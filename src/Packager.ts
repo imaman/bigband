@@ -93,12 +93,10 @@ export class ZipBuilder {
   }
 }
 
-
-const rootDir = '/home/me/code/abc';
-const tsFile = 'p1/p2/handler.ts';
-
-const workingDir = path.resolve(os.tmpdir(), "packager-" + uuidv1());
-fs.mkdirSync(workingDir);
-const outDir = path.resolve(workingDir, 'build');
-
-compile(rootDir, tsFile, outDir, ['/home/me/code/abc/p1/p2']);
+export function run(rootDir: string, tsFile: string, npmDir: string) {
+  const workingDir = path.resolve(os.tmpdir(), "packager-" + uuidv1());
+  fs.mkdirSync(workingDir);
+  const outDir = path.resolve(workingDir, 'build');
+  
+  compile(rootDir, tsFile, outDir, [npmDir]);
+}
