@@ -1,11 +1,15 @@
 {
   "name": "servicemix",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.",
   "main": "",
   "scripts": {
     "unit": "mocha -r ts-node/register src/**/*.test.ts"
   },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/imaman/servicemix.git"
+  },  
   "author": "Itay Maman",
   "license": "MIT",
   "dependencies": {
