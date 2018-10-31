@@ -7,6 +7,8 @@
     "compile": "tsc",
     "copy-files": "node tools/copy_to_build.js",
     "build": "npm-run-all -s copy-files compile",
+    "publish-directly": "npm publish build",
+    "publish": "npm-run-all -s build publish-directly",
     "unit": "mocha -r ts-node/register src/**/*.test.ts"
   },
   "repository": {
