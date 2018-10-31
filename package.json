@@ -1,14 +1,14 @@
 {
   "name": "servicemix",
-  "version": "0.1.2",
+  "version": "0.1.6",
   "description": "Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.",
   "main": "",
   "scripts": {
     "compile": "tsc",
     "copy-files": "node tools/copy_to_build.js",
     "build": "npm-run-all -s copy-files compile",
-    "publish-directly": "npm publish build",
-    "publish": "npm-run-all -s build publish-directly",
+    "push-directly": "npm publish build",
+    "push": "npm-run-all -s build push-directly",
     "unit": "mocha -r ts-node/register src/**/*.test.ts"
   },
   "repository": {

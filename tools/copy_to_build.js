@@ -35,8 +35,16 @@ async function main() {
     if (!path.isAbsolute(buildDir)) {
         throw new Error(`Expected build dir (${buildDir}) to be absolute.`);
     }
+    try {
+        await removeDir(buildDir);
+    } catch (e) {
+        // Intentionally abosrb
+    }
 
-    await removeDir(buildDir);
+    if (fs.existsSync(buildDir)) {
+        throw new Error(`Removal of directory ${buildDir} did not succeed.`);
+    }
+
     fs.mkdirSync(buildDir);
     await copyFile(baseDir, buildDir, 'package.json');
     await copyFile(baseDir, buildDir, 'README.md');
