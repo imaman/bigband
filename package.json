@@ -7,15 +7,20 @@
     "unit": "mocha -r ts-node/register src/**/*.test.ts"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/imaman/servicemix.git"
-  },  
+    "type": "git",
+    "url": "https://github.com/imaman/servicemix.git"
+  },
+  "bin": {
+    "servicemix": "./src/cli.js"
+  },
   "author": "Itay Maman",
   "license": "MIT",
   "dependencies": {
+    "aws-sdk": "^2.345.0",
     "jszip": "^3.1.5",
     "uuid": "^3.3.2",
-    "yamljs": "^0.3.0"
+    "yamljs": "^0.3.0",
+    "yargs": "^12.0.2"
   },
   "devDependencies": {
     "@types/chai": "^4.1.6",

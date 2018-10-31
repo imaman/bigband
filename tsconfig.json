@@ -15,6 +15,7 @@
     "rootDir": "./"    
   },
   "files": [
+    "src/cli.ts",
     "src/Packager.ts",
     "src/NpmPackageResolver.ts",
     "src/Instrument.test.ts",

@@ -4,6 +4,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as uuidv1 from 'uuid/v1';
 import * as os from 'os';
+
+import * as AWS from 'aws-sdk';
+AWS.config.setPromisesDependency(Promise);
+AWS.config.update({ region: 'eu-central-1' });
+
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
 import { DeployableFragment, DeployableAtom } from './Instrument';
@@ -17,7 +22,7 @@ import { DeployableFragment, DeployableAtom } from './Instrument';
 
 
 
-function compile(rootDir: string, relativeTsFile: string, outDir: string, npmProjectDirs: string[]) {
+function compile(rootDir: string, relativeTsFile: string, outDir: string, npmProjectDirs: string[]): ZipBuilder {
   if (!path.isAbsolute(outDir)) {
     throw new Error(`outDir must be absoulte (${outDir})`);
   }
@@ -52,8 +57,7 @@ function compile(rootDir: string, relativeTsFile: string, outDir: string, npmPro
   zipBuilder.scan('build', outDir);
 
   zipBuilder.populateZip();
-  zipBuilder.dump('/tmp/abcd.zip');
-
+  return zipBuilder;
 }
 
 function shouldBeIncluded(packageName: string) {
@@ -85,11 +89,14 @@ export class ZipBuilder {
     });
   }
 
-  dump(outputFile: string) {
-    this.zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 0 } }).then(buf => {
-      fs.writeFileSync(outputFile, buf);
-      console.log('-written-')
-    });
+  async toBuffer(): Promise<Buffer> {
+    return this.zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 0 } });
+  }
+
+  async dump(outputFile: string) {
+    const buf = await this.toBuffer();
+    fs.writeFileSync(outputFile, buf);
+    console.log('-written-')
   }
 }
 
@@ -97,6 +104,21 @@ export function run(rootDir: string, tsFile: string, npmDir: string) {
   const workingDir = path.resolve(os.tmpdir(), "packager-" + uuidv1());
   fs.mkdirSync(workingDir);
   const outDir = path.resolve(workingDir, 'build');
-  
-  compile(rootDir, tsFile, outDir, [npmDir]);
+
+  return compile(rootDir, tsFile, outDir, [npmDir]);
 }
+
+export async function pushToS3(zipBuilder: ZipBuilder, s3Bucket: string, s3Object: string) {
+  const s3 = new AWS.S3();
+
+  const buf = await zipBuilder.toBuffer();
+  await s3.putObject({
+    Bucket: s3Bucket,
+    Key: s3Object,
+    Body: buf,
+    ContentType: "application/zip"
+  }).promise();
+
+  return `s3://${s3Bucket}/${s3Object}`;
+}
+
