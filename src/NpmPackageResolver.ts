@@ -60,7 +60,7 @@ export class NpmPackageResolver {
         const traverse = (packageName) => {
             const obj = this.depsByPackageName[packageName];
             if (!obj) {
-                throw new Error(`package ${packageName} not found.`);
+                throw new Error(`Arrived at an uninstalled package: ${packageName}.`);
             }
 
             const dir = path.join(obj.root, 'node_modules', packageName);

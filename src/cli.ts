@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as yargs from 'yargs';
 import * as path from 'path';
 import * as fs from 'fs';

@@ -2,8 +2,12 @@ import * as detective from 'detective-typescript';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const builtinModules = new Set<String>(require('module').builtinModules);
+const builtins = require('module').builtinModules;
+if (!builtins) {
+    throw new Error('Module.builtinModules is falsy. Is your Node version < 8.11.3 ?');
+}
 
+const builtinModules = new Set<String>(builtins);
 
 function read(fileName) {
     try {
