@@ -62,9 +62,9 @@ export class Packager {
     return zipBuilder;
   }
 
-  run(relativeTsFile: string) {
-    const binDir = this.compile(relativeTsFile, 'build');
-    return this.createZip(relativeTsFile, binDir);
+  run(relativeTsFile: string, relativeOutDir: string) {
+    this.compile(relativeTsFile, relativeOutDir);
+    return this.createZip(relativeTsFile, relativeOutDir);
   }
 
   async pushToS3(s3Object: string, zipBuilder: ZipBuilder) {

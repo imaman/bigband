@@ -31,14 +31,14 @@ const argv = yargs
 
 async function main() {
     const d = path.resolve(argv.dir);
-
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
         throw new Error(`Bad value. ${d} is not a directory.`);
     }
 
     if (!argv.isMixFile) {
         const packager = new Packager(d, d, argv.s3Bucket);
-        packager.pushToS3(argv.s3Object, packager.run(argv.file));
+        packager.pushToS3(argv.s3Object, packager.run(argv.file, 'build'));
+        return;
     }
 
     throw new Error('Not implemented yet');
@@ -46,4 +46,7 @@ async function main() {
 
 main()
     .then(o => console.log(o))
-    .catch(e => console.log('Error', e));
+    .catch(e => {
+        console.log('Error', e);
+        process.exit(-1);
+    });
