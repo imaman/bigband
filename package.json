@@ -1,6 +1,6 @@
 {
   "name": "servicemix",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.",
   "main": "",
   "scripts": {
@@ -25,6 +25,7 @@
     "detective-typescript": "^4.1.1",
     "jszip": "^3.1.5",
     "rmdir": "^1.2.0",
+    "source-map-support": "^0.5.9",
     "uuid": "^3.3.2",
     "yamljs": "^0.3.0",
     "yargs": "^12.0.2"

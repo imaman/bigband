@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 
+import * as sourceMapSupport from 'source-map-support';
+sourceMapSupport.install();
+
 import * as yargs from 'yargs';
 import * as path from 'path';
 import * as fs from 'fs';
 
 import {Packager} from './Packager'
+import { ETIME } from 'constants';
 
 const argv = yargs
     .version('1.0.0')
@@ -20,29 +24,44 @@ const argv = yargs
     .option('file', {
         describe: 'Path (relative to --dir) to a .ts file to compile.'
     })
-    .option('is-mix-file', {
-        descirbe: 'Run the file',
-        type: 'boolean'
+    .option('mix-file', {
+        descirbe: 'path to a servicemix.config.ts file',
     })
-    .demandOption(['dir', 'file', 's3-bucket', 's3-object'], 'Required option(s) missing')
+    // .demandOption(['dir', 'file', 's3-bucket', 's3-object'], 'Required option(s) missing')
     .help()
     .argv;
 
 
 async function main() {
+    if (argv.mixFile) {
+        const config = compileConfigFile(argv.mixFile);
+        return await ship(path.resolve(config.dir), config.file, config.s3Bucket, config.s3Object);
+    }
+
     const d = path.resolve(argv.dir);
+    return ship(d, argv.file, argv.s3Bucket, argv.s3Object);
+}
+
+function compileConfigFile(mixFile: string) {
+    const d = path.dirname(path.resolve(mixFile));
+    const packager = new Packager(d, d, argv.s3Bucket);
+    const file = 'servicemix.config'
+    const outDir = packager.compile(`${file}.ts`, 'meta');
+    const ret = require(path.resolve(outDir, `${file}.js`)).config;
+    if (!ret.dir) {
+        ret.dir = d;
+    }
+    return ret;
+}
+
+async function ship(d: string, file: string, s3Bucket: string, s3Object: string) {
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
         throw new Error(`Bad value. ${d} is not a directory.`);
     }
 
-    if (!argv.isMixFile) {
-        const packager = new Packager(d, d, argv.s3Bucket);
-        const zb = packager.run(argv.file, 'build');
-        const ret = await packager.pushToS3(argv.s3Object, zb);
-        return ret;
-    }
-
-    throw new Error('Not implemented yet');
+    const packager = new Packager(d, d, s3Bucket);
+    const zb = packager.run(file, 'build');
+    return await packager.pushToS3(s3Object, zb);
 }
 
 main()
