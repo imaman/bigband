@@ -40,7 +40,7 @@ export class Packager {
     return outDir;
   }
   
-  createZip(relativeTsFile: string, relativeCompiledFilesDir: string) {
+  createZip(relativeTsFile: string, compiledFilesDir: string) {
     const deps = DepsCollector.scanFrom(this.toAbs(relativeTsFile));
   
     const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir]);
@@ -56,20 +56,20 @@ export class Packager {
       zipBuilder.scan(`node_modules/${usage.packageName}`, usage.dir);
     });
   
-    zipBuilder.scan('build', this.toAbs(relativeCompiledFilesDir));
+    zipBuilder.scan('build', compiledFilesDir);
   
     zipBuilder.populateZip();
     return zipBuilder;
   }
 
   run(relativeTsFile: string, relativeOutDir: string) {
-    this.compile(relativeTsFile, relativeOutDir);
-    return this.createZip(relativeTsFile, relativeOutDir);
+    const compiledFilesDir = this.compile(relativeTsFile, relativeOutDir);
+    return this.createZip(relativeTsFile, compiledFilesDir);
   }
 
   async pushToS3(s3Object: string, zipBuilder: ZipBuilder) {
     const s3 = new AWS.S3();
-  
+
     const buf = await zipBuilder.toBuffer();
     await s3.putObject({
       Bucket: this.s3Bucket,
@@ -126,9 +126,14 @@ export class ZipBuilder {
         this.scan(path.join(pathInJar, f), path.join(absolutePath, f));
       });
     } else {
-      const atom = new DeployableAtom(pathInJar, fs.readFileSync(absolutePath, 'utf-8'));
+      const content = fs.readFileSync(absolutePath, 'utf-8');
+      const atom = new DeployableAtom(pathInJar, content);
       this.fragment.add(atom);
     }
+  }
+
+  async get(path) {
+    return await this.zip.file(path).async("string");
   }
 
   populateZip() {

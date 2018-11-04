@@ -37,7 +37,9 @@ async function main() {
 
     if (!argv.isMixFile) {
         const packager = new Packager(d, d, argv.s3Bucket);
-        return packager.pushToS3(argv.s3Object, packager.run(argv.file, 'build'));
+        const zb = packager.run(argv.file, 'build');
+        const ret = await packager.pushToS3(argv.s3Object, zb);
+        return ret;
     }
 
     throw new Error('Not implemented yet');
