@@ -4,7 +4,7 @@ import * as yargs from 'yargs';
 import * as path from 'path';
 import * as fs from 'fs';
 
-import * as Packager from './Packager'
+import {Packager} from './Packager'
 
 const argv = yargs
     .version('1.0.0')
@@ -20,6 +20,10 @@ const argv = yargs
     .option('file', {
         describe: 'Path (relative to --dir) to a .ts file to compile.'
     })
+    .option('is-mix-file', {
+        descirbe: 'Run the file',
+        type: 'boolean'
+    })
     .demandOption(['dir', 'file', 's3-bucket', 's3-object'], 'Required option(s) missing')
     .help()
     .argv;
@@ -31,8 +35,13 @@ async function main() {
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
         throw new Error(`Bad value. ${d} is not a directory.`);
     }
-    
-    return Packager.pushToS3(Packager.run(d, argv.file, d), argv.s3Bucket, argv.s3Object);
+
+    if (!argv.isMixFile) {
+        const packager = new Packager(d, d, argv.s3Bucket);
+        packager.pushToS3(argv.s3Object, packager.run(argv.file));
+    }
+
+    throw new Error('Not implemented yet');
 }
 
 main()
