@@ -9,7 +9,7 @@ export const config = {
         name: 'chronology',
         functions: {
             "importantDates": {
-                controller: "compute",
+                controller: "src/chronology/compute",
                 properties: {
                     Description: "returns important dates for a year",
                     MemorySize: 1024,
