@@ -15,7 +15,7 @@ export async function runLambda(context, event) {
         headers: { 
           "content-type": 'application/json', 
         },
-        body: JSON.stringify({y: event.year, title: t, fromNow: timePassed})
+        body: JSON.stringify({year: event.year, description: t, howLongAgo: timePassed})
     };
 }
 

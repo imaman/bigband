@@ -12,14 +12,17 @@ AWS.config.update({ region: 'eu-central-1' });
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
 import { DeployableFragment, DeployableAtom } from './Instrument';
-import { ConfigurationServicePlaceholders } from 'aws-sdk/lib/config_service_placeholders';
 
 export class Packager {
   private readonly workingDir: string;
   private workingDirCreated = false;
   private readonly npmPackageDir;
 
-  constructor(private readonly rootDir: string, npmPackageDir: string, private readonly s3Bucket: string) {
+  constructor(private readonly rootDir: string, npmPackageDir: string, private readonly s3Bucket: string,
+      private readonly s3Prefix: string) {
+    if (s3Prefix.endsWith('/')) {
+      throw new Error(`s3Prefix ${s3Prefix} cannot have a trailing slash`)
+    }
     if (!path.isAbsolute(npmPackageDir)) {
       throw new Error(`Expected an absolute path but got ${npmPackageDir}.`);
     }
@@ -66,19 +69,20 @@ export class Packager {
     return this.createZip(relativeTsFile, compiledFilesDir);
   }
 
-  async pushToS3(s3Object: string, zipBuilder: ZipBuilder) {      
+  async pushToS3(s3Object: string, zipBuilder: ZipBuilder): Promise<S3Ref> {      
     zipBuilder.populateZip();
     const buf = await zipBuilder.toBuffer();
 
+    const s3Key = `${this.s3Prefix}/${s3Object}`;
     const s3 = new AWS.S3();
     await s3.putObject({
       Bucket: this.s3Bucket,
-      Key: s3Object,
+      Key: s3Key,
       Body: buf,
       ContentType: "application/zip"
     }).promise();
   
-    return `s3://${this.s3Bucket}/${s3Object}`;
+    return new S3Ref(this.s3Bucket, s3Key);
   }
 
   private toAbs(relativeFile: string) {
@@ -106,6 +110,15 @@ export class Packager {
     return ret;
   }
 }
+
+class S3Ref {
+  constructor(public readonly s3Bucket, public readonly s3Key) {}
+
+  toUri() {
+    return `s3://${this.s3Bucket}/${this.s3Key}`
+  }
+}
+
 
 function shouldBeIncluded(packageName: string) {
   return packageName !== 'aws-sdk';

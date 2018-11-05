@@ -1,8 +1,8 @@
 export const config = {
-    s3Object: 'deployables/a.zip',
     namespace: {
         s3Bucket: 'servicemix-example',
-        name: 'servicemixExample'
+        s3Prefix: 'root',
+        name: 'servicemix-example-app'
     },
     package: {
         region: "eu-central-1",
