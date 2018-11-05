@@ -12,6 +12,7 @@ AWS.config.update({ region: 'eu-central-1' });
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
 import { DeployableFragment, DeployableAtom } from './Instrument';
+import { ConfigurationServicePlaceholders } from 'aws-sdk/lib/config_service_placeholders';
 
 export class Packager {
   private readonly workingDir: string;
@@ -57,8 +58,6 @@ export class Packager {
     });
   
     zipBuilder.scan('build', compiledFilesDir);
-  
-    zipBuilder.populateZip();
     return zipBuilder;
   }
 
@@ -67,10 +66,11 @@ export class Packager {
     return this.createZip(relativeTsFile, compiledFilesDir);
   }
 
-  async pushToS3(s3Object: string, zipBuilder: ZipBuilder) {
-    const s3 = new AWS.S3();
-
+  async pushToS3(s3Object: string, zipBuilder: ZipBuilder) {      
+    zipBuilder.populateZip();
     const buf = await zipBuilder.toBuffer();
+
+    const s3 = new AWS.S3();
     await s3.putObject({
       Bucket: this.s3Bucket,
       Key: s3Object,
@@ -130,6 +130,10 @@ export class ZipBuilder {
       const atom = new DeployableAtom(pathInJar, content);
       this.fragment.add(atom);
     }
+  }
+
+  add(path, content) {
+    this.fragment.add(new DeployableAtom(path, content));
   }
 
   async get(path) {

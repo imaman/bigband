@@ -6,9 +6,11 @@ sourceMapSupport.install();
 import * as yargs from 'yargs';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as AWS from 'aws-sdk';
 
-import { Packager } from './Packager'
-import { CloudFormationPusher } from './CloudFormationPusher';
+import {Packager,ZipBuilder} from './Packager'
+import {CloudFormationPusher} from './CloudFormationPusher';
+import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 
 const argv = yargs
     .version('1.0.0')
@@ -56,8 +58,7 @@ async function main() {
         const config = compileConfigFile(argv.mixFile);
         const ps = Object.keys(config.package.functions).map(name => {
             const functionConfig = config.package.functions[name];
-            const handler = functionConfig.handler;
-            return ship(path.resolve(config.dir), `${handler}.ts`, name, config.namespace.s3Bucket, config.s3Object, config, functionConfig);
+            return ship(path.resolve(config.dir), name, config.namespace.s3Bucket, config.s3Object, config, functionConfig);
         });
         return await Promise.all(ps);
     }
@@ -77,7 +78,49 @@ function compileConfigFile(mixFile: string) {
     return ret;
 }
 
-async function ship(d: string, file: string, simpleName: string, s3Bucket: string, s3Object: string, config: any, functionConfig: any) {
+
+function injectHandler(zipBuilder: ZipBuilder, pathToHandlerFile, pathToControllerFile) {
+    function validate(name, value) {
+        if (value.startsWith('.')) {
+            throw new Error(`Leading dot not allowed. Argument name: ${name}, value: "${pathToControllerFile}"`);
+        }
+    
+        if (path.isAbsolute(value)) {
+            throw new Error(`Absolute path not allowed. Argument name: ${name}, value: "${pathToControllerFile}"`);
+        }    
+    }
+
+    validate('pathToHandlerFile', pathToHandlerFile);
+    validate('pathToControllerFile', pathToControllerFile);
+
+    const content = `
+        'use strict';
+
+        // V_1522
+        const {runLambda} = require('./${pathToControllerFile}');
+
+        function handle(event, context, callback) {
+            try {
+                Promise.resolve()
+                .then(() => runLambda(context, event))
+                .then(response => callback(null, response))
+                .catch(e => {
+                    console.error('Exception caught from promise flow (event=\\n:' + JSON.stringify(event) + ")\\n\\n", e);
+                    callback(e);
+                });
+            } catch (e) {
+                console.error('Exception caught:', e);
+                callback(e);
+            }
+        }
+
+        module.exports = {handle};
+    `;
+
+    zipBuilder.add(pathToHandlerFile, content);
+}
+
+async function ship(d: string, simpleName: string, s3Bucket: string, s3Object: string, config: any, functionConfig: any) {
     const fullName = composeName(config.namespace.name, config.package.name, simpleName);
     const logicalResourceName = composeCamelCaseName(config.namespace.name, config.package.name, simpleName);
     console.log('logicalResourceName=', logicalResourceName);
@@ -86,7 +129,8 @@ async function ship(d: string, file: string, simpleName: string, s3Bucket: strin
     }
 
     const packager = new Packager(d, d, s3Bucket);
-    const zb = packager.run(file, 'build');
+    const zb: ZipBuilder = packager.run(`${functionConfig.controller}.ts`, 'build');
+    injectHandler(zb, 'handler.js', 'build/' + functionConfig.controller);
     await packager.pushToS3(s3Object, zb);
 
     const cfp = new CloudFormationPusher(config.package.region);
@@ -96,7 +140,7 @@ async function ship(d: string, file: string, simpleName: string, s3Bucket: strin
         Properties: {
             FunctionName: fullName,
             Runtime: "nodejs8.10",
-            Handler: "build/handler.endpoint",
+            Handler: "handler.handle",
             CodeUri: `s3://${s3Bucket}/${s3Object}`,
             Policies: [
                 {
@@ -152,6 +196,16 @@ async function ship(d: string, file: string, simpleName: string, s3Bucket: strin
 
     const stackName = composeName(config.namespace.name, config.package.name);
     await cfp.deploy(stack, stackName);
+
+
+    const lambda = new AWS.Lambda({region: config.package.region});
+    const updateFunctionCodeReq: UpdateFunctionCodeRequest = {
+        FunctionName: fullName,
+        S3Bucket: s3Bucket,
+        S3Key: s3Object
+    };
+    const updateFunctionCodeResp = await lambda.updateFunctionCode(updateFunctionCodeReq).promise();
+    console.log('Function code updaed');
     return `deployed ${stackName}`;
 }
 
