@@ -7,8 +7,8 @@ import * as yargs from 'yargs';
 import * as path from 'path';
 import * as fs from 'fs';
 
-import {Packager} from './Packager'
-import {CloudFormationPusher} from './CloudFormationPusher';
+import { Packager } from './Packager'
+import { CloudFormationPusher } from './CloudFormationPusher';
 
 const argv = yargs
     .version('1.0.0')
@@ -36,6 +36,14 @@ const argv = yargs
 
 
 
+function composeCamelCaseName(...args: string[]) {
+    if (args.some(x => !x.length)) {
+        throw new Error('One of the name components was empty');
+    }
+
+    return args.map((curr, i) => i === 0 ? curr : curr[0].toUpperCase() + curr.substr(1)).join('');
+}
+
 function composeName(...args: string[]) {
     if (args.some(x => !x.length)) {
         throw new Error('One of the name components was empty');
@@ -47,9 +55,9 @@ async function main() {
     if (argv.mixFile) {
         const config = compileConfigFile(argv.mixFile);
         const ps = Object.keys(config.package.functions).map(name => {
-            const fullName = composeName(config.namespace.name, config.package.name, name);
-            const handler = config.package.functions[name];
-            return ship(path.resolve(config.dir), `${handler}.ts`, fullName, config.namespace.s3Bucket, config.s3Object, config);
+            const functionConfig = config.package.functions[name];
+            const handler = functionConfig.handler;
+            return ship(path.resolve(config.dir), `${handler}.ts`, name, config.namespace.s3Bucket, config.s3Object, config, functionConfig);
         });
         return await Promise.all(ps);
     }
@@ -69,7 +77,10 @@ function compileConfigFile(mixFile: string) {
     return ret;
 }
 
-async function ship(d: string, file: string, name: string, s3Bucket: string, s3Object: string, config: any) {
+async function ship(d: string, file: string, simpleName: string, s3Bucket: string, s3Object: string, config: any, functionConfig: any) {
+    const fullName = composeName(config.namespace.name, config.package.name, simpleName);
+    const logicalResourceName = composeCamelCaseName(config.namespace.name, config.package.name, simpleName);
+    console.log('logicalResourceName=', logicalResourceName);
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
         throw new Error(`Bad value. ${d} is not a directory.`);
     }
@@ -80,58 +91,64 @@ async function ship(d: string, file: string, name: string, s3Bucket: string, s3O
 
     const cfp = new CloudFormationPusher(config.package.region);
 
+    const functionResource: any = {
+        Type: 'AWS::Serverless::Function',
+        Properties: {
+            FunctionName: fullName,
+            Runtime: "nodejs8.10",
+            Handler: "build/handler.endpoint",
+            CodeUri: `s3://${s3Bucket}/${s3Object}`,
+            Policies: [
+                {
+                    Version: '2012-10-17',
+                    Statement: [
+                        {
+                            Effect: "Allow",
+                            Action: "s3:*",
+                            Resource: "arn:aws:s3:::dataplatform-tagging-browsers/*"
+                        },
+                        {
+                            Effect: "Allow",
+                            Action: "s3:*",
+                            Resource: "arn:aws:s3:::dataplatform-tagging-snapshots/*"
+                        },
+                        {
+                            Effect: "Allow",
+                            Action: [
+                                "dynamodb:DeleteItem",
+                                "dynamodb:DescribeTable",
+                                "dynamodb:GetItem",
+                                "dynamodb:PutItem",
+                                "dynamodb:Query",
+                                "dynamodb:Scan",
+                                "dynamodb:UpdateItem"
+                            ],
+                            Resource: [
+                                "arn:aws:dynamodb:eu-central-1:274788167589:table/dataplatform.tagging.Snapshots",
+                                "arn:aws:dynamodb:eu-central-1:274788167589:table/dataplatform.Users",
+                                "arn:aws:dynamodb:eu-central-1:274788167589:table/dataplatform.tagging.Assignments",
+                                "arn:aws:dynamodb:eu-central-1:274788167589:table/dataplatform.tagging.Assignments/index/*"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
+    Object.assign(functionResource.Properties, functionConfig.properties);
+
     const stack = {
         AWSTemplateFormatVersion: '2010-09-09',
         Transform: 'AWS::Serverless-2016-10-31',
         Description: "Backend services for Testim's tagging application",
-        Resources:{
-          main: {
-            Type: 'AWS::Serverless::Function',
-            Properties: {
-              FunctionName: name,
-              Runtime: "nodejs8.10",
-              Handler: "build/handler.endpoint",
-              CodeUri: `s3://${s3Bucket}/${s3Object}`,
-              Description: "Backend function for Testim's tagging application.",
-              MemorySize: 3008,
-              Timeout: 300,
-              Policies: [
-                { Version: '2012-10-17',
-                  Statement: [
-                    { Effect: "Allow",
-                      Action: "s3:*",
-                      Resource: "arn:aws:s3:::dataplatform-tagging-browsers/*"
-                    },
-                    {
-                      Effect: "Allow",
-                      Action: "s3:*",
-                      Resource: "arn:aws:s3:::dataplatform-tagging-snapshots/*"
-                    },
-                    {
-                      Effect: "Allow",
-                      Action: [
-                        "dynamodb:DeleteItem",
-                        "dynamodb:DescribeTable",
-                        "dynamodb:GetItem",
-                        "dynamodb:PutItem",
-                        "dynamodb:Query",
-                        "dynamodb:Scan",
-                        "dynamodb:UpdateItem"
-                      ],
-                      Resource: [
-                        "arn:aws:dynamodb:eu-central-1:274788167589:table/dataplatform.tagging.Snapshots",
-                        "arn:aws:dynamodb:eu-central-1:274788167589:table/dataplatform.Users",
-                        "arn:aws:dynamodb:eu-central-1:274788167589:table/dataplatform.tagging.Assignments",
-                        "arn:aws:dynamodb:eu-central-1:274788167589:table/dataplatform.tagging.Assignments/index/*"
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        }
+        Resources: {}
     };
+
+
+    stack.Resources[logicalResourceName] = functionResource;
+
+    console.log(`functionResource=${JSON.stringify(functionResource, null, 2)}`);
 
     const stackName = composeName(config.namespace.name, config.package.name);
     await cfp.deploy(stack, stackName);
