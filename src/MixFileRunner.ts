@@ -2,13 +2,16 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as AWS from 'aws-sdk';
 
-import {NameStyle, IsolationScope,newLambda,Rig, Instrument} from '../src/Instrument';
+import {NameStyle, IsolationScope,newLambda,Rig, Instrument} from './runtime/Instrument';
 import {Packager,ZipBuilder} from './Packager'
 import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 
-export async function runMixFile(mixFile) {
-    const config = compileConfigFile(mixFile);
+export async function runMixFile(mixFile: string, runtimeDir: string) {
+    if (!path.isAbsolute(runtimeDir)) {
+        throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
+    }
+    const config = compileConfigFile(mixFile, runtimeDir);
     runSpec(config);
 }
 
@@ -36,12 +39,15 @@ export async function runSpec(mixSpec: MixSpec) {
     return await Promise.all(ps);
 }
 
-function compileConfigFile(mixFile: string) {
+function compileConfigFile(mixFile: string, runtimeDir: string) {
     const d = path.dirname(path.resolve(mixFile));
     const packager = new Packager(d, d, '', '');
     const file = 'servicemix.config'
-    const outDir = packager.compile(`${file}.ts`, 'meta');
-    const ret: MixSpec = require(path.resolve(outDir, `${file}.js`)).config;
+    const zb = packager.run(`${file}.ts`, 'spec_compiled', runtimeDir);
+    const specDeployedDir = packager.unzip(zb, 'spec_deployed')
+    console.log('requiring from', process.cwd());
+    const ret: MixSpec = require(path.resolve(specDeployedDir, 'build', `${file}.js`)).run();
+    console.log('... requiring completed');
     if (!ret.dir) {
         ret.dir = d;
     }
@@ -88,23 +94,25 @@ function injectHandler(zipBuilder: ZipBuilder, pathToHandlerFile, pathToControll
 }
 
 async function ship(d: string, rig: Rig, instrument: Instrument) {
-    const fullName = composeName(rig.isolationScope.name, instrument.fullyQualifiedName());
     const logicalResourceName = instrument.fullyQualifiedName(NameStyle.CAMEL_CASE);
     console.log('logicalResourceName=', logicalResourceName);
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
         throw new Error(`Bad value. ${d} is not a directory.`);
     }
-
+    
     const packager = new Packager(d, d, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix);
-    const zb: ZipBuilder = packager.run(instrument.getEntryPointFile(), 'build');
-    zb.importFragment(instrument.createFragment());
-
+    const pathPrefix = 'build';
+    const zb: ZipBuilder = packager.run(instrument.getEntryPointFile(), pathPrefix);
+    zb.importFragment(instrument.createFragment(pathPrefix));
+    
     // injectHandler(zb, 'handler.js', 'build/' + functionConfig.controller);
-    const s3Ref = await packager.pushToS3(`deployables/${fullName}.zip`, zb);
+    const physicalName = instrument.physicalName(rig);
+    const s3Ref = await packager.pushToS3(`deployables/${physicalName}.zip`, zb);
 
     const cfp = new CloudFormationPusher(rig.region);
 
-    const functionResource = instrument.getDefinition().get();
+    const functionResource = instrument.getPhysicalDefinition(rig).get();
+    functionResource.Properties.CodeUri = s3Ref.toUri();
 
     const stack = {
         AWSTemplateFormatVersion: '2010-09-09',
@@ -122,12 +130,12 @@ async function ship(d: string, rig: Rig, instrument: Instrument) {
 
     const lambda = new AWS.Lambda({region: rig.region});
     const updateFunctionCodeReq: UpdateFunctionCodeRequest = {
-        FunctionName: fullName,
+        FunctionName: physicalName,
         S3Bucket: s3Ref.s3Bucket,
         S3Key: s3Ref.s3Key
     };
     await lambda.updateFunctionCode(updateFunctionCodeReq).promise();
-    console.log('Function code updated');
+    console.log('Function code updated:\n' + JSON.stringify(updateFunctionCodeReq, null, 2));
     return `deployed ${rig.physicalName()}`;
 }
 

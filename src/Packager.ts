@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as uuidv1 from 'uuid/v1';
 import * as os from 'os';
+import * as mkdirp from 'mkdirp'
 
 import * as AWS from 'aws-sdk';
 AWS.config.setPromisesDependency(Promise);
@@ -11,7 +12,7 @@ AWS.config.update({ region: 'eu-central-1' });
 
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
-import { DeployableFragment, DeployableAtom } from './Instrument';
+import { DeployableFragment, DeployableAtom } from './runtime/Instrument';
 
 export class Packager {
   private readonly workingDir: string;
@@ -44,10 +45,10 @@ export class Packager {
     return outDir;
   }
   
-  createZip(relativeTsFile: string, compiledFilesDir: string) {
+  createZip(relativeTsFile: string, compiledFilesDir: string, runtimeDir?: string) {
     const deps = DepsCollector.scanFrom(this.toAbs(relativeTsFile));
   
-    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir]);
+    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir], runtimeDir);
     deps.npmDeps
       .filter(d => shouldBeIncluded(d))
       .forEach(d => npmPackageResolver.recordUsage(d));
@@ -64,9 +65,16 @@ export class Packager {
     return zipBuilder;
   }
 
-  run(relativeTsFile: string, relativeOutDir: string) {
+  run(relativeTsFile: string, relativeOutDir: string, runtimeDir?: string) {
     const compiledFilesDir = this.compile(relativeTsFile, relativeOutDir);
-    return this.createZip(relativeTsFile, compiledFilesDir);
+    return this.createZip(relativeTsFile, compiledFilesDir, runtimeDir);
+  }
+
+  unzip(zipBuilder: ZipBuilder, relativeOutDir: string) {
+    zipBuilder.populateZip();
+    const outDir = this.newOutDir(relativeOutDir);
+    zipBuilder.unzip(outDir);
+    return outDir;
   }
 
   async pushToS3(s3Object: string, zipBuilder: ZipBuilder): Promise<S3Ref> {      
@@ -167,6 +175,18 @@ export class ZipBuilder {
 
   async toBuffer(): Promise<Buffer> {
     return this.zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 0 } });
+  }
+
+  unzip(outDir: string) {
+    if (!path.isAbsolute(outDir)) {
+      throw new Error(`outDir (${outDir}) must be absolute`);
+    }
+
+    this.fragment.forEach((curr: DeployableAtom) => {
+      const p = path.resolve(outDir, curr.path);
+      mkdirp.sync(path.dirname(p));
+      fs.writeFileSync(p, curr.content, "utf-8");
+    });
   }
 
   async dump(outputFile: string) {

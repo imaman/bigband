@@ -1,5 +1,3 @@
-import * as YAML from 'yamljs';
-import * as JSZip from 'jszip';
 const settings: any = {
     DEPLOYABLES_FOLDER: 'deployables'
 };
@@ -18,7 +16,7 @@ export abstract class Instrument {
         private readonly packageName: string,
         private readonly _name: string) {}
 
-    abstract createFragment()
+    abstract createFragment(pathPrefix: string)
     abstract contributeToConsumerDefinition(rig: Rig, consumerDef: Definition)
     abstract arnType(): string
     abstract nameProperty(): string
@@ -53,17 +51,15 @@ export abstract class Instrument {
     }
 
     getPhysicalDefinition(rig: Rig) : Definition {
-        const temp = {};
         const copy = JSON.parse(JSON.stringify(this.definition.get()));
-        copy.Properties.CodeUri = `s3://${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${settings.DEPLOYABLES_FOLDER}/${this.physicalName(rig)}.zip`;
+        // copy.Properties.CodeUri = `s3://${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${settings.DEPLOYABLES_FOLDER}/${this.physicalName(rig)}.zip`;
         copy.Properties[this.nameProperty()] = this.physicalName(rig);
-        temp[this.fullyQualifiedName()] = copy;
-        return new Definition(temp);
+        return new Definition(copy);
     }
 
-    contributeToConsumerCode(deployable: Deployable) {
-        throw new Error('Not implemented yet.');
-    }
+    // contributeToConsumerCode(deployable: Deployable) {
+    //     throw new Error('Not implemented yet.');
+    // }
 }
 
 class LambdaInstrument extends Instrument {
@@ -99,12 +95,31 @@ class LambdaInstrument extends Instrument {
         return this.fullyQualifiedName() + '_Handler';
     }
 
-    createFragment() {
+    createFragment(pathPrefix: string) {
         const fragment = new DeployableFragment();
-        fragment.add(new DeployableAtom(this.getHandlerFile() + '.js', `
-            const c = require('${this.controllerPath}');
-            console.log('controller=', c.toString());
-        `));
+        const content = `
+            const {runLambda} = require('./${pathPrefix}/${this.getEntryPointFile()}');
+
+            function handle(event, context, callback) {
+                try {
+                    Promise.resolve()
+                    .then(() => runLambda(context, event))
+                    .then(response => callback(null, response))
+                    .catch(e => {
+                        console.error('Exception caught from promise flow (event=\\n:' + JSON.stringify(event) + ")\\n\\n", e);
+                        callback(e);
+                    });
+                } catch (e) {
+                    console.error('Exception caught:', e);
+                    callback(e);
+                }
+            }
+
+            module.exports = {handle};
+        `;
+
+        console.log('content=\n' + content);
+        fragment.add(new DeployableAtom(this.getHandlerFile() + '.js', content));
         return fragment;
     }
 
@@ -154,10 +169,6 @@ export class Definition {
     get() {
         return this.obj;
     }
-
-    toYml(): string {
-        return YAML.stringify(this.obj, 4);
-    }
 }
 
 
@@ -190,18 +201,18 @@ export class DeployableFragment {
     }
 }
 
-export class Deployable {
-    private readonly fragments: DeployableFragment[] = [];
-    add(fragment: DeployableFragment) {
-        this.fragments.push(fragment);
-    }
+// export class Deployable {
+//     private readonly fragments: DeployableFragment[] = [];
+//     add(fragment: DeployableFragment) {
+//         this.fragments.push(fragment);
+//     }
 
-    storeIn(jsZip: JSZip) {
-        this.fragments.forEach(fragment => {
-            fragment.forEach(atom => jsZip.file(atom.path, atom.content));
-        });
-    }
-}
+//     storeIn(jsZip: JSZip) {
+//         this.fragments.forEach(fragment => {
+//             fragment.forEach(atom => jsZip.file(atom.path, atom.content));
+//         });
+//     }
+// }
 
 export class IsolationScope {
     constructor(public readonly awsAccount: string, public readonly name: string,

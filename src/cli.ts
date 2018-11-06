@@ -6,6 +6,7 @@ sourceMapSupport.install();
 import {runMixFile} from './MixFileRunner';
 
 import * as yargs from 'yargs';
+import * as path from 'path';
 
 const argv = yargs
     .version('1.0.0')
@@ -27,7 +28,10 @@ const argv = yargs
     .option('mix-file', {
         descirbe: 'path to a servicemix.config.ts file',
     })
-    // .demandOption(['dir', 'file', 's3-bucket', 's3-object'], 'Required option(s) missing')
+    .option('runtime-dir', {
+        descirbe: 'path to a directory with an Instrument.js file',
+    })
+    .demandOption(['runtime-dir','mix-file'])
     .help()
     .argv;
 
@@ -36,7 +40,7 @@ async function main() {
         throw new Error('mix-file is missing');
     }
 
-    return await runMixFile(argv.mixFile);
+    return await runMixFile(argv.mixFile, path.resolve(argv.runtimeDir));
 }
 
 main()

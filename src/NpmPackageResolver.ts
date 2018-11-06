@@ -15,7 +15,10 @@ export class NpmPackageResolver {
     private readonly npmLsByRoot: any = {};
     private readonly depsByPackageName: any = {};
 
-    constructor(private readonly roots: string[]) {
+    constructor(private readonly roots: string[], private readonly injectedServiceMixDir?: string) {
+        if (injectedServiceMixDir && !path.isAbsolute(injectedServiceMixDir)) {
+            throw new Error(`injectedServiceMixDir (${injectedServiceMixDir}) is not an absolute path`);
+        }
         const relatives = roots.filter(r => !path.isAbsolute(r));        
         if (relatives.length) {
             throw new Error(`Roots must be absolute but found some which are not:\n${relatives.join('\n')}`);
@@ -57,8 +60,12 @@ export class NpmPackageResolver {
         }
 
 
-        const traverse = (packageName) => {
-            const obj = this.depsByPackageName[packageName];
+        const traverse = (packageName: string) => {
+            let obj = this.depsByPackageName[packageName];
+            if (!obj && (packageName === '@servicemix') && this.injectedServiceMixDir) {
+                this.usages.push({packageName, version: "0.0.0", dir: this.injectedServiceMixDir});
+                return;
+            }
             if (!obj) {
                 throw new Error(`Arrived at an uninstalled package: ${packageName}.`);
             }

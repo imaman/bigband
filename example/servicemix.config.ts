@@ -1,4 +1,4 @@
-import {IsolationScope,newLambda,Rig} from '../src/Instrument';
+import {IsolationScope,newLambda,Rig} from '@servicemix/runtime/Instrument.js';
 
 
 const namespace = new IsolationScope('274788167589', 'servicemix-example-app', 'servicemix-example', 'root');

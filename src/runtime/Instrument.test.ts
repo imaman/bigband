@@ -8,24 +8,10 @@ const {expect} = chai;
 import 'mocha';
 
 
-import {IsolationScope, Rig, Definition, Deployable, newLambda, DeployableFragment} from './Instrument'
+import {IsolationScope, Rig, Definition, newLambda, DeployableFragment} from './Instrument'
 
 
 describe('Instruments', () => {
-
-    describe('Definition', () => {
-        it('should generate yml', () => {
-            let d = new Definition({ a: ['a1', 'a2', 'a3'], b: 2, c: "THIS IS C" });
-            expect(d.toYml().trim()).to.equal([
-                'a:',
-                '    - a1',
-                '    - a2',
-                '    - a3',
-                'b: 2',
-                "c: 'THIS IS C'"].join('\n'));
-        });
-    });
-
     describe('Lambda', () => {
         it('produces yml', () => {
             const instrument = newLambda('p1-p2-p3', 'abc', '');
@@ -70,19 +56,6 @@ describe('Instruments', () => {
                     }]
                 }]
             }});
-        });
-        it('contributes to deployable', async () => {
-            const f = newLambda('p1-p2-p3', 'c1', "x/y/MyController.js");
-
-            const frag = f.createFragment();
-            const d = new Deployable();
-            d.add(frag);
-
-            const jsZip = new JSZip();
-            d.storeIn(jsZip);
-
-            const content = await jsZip.file('p1-p2-p3-c1_Handler.js').async('string');
-            expect(content).to.include("const c = require('x/y/MyController.js');");
         });
     });
 })
