@@ -1,6 +1,8 @@
 import * as YAML from 'yamljs';
 import * as JSZip from 'jszip';
-
+const settings: any = {
+    DEPLOYABLES_FOLDER: 'deployables'
+};
 
 export abstract class Instrument {
 
@@ -38,7 +40,7 @@ export abstract class Instrument {
     getPhysicalDefinition(rig: Rig) : Definition {
         const temp = {};
         const copy = JSON.parse(JSON.stringify(this.definition.get()));
-        copy.Properties.CodeUri = `s3://${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${this.physicalName(rig)}.zip`;
+        copy.Properties.CodeUri = `s3://${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${settings.DEPLOYABLES_FOLDER}/${this.physicalName(rig)}.zip`;
         copy.Properties[this.nameProperty()] = this.physicalName(rig);
         temp[this.fullyQualifiedName()] = copy;
         return new Definition(temp);
@@ -58,11 +60,12 @@ class LambdaInstrument extends Instrument {
         }
     }
 
-    constructor(packageName: string, name: string, private readonly controllerPath?: string) {
+    constructor(packageName: string, name: string, private readonly controllerPath?: string, cloudFormationProperties: any = {}) {
         super(packageName, name);
 
         this.definition.overwrite(LambdaInstrument.BASE_DEF);
         this.definition.mutate(o => o.Properties.Handler = `${this.getHandlerFile()}.handle`);
+        this.definition.mutate(o => Object.assign(o.Properties, cloudFormationProperties));
     }
     
     arnType(): string {
@@ -101,8 +104,8 @@ class LambdaInstrument extends Instrument {
 }
 
 
-export function newLambda(packageName: string, name: string, controllerPath?: string) {
-    return new LambdaInstrument(packageName, name, controllerPath);
+export function newLambda(packageName: string, name: string, controllerPath?: string, cloudFormationProperties?: any) {
+    return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
 }
 
 export class Rig {
