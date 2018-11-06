@@ -9,10 +9,16 @@ const importantDates = newLambda('chronology', 'importantDates', 'src/chronology
     Timeout: 30      
 });
 
+const placeFinder = newLambda('geography', 'placeFinder', 'src/geography/compute', {
+    Description: 'returns names of places that best match the given query',
+    MemorySize: 1024,
+    Timeout: 30      
+});
+
 export function run() {
     return {
         rigs: [rig],
-        instruments: [importantDates]
+        instruments: [importantDates, placeFinder]
     }
 }
 
