@@ -163,7 +163,8 @@ export class Definition {
     }
 
     overwrite(o: any) {
-        Object.assign(this.obj, o);
+        const copy = JSON.parse(JSON.stringify(o));
+        Object.assign(this.obj, copy);
     }
 
     get() {

@@ -2,17 +2,21 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as AWS from 'aws-sdk';
 
-import {NameStyle, IsolationScope,newLambda,Rig, Instrument} from './runtime/Instrument';
+import {NameStyle, Rig, Instrument} from './runtime/Instrument';
 import {Packager,ZipBuilder} from './Packager'
 import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 
-export async function runMixFile(mixFile: string, runtimeDir: string) {
+export async function runMixFile(mixFile: string, runtimeDir: string, rigName: string) {
     if (!path.isAbsolute(runtimeDir)) {
         throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
     }
-    const config = compileConfigFile(mixFile, runtimeDir);
-    runSpec(config);
+    const mixSpec = compileConfigFile(mixFile, runtimeDir);
+    const rig = mixSpec.rigs.find(curr => curr.name === rigName);
+    if (!rig) {
+        throw new Error(`Failed to find a rig named ${rigName} in ${mixSpec.rigs.map(curr => curr.name).join(', ')}`);
+    }
+    return runSpec(mixSpec, rig);
 }
 
 interface MixSpec {
@@ -21,22 +25,37 @@ interface MixSpec {
     dir: string
 }
 
-function crossProduct<T, U>(ts: T[], us: U[]): Array<[T, U]> {
-    const ret = new Array<[T, U]>();
-    ts.forEach(t => {
-        us.forEach(u => {
-            ret.push([t, u]);
-        })
-    })
+export async function runSpec(mixSpec: MixSpec, rig: Rig) {
+    const ps = mixSpec.instruments.map(instrument => pushCode(mixSpec.dir, rig, instrument));
+    const pushedFunctions = await Promise.all(ps);
+    const stack = {
+        AWSTemplateFormatVersion: '2010-09-09',
+        Transform: 'AWS::Serverless-2016-10-31',
+        Description: "Backend services for Testim's tagging application",
+        Resources: {}
+    };
 
-    return ret;
-}
-
-export async function runSpec(mixSpec: MixSpec) {
-    const ps = crossProduct(mixSpec.rigs, mixSpec.instruments).map(([rig, instrument]: [Rig, Instrument]) => {
-        ship(mixSpec.dir, rig, instrument);
+    pushedFunctions.forEach(curr => {
+        stack.Resources[curr.logicalResourceName] = curr.functionResource;
     });
-    return await Promise.all(ps);
+
+    console.log('stack=\n' + JSON.stringify(stack, null, 2));
+    const cfp = new CloudFormationPusher(rig.region);
+
+    await cfp.deploy(stack, rig.physicalName());
+
+
+    const lambda = new AWS.Lambda({region: rig.region});
+
+    await Promise.all(pushedFunctions.map(curr => {
+        const updateFunctionCodeReq: UpdateFunctionCodeRequest = {
+            FunctionName: curr.physicalName,
+            S3Bucket: curr.s3Ref.s3Bucket,
+            S3Key: curr.s3Ref.s3Key
+        };    
+        return lambda.updateFunctionCode(updateFunctionCodeReq).promise();
+    }));
+    return `deployed ${rig.physicalName()}`;
 }
 
 function compileConfigFile(mixFile: string, runtimeDir: string) {
@@ -54,46 +73,7 @@ function compileConfigFile(mixFile: string, runtimeDir: string) {
     return ret;
 }
 
-
-function injectHandler(zipBuilder: ZipBuilder, pathToHandlerFile, pathToControllerFile) {
-    function validate(name, value) {
-        if (value.startsWith('.')) {
-            throw new Error(`Leading dot not allowed. Argument name: ${name}, value: "${pathToControllerFile}"`);
-        }
-    
-        if (path.isAbsolute(value)) {
-            throw new Error(`Absolute path not allowed. Argument name: ${name}, value: "${pathToControllerFile}"`);
-        }    
-    }
-
-    validate('pathToHandlerFile', pathToHandlerFile);
-    validate('pathToControllerFile', pathToControllerFile);
-
-    const content = `
-        const {runLambda} = require('./${pathToControllerFile}');
-
-        function handle(event, context, callback) {
-            try {
-                Promise.resolve()
-                .then(() => runLambda(context, event))
-                .then(response => callback(null, response))
-                .catch(e => {
-                    console.error('Exception caught from promise flow (event=\\n:' + JSON.stringify(event) + ")\\n\\n", e);
-                    callback(e);
-                });
-            } catch (e) {
-                console.error('Exception caught:', e);
-                callback(e);
-            }
-        }
-
-        module.exports = {handle};
-    `;
-
-    zipBuilder.add(pathToHandlerFile, content);
-}
-
-async function ship(d: string, rig: Rig, instrument: Instrument) {
+async function pushCode(d: string, rig: Rig, instrument: Instrument) {
     const logicalResourceName = instrument.fullyQualifiedName(NameStyle.CAMEL_CASE);
     console.log('logicalResourceName=', logicalResourceName);
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
@@ -105,38 +85,18 @@ async function ship(d: string, rig: Rig, instrument: Instrument) {
     const zb: ZipBuilder = packager.run(instrument.getEntryPointFile(), pathPrefix);
     zb.importFragment(instrument.createFragment(pathPrefix));
     
-    // injectHandler(zb, 'handler.js', 'build/' + functionConfig.controller);
     const physicalName = instrument.physicalName(rig);
     const s3Ref = await packager.pushToS3(`deployables/${physicalName}.zip`, zb);
-
-    const cfp = new CloudFormationPusher(rig.region);
 
     const functionResource = instrument.getPhysicalDefinition(rig).get();
     functionResource.Properties.CodeUri = s3Ref.toUri();
 
-    const stack = {
-        AWSTemplateFormatVersion: '2010-09-09',
-        Transform: 'AWS::Serverless-2016-10-31',
-        Description: "Backend services for Testim's tagging application",
-        Resources: {}
-    };
-
-
-    stack.Resources[logicalResourceName] = functionResource;
-
-    console.log(`functionResource=${JSON.stringify(functionResource, null, 2)}`);
-    await cfp.deploy(stack, rig.physicalName());
-
-
-    const lambda = new AWS.Lambda({region: rig.region});
-    const updateFunctionCodeReq: UpdateFunctionCodeRequest = {
-        FunctionName: physicalName,
-        S3Bucket: s3Ref.s3Bucket,
-        S3Key: s3Ref.s3Key
-    };
-    await lambda.updateFunctionCode(updateFunctionCodeReq).promise();
-    console.log('Function code updated:\n' + JSON.stringify(updateFunctionCodeReq, null, 2));
-    return `deployed ${rig.physicalName()}`;
+    return {
+        s3Ref,
+        functionResource,
+        logicalResourceName,
+        physicalName
+    }
 }
 
 function composeCamelCaseName(...args: string[]) {
