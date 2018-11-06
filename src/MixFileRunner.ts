@@ -2,19 +2,36 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as AWS from 'aws-sdk';
 
+import {NameStyle, IsolationScope,newLambda,Rig, Instrument} from '../src/Instrument';
 import {Packager,ZipBuilder} from './Packager'
 import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 
 export async function runMixFile(mixFile) {
     const config = compileConfigFile(mixFile);
-    runConfig(config);
+    runSpec(config);
 }
 
-export async function runConfig(config) {
-    const ps = Object.keys(config.package.functions).map(name => {
-        const functionConfig = config.package.functions[name];
-        return ship(path.resolve(config.dir), name, config, functionConfig);
+interface MixSpec {
+    rigs: Rig[]
+    instruments: Instrument[]
+    dir: string
+}
+
+function crossProduct<T, U>(ts: T[], us: U[]): Array<[T, U]> {
+    const ret = new Array<[T, U]>();
+    ts.forEach(t => {
+        us.forEach(u => {
+            ret.push([t, u]);
+        })
+    })
+
+    return ret;
+}
+
+export async function runSpec(mixSpec: MixSpec) {
+    const ps = crossProduct(mixSpec.rigs, mixSpec.instruments).map(([rig, instrument]: [Rig, Instrument]) => {
+        ship(mixSpec.dir, rig, instrument);
     });
     return await Promise.all(ps);
 }
@@ -24,7 +41,7 @@ function compileConfigFile(mixFile: string) {
     const packager = new Packager(d, d, '', '');
     const file = 'servicemix.config'
     const outDir = packager.compile(`${file}.ts`, 'meta');
-    const ret = require(path.resolve(outDir, `${file}.js`)).config;
+    const ret: MixSpec = require(path.resolve(outDir, `${file}.js`)).config;
     if (!ret.dir) {
         ret.dir = d;
     }
@@ -70,33 +87,24 @@ function injectHandler(zipBuilder: ZipBuilder, pathToHandlerFile, pathToControll
     zipBuilder.add(pathToHandlerFile, content);
 }
 
-async function ship(d: string, simpleName: string, config: any, functionConfig: any) {
-    const fullName = composeName(config.namespace.name, config.package.name, simpleName);
-    const logicalResourceName = composeCamelCaseName(config.package.name, simpleName);
+async function ship(d: string, rig: Rig, instrument: Instrument) {
+    const fullName = composeName(rig.isolationScope.name, instrument.fullyQualifiedName());
+    const logicalResourceName = instrument.fullyQualifiedName(NameStyle.CAMEL_CASE);
     console.log('logicalResourceName=', logicalResourceName);
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
         throw new Error(`Bad value. ${d} is not a directory.`);
     }
 
-    const packager = new Packager(d, d, config.namespace.s3Bucket, config.namespace.s3Prefix);
-    const zb: ZipBuilder = packager.run(`${functionConfig.controller}.ts`, 'build');
-    injectHandler(zb, 'handler.js', 'build/' + functionConfig.controller);
+    const packager = new Packager(d, d, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix);
+    const zb: ZipBuilder = packager.run(instrument.getEntryPointFile(), 'build');
+    zb.importFragment(instrument.createFragment());
+
+    // injectHandler(zb, 'handler.js', 'build/' + functionConfig.controller);
     const s3Ref = await packager.pushToS3(`deployables/${fullName}.zip`, zb);
 
-    const cfp = new CloudFormationPusher(config.package.region);
+    const cfp = new CloudFormationPusher(rig.region);
 
-    const functionResource: any = {
-        Type: 'AWS::Serverless::Function',
-        Properties: {
-            FunctionName: fullName,
-            Runtime: "nodejs8.10",
-            Handler: "handler.handle",
-            CodeUri: s3Ref.toUri(),
-            Policies: []
-        }
-    }
-
-    Object.assign(functionResource.Properties, functionConfig.properties);
+    const functionResource = instrument.getDefinition().get();
 
     const stack = {
         AWSTemplateFormatVersion: '2010-09-09',
@@ -109,12 +117,10 @@ async function ship(d: string, simpleName: string, config: any, functionConfig: 
     stack.Resources[logicalResourceName] = functionResource;
 
     console.log(`functionResource=${JSON.stringify(functionResource, null, 2)}`);
-
-    const stackName = composeName(config.namespace.name, config.package.name);
-    await cfp.deploy(stack, stackName);
+    await cfp.deploy(stack, rig.physicalName());
 
 
-    const lambda = new AWS.Lambda({region: config.package.region});
+    const lambda = new AWS.Lambda({region: rig.region});
     const updateFunctionCodeReq: UpdateFunctionCodeRequest = {
         FunctionName: fullName,
         S3Bucket: s3Ref.s3Bucket,
@@ -122,7 +128,7 @@ async function ship(d: string, simpleName: string, config: any, functionConfig: 
     };
     await lambda.updateFunctionCode(updateFunctionCodeReq).promise();
     console.log('Function code updated');
-    return `deployed ${stackName}`;
+    return `deployed ${rig.physicalName()}`;
 }
 
 function composeCamelCaseName(...args: string[]) {

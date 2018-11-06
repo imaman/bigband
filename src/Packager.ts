@@ -40,7 +40,7 @@ export class Packager {
     const outDir = this.newOutDir(relativeOutDir);
     const command = `tsc --outDir "${outDir}" --preserveConstEnums --strictNullChecks --sourceMap --target es2015 --module commonjs --allowJs --checkJs false --lib es2015 --rootDir "${this.rootDir}" "${this.toAbs(relatvieTsFile)}"`
     console.log('Executing: ', command);
-    child_process.execSync(command);
+    child_process.execSync(command, {encoding: 'utf-8'});
     return outDir;
   }
   
@@ -143,6 +143,12 @@ export class ZipBuilder {
       const atom = new DeployableAtom(pathInJar, content);
       this.fragment.add(atom);
     }
+  }
+
+  importFragment(from: DeployableFragment) {
+    from.forEach(curr => {
+      this.fragment.add(curr);
+    })
   }
 
   add(path, content) {

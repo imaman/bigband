@@ -4,6 +4,12 @@ const settings: any = {
     DEPLOYABLES_FOLDER: 'deployables'
 };
 
+
+export enum NameStyle {
+    DASH,
+    CAMEL_CASE
+}
+
 export abstract class Instrument {
 
     protected readonly definition = new Definition();
@@ -12,21 +18,30 @@ export abstract class Instrument {
         private readonly packageName: string,
         private readonly _name: string) {}
 
-    abstract createFragment();
-    abstract contributeToConsumerDefinition(rig: Rig, consumerDef: Definition);
-    abstract arnType(): string;
+    abstract createFragment()
+    abstract contributeToConsumerDefinition(rig: Rig, consumerDef: Definition)
+    abstract arnType(): string
     abstract nameProperty(): string
+    abstract getEntryPointFile(): string
 
     name(): string {
         return this._name;
     }
 
-    fullyQualifiedName() {
-        return `${this.packageName}-${this.name()}`;
+    fullyQualifiedName(style: NameStyle = NameStyle.DASH) {
+        if (style == NameStyle.DASH) {
+            return `${this.packageName}-${this.name()}`;
+        }
+
+        return camelCase(this.packageName, this.name());
     }
 
-    physicalName(rig: Rig) {
-        return `${rig.isolationScope.name}-${rig.name}-${this.fullyQualifiedName()}`;
+    physicalName(rig: Rig, style: NameStyle = NameStyle.DASH) {
+        if (style == NameStyle.DASH) {
+            return `${rig.isolationScope.name}-${rig.name}-${this.fullyQualifiedName()}`;
+        }
+
+        return camelCase(rig.isolationScope.name, rig.name, this.packageName, this.name());
     }
     
     arn(rig: Rig): string {
@@ -60,7 +75,7 @@ class LambdaInstrument extends Instrument {
         }
     }
 
-    constructor(packageName: string, name: string, private readonly controllerPath?: string, cloudFormationProperties: any = {}) {
+    constructor(packageName: string, name: string, private readonly controllerPath: string, cloudFormationProperties: any = {}) {
         super(packageName, name);
 
         this.definition.overwrite(LambdaInstrument.BASE_DEF);
@@ -74,6 +89,10 @@ class LambdaInstrument extends Instrument {
 
     nameProperty(): string {
         return 'FunctionName';
+    }
+
+    getEntryPointFile(): string {
+        return this.controllerPath;
     }
 
     private getHandlerFile() {
@@ -104,13 +123,17 @@ class LambdaInstrument extends Instrument {
 }
 
 
-export function newLambda(packageName: string, name: string, controllerPath?: string, cloudFormationProperties?: any) {
+export function newLambda(packageName: string, name: string, controllerPath: string, cloudFormationProperties?: any) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
 }
 
 export class Rig {
     constructor(public readonly isolationScope: IsolationScope, 
         public readonly region: string, public readonly name: string) {}    
+
+    physicalName() {
+        return `${this.isolationScope.name}-${this.name}`;
+    }        
 }
 
 export class Definition {
@@ -183,4 +206,15 @@ export class Deployable {
 export class IsolationScope {
     constructor(public readonly awsAccount: string, public readonly name: string,
         public readonly s3Bucket: string, public readonly s3Prefix: string) {}
+}
+
+function camelCase(...args) {
+    function capitalize(s: string) {
+        if (!s) {
+            throw new Error('Cannot capitalize an empty string');
+        }
+        return s[0].toUpperCase() + s.substr(1);
+    }
+
+    return args.map((curr, i) => i === 0 ? curr : capitalize(curr)).join('');
 }
