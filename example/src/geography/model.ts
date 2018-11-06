@@ -202,6 +202,6 @@ const countries = [
 export function lookup(query: string): string[] {
     return countries.map(curr => ({answer: curr, score: levenshtein.get(query, curr)}))
         .sort((lhs, rhs) => lhs.score - rhs.score)
-        .slice(0, 4)
+        .slice(0, 10)
         .map(curr => curr.answer);
 }
