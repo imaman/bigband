@@ -15,6 +15,15 @@ export class NpmPackageResolver {
     private readonly npmLsByRoot: any = {};
     private readonly depsByPackageName: any = {};
 
+    /**
+     * during development we want to run this code on samples without actually having servicemix installed
+     * at the node_modules/ directory. To achieve that we provide the injectedServiceMixDir shim: it specifies
+     * it specifies a directory from which servicemix files can be obtained, thus bypassing the standard discovery
+     * mechanism which is based on 'npm ls --json'.
+     * 
+     * @param roots 
+     * @param injectedServiceMixDir 
+     */
     constructor(private readonly roots: string[], private readonly injectedServiceMixDir?: string) {
         if (injectedServiceMixDir && !path.isAbsolute(injectedServiceMixDir)) {
             throw new Error(`injectedServiceMixDir (${injectedServiceMixDir}) is not an absolute path`);
