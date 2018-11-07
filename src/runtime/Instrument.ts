@@ -16,8 +16,8 @@ export abstract class Instrument {
         private readonly packageName: string,
         private readonly _name: string) {}
 
-    abstract createFragment(pathPrefix: string)
-    abstract contributeToConsumerDefinition(rig: Rig, consumerDef: Definition)
+    abstract createFragment(pathPrefix: string): DeployableFragment
+    abstract contributeToConsumerDefinition(rig: Rig, consumerDef: Definition): void
     abstract arnType(): string
     abstract nameProperty(): string
     abstract getEntryPointFile(): string
@@ -140,6 +140,78 @@ class LambdaInstrument extends Instrument {
 
 export function newLambda(packageName: string, name: string, controllerPath: string, cloudFormationProperties?: any) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
+}
+
+export enum DynamoDbAttributeType {
+    STRING = 'S',
+    NUMBER = 'N',
+    BINARY = 'B'
+}
+
+interface DynamoDbAttribute {
+    name: string
+    type: DynamoDbAttributeType
+}
+
+
+export class DynamoDbInstrument extends Instrument {
+
+    private static readonly BASE_DEF = {
+        Type: "AWS::DynamoDB::Table",
+        Properties: {}
+    }
+
+    constructor(packageName: string, name: string, partitionKey: DynamoDbAttribute, sortKey: DynamoDbAttribute, readCapacityUnits: number, writeCapacityUnits: number, cloudFormationProperties?: any) {
+        super(packageName, name);
+
+        function toAttributeDefinition(a: DynamoDbAttribute) {
+            if (!a.type) {
+                throw new Error(`Missing type in attribute ${a.name}`);
+            }
+            return {
+                AttributeName: a.name,
+                AttributeType: a.type
+            }
+        }
+
+        const atts: any[] = [];
+        atts.push(toAttributeDefinition(partitionKey));
+        sortKey && atts.push(toAttributeDefinition(sortKey));
+
+        const keySchema: any[] = [];
+        keySchema.push({AttributeName: partitionKey.name, KeyType: 'HASH'});
+        sortKey && keySchema.push({AttributeName: sortKey.name, KeyType: 'RANGE'});
+
+        this.definition.overwrite(DynamoDbInstrument.BASE_DEF);
+        this.definition.mutate(o => Object.assign(o.Properties, {
+            AttributeDefinitions: atts,
+            KeySchema: keySchema,
+            ProvisionedThroughput: {
+                ReadCapacityUnits: readCapacityUnits,
+                WriteCapacityUnits: writeCapacityUnits
+            }
+        }));
+        this.definition.mutate(o => Object.assign(o.Properties, cloudFormationProperties));
+    }
+
+    createFragment(pathPrefix: string): DeployableFragment {
+        return new DeployableFragment();
+    }
+
+    contributeToConsumerDefinition(rig: Rig, consumerDef: Definition): void {
+        throw new Error('Not implemented yet');
+    }
+    arnType(): string {
+        return 'dynamodb';
+    }
+
+    nameProperty(): string {
+        return 'TableName'
+    }
+
+    getEntryPointFile(): string {
+        return "";
+    }
 }
 
 export class Rig {

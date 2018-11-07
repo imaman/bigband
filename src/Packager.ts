@@ -39,7 +39,9 @@ export class Packager {
 
   compile(relatvieTsFile: string, relativeOutDir: string) {
     const outDir = this.newOutDir(relativeOutDir);
-    const command = `tsc --outDir "${outDir}" --preserveConstEnums --strictNullChecks --sourceMap --target es2015 --module commonjs --allowJs --checkJs false --lib es2015 --rootDir "${this.rootDir}" "${this.toAbs(relatvieTsFile)}"`
+
+    const fileToCompile = this.toAbs(relatvieTsFile);
+    const command = `tsc --outDir "${outDir}" --preserveConstEnums --strictNullChecks --sourceMap --target es2015 --module commonjs --allowJs --checkJs false --lib es2015 --rootDir "${this.rootDir}" "${fileToCompile}"`
     console.log('Executing: ', command);
     child_process.execSync(command, {encoding: 'utf-8'});
     return outDir;
@@ -66,6 +68,7 @@ export class Packager {
   }
 
   run(relativeTsFile: string, relativeOutDir: string, runtimeDir?: string) {
+    console.log('relativeTsFile=', relativeTsFile);
     const compiledFilesDir = this.compile(relativeTsFile, relativeOutDir);
     return this.createZip(relativeTsFile, compiledFilesDir, runtimeDir);
   }
@@ -119,8 +122,14 @@ export class Packager {
   }
 }
 
-class S3Ref {
+export class S3Ref {
   constructor(public readonly s3Bucket, public readonly s3Key) {}
+
+  static EMPTY = new S3Ref("", "");
+
+  isOk() {
+    return Boolean(this.s3Bucket) && Boolean(this.s3Key);
+  }
 
   toUri() {
     return `s3://${this.s3Bucket}/${this.s3Key}`

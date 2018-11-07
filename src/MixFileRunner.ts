@@ -3,11 +3,12 @@ import * as fs from 'fs';
 import * as AWS from 'aws-sdk';
 
 import {NameStyle, Rig, Instrument} from './runtime/Instrument';
-import {Packager,ZipBuilder} from './Packager'
+import {Packager,ZipBuilder,S3Ref} from './Packager'
 import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 
 export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: string) {
+    console.log(`runMixFile(${mixFile}, ${rigName}, ${runtimeDir})`);
     if (runtimeDir && !path.isAbsolute(runtimeDir)) {
         throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
     }
@@ -26,8 +27,9 @@ interface MixSpec {
 }
 
 export async function runSpec(mixSpec: MixSpec, rig: Rig) {
-    const ps = mixSpec.instruments.map(instrument => pushCode(mixSpec.dir, rig, instrument));
-    const pushedFunctions = await Promise.all(ps);
+    const ps = mixSpec.instruments
+        .map(instrument => pushCode(mixSpec.dir, rig, instrument));
+    const pushedInstruments = await Promise.all(ps);
     const stack = {
         AWSTemplateFormatVersion: '2010-09-09',
         Transform: 'AWS::Serverless-2016-10-31',
@@ -35,8 +37,8 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
         Resources: {}
     };
 
-    pushedFunctions.forEach(curr => {
-        stack.Resources[curr.logicalResourceName] = curr.functionResource;
+    pushedInstruments.forEach(curr => {
+        stack.Resources[curr.logicalResourceName] = curr.resource;
     });
 
     console.log('stack=\n' + JSON.stringify(stack, null, 2));
@@ -47,7 +49,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
 
     const lambda = new AWS.Lambda({region: rig.region});
 
-    await Promise.all(pushedFunctions.map(curr => {
+    await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk()).map(curr => {
         const updateFunctionCodeReq: UpdateFunctionCodeRequest = {
             FunctionName: curr.physicalName,
             S3Bucket: curr.s3Ref.s3Bucket,
@@ -80,20 +82,26 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
         throw new Error(`Bad value. ${d} is not a directory.`);
     }
     
+    const physicalName = instrument.physicalName(rig);
+    const resource = instrument.getPhysicalDefinition(rig).get();
+    if (!instrument.getEntryPointFile()) {
+        return {
+            s3Ref: S3Ref.EMPTY,
+            resource,
+            logicalResourceName,
+            physicalName
+        }
+    }
     const packager = new Packager(d, d, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix);
     const pathPrefix = 'build';
     const zb: ZipBuilder = packager.run(instrument.getEntryPointFile(), pathPrefix);
     zb.importFragment(instrument.createFragment(pathPrefix));
     
-    const physicalName = instrument.physicalName(rig);
     const s3Ref = await packager.pushToS3(`deployables/${physicalName}.zip`, zb);
-
-    const functionResource = instrument.getPhysicalDefinition(rig).get();
-    functionResource.Properties.CodeUri = s3Ref.toUri();
-
+    resource.Properties.CodeUri = s3Ref.toUri();
     return {
         s3Ref,
-        functionResource,
+        resource,
         logicalResourceName,
         physicalName
     }
