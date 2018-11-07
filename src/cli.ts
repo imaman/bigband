@@ -28,7 +28,7 @@ async function main() {
         throw new Error('mix-file is missing');
     }
 
-    return await runMixFile(argv.mixFile, path.resolve(argv.runtimeDir), argv.rig);
+    return await runMixFile(argv.mixFile, argv.rig, argv.runtimeDir && path.resolve(argv.runtimeDir));
 }
 
 Promise.resolve()

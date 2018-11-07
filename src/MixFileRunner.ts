@@ -7,8 +7,8 @@ import {Packager,ZipBuilder} from './Packager'
 import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 
-export async function runMixFile(mixFile: string, runtimeDir: string, rigName: string) {
-    if (!path.isAbsolute(runtimeDir)) {
+export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: string) {
+    if (runtimeDir && !path.isAbsolute(runtimeDir)) {
         throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
     }
     const mixSpec = compileConfigFile(mixFile, runtimeDir);
@@ -58,7 +58,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     return `deployed ${rig.physicalName()}`;
 }
 
-function compileConfigFile(mixFile: string, runtimeDir: string) {
+function compileConfigFile(mixFile: string, runtimeDir?: string) {
     const d = path.dirname(path.resolve(mixFile));
     const packager = new Packager(d, d, '', '');
     const file = path.parse(mixFile).name;
