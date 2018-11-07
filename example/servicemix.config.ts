@@ -22,7 +22,7 @@ const distanceTable = new DynamoDbInstrument('geography', 'Distance', {name: 'di
 export function run() {
     return {
         rigs: [prodMajor, prodMinor],
-        instruments: [importantDates, placeFinder, statsTable, distanceTable]
+        instruments: [importantDates, placeFinder, distanceTable]
     }
 }
 
