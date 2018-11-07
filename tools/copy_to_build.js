@@ -52,7 +52,8 @@ async function main() {
 }
 
 
-main()
+Promise.resolve()
+    .then(() => main())
     .then(o => console.log('Success', o))
     .catch(e => console.error('Failure', e));
 

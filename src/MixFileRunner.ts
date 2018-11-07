@@ -61,7 +61,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
 function compileConfigFile(mixFile: string, runtimeDir: string) {
     const d = path.dirname(path.resolve(mixFile));
     const packager = new Packager(d, d, '', '');
-    const file = 'servicemix.config'
+    const file = path.parse(mixFile).name;
     const zb = packager.run(`${file}.ts`, 'spec_compiled', runtimeDir);
     const specDeployedDir = packager.unzip(zb, 'spec_deployed')
     console.log('requiring from', process.cwd());
