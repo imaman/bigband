@@ -1,6 +1,6 @@
 {
   "name": "bigband",
-  "version": "0.1.25",
+  "version": "0.1.32",
   "description": "Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.",
   "main": "",
   "scripts": {
@@ -16,7 +16,7 @@
     "url": "https://github.com/imaman/servicemix.git"
   },
   "bin": {
-    "servicemix": "./src/cli.js"
+    "bigband": "./src/cli.js"
   },
   "author": "Itay Maman",
   "license": "MIT",
