@@ -19,10 +19,13 @@ const placeFinder = newLambda('geography', 'placeFinder', 'src/geography/compute
 const statsTable = new DynamoDbInstrument('geography', 'Stats', {name: 'query', type: DynamoDbAttributeType.STRING}, {name: 'when', type: DynamoDbAttributeType.NUMBER}, 1, 1);
 const distanceTable = new DynamoDbInstrument('geography', 'Distance', {name: 'dist', type: DynamoDbAttributeType.NUMBER}, null, 2, 2);
 
+
+placeFinder.uses(distanceTable, "distanceTable");
+
 export function run() {
     return {
         rigs: [prodMajor, prodMinor],
-        instruments: [importantDates, placeFinder, distanceTable]
+        instruments: [placeFinder, importantDates, distanceTable]
     }
 }
 

@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as AWS from 'aws-sdk';
 
-import {NameStyle, Rig, Instrument} from './runtime/Instrument';
+import {NameStyle, Rig, Instrument, DeployableAtom} from './runtime/Instrument';
 import {Packager,ZipBuilder,S3Ref} from './Packager'
 import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
@@ -83,42 +83,43 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
     }
     
     const physicalName = instrument.physicalName(rig);
-    const resource = instrument.getPhysicalDefinition(rig).get();
+    const def = instrument.getPhysicalDefinition(rig);
     if (!instrument.getEntryPointFile()) {
         return {
             s3Ref: S3Ref.EMPTY,
-            resource,
+            resource: def.get(),
             logicalResourceName,
             physicalName
         }
     }
+
     const packager = new Packager(d, d, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix);
     const pathPrefix = 'build';
     const zb: ZipBuilder = packager.run(instrument.getEntryPointFile(), pathPrefix);
-    zb.importFragment(instrument.createFragment(pathPrefix));
+    const frag = instrument.createFragment(pathPrefix);
+
+    const mapping = {};
+    instrument.dependencies.forEach(d => {
+        mapping[d.name] = {name: d.supplier.physicalName(rig), region: rig.region};
+        d.supplier.contributeToConsumerDefinition(rig, def);
+    });
+    frag.add(new DeployableAtom('bigband/deps.js', 
+        `module.exports = ${JSON.stringify(mapping)}`));
+
+    zb.importFragment(frag);
     
     const s3Ref = await packager.pushToS3(`deployables/${physicalName}.zip`, zb);
+    const resource = def.get();
     resource.Properties.CodeUri = s3Ref.toUri();
+
+    console.log('resource=\n', JSON.stringify(resource, null, 2));
+    console.log('s3Ref=', s3Ref.toUri());
+    console.log('mapping=', JSON.stringify(mapping, null, 2));
     return {
         s3Ref,
         resource,
         logicalResourceName,
         physicalName
     }
-}
-
-function composeCamelCaseName(...args: string[]) {
-    if (args.some(x => !x.length)) {
-        throw new Error('One of the name components was empty');
-    }
-
-    return args.map((curr, i) => i === 0 ? curr : curr[0].toUpperCase() + curr.substr(1)).join('');
-}
-
-function composeName(...args: string[]) {
-    if (args.some(x => !x.length)) {
-        throw new Error('One of the name components was empty');
-    }
-    return args.join('-');
 }
 

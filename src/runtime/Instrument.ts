@@ -8,16 +8,30 @@ export enum NameStyle {
     CAMEL_CASE
 }
 
+
+class Dependency {
+    constructor(readonly consumer: Instrument, readonly supplier: Instrument, readonly name: string) {}
+}
 export abstract class Instrument {
 
     protected readonly definition = new Definition();
+    public readonly dependencies: Dependency[] = [];
 
     constructor(
         private readonly packageName: string,
         private readonly _name: string) {}
 
+    uses(supplier: Instrument, name: string) {
+        const existingDep = this.dependencies.find(d => d.name === name);
+        if (existingDep) {
+            throw new Error(`Name conflict. There is always a dependency named ${name} on ${existingDep.supplier.fullyQualifiedName()}`);
+        }
+        this.dependencies.push(new Dependency(this, supplier, name));
+    }
+
     abstract createFragment(pathPrefix: string): DeployableFragment
     abstract contributeToConsumerDefinition(rig: Rig, consumerDef: Definition): void
+    abstract arnService(): string
     abstract arnType(): string
     abstract nameProperty(): string
     abstract getEntryPointFile(): string
@@ -43,7 +57,7 @@ export abstract class Instrument {
     }
     
     arn(rig: Rig): string {
-        return `arn:aws:lambda:${rig.region}:${rig.isolationScope.awsAccount}:${this.arnType()}:${this.physicalName(rig)}`;
+        return `arn:aws:${this.arnService()}:${rig.region}:${rig.isolationScope.awsAccount}:${this.arnType()}${this.physicalName(rig)}`;
     }
 
     getDefinition() : Definition {
@@ -79,8 +93,12 @@ class LambdaInstrument extends Instrument {
         this.definition.mutate(o => Object.assign(o.Properties, cloudFormationProperties));
     }
     
+    arnService(): string {
+        return 'lambda'
+    }
+
     arnType(): string {
-        return 'function';
+        return 'function:';
     }
 
     nameProperty(): string {
@@ -99,11 +117,12 @@ class LambdaInstrument extends Instrument {
         const fragment = new DeployableFragment();
         const content = `
             const {runLambda} = require('./${pathPrefix}/${this.getEntryPointFile()}');
+            const mapping = require('./bigband/deps.js');
 
             function handle(event, context, callback) {
                 try {
                     Promise.resolve()
-                    .then(() => runLambda(context, event))
+                    .then(() => runLambda(context, event, mapping))
                     .then(response => callback(null, response))
                     .catch(e => {
                         console.error('Exception caught from promise flow (event=\\n:' + JSON.stringify(event) + ")\\n\\n", e);
@@ -199,10 +218,24 @@ export class DynamoDbInstrument extends Instrument {
     }
 
     contributeToConsumerDefinition(rig: Rig, consumerDef: Definition): void {
-        throw new Error('Not implemented yet');
+        consumerDef.mutate(o => o.Properties.Policies.push({
+            Version: '2012-10-17',
+            Statement: [{ 
+                Effect: "Allow",
+                Action: [
+                  'dynamodb:*'
+                ],
+                Resource: this.arn(rig)
+            }]
+        }));
     }
-    arnType(): string {
+
+    arnService(): string {
         return 'dynamodb';
+    }
+
+    arnType(): string {
+        return 'table/'
     }
 
     nameProperty(): string {

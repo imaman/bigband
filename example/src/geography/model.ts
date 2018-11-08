@@ -199,9 +199,13 @@ const countries = [
     "Zimbabwe"
 ];
 
-export function lookup(query: string): string[] {
+export interface Answer {
+    answer: string,
+    score: number
+}
+
+export function lookup(query: string): Answer[] {
     return countries.map(curr => ({answer: curr, score: levenshtein.get(query, curr)}))
         .sort((lhs, rhs) => lhs.score - rhs.score)
-        .slice(0, 10)
-        .map(curr => curr.answer);
+        .slice(0, 10);
 }
