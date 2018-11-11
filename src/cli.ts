@@ -32,7 +32,10 @@ yargs
         yargs.option('function-name', {
             descirbe: 'Physical name of a function',
         })
-        .demandOption(['function-name'])
+        yargs.option('region', {
+            descirbe: 'AWS region',
+        })
+        .demandOption(['function-name', 'region'])
     }, argv => {
         run(LogsCommand.run, argv)
     })

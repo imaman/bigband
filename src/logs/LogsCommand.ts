@@ -1,10 +1,10 @@
 import * as AWS from 'aws-sdk'
 import { DescribeLogStreamsRequest, GetLogEventsRequest, GetLogEventsResponse } from 'aws-sdk/clients/cloudwatchlogs';
 
-var cloudWatchLogs = new AWS.CloudWatchLogs({region: 'eu-central-1'});
 
 
-async function main(lambdaName: string) {
+async function main(lambdaName: string, region: string) {
+    var cloudWatchLogs = new AWS.CloudWatchLogs({region});
     const logGroupName = `/aws/lambda/${lambdaName}`;
 
     const describeLogStreamsReq: DescribeLogStreamsRequest = {
@@ -77,7 +77,7 @@ function shouldKeep(message?: string) {
 
 export class LogsCommand {
     static async run(argv) {
-        const temp = await main(argv.functionName);
+        const temp = await main(argv.functionName, argv.region);
         return JSON.stringify(temp, null, 2);
     }
 }

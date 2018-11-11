@@ -7,8 +7,6 @@ import * as os from 'os';
 import * as mkdirp from 'mkdirp'
 
 import * as AWS from 'aws-sdk';
-AWS.config.setPromisesDependency(Promise);
-AWS.config.update({ region: 'eu-central-1' });
 
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
@@ -20,7 +18,7 @@ export class Packager {
   private readonly npmPackageDir;
 
   constructor(private readonly rootDir: string, npmPackageDir: string, private readonly s3Bucket: string,
-      private readonly s3Prefix: string) {
+      private readonly s3Prefix: string, private readonly region: string) {
     if (s3Prefix.endsWith('/')) {
       throw new Error(`s3Prefix ${s3Prefix} cannot have a trailing slash`)
     }
@@ -85,7 +83,7 @@ export class Packager {
     const buf = await zipBuilder.toBuffer();
 
     const s3Key = `${this.s3Prefix}/${s3Object}`;
-    const s3 = new AWS.S3();
+    const s3 = new AWS.S3({region: this.region})
     await s3.putObject({
       Bucket: this.s3Bucket,
       Key: s3Key,
