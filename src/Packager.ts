@@ -6,8 +6,7 @@ import * as uuidv1 from 'uuid/v1';
 import * as os from 'os';
 import * as mkdirp from 'mkdirp'
 
-import * as AWS from 'aws-sdk';
-
+import {AwsFactory} from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
 import { DeployableFragment, DeployableAtom } from './runtime/Instrument';
@@ -83,7 +82,7 @@ export class Packager {
     const buf = await zipBuilder.toBuffer();
 
     const s3Key = `${this.s3Prefix}/${s3Object}`;
-    const s3 = new AWS.S3({region: this.region})
+    const s3 = AwsFactory.fromRegion(this.region).newS3();
     await s3.putObject({
       Bucket: this.s3Bucket,
       Key: s3Key,

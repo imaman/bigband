@@ -1,10 +1,10 @@
-import * as AWS from 'aws-sdk'
+import {AwsFactory} from '../AwsFactory'
 import { DescribeLogStreamsRequest, GetLogEventsRequest, GetLogEventsResponse } from 'aws-sdk/clients/cloudwatchlogs';
 
 
 
 async function main(lambdaName: string, region: string) {
-    var cloudWatchLogs = new AWS.CloudWatchLogs({region});
+    var cloudWatchLogs = AwsFactory.fromRegion(region).newCloudWatchLogs();
     const logGroupName = `/aws/lambda/${lambdaName}`;
 
     const describeLogStreamsReq: DescribeLogStreamsRequest = {

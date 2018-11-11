@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import * as AWS from 'aws-sdk';
 
+import {AwsFactory} from './AwsFactory';
 import {NameStyle, Rig, Instrument, DeployableAtom} from './runtime/Instrument';
 import {Packager,ZipBuilder,S3Ref} from './Packager'
 import {CloudFormationPusher} from './CloudFormationPusher';
@@ -47,7 +47,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     await cfp.deploy(stack, rig.physicalName());
 
 
-    const lambda = new AWS.Lambda({region: rig.region});
+    const lambda = AwsFactory.fromRegion(rig.region).newLambda();
 
     await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk()).map(curr => {
         const updateFunctionCodeReq: UpdateFunctionCodeRequest = {
