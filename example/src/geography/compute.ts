@@ -1,5 +1,5 @@
 import {lookup,Answer} from './model';
-import * as AWS from 'aws-sdk';
+import AWS = require('aws-sdk');
 
 
 export async function runLambda(context, event, mapping) {

@@ -3,8 +3,8 @@ import { DescribeLogStreamsRequest, GetLogEventsRequest, GetLogEventsResponse } 
 
 
 
-async function main(lambdaName: string, region: string) {
-    var cloudWatchLogs = AwsFactory.fromRegion(region).newCloudWatchLogs();
+async function main(lambdaName: string, region: string, profile: string) {
+    var cloudWatchLogs = new AwsFactory(region, profile).newCloudWatchLogs();
     const logGroupName = `/aws/lambda/${lambdaName}`;
 
     const describeLogStreamsReq: DescribeLogStreamsRequest = {
@@ -77,7 +77,7 @@ function shouldKeep(message?: string) {
 
 export class LogsCommand {
     static async run(argv) {
-        const temp = await main(argv.functionName, argv.region);
+        const temp = await main(argv.functionName, argv.region, 'testim');
         return JSON.stringify(temp, null, 2);
     }
 }

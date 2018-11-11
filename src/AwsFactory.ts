@@ -3,12 +3,16 @@ import * as AWS from 'aws-sdk';
 
 export class AwsFactory {
     private readonly options: any;
-    private constructor(private readonly region: string) {
-        this.options = {region};
+    constructor(private readonly region: string, profileName: string) {
+        const credentials = new AWS.SharedIniFileCredentials({profile: profileName});
+        this.options = {
+            region,
+            credentials
+        };
     }
 
-    static fromRegion(r: string) {
-        return new AwsFactory(r);
+    static fromRig(r: Rig) {
+        return new AwsFactory(r.region, r.isolationScope.profile);
     }
 
     newCloudFormation() {

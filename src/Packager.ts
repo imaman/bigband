@@ -9,7 +9,7 @@ import * as mkdirp from 'mkdirp'
 import {AwsFactory} from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
-import { DeployableFragment, DeployableAtom } from './runtime/Instrument';
+import { DeployableFragment, DeployableAtom, Rig } from './runtime/Instrument';
 
 export class Packager {
   private readonly workingDir: string;
@@ -17,7 +17,7 @@ export class Packager {
   private readonly npmPackageDir;
 
   constructor(private readonly rootDir: string, npmPackageDir: string, private readonly s3Bucket: string,
-      private readonly s3Prefix: string, private readonly region: string) {
+      private readonly s3Prefix: string, private readonly rig?: Rig) {
     if (s3Prefix.endsWith('/')) {
       throw new Error(`s3Prefix ${s3Prefix} cannot have a trailing slash`)
     }
@@ -78,11 +78,14 @@ export class Packager {
   }
 
   async pushToS3(s3Object: string, zipBuilder: ZipBuilder): Promise<S3Ref> {      
+    if (!this.rig) {
+      throw new Error('rig was not set.');
+    }
     zipBuilder.populateZip();
     const buf = await zipBuilder.toBuffer();
 
     const s3Key = `${this.s3Prefix}/${s3Object}`;
-    const s3 = AwsFactory.fromRegion(this.region).newS3();
+    const s3 = AwsFactory.fromRig(this.rig).newS3();
     await s3.putObject({
       Bucket: this.s3Bucket,
       Key: s3Key,

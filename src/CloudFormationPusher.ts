@@ -1,6 +1,7 @@
 import {AwsFactory} from './AwsFactory';
 
 import { CreateChangeSetInput, UpdateStackInput, ExecuteChangeSetInput, CreateChangeSetOutput, ChangeSetType, DescribeChangeSetInput, DescribeChangeSetOutput, DescribeStacksInput, DescribeStacksOutput } from 'aws-sdk/clients/cloudformation';
+import {Rig} from './runtime/Instrument';
 import * as uuid from 'uuid/v1';
 
 const CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS = 5 * 60;
@@ -9,8 +10,8 @@ export class CloudFormationPusher {
 
     private readonly cloudFormation: AWS.CloudFormation;
 
-    constructor(region) {
-        this.cloudFormation = AwsFactory.fromRegion(region).newCloudFormation();
+    constructor(rig: Rig) {
+        this.cloudFormation = AwsFactory.fromRig(rig).newCloudFormation();
     }
 
     async deploy(stackSpec, stackName: string) {

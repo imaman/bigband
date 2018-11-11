@@ -42,12 +42,12 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     });
 
     console.log('stack=\n' + JSON.stringify(stack, null, 2));
-    const cfp = new CloudFormationPusher(rig.region);
+    const cfp = new CloudFormationPusher(rig);
 
     await cfp.deploy(stack, rig.physicalName());
 
 
-    const lambda = AwsFactory.fromRegion(rig.region).newLambda();
+    const lambda = AwsFactory.fromRig(rig).newLambda();
 
     await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk()).map(curr => {
         const updateFunctionCodeReq: UpdateFunctionCodeRequest = {
@@ -62,7 +62,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
 
 function compileConfigFile(mixFile: string, runtimeDir?: string) {
     const d = path.dirname(path.resolve(mixFile));
-    const packager = new Packager(d, d, '', '', '');
+    const packager = new Packager(d, d, '', '');
     const file = path.parse(mixFile).name;
     const zb = packager.run(`${file}.ts`, 'spec_compiled', runtimeDir);
     const specDeployedDir = packager.unzip(zb, 'spec_deployed')
@@ -93,7 +93,7 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
         }
     }
 
-    const packager = new Packager(d, d, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig.region);
+    const packager = new Packager(d, d, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig);
     const pathPrefix = 'build';
     const zb: ZipBuilder = packager.run(instrument.getEntryPointFile(), pathPrefix);
     const frag = instrument.createFragment(pathPrefix);
