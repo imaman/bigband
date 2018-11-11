@@ -4,37 +4,54 @@ import * as sourceMapSupport from 'source-map-support';
 sourceMapSupport.install();
 
 import {runMixFile} from './MixFileRunner';
+import {LogsCommand} from './logs/LogsCommand'
 
 import * as yargs from 'yargs';
 import * as path from 'path';
 
-const argv = yargs
+yargs
+    .usage('<cmd> [args]')
     .version('1.0.0')
-    .option('mix-file', {
-        descirbe: 'path to a servicemix.config.ts file',
+    .strict()
+    .command('ship', 'deploy!', yargs => {
+        yargs.option('mix-file', {
+            descirbe: 'path to a servicemix.config.ts file',
+            default: 'bigband.spec.ts'
+        })
+        yargs.option('rig', {
+            descirbe: 'Name of the rig to deploy',
+        })
+        yargs.option('runtime-dir', {
+            descirbe: 'path to a directory with an Instrument.js file',
+        })
+        .demandOption(['rig','mix-file'])
+    }, argv => {
+        run(ship, argv)
     })
-    .option('rig', {
-        descirbe: 'Name of the rig to deploy',
+    .command('logs', 'Watch logs of a function', yargs => {
+        yargs.option('function-name', {
+            descirbe: 'Physical name of a function',
+        })
+        .demandOption(['function-name'])
+    }, argv => {
+        run(LogsCommand.run, argv)
     })
-    .option('runtime-dir', {
-        descirbe: 'path to a directory with an Instrument.js file',
-    })
-    .demandOption(['rig','mix-file'])
+    .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')
     .help()
     .argv;
 
-async function main() {
-    if (!argv.mixFile) {
-        throw new Error('mix-file is missing');
-    }
-
+async function ship(argv) {
     return await runMixFile(argv.mixFile, argv.rig, argv.runtimeDir && path.resolve(argv.runtimeDir));
 }
 
-Promise.resolve()
-    .then(() => main())
-    .then(o => console.log('L.144', o))
-    .catch(e => {
-        console.log('Error', e);
-        process.exit(-1);
-    });
+
+function run(handler, argv) {
+    console.log('run');
+    Promise.resolve()
+        .then(() => handler(argv))
+        .then(o => console.log(o))
+        .catch(e => {
+            console.log('Error', e);
+            process.exit(-1);
+        });
+}
