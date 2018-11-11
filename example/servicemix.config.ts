@@ -1,4 +1,4 @@
-import {DynamoDbAttributeType,IsolationScope,newLambda,DynamoDbInstrument,Rig} from '@servicemix/runtime/Instrument.js';
+import {DynamoDbAttributeType,IsolationScope,newLambda,DynamoDbInstrument,KinesisStreamInstrument,KinesisStreamConsumer,Rig} from '@servicemix/runtime/Instrument.js';
 
 
 const namespace = new IsolationScope('274788167589', 'servicemix-example-app', 'servicemix-example', 'root');
@@ -16,16 +16,22 @@ const placeFinder = newLambda('geography', 'placeFinder', 'src/geography/compute
     Timeout: 30      
 });
 
+
 const statsTable = new DynamoDbInstrument('geography', 'Stats', {name: 'query', type: DynamoDbAttributeType.STRING}, {name: 'when', type: DynamoDbAttributeType.NUMBER}, 1, 1);
 const distanceTable = new DynamoDbInstrument('geography', 'Distance', {name: 'dist', type: DynamoDbAttributeType.NUMBER}, null, 2, 2);
 
+const queryStream = new KinesisStreamInstrument('geography', 'QueryStream', 2);
+
+const queryStreamAnalyzer = new KinesisStreamConsumer('geography', 'analyzer', 'src/geography/analyzer', queryStream);
+
 
 placeFinder.uses(distanceTable, "distanceTable");
+placeFinder.uses(queryStream, 'queryStream');
 
 export function run() {
     return {
         rigs: [prodMajor, prodMinor],
-        instruments: [placeFinder, importantDates, distanceTable]
+        instruments: [placeFinder, queryStream, importantDates, distanceTable, queryStreamAnalyzer]
     }
 }
 
