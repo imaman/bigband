@@ -5,7 +5,7 @@ const namespace = new IsolationScope('274788167589', 'bb-example', 'bb-example-e
 const prodMajor = new Rig(namespace, 'eu-west-2', 'prod-major');
 const importantDates = newLambda('chronology', 'importantDates', 'src/chronology/compute', {
     Description: "returns important dates for a year",
-    MemorySize: 1024,
+    MemorySize: 1088,
     Timeout: 30      
 });
 

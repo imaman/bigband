@@ -6,6 +6,7 @@ import * as uuidv1 from 'uuid/v1';
 import * as os from 'os';
 import * as mkdirp from 'mkdirp'
 
+import {logger} from './logger';
 import {AwsFactory} from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
@@ -39,7 +40,8 @@ export class Packager {
 
     const fileToCompile = this.toAbs(relatvieTsFile);
     const command = `tsc --outDir "${outDir}" --preserveConstEnums --strictNullChecks --sourceMap --target es2015 --module commonjs --allowJs --checkJs false --lib es2015 --rootDir "${this.rootDir}" "${fileToCompile}"`
-    console.log('Executing: ', command);
+    logger.info(`Compiling ${fileToCompile}`);
+    logger.silly('Executing: ', command);
     child_process.execSync(command, {encoding: 'utf-8'});
     return outDir;
   }
@@ -64,6 +66,7 @@ export class Packager {
   }
 
   run(relativeTsFile: string, relativeOutDir: string, runtimeDir?: string) {
+    logger.silly(`Packagr.run(${relativeOutDir}, ${relativeOutDir}, ${runtimeDir})`);
     const compiledFilesDir = this.compile(relativeTsFile, relativeOutDir);
     return this.createZip(relativeTsFile, compiledFilesDir, runtimeDir);
   }
@@ -83,13 +86,20 @@ export class Packager {
     const buf = await zipBuilder.toBuffer();
 
     const s3Key = `${this.s3Prefix}/${s3Object}`;
-    const s3 = AwsFactory.fromRig(this.rig).newS3();
-    await s3.putObject({
-      Bucket: this.s3Bucket,
-      Key: s3Key,
-      Body: buf,
-      ContentType: "application/zip"
-    }).promise();
+    const factory = AwsFactory.fromRig(this.rig)
+    const s3 = factory.newS3();
+
+    try {
+      await s3.putObject({
+        Bucket: this.s3Bucket,
+        Key: s3Key,
+        Body: buf,
+        ContentType: "application/zip"
+      }).promise();
+    } catch (e) {
+      console.log(`S3 putObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${this.s3Bucket}, Key:${s3Key}`);
+      throw e;
+    }
   
     return new S3Ref(this.s3Bucket, s3Key);
   }

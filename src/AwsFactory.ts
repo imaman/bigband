@@ -3,7 +3,7 @@ import * as AWS from 'aws-sdk';
 
 export class AwsFactory {
     private readonly options: any;
-    constructor(private readonly region: string, profileName: string) {
+    constructor(readonly region: string, readonly profileName: string) {
         const credentials = new AWS.SharedIniFileCredentials({profile: profileName});
         this.options = {
             region,

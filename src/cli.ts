@@ -53,7 +53,6 @@ async function ship(argv) {
 
 
 function run(handler, argv) {
-    console.log('run');
     Promise.resolve()
         .then(() => handler(argv))
         .then(o => console.log(o))

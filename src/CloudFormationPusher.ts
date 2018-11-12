@@ -3,6 +3,7 @@ import {AwsFactory} from './AwsFactory';
 import { CreateChangeSetInput, UpdateStackInput, ExecuteChangeSetInput, CreateChangeSetOutput, ChangeSetType, DescribeChangeSetInput, DescribeChangeSetOutput, DescribeStacksInput, DescribeStacksOutput } from 'aws-sdk/clients/cloudformation';
 import {Rig} from './runtime/Instrument';
 import * as uuid from 'uuid/v1';
+import {logger} from './logger';
 
 const CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS = 5 * 60;
 
@@ -23,7 +24,9 @@ export class CloudFormationPusher {
             Capabilities: ['CAPABILITY_IAM'],
             TemplateBody: JSON.stringify(stackSpec)
         };
-        console.log('Creating change set');
+
+        logger.silly('StackSpec: ' + JSON.stringify(stackSpec, null, 2));
+        logger.silly('Creating change set');
         try {
             await this.cloudFormation.createChangeSet(createChangeSetReq).promise();
         } catch (e) {
@@ -31,7 +34,7 @@ export class CloudFormationPusher {
                 throw e;
             }
 
-            console.log('Trying to create (instead of update)');
+            logger.silly('Trying to create (instead of update)');
             createChangeSetReq.ChangeSetType = 'CREATE';
             await this.cloudFormation.createChangeSet(createChangeSetReq).promise();
         }
@@ -43,11 +46,11 @@ export class CloudFormationPusher {
         let description: DescribeChangeSetOutput;
         let iteration = 0;
         let t0 = Date.now();
-        console.log(`Waiting for ChangeSet (${changeSetName}) to be ready`);
+        logger.info(`Waiting for ChangeSet (${changeSetName}) to be ready`);
         while (true) {
-            console.log('Polling iteration #', iteration);
+            logger.info('Polling cycle #' + iteration);
             description = await this.cloudFormation.describeChangeSet(describeReq).promise();
-            console.log('ChangeSet created. description=\n' + JSON.stringify(description, null, 2));
+            logger.silly('ChangeSet created. description=\n' + JSON.stringify(description, null, 2));
             if (description.Status != "CREATE_IN_PROGRESS") {
                 break;
             }
@@ -61,16 +64,17 @@ export class CloudFormationPusher {
         }
 
         if (description.Status == 'FAILED' && description.StatusReason == 'No updates are to be performed.')  {
-            console.log('Change set is empty');
+            logger.info('Change set is empty');
             return;
         }
         const executeChangeSetReq: ExecuteChangeSetInput = {
             StackName: stackName,
             ChangeSetName: changeSetName,
         };
+
+        logger.info('Enacting Change set');
         await this.cloudFormation.executeChangeSet(executeChangeSetReq).promise();
         await this.waitForStack(description.StackId);
-
     }
 
     private async waitForStack(stackId?: string) {
@@ -82,9 +86,9 @@ export class CloudFormationPusher {
         const t0 = Date.now();
         let stackDescription: DescribeStacksOutput;
         let status: string;
-        console.log(`Waiting for stack (${stackId}) to be updated`);
+        logger.silly(`Waiting for stack (${stackId}) to be updated`);
         while (true) {
-            console.log('Polling iteration #', iteration);
+            logger.info('Polling cycle #' + iteration);
             const describeReq: DescribeStacksInput = {
                 StackName: stackId,
             };
@@ -109,7 +113,8 @@ export class CloudFormationPusher {
             await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
         }
 
-        console.log(`Stack status: ${status}; stack ID: ${stackId}`);
+        logger.info(`Stack status: ${status}`);
+        logger.silly(`stack ID: ${stackId}`);
         if (status !== 'CREATE_COMPLETE' && status !== 'UPDATE_COMPLETE') {
             throw new Error(`Stack alarm for stack ID ${stackId}. Current status: ${status}`);
         }
