@@ -51,19 +51,35 @@ async function main(lambdaName: string, region: string, profile: string, limit: 
 
 function format(event) {
     const message = event.message;
-    const ret = message.split('\n').map(x => formatTabs(x)).filter(Boolean);
-    if (ret.length) {
-        const s = ret[0];
-        const tokens = s.split(' ');
-        if (tokens.length >= 0) {
-            const first = tokens[0];
-            const d = Date.parse(first);
-            const secs = (Date.now() - d) / 1000;
-            const s = secs > 59 ? `${Math.round(secs / 60)} minutes` : `${Math.round(secs)} seconds`;
-            ret[0] = `<${s} ago> ` + ret[0];
-        }
+    let lines: string[] = message.split('\n').map(x => formatTabs(x)).filter(Boolean);
+    if (!lines.length) {
+        return;
     }
-    return ret;
+
+    const firstLine = lines[0];
+    const timeIndication = computeTimeIndication(firstLine);
+    if (firstLine.endsWith('_BIGBAND_ERROR_SINK_')) {
+        const data = JSON.parse(lines.slice(1).join('\n'));
+        lines = [firstLine, JSON.stringify(data, null, 2)];
+    }
+    
+    if (timeIndication) {
+        lines.unshift(`<${timeIndication} ago> `);
+    }
+
+    return lines;
+}
+
+function computeTimeIndication(s: string): string {
+    const tokens = s.split(' ');
+    if (tokens.length <= 0) {
+        return '';
+    }
+
+    const first = tokens[0];
+    const d = Date.parse(first);
+    const secs = (Date.now() - d) / 1000;
+    return secs > 59 ? `${Math.round(secs / 60)} minutes` : `${Math.round(secs)} seconds`;
 }
 
 function formatTabs(s: string) {
