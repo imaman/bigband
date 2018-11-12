@@ -8,7 +8,6 @@ import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 
 export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: string) {
-    console.log(`runMixFile(${mixFile}, ${rigName}, ${runtimeDir})`);
     if (runtimeDir && !path.isAbsolute(runtimeDir)) {
         throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
     }
@@ -41,9 +40,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
         stack.Resources[curr.logicalResourceName] = curr.resource;
     });
 
-    console.log('stack=\n' + JSON.stringify(stack, null, 2));
     const cfp = new CloudFormationPusher(rig);
-
     await cfp.deploy(stack, rig.physicalName());
 
 
@@ -66,9 +63,7 @@ function compileConfigFile(mixFile: string, runtimeDir?: string) {
     const file = path.parse(mixFile).name;
     const zb = packager.run(`${file}.ts`, 'spec_compiled', runtimeDir);
     const specDeployedDir = packager.unzip(zb, 'spec_deployed')
-    console.log('requiring from', process.cwd());
     const ret: MixSpec = require(path.resolve(specDeployedDir, 'build', `${file}.js`)).run();
-    console.log('... requiring completed');
     if (!ret.dir) {
         ret.dir = d;
     }
@@ -77,7 +72,6 @@ function compileConfigFile(mixFile: string, runtimeDir?: string) {
 
 async function pushCode(d: string, rig: Rig, instrument: Instrument) {
     const logicalResourceName = instrument.fullyQualifiedName(NameStyle.CAMEL_CASE);
-    console.log('logicalResourceName=', logicalResourceName);
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
         throw new Error(`Bad value. ${d} is not a directory.`);
     }
@@ -112,9 +106,6 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
     const resource = def.get();
     resource.Properties.CodeUri = s3Ref.toUri();
 
-    console.log('resource=\n', JSON.stringify(resource, null, 2));
-    console.log('s3Ref=', s3Ref.toUri());
-    console.log('mapping=', JSON.stringify(mapping, null, 2));
     return {
         s3Ref,
         resource,

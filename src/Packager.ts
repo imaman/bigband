@@ -52,7 +52,6 @@ export class Packager {
       .filter(d => shouldBeIncluded(d))
       .forEach(d => npmPackageResolver.recordUsage(d));
     const map = npmPackageResolver.complete();
-    console.log("packages=\n" + JSON.stringify(map, null, 2));
   
     const zipBuilder = new ZipBuilder();
     Object.keys(map).forEach(k => {
@@ -65,7 +64,6 @@ export class Packager {
   }
 
   run(relativeTsFile: string, relativeOutDir: string, runtimeDir?: string) {
-    console.log('relativeTsFile=', relativeTsFile);
     const compiledFilesDir = this.compile(relativeTsFile, relativeOutDir);
     return this.createZip(relativeTsFile, compiledFilesDir, runtimeDir);
   }

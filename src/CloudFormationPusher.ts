@@ -43,6 +43,7 @@ export class CloudFormationPusher {
         let description: DescribeChangeSetOutput;
         let iteration = 0;
         let t0 = Date.now();
+        console.log(`Waiting for ChangeSet (${changeSetName}) to be ready`);
         while (true) {
             console.log('Polling iteration #', iteration);
             description = await this.cloudFormation.describeChangeSet(describeReq).promise();
@@ -67,8 +68,7 @@ export class CloudFormationPusher {
             StackName: stackName,
             ChangeSetName: changeSetName,
         };
-        const executeResp = await this.cloudFormation.executeChangeSet(executeChangeSetReq).promise();
-        console.log('executeResp=', JSON.stringify(executeResp, null, 2));
+        await this.cloudFormation.executeChangeSet(executeChangeSetReq).promise();
         await this.waitForStack(description.StackId);
 
     }
@@ -82,6 +82,7 @@ export class CloudFormationPusher {
         const t0 = Date.now();
         let stackDescription: DescribeStacksOutput;
         let status: string;
+        console.log(`Waiting for stack (${stackId}) to be updated`);
         while (true) {
             console.log('Polling iteration #', iteration);
             const describeReq: DescribeStacksInput = {

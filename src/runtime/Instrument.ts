@@ -137,7 +137,6 @@ class LambdaInstrument extends Instrument {
             module.exports = {handle};
         `;
 
-        console.log('content=\n' + content);
         fragment.add(new DeployableAtom(this.getHandlerFile() + '.js', content));
         return fragment;
     }
