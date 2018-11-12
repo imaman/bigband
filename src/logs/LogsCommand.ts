@@ -58,9 +58,9 @@ function format(event) {
         if (tokens.length >= 0) {
             const first = tokens[0];
             const d = Date.parse(first);
-            const dt = Date.now() - d;
-            const dminutes = dt / (1000 * 60);
-            ret[0] = `<${dminutes} ago> ` + ret[0];
+            const secs = (Date.now() - d) / 1000;
+            const s = secs > 59 ? `${Math.round(secs / 60)} minutes` : `${Math.round(secs)} seconds`;
+            ret[0] = `<${s} ago> ` + ret[0];
         }
     }
     return ret;
