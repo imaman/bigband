@@ -1,7 +1,7 @@
 import {DynamoDbAttributeType,IsolationScope,newLambda,DynamoDbInstrument,KinesisStreamInstrument,KinesisStreamConsumer,Rig} from '@servicemix/runtime/Instrument.js';
 
 
-const namespace = new IsolationScope('274788167589', 'servicemix-example-app', 'servicemix-example', 'root');
+const namespace = new IsolationScope('274788167589', 'bb-example', 'bb-example-e-w-2', 'root', 'testim');
 const prodMajor = new Rig(namespace, 'eu-west-2', 'prod-major');
 const importantDates = newLambda('chronology', 'importantDates', 'src/chronology/compute', {
     Description: "returns important dates for a year",

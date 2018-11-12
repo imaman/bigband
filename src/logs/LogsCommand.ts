@@ -1,9 +1,9 @@
 import {AwsFactory} from '../AwsFactory'
-import { DescribeLogStreamsRequest, GetLogEventsRequest, GetLogEventsResponse } from 'aws-sdk/clients/cloudwatchlogs';
+import { DescribeLogStreamsRequest, GetLogEventsRequest, GetLogEventsResponse, DescribeLogStreamsResponse } from 'aws-sdk/clients/cloudwatchlogs';
 
 
 
-async function main(lambdaName: string, region: string, profile: string) {
+async function main(lambdaName: string, region: string, profile: string, limit: number) {
     var cloudWatchLogs = new AwsFactory(region, profile).newCloudWatchLogs();
     const logGroupName = `/aws/lambda/${lambdaName}`;
 
@@ -15,7 +15,7 @@ async function main(lambdaName: string, region: string, profile: string) {
     }
 
     console.log('describeLogStreamsReq=\n' + JSON.stringify(describeLogStreamsReq, null, 2));
-    let describeLogStreamsResp;
+    let describeLogStreamsResp: DescribeLogStreamsResponse;
     try {
         describeLogStreamsResp = await cloudWatchLogs.describeLogStreams(describeLogStreamsReq).promise();
     } catch (e) {
@@ -27,7 +27,8 @@ async function main(lambdaName: string, region: string, profile: string) {
         return;
     }
 
-    const logStreamName = describeLogStreamsResp.logStreams[0].logStreamName;
+    const stream = describeLogStreamsResp.logStreams[0];
+    const logStreamName = stream.logStreamName;
     if (!logStreamName) {
         throw new Error('log stream is empty');
     }
@@ -35,7 +36,7 @@ async function main(lambdaName: string, region: string, profile: string) {
     const getLogEventsReq: GetLogEventsRequest = {
         logGroupName,
         logStreamName,
-        limit: 1000,
+        limit,
         startFromHead: false
     }
 
@@ -77,7 +78,7 @@ function shouldKeep(message?: string) {
 
 export class LogsCommand {
     static async run(argv) {
-        const temp = await main(argv.functionName, argv.region, 'testim');
+        const temp = await main(argv.functionName, argv.region, 'testim', argv.limit);
         return JSON.stringify(temp, null, 2);
     }
 }

@@ -35,6 +35,10 @@ yargs
         yargs.option('region', {
             descirbe: 'AWS region',
         })
+        yargs.option('limit', {
+            descirbe: 'Number of items to show',
+            default: 30
+        })
         .demandOption(['function-name', 'region'])
     }, argv => {
         run(LogsCommand.run, argv)

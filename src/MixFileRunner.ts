@@ -33,7 +33,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     const stack = {
         AWSTemplateFormatVersion: '2010-09-09',
         Transform: 'AWS::Serverless-2016-10-31',
-        Description: "Backend services for Testim's tagging application",
+        Description: "description goes here",
         Resources: {}
     };
 
