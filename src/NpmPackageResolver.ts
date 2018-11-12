@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as semver from 'semver';
 import * as child_process from 'child_process'
+import logger from './logger';
 
 export interface Usage {
     packageName: string
@@ -94,6 +95,7 @@ export class NpmPackageResolver {
 
     complete(): {[s: string]: Usage} {
         const usageByPackageName: {[s: string]: Usage} = {};
+        logger.info('')
         this.usages.forEach(u => {
             const preexisting = usageByPackageName[u.packageName];
             if (!preexisting) {
@@ -101,7 +103,7 @@ export class NpmPackageResolver {
                 return;
             }
 
-            console.log(`Comparing ${u.packageName}: ${u.version} with ${preexisting.version}`);
+            logger.silly(`Comparing ${u.packageName}: ${u.version} with ${preexisting.version}`);
             if (semver.gt(u.version, preexisting.version)) {
                 usageByPackageName[u.packageName] = u;
             }
