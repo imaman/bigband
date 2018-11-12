@@ -49,18 +49,18 @@ async function main(lambdaName: string, region: string, profile: string, limit: 
     return getLogEventsResp.events.filter(event => shouldKeep(event.message)).map(format);
 }
 
-function format(event) {
+function format(event): any[] {
     const message = event.message;
-    let lines: string[] = message.split('\n').map(x => formatTabs(x)).filter(Boolean);
+    let lines: any[] = message.split('\n').map(x => formatTabs(x)).filter(Boolean);
     if (!lines.length) {
-        return;
+        return [];
     }
 
     const firstLine = lines[0];
     const timeIndication = computeTimeIndication(firstLine);
     if (firstLine.endsWith('_BIGBAND_ERROR_SINK_')) {
         const data = JSON.parse(lines.slice(1).join('\n'));
-        lines = [firstLine, JSON.stringify(data, null, 2)];
+        lines = [firstLine, data];
     }
     
     if (timeIndication) {
