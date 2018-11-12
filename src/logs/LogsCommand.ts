@@ -51,8 +51,19 @@ async function main(lambdaName: string, region: string, profile: string, limit: 
 
 function format(event) {
     const message = event.message;
-    const formattedMessage = message.split('\n').map(x => formatTabs(x)).filter(Boolean);
-    return formattedMessage;
+    const ret = message.split('\n').map(x => formatTabs(x)).filter(Boolean);
+    if (ret.length) {
+        const s = ret[0];
+        const tokens = s.split(' ');
+        if (tokens.length >= 0) {
+            const first = tokens[0];
+            const d = Date.parse(first);
+            const dt = Date.now() - d;
+            const dminutes = dt / (1000 * 60);
+            ret[0] = `<${dminutes} ago> ` + ret[0];
+        }
+    }
+    return ret;
 }
 
 function formatTabs(s: string) {
