@@ -7,6 +7,7 @@ import {runMixFile,loadSpec} from './MixFileRunner';
 import {LogsCommand} from './commands/Logs'
 import {ListCommand} from './commands/List'
 import {Invoke} from './commands/Invoke'
+import {logger} from './logger'
 
 import * as yargs from 'yargs';
 import * as path from 'path';
@@ -73,7 +74,7 @@ function run(handler, argv) {
     }
     Promise.resolve()
         .then(() => handler(argv))
-        .then(o => console.log(o))
+        .then(output => logger.info(output))
         .catch(e => {
             console.log('Error', e);
             process.exit(-1);

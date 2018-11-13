@@ -61,7 +61,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
         };    
         return lambda.updateFunctionCode(updateFunctionCodeReq).promise();
     }));
-    return `deployed ${rig.physicalName()}`;
+    return `Rig ${rig.name} shipped.`;
 }
 
 export function loadSpec(mixFile: string, runtimeDir?: string): MixSpec {
