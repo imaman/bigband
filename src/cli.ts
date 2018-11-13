@@ -4,7 +4,7 @@ import * as sourceMapSupport from 'source-map-support';
 sourceMapSupport.install();
 
 import {runMixFile,loadSpec} from './MixFileRunner';
-import {LogsCommand} from './logs/LogsCommand'
+import {LogsCommand} from './commands/LogsCommand'
 
 import * as yargs from 'yargs';
 import * as path from 'path';
