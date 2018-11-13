@@ -3,44 +3,49 @@
 import * as sourceMapSupport from 'source-map-support';
 sourceMapSupport.install();
 
-import {runMixFile} from './MixFileRunner';
+import {runMixFile,loadSpec} from './MixFileRunner';
 import {LogsCommand} from './logs/LogsCommand'
 
 import * as yargs from 'yargs';
 import * as path from 'path';
+
+
+function specFileAndRigOptions(yargs) {
+    yargs.option('mix-file', {
+        descirbe: 'path to a servicemix.config.ts file',
+        default: 'bigband.spec.ts'
+    })
+    yargs.option('rig', {
+        descirbe: 'Name of a rig to deploy',
+    })
+    yargs.option('runtime-dir', {
+        descirbe: 'path to a directory with an Instrument.js file',
+    });
+return yargs;
+}
 
 yargs
     .usage('<cmd> [args]')
     .version('1.0.0')
     .strict()
     .command('ship', 'deploy!', yargs => {
-        yargs.option('mix-file', {
-            descirbe: 'path to a servicemix.config.ts file',
-            default: 'bigband.spec.ts'
-        })
-        yargs.option('rig', {
-            descirbe: 'Name of the rig to deploy',
-        })
-        yargs.option('runtime-dir', {
-            descirbe: 'path to a directory with an Instrument.js file',
-        })
-        .demandOption(['rig','mix-file'])
-    }, argv => {
-        run(ship, argv)
-    })
+        specFileAndRigOptions(yargs);
+        yargs.demandOption(['rig']);
+    }, argv => run(ship, argv))
     .command('logs', 'Watch logs of a function', yargs => {
+        specFileAndRigOptions(yargs);
         yargs.option('function-name', {
-            descirbe: 'Physical name of a function',
-        })
-        yargs.option('region', {
-            descirbe: 'AWS region',
-        })
+            descirbe: 'name of a function',
+        });
         yargs.option('limit', {
             descirbe: 'Number of items to show',
             default: 30
-        })
-        .demandOption(['function-name', 'region'])
+        });
+        yargs.demandOption(['function-name', 'rig'])
     }, argv => {
+        if (argv.runtimeDir) {
+            argv.runtimeDir = path.resolve(argv.runtimeDir)
+        }
         run(LogsCommand.run, argv)
     })
     .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')

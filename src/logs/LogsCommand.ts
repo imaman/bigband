@@ -1,11 +1,24 @@
 import {AwsFactory} from '../AwsFactory'
 import { DescribeLogStreamsRequest, GetLogEventsRequest, GetLogEventsResponse, DescribeLogStreamsResponse } from 'aws-sdk/clients/cloudwatchlogs';
+import {loadSpec} from '../MixFileRunner';
+import {Rig} from '../runtime/Instrument';
 
 
 
-async function main(lambdaName: string, region: string, profile: string, limit: number) {
-    var cloudWatchLogs = new AwsFactory(region, profile).newCloudWatchLogs();
-    const logGroupName = `/aws/lambda/${lambdaName}`;
+async function main(mixFile: string, rigName: string, runtimeDir: string, lambdaName: string, limit: number) {
+    const spec = loadSpec(mixFile, runtimeDir);
+    const rig: undefined|Rig = spec.rigs.find(r => r.name === rigName);
+    if (!rig) {
+        throw new Error(`Rig ${rigName} not found in ${JSON.stringify(spec.rigs.map(r => r.name))}`);
+    }
+
+    const instrument = spec.instruments.find(i => i.name() === lambdaName);
+    if (!instrument) {
+        throw new Error(`Function ${lambdaName} not found in ${JSON.stringify(spec.instruments.map(i => i.name()))}`);
+    }
+
+    var cloudWatchLogs = new AwsFactory(rig.region, rig.isolationScope.profile).newCloudWatchLogs();
+    const logGroupName = `/aws/lambda/${instrument.physicalName(rig)}`;
 
     const describeLogStreamsReq: DescribeLogStreamsRequest = {
         logGroupName,
@@ -105,7 +118,7 @@ function shouldKeep(message?: string) {
 
 export class LogsCommand {
     static async run(argv) {
-        const temp = await main(argv.functionName, argv.region, 'testim', argv.limit);
+        const temp = await main(argv.mixFile, argv.rig, argv.runtimeDir, argv.functionName, argv.limit);
         return JSON.stringify(temp, null, 2);
     }
 }

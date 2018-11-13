@@ -7,9 +7,10 @@ const eventByYear: any = {
     'NONE': 'Please specify a year'
 };
 
-export async function runLambda(context, event) {    
+export async function runLambda(context, event) {
     const t = eventByYear[event.year || 'NONE'] || 'NOTHING';
     const timePassed = event.year ? moment(`${event.year}-01-01`).fromNow(): undefined;
+    console.log(`Time since ${event.year}: ${timePassed}`);
     return {
         statusCode: 200,
         headers: { 
