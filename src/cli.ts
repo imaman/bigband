@@ -6,6 +6,7 @@ sourceMapSupport.install();
 import {runMixFile,loadSpec} from './MixFileRunner';
 import {LogsCommand} from './commands/Logs'
 import {ListCommand} from './commands/List'
+import {Invoke} from './commands/Invoke'
 
 import * as yargs from 'yargs';
 import * as path from 'path';
@@ -43,20 +44,20 @@ yargs
             default: 30
         });
         yargs.demandOption(['function-name', 'rig'])
-    }, argv => {
-        if (argv.runtimeDir) {
-            argv.runtimeDir = path.resolve(argv.runtimeDir)
-        }
-        run(LogsCommand.run, argv)
-    })
+    }, argv => run(LogsCommand.run, argv))
+    .command('invoke', 'Invoke a function', yargs => {
+        specFileAndRigOptions(yargs);
+        yargs.option('function-name', {
+            descirbe: 'name of a function',
+        });
+        yargs.option('input', {
+            descirbe: 'input to pass to the invoked function',
+        });
+        yargs.demandOption(['function-name', 'input'])
+    }, argv => run(Invoke.run, argv))
     .command('list', 'Show the spec', yargs => {
         specFileAndRigOptions(yargs);
-    }, argv => {
-        if (argv.runtimeDir) {
-            argv.runtimeDir = path.resolve(argv.runtimeDir)
-        }
-        run(ListCommand.run, argv)
-    })
+    }, argv => run(ListCommand.run, argv))
     .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')
     .help()
     .argv;
@@ -67,6 +68,9 @@ async function ship(argv) {
 
 
 function run(handler, argv) {
+    if (argv.runtimeDir) {
+        argv.runtimeDir = path.resolve(argv.runtimeDir)
+    }
     Promise.resolve()
         .then(() => handler(argv))
         .then(o => console.log(o))

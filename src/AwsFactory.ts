@@ -23,7 +23,7 @@ export class AwsFactory {
         return new AWS.CloudWatchLogs(this.options);
     }
 
-    newLambda() {
+    newLambda(): AWS.Lambda {
         return new AWS.Lambda(this.options);
     }
 
