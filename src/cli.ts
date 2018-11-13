@@ -4,7 +4,8 @@ import * as sourceMapSupport from 'source-map-support';
 sourceMapSupport.install();
 
 import {runMixFile,loadSpec} from './MixFileRunner';
-import {LogsCommand} from './commands/LogsCommand'
+import {LogsCommand} from './commands/Logs'
+import {ListCommand} from './commands/List'
 
 import * as yargs from 'yargs';
 import * as path from 'path';
@@ -47,6 +48,14 @@ yargs
             argv.runtimeDir = path.resolve(argv.runtimeDir)
         }
         run(LogsCommand.run, argv)
+    })
+    .command('list', 'Show the spec', yargs => {
+        specFileAndRigOptions(yargs);
+    }, argv => {
+        if (argv.runtimeDir) {
+            argv.runtimeDir = path.resolve(argv.runtimeDir)
+        }
+        run(ListCommand.run, argv)
     })
     .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')
     .help()
