@@ -6,6 +6,7 @@ import {NameStyle, Rig, Instrument, DeployableAtom} from './runtime/Instrument';
 import {Packager,ZipBuilder,S3Ref} from './Packager'
 import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
+import { logger } from './logger';
 
 export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: string) {
     if (Number(process.versions.node.split('.')[0]) < 8) {
@@ -29,6 +30,10 @@ export interface MixSpec {
 }
 
 export async function runSpec(mixSpec: MixSpec, rig: Rig) {
+    const cfp = new CloudFormationPusher(rig);
+    cfp.peekAtExistingStack();
+    
+    logger.info(`Shipping rig ${rig.name} to ${rig.region}`);
     const ps = mixSpec.instruments
         .map(instrument => pushCode(mixSpec.dir, rig, instrument));
     const pushedInstruments = await Promise.all(ps);
@@ -43,8 +48,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
         stack.Resources[curr.logicalResourceName] = curr.resource;
     });
 
-    const cfp = new CloudFormationPusher(rig);
-    await cfp.deploy(stack, rig.physicalName());
+    await cfp.deploy(stack)
 
 
     const lambda = AwsFactory.fromRig(rig).newLambda();
@@ -105,6 +109,7 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
 
     zb.importFragment(frag);
     
+    logger.info(`Pushing code: ${instrument.name()}`);
     const s3Ref = await packager.pushToS3(`deployables/${physicalName}.zip`, zb);
     const resource = def.get();
     resource.Properties.CodeUri = s3Ref.toUri();

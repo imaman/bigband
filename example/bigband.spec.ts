@@ -6,7 +6,7 @@ const prodMajor = new Rig(namespace, 'eu-west-2', 'prod-major');
 const importantDates = newLambda('chronology', 'importantDates', 'src/chronology/compute', {
     Description: "returns important dates for a year",
     MemorySize: 1088,
-    Timeout: 30      
+    Timeout: 15   
 });
 
 const placeFinder = newLambda('geography', 'placeFinder', 'src/geography/compute', {

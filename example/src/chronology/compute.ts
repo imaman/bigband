@@ -3,6 +3,7 @@ import * as moment from 'moment';
 const eventByYear: any = {
     1968: 'Apollo 8',
     1967: 'Sgt. Pepper',
+    1969: 'Apollo 11',
     1985: 'Talking Heads: Road to Nowhere',
     'NONE': 'Please specify a year'
 };

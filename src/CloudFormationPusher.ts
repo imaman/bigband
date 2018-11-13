@@ -3,26 +3,79 @@ import {AwsFactory} from './AwsFactory';
 import { CreateChangeSetInput, UpdateStackInput, ExecuteChangeSetInput, CreateChangeSetOutput, ChangeSetType, DescribeChangeSetInput, DescribeChangeSetOutput, DescribeStacksInput, DescribeStacksOutput } from 'aws-sdk/clients/cloudformation';
 import {Rig} from './runtime/Instrument';
 import * as uuid from 'uuid/v1';
+import * as hash from 'hash.js';
 import {logger} from './logger';
 
 const CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS = 5 * 60;
 
+
+function computeFingerprint(spec, name): string {
+    const str = JSON.stringify({spec, name});
+    return hash.sha256().update(str).digest('hex');
+}
+
+
+const FINGERPRINT_KEY = 'bigband_fingerprint'
+
 export class CloudFormationPusher {
 
     private readonly cloudFormation: AWS.CloudFormation;
+    private readonly stackName: string;
+    private readonly existingFingerprint;
+    private resolver;
 
     constructor(rig: Rig) {
         this.cloudFormation = AwsFactory.fromRig(rig).newCloudFormation();
+        this.stackName = rig.physicalName();
+
+        this.existingFingerprint = new Promise<string>(resolver => {
+            this.resolver = resolver;
+        });
     }
 
-    async deploy(stackSpec, stackName: string) {
+    async peekAtExistingStack() {
+        const req: DescribeStacksInput = {
+            StackName: this.stackName
+        };
+
+        const resp: DescribeStacksOutput = await this.cloudFormation.describeStacks(req).promise();
+        if (!resp.Stacks || resp.Stacks.length !== 1) {
+            this.resolver('');
+            return;
+        }
+
+        const stack = resp.Stacks[0];
+        if (!stack.Tags) {
+            this.resolver('');
+            return;
+        }
+
+        const t = stack.Tags.find(t => t.Key === FINGERPRINT_KEY);
+        if (!t || !t.Value) {
+            this.resolver('');
+            return;
+        }
+
+        this.resolver(t.Value);
+    }
+
+    async deploy(stackSpec) {
+        const newFingerprint = computeFingerprint(stackSpec, this.stackName);
+        const existingFingerprint = await this.existingFingerprint;
+        logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
+        if (newFingerprint === existingFingerprint) {
+            logger.info(`No stack changes`);
+            return;
+        }
+
         const changeSetName = `cs-${uuid()}`;
         const createChangeSetReq: CreateChangeSetInput = {
-            StackName: stackName,            
+            StackName: this.stackName,            
             ChangeSetName: changeSetName,
             ChangeSetType: 'UPDATE',
             Capabilities: ['CAPABILITY_IAM'],
-            TemplateBody: JSON.stringify(stackSpec)
+            TemplateBody: JSON.stringify(stackSpec),
+            Tags: [{Key: FINGERPRINT_KEY, Value: newFingerprint}]
         };
 
         logger.silly('StackSpec: ' + JSON.stringify(stackSpec, null, 2));
@@ -40,7 +93,7 @@ export class CloudFormationPusher {
         }
 
         const describeReq: DescribeChangeSetInput = {
-            StackName: stackName,
+            StackName: this.stackName,
             ChangeSetName: changeSetName
         };
         let description: DescribeChangeSetOutput;
@@ -68,7 +121,7 @@ export class CloudFormationPusher {
             return;
         }
         const executeChangeSetReq: ExecuteChangeSetInput = {
-            StackName: stackName,
+            StackName: this.stackName,
             ChangeSetName: changeSetName,
         };
 

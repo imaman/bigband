@@ -37,18 +37,18 @@ export class Packager {
 
   compile(relatvieTsFile: string, relativeOutDir: string) {
     const outDir = this.newOutDir(relativeOutDir);
-
     const fileToCompile = this.toAbs(relatvieTsFile);
+
+    logger.silly(`Compiling ${fileToCompile}`);
     const command = `tsc --outDir "${outDir}" --preserveConstEnums --strictNullChecks --sourceMap --target es2015 --module commonjs --allowJs --checkJs false --lib es2015 --rootDir "${this.rootDir}" "${fileToCompile}"`
-    logger.info(`Compiling ${fileToCompile}`);
-    logger.silly('Executing: ', command);
+    logger.silly(`Executing: ${command}`);
     child_process.execSync(command, {encoding: 'utf-8'});
     return outDir;
   }
   
   createZip(relativeTsFile: string, compiledFilesDir: string, runtimeDir?: string) {
     const absoluteTsFile = this.toAbs(relativeTsFile);
-    logger.info('Packing dependencies of ' + absoluteTsFile);
+    logger.silly('Packing dependencies of ' + absoluteTsFile);
 
     const deps = DepsCollector.scanFrom(absoluteTsFile);
     const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir], runtimeDir);
