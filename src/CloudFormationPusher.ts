@@ -48,7 +48,7 @@ export class CloudFormationPusher {
         let t0 = Date.now();
         logger.info(`Waiting for ChangeSet (${changeSetName}) to be ready`);
         while (true) {
-            logger.info('Polling cycle #' + iteration);
+            showProgress(iteration);
             description = await this.cloudFormation.describeChangeSet(describeReq).promise();
             logger.silly('ChangeSet created. description=\n' + JSON.stringify(description, null, 2));
             if (description.Status != "CREATE_IN_PROGRESS") {
@@ -88,7 +88,7 @@ export class CloudFormationPusher {
         let status: string;
         logger.silly(`Waiting for stack (${stackId}) to be updated`);
         while (true) {
-            logger.info('Polling cycle #' + iteration);
+            showProgress(iteration);
             const describeReq: DescribeStacksInput = {
                 StackName: stackId,
             };
@@ -119,5 +119,9 @@ export class CloudFormationPusher {
             throw new Error(`Stack alarm for stack ID ${stackId}. Current status: ${status}`);
         }
     }
+}
+
+function showProgress(n) {
+    logger.info(new Array(n + 1).fill('.').join(''));
 }
 

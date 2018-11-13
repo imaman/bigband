@@ -8,6 +8,9 @@ import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 
 export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: string) {
+    if (Number(process.versions.node.split('.')[0]) < 8) {
+        throw new Error('You must use node version >= 8 to run this program');
+    }
     if (runtimeDir && !path.isAbsolute(runtimeDir)) {
         throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
     }

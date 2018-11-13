@@ -2,12 +2,22 @@ import * as detective from 'detective-typescript';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const builtins = require('module').builtinModules;
-if (!builtins) {
-    throw new Error('Module.builtinModules is falsy. Is your Node version < 8.11.3 ?');
+
+let builtinModules: Set<String>;
+
+function isBuiltin(d) {
+    if (!builtinModules) {
+        const builtins = require('module').builtinModules;
+        if (!builtins) {
+            throw new Error('Module.builtinModules is falsy. Is your Node version < 8.11.3 ?');
+        }
+
+        builtinModules = new Set<String>(builtins);
+    }
+
+    return builtinModules.has(d);
 }
 
-const builtinModules = new Set<String>(builtins);
 
 function read(fileName) {
     try {
@@ -55,7 +65,7 @@ export class DepsCollector {
 
         deps
             .filter(d => !d.startsWith("."))
-            .filter(d => !builtinModules.has(d))
+            .filter(d => !isBuiltin(d))
             .forEach(curr => this.npmDeps.add(curr));
 
         const dir = path.dirname(temp.fileName);        

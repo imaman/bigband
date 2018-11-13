@@ -49,15 +49,17 @@ export class Packager {
   createZip(relativeTsFile: string, compiledFilesDir: string, runtimeDir?: string) {
     const deps = DepsCollector.scanFrom(this.toAbs(relativeTsFile));
   
-    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir], runtimeDir);
+    const roots = [this.npmPackageDir];
+    logger.info('Computing dependencies of ' + JSON.stringify(roots));
+    const npmPackageResolver = new NpmPackageResolver(roots, runtimeDir);
     deps.npmDeps
       .filter(d => shouldBeIncluded(d))
       .forEach(d => npmPackageResolver.recordUsage(d));
-    const map = npmPackageResolver.complete();
+    const usageByPackageName = npmPackageResolver.compute();
   
     const zipBuilder = new ZipBuilder();
-    Object.keys(map).forEach(k => {
-      const usage: Usage = map[k];
+    Object.keys(usageByPackageName).forEach(k => {
+      const usage: Usage = usageByPackageName[k];
       zipBuilder.scan(`node_modules/${usage.packageName}`, usage.dir);
     });
   
