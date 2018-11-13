@@ -5,7 +5,7 @@ const namespace = new IsolationScope('274788167589', 'bb-example', 'bb-example-e
 const prodMajor = new Rig(namespace, 'eu-west-2', 'prod-major');
 const importantDates = newLambda('chronology', 'importantDates', 'src/chronology/compute', {
     Description: "returns important dates for a year",
-    MemorySize: 1088,
+    MemorySize: 1024,
     Timeout: 15   
 });
 
@@ -30,8 +30,6 @@ placeFinder.uses(queryStream, 'queryStream');
 export function run() {
     return {
         rigs: [prodMajor],
-        instruments: [importantDates] //placeFinder, queryStream, importantDates, distanceTable, queryStreamAnalyzer]
+        instruments: [importantDates, placeFinder, queryStream, distanceTable, queryStreamAnalyzer]
     }
 }
-
-

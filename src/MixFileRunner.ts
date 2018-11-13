@@ -74,7 +74,40 @@ export function loadSpec(mixFile: string, runtimeDir?: string): MixSpec {
     if (!ret.dir) {
         ret.dir = d;
     }
+
+    checkSpec(ret);
     return ret;
+}
+
+
+function checkDuplicates(names: string[]): string[] {
+    const uniqueNames = new Set<string>(names);
+    if (uniqueNames.size === names.length) {
+        return [];
+    }
+
+    const ret: string[] = [];
+    names.forEach(n => {
+        if (uniqueNames.has(n)) {
+            uniqueNames.delete(n);
+        } else {
+            ret.push(n);
+        }
+    });
+
+    return ret;
+}
+
+function checkSpec(spec: MixSpec) {
+    let dupes = checkDuplicates(spec.rigs.map(r => r.name));
+    if (dupes.length) {
+        throw new Error(`Found two (or more) rigs with the same name: ${JSON.stringify(dupes)}`);
+    }
+
+    dupes = checkDuplicates(spec.instruments.map(r => r.name()));
+    if (dupes.length) {
+        throw new Error(`Found two (or more) instruments with the same name: ${JSON.stringify(dupes)}`);
+    }
 }
 
 async function pushCode(d: string, rig: Rig, instrument: Instrument) {

@@ -79,7 +79,7 @@ export class CloudFormationPusher {
         };
 
         logger.silly('StackSpec: ' + JSON.stringify(stackSpec, null, 2));
-        logger.silly('Creating change set');
+        logger.silly('createChangeSetReq=\n' + JSON.stringify(createChangeSetReq, null, 2));
         try {
             await this.cloudFormation.createChangeSet(createChangeSetReq).promise();
         } catch (e) {
@@ -99,11 +99,11 @@ export class CloudFormationPusher {
         let description: DescribeChangeSetOutput;
         let iteration = 0;
         let t0 = Date.now();
-        logger.info(`Waiting for ChangeSet (${changeSetName}) to be ready`);
+        logger.info(`Creating change set`);
         while (true) {
             showProgress(iteration);
             description = await this.cloudFormation.describeChangeSet(describeReq).promise();
-            logger.silly('ChangeSet created. description=\n' + JSON.stringify(description, null, 2));
+            logger.silly('ChangeSet description=\n' + JSON.stringify(description, null, 2));
             if (description.Status != "CREATE_IN_PROGRESS") {
                 break;
             }
