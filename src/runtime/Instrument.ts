@@ -299,8 +299,9 @@ export class KinesisStreamInstrument extends Instrument {
 }
 
 export class KinesisStreamConsumer extends LambdaInstrument {
-    constructor(packageName: string, name: string, controllerPath: string, stream: KinesisStreamInstrument, batchSize: number) {
-        super(packageName, name, controllerPath, {
+    constructor(packageName: string, name: string, controllerPath: string, 
+            stream: KinesisStreamInstrument, batchSize: number, cloudFormationProperties: any = {}) {
+        super(packageName, name, controllerPath, Object.assign({}, {
             Events: {
                 Stream: {
                     Type: "Kinesis",
@@ -311,7 +312,7 @@ export class KinesisStreamConsumer extends LambdaInstrument {
                     }
                 }
             }
-        });
+        }, cloudFormationProperties));
     }
 }
 
