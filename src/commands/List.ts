@@ -1,10 +1,21 @@
 import {AwsFactory} from '../AwsFactory'
-import {loadSpec} from '../MixFileRunner';
+import {loadSpec,MixSpec} from '../MixFileRunner';
 
 
 
 async function main(mixFile: string, runtimeDir: string) {
-    return loadSpec(mixFile, runtimeDir);
+    const spec: MixSpec = loadSpec(mixFile, runtimeDir);
+    const scopes = spec.rigs.map(r => r.isolationScope);
+    const ret = {};
+    scopes.forEach(s => ret[s.name] = {});
+    spec.rigs.forEach(r => {
+        const e = ret[r.isolationScope.name];
+        const d = {};
+        e[r.name] = d;
+        spec.instruments.forEach(curr => d[curr.physicalName(r)] = curr.arnService());
+    });
+
+    return ret;
 }
 
 

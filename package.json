@@ -1,6 +1,6 @@
 {
   "name": "bigband",
-  "version": "0.1.42",
+  "version": "0.1.43",
   "description": "Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.",
   "main": "",
   "scripts": {

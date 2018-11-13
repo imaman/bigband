@@ -22,7 +22,7 @@ export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: 
     return runSpec(mixSpec, rig);
 }
 
-interface MixSpec {
+export interface MixSpec {
     rigs: Rig[]
     instruments: Instrument[]
     dir: string
@@ -60,7 +60,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     return `deployed ${rig.physicalName()}`;
 }
 
-export function loadSpec(mixFile: string, runtimeDir?: string) {
+export function loadSpec(mixFile: string, runtimeDir?: string): MixSpec {
     const d = path.dirname(path.resolve(mixFile));
     const packager = new Packager(d, d, '', '');
     const file = path.parse(mixFile).name;
