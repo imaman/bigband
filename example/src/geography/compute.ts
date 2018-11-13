@@ -1,5 +1,6 @@
-import {lookup,Answer} from './model';
+import {lookup} from './model';
 import AWS = require('aws-sdk');
+import { PutRecordInput } from 'aws-sdk/clients/kinesis';
 
 
 export async function runLambda(context, event, mapping) {
@@ -17,6 +18,15 @@ export async function runLambda(context, event, mapping) {
         }
     };
     await client.put(req).promise();
+
+    const kinesis = new AWS.Kinesis({region: mapping.queryStream.region})
+    const putReq: PutRecordInput = {
+        StreamName: mapping.queryStream.name,
+        Data: JSON.stringify({streamedQuery: q, timestamp: Date.now()}),
+        PartitionKey: 'q1'
+    };
+    const putResp = kinesis.putRecord(putReq).promise();
+    console.log('putResp=' + JSON.stringify(putResp));
 
     return {
         statusCode: 200,
