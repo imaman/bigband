@@ -14,7 +14,7 @@ export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: 
     if (runtimeDir && !path.isAbsolute(runtimeDir)) {
         throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
     }
-    const mixSpec = compileConfigFile(mixFile, runtimeDir);
+    const mixSpec = loadSpec(mixFile, runtimeDir);
     const rig = mixSpec.rigs.find(curr => curr.name === rigName);
     if (!rig) {
         throw new Error(`Failed to find a rig named ${rigName} in ${mixSpec.rigs.map(curr => curr.name).join(', ')}`);
@@ -60,7 +60,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     return `deployed ${rig.physicalName()}`;
 }
 
-function compileConfigFile(mixFile: string, runtimeDir?: string) {
+export function loadSpec(mixFile: string, runtimeDir?: string) {
     const d = path.dirname(path.resolve(mixFile));
     const packager = new Packager(d, d, '', '');
     const file = path.parse(mixFile).name;
