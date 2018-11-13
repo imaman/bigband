@@ -47,11 +47,11 @@ export class Packager {
   }
   
   createZip(relativeTsFile: string, compiledFilesDir: string, runtimeDir?: string) {
-    const deps = DepsCollector.scanFrom(this.toAbs(relativeTsFile));
-  
-    const roots = [this.npmPackageDir];
-    logger.info('Computing dependencies of ' + JSON.stringify(roots));
-    const npmPackageResolver = new NpmPackageResolver(roots, runtimeDir);
+    const absoluteTsFile = this.toAbs(relativeTsFile);
+    logger.info('Packing dependencies of ' + absoluteTsFile);
+
+    const deps = DepsCollector.scanFrom(absoluteTsFile);
+    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir], runtimeDir);
     deps.npmDeps
       .filter(d => shouldBeIncluded(d))
       .forEach(d => npmPackageResolver.recordUsage(d));
@@ -68,7 +68,7 @@ export class Packager {
   }
 
   run(relativeTsFile: string, relativeOutDir: string, runtimeDir?: string) {
-    logger.silly(`Packagr.run(${relativeOutDir}, ${relativeOutDir}, ${runtimeDir})`);
+    logger.silly(`Packing ${relativeTsFile} into ${relativeOutDir}`);
     const compiledFilesDir = this.compile(relativeTsFile, relativeOutDir);
     return this.createZip(relativeTsFile, compiledFilesDir, runtimeDir);
   }
