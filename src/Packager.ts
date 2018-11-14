@@ -103,6 +103,7 @@ export class Packager {
       throw e;
     }
   
+    logger.silly(`Size: ${buf.byteLength} bytes`);
     return new S3Ref(this.s3Bucket, s3Key);
   }
 
