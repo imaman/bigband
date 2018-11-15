@@ -125,7 +125,7 @@ class LambdaInstrument extends Instrument {
                     .then(() => runLambda(context, event, mapping))
                     .then(response => callback(null, response))
                     .catch(e => {
-                        console.error('Exception caught from promise flow (event=\\n:' + JSON.stringify(event) + ")\\n\\n", e);
+                        console.error('Exception caught from promise flow (event=\\n:' + JSON.stringify(event).substring(0, 1000) + ")\\n\\n", e);
                         callback(e);
                     });
                 } catch (e) {
