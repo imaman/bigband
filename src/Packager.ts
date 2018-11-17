@@ -169,7 +169,7 @@ export class S3Ref {
 
 
 function shouldBeIncluded(packageName: string) {
-  return packageName !== 'aws-sdk';
+  return packageName !== 'aws-sdk' && !packageName.startsWith('aws-sdk/');
 }
 
 
