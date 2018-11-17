@@ -5,12 +5,14 @@ import * as path from 'path';
 import * as uuidv1 from 'uuid/v1';
 import * as os from 'os';
 import * as mkdirp from 'mkdirp'
+import * as hash from 'hash.js';
 
 import {logger} from './logger';
 import {AwsFactory} from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
 import { DeployableFragment, DeployableAtom, Rig } from './runtime/Instrument';
+import { GetFunctionResponse } from 'aws-sdk/clients/lambda';
 
 export class Packager {
   private readonly workingDir: string;
@@ -80,16 +82,31 @@ export class Packager {
     return outDir;
   }
 
-  async pushToS3(s3Object: string, zipBuilder: ZipBuilder): Promise<S3Ref> {      
+  async pushToS3(physicalName: string, s3Object: string, zipBuilder: ZipBuilder): Promise<S3Ref> {      
     if (!this.rig) {
       throw new Error('rig was not set.');
     }
+    const factory = AwsFactory.fromRig(this.rig);
+
+    const p = factory.newLambda().getFunction({
+      FunctionName: physicalName
+    }).promise();
     zipBuilder.populateZip();
     const buf = await zipBuilder.toBuffer();
+    const fingeprint = Buffer.from(hash.sha256().update(buf).digest()).toString('base64');
+    const getFunctionResponse: GetFunctionResponse = await p;
+    const c = getFunctionResponse.Configuration && getFunctionResponse.Configuration.CodeSha256;
 
     const s3Key = `${this.s3Prefix}/${s3Object}`;
-    const factory = AwsFactory.fromRig(this.rig)
     const s3 = factory.newS3();
+
+    const ret = new S3Ref(this.s3Bucket, s3Key);
+    logger.silly(`Comparing fingerprints for ${physicalName}:\n  ${c}\n  ${fingeprint}`);
+    if (c && c == fingeprint) {
+      logger.info(`No code changes in ${physicalName}`);
+      return ret;
+    }
+    console.log(`Uploading ${(buf.length / (1024 * 1024)).toFixed(1)}MB for ${physicalName}`);
 
     try {
       await s3.putObject({
@@ -104,7 +121,7 @@ export class Packager {
     }
   
     logger.silly(`Size: ${buf.byteLength} bytes`);
-    return new S3Ref(this.s3Bucket, s3Key);
+    return ret;
   }
 
   private toAbs(relativeFile: string) {
@@ -149,7 +166,7 @@ export class S3Ref {
 
 
 function shouldBeIncluded(packageName: string) {
-  return packageName !== 'aws-sdk';
+  return packageName !== 'aws-sdk' && !packageName.startsWith("aws-sdk/");
 }
 
 
@@ -188,9 +205,28 @@ export class ZipBuilder {
   }
 
   populateZip() {
-    this.fragment.forEach((curr: DeployableAtom) => {
-      this.zip.file(curr.path, curr.content);
-    });
+      const zipByPath: any = {}
+      zipByPath["."] = this.zip;
+      this.fragment.forEach(atom => {
+          const curr = path.dirname(atom.path);
+          const ps: string[] = [];
+          for (let x = curr; x !== '.'; x = path.dirname(x)) {
+              ps.push(x);
+          }
+          ps.reverse();
+          ps.forEach(p => {
+              if (zipByPath[p]) {
+                  return;
+              }
+              const parZip = zipByPath[path.dirname(p)];
+              zipByPath[p] = parZip.file(path.basename(p), '' ,{date: new Date(1000), dir: true});
+          });
+      });
+  
+      this.fragment.forEach(atom => {
+        const zz = zipByPath[path.dirname(atom.path)];
+        zz.file(path.basename(atom.path), atom.content, {date: new Date(1000)});
+      });
   }
 
   async toBuffer(): Promise<Buffer> {

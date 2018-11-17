@@ -348,7 +348,7 @@ export class Definition {
 
 
 export class DeployableAtom {
-    constructor(readonly path, readonly content) {}
+    constructor(readonly path: string, readonly content: string) {}
 
     toString() {
         return `Path: ${this.path}/`;
@@ -368,6 +368,7 @@ export class DeployableFragment {
     }
 
     forEach(f: (DeployableAtom) => void) {
+        this.atoms.sort((lhs, rhs) => lhs.path.localeCompare(rhs.path));
         this.atoms.forEach(f);
     }
 

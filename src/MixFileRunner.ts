@@ -143,7 +143,7 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
     zb.importFragment(frag);
     
     logger.info(`Pushing code: ${instrument.name()}`);
-    const s3Ref = await packager.pushToS3(`deployables/${physicalName}.zip`, zb);
+    const s3Ref = await packager.pushToS3(physicalName, `deployables/${physicalName}.zip`, zb);
     const resource = def.get();
     resource.Properties.CodeUri = s3Ref.toUri();
 
