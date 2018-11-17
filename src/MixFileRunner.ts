@@ -129,6 +129,7 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
 
     const packager = new Packager(d, d, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig);
     const pathPrefix = 'build';
+    logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
     const zb: ZipBuilder = packager.run(instrument.getEntryPointFile(), pathPrefix);
     const frag = instrument.createFragment(pathPrefix);
 
@@ -142,8 +143,8 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
 
     zb.importFragment(frag);
     
-    logger.info(`Pushing code: ${instrument.name()}`);
-    const s3Ref = await packager.pushToS3(physicalName, `deployables/${physicalName}.zip`, zb);
+    // logger.info(`Pushing code: ${instrument.name()}`);
+    const s3Ref = await packager.pushToS3(instrument, `deployables/${physicalName}.zip`, zb);
     const resource = def.get();
     resource.Properties.CodeUri = s3Ref.toUri();
 

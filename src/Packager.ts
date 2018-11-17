@@ -11,7 +11,7 @@ import {logger} from './logger';
 import {AwsFactory} from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
-import { DeployableFragment, DeployableAtom, Rig } from './runtime/Instrument';
+import { Instrument, DeployableFragment, DeployableAtom, Rig } from './runtime/Instrument';
 import { GetFunctionResponse } from 'aws-sdk/clients/lambda';
 
 export class Packager {
@@ -82,14 +82,14 @@ export class Packager {
     return outDir;
   }
 
-  async pushToS3(physicalName: string, s3Object: string, zipBuilder: ZipBuilder): Promise<S3Ref> {      
+  async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder): Promise<S3Ref> {      
     if (!this.rig) {
       throw new Error('rig was not set.');
     }
     const factory = AwsFactory.fromRig(this.rig);
 
     const p = factory.newLambda().getFunction({
-      FunctionName: physicalName
+      FunctionName: instrument.physicalName(this.rig)
     }).promise();
     zipBuilder.populateZip();
     const buf = await zipBuilder.toBuffer();
@@ -101,12 +101,15 @@ export class Packager {
     const s3 = factory.newS3();
 
     const ret = new S3Ref(this.s3Bucket, s3Key);
-    logger.silly(`Comparing fingerprints for ${physicalName}:\n  ${c}\n  ${fingeprint}`);
+    logger.silly(`Comparing fingerprints for ${instrument.fullyQualifiedName()}:\n  ${c}\n  ${fingeprint}`);
+    fs.writeFileSync('/tmp/a.zip', buf);
+    console.log('saved in file:///tmp/a.zip');
+    process.exit(1);
     if (c && c == fingeprint) {
-      logger.info(`No code changes in ${physicalName}`);
+      logger.info(`No code changes in ${instrument.fullyQualifiedName()}`);
       return ret;
     }
-    console.log(`Uploading ${(buf.length / (1024 * 1024)).toFixed(1)}MB for ${physicalName}`);
+    console.log(`Uploading ${(buf.length / (1024 * 1024)).toFixed(3)}MB for ${instrument.fullyQualifiedName()}`);
 
     try {
       await s3.putObject({
@@ -166,7 +169,7 @@ export class S3Ref {
 
 
 function shouldBeIncluded(packageName: string) {
-  return packageName !== 'aws-sdk' && !packageName.startsWith("aws-sdk/");
+  return packageName !== 'aws-sdk';
 }
 
 
