@@ -1,20 +1,21 @@
 import * as JSZip from 'jszip';
 import * as hash from 'hash.js'
 import * as path from 'path';
+import * as fs from 'fs';
 
 async function zip(forward: boolean) {
     const folders = [
-        'a/c/d2/d4',
-        'a/b/d1',
-        'a/b',
-        'a/c/d2',
-        'a/c/d3',
-        'a/d/e/d5',
-        'a/d/d6'
+        'a/b/c',
+        'a/d/e',
+        // 'a/b',
+        // 'a/c/d2',
+        // 'a/c/d3',
+        // 'a/d/e/d5',
+        // 'a/d/d6'
     ]
 
     
-    const files: string[] = new Array(30)
+    const files: string[] = new Array(4)
         .fill(0)
         .map((_, i, a) => forward ? i : (a.length - i) - 1)
         .map(curr => `${folders[curr % folders.length]}/a_${curr}`);
@@ -35,16 +36,24 @@ async function populate(jsZip: JSZip, files: string[]) {
         }
         ps.reverse();
         ps.forEach(p => {
+            console.log('p=', p);
             if (zipByPath[p]) {
                 return;
             }
-            const parZip = zipByPath[path.dirname(p)];
-            zipByPath[p] = parZip.file(path.basename(p), '' ,{date: new Date(1000), dir: true});
+            const dn = path.dirname(p);
+            const parZip = zipByPath[dn];
+            console.log('Found parZip of ' + dn + ' it is' + parZip);
+            const baseName = path.basename(p);
+            parZip.file(baseName, '' ,{date: new Date(1000), dir: true});
+            zipByPath[p] = parZip.folder(baseName);
         });
     });
 
+    // zipByPath[p] = parZip.folder(baseName);
     files.forEach((fullPath, i) => {
-            const zz = zipByPath[path.dirname(fullPath)];
+            const d = path.dirname(fullPath);
+            const zz = zipByPath[d];
+            console.log('fullPath=', fullPath, 'd=', d);
             zz.file(path.basename(fullPath), `content_${i}`, {date: new Date(1000)});
         });
     const buf = await jsZip.generateAsync({ type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 0 } });
