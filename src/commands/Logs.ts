@@ -27,7 +27,6 @@ async function main(mixFile: string, rigName: string, runtimeDir: string, lambda
         limit: 1
     }
 
-    console.log('describeLogStreamsReq=\n' + JSON.stringify(describeLogStreamsReq, null, 2));
     let describeLogStreamsResp: DescribeLogStreamsResponse;
     try {
         describeLogStreamsResp = await cloudWatchLogs.describeLogStreams(describeLogStreamsReq).promise();
@@ -52,8 +51,6 @@ async function main(mixFile: string, rigName: string, runtimeDir: string, lambda
         limit,
         startFromHead: false
     }
-
-    console.log('getLogEventsReq=\n' + JSON.stringify(getLogEventsReq, null, 2));
     const getLogEventsResp: GetLogEventsResponse = await cloudWatchLogs.getLogEvents(getLogEventsReq).promise();
 
     if (!getLogEventsResp.events) {
