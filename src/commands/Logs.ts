@@ -6,7 +6,7 @@ import {Rig} from '../runtime/Instrument';
 
 
 async function main(mixFile: string, rigName: string, runtimeDir: string, lambdaName: string, limit: number) {
-    const spec = loadSpec(mixFile, runtimeDir);
+    const spec = await loadSpec(mixFile, runtimeDir);
     const rig: undefined|Rig = spec.rigs.find(r => r.name === rigName);
     if (!rig) {
         throw new Error(`Rig ${rigName} not found in ${JSON.stringify(spec.rigs.map(r => r.name))}`);

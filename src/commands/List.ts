@@ -4,7 +4,7 @@ import {loadSpec,MixSpec} from '../MixFileRunner';
 
 
 async function main(mixFile: string, runtimeDir: string) {
-    const spec: MixSpec = loadSpec(mixFile, runtimeDir);
+    const spec: MixSpec = await loadSpec(mixFile, runtimeDir);
     const scopes = spec.rigs.map(r => r.isolationScope);
     const ret = {};
     scopes.forEach(s => ret[s.name] = {});

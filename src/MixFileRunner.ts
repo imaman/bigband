@@ -15,7 +15,7 @@ export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: 
     if (runtimeDir && !path.isAbsolute(runtimeDir)) {
         throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
     }
-    const mixSpec = loadSpec(mixFile, runtimeDir);
+    const mixSpec = await loadSpec(mixFile, runtimeDir);
     const rig = mixSpec.rigs.find(curr => curr.name === rigName);
     if (!rig) {
         throw new Error(`Failed to find a rig named ${rigName} in ${mixSpec.rigs.map(curr => curr.name).join(', ')}`);
@@ -34,6 +34,8 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     cfp.peekAtExistingStack();
     
     logger.info(`Shipping rig ${rig.name} to ${rig.region}`);
+    logger.info('#instruments=' + mixSpec.instruments.length);
+    logger.info('names=' + mixSpec.instruments.map(x => x.name()).join(','));
     const ps = mixSpec.instruments
         .map(instrument => pushCode(mixSpec.dir, rig, instrument));
     const pushedInstruments = await Promise.all(ps);
@@ -64,11 +66,11 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     return `Rig ${rig.name} shipped.`;
 }
 
-export function loadSpec(mixFile: string, runtimeDir?: string): MixSpec {
+export async function loadSpec(mixFile: string, runtimeDir?: string): Promise<MixSpec> {
     const d = path.dirname(path.resolve(mixFile));
     const packager = new Packager(d, d, '', '');
     const file = path.parse(mixFile).name;
-    const zb = packager.run(`${file}.ts`, 'spec_compiled', runtimeDir);
+    const zb = await packager.run(`${file}.ts`, 'spec_compiled', runtimeDir);
     const specDeployedDir = packager.unzip(zb, 'spec_deployed')
     const ret: MixSpec = require(path.resolve(specDeployedDir, 'build', `${file}.js`)).run();
     if (!ret.dir) {
@@ -111,6 +113,7 @@ function checkSpec(spec: MixSpec) {
 }
 
 async function pushCode(d: string, rig: Rig, instrument: Instrument) {
+    logger.info('Doing ' + instrument.name());
     const logicalResourceName = instrument.fullyQualifiedName(NameStyle.CAMEL_CASE);
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
         throw new Error(`Bad value. ${d} is not a directory.`);
@@ -130,7 +133,7 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
     const packager = new Packager(d, d, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig);
     const pathPrefix = 'build';
     logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
-    const zb: ZipBuilder = packager.run(instrument.getEntryPointFile(), pathPrefix);
+    const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix);
     const frag = instrument.createFragment(pathPrefix);
 
     const mapping = {};
@@ -143,14 +146,14 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
 
     zb.importFragment(frag);
     
-    // logger.info(`Pushing code: ${instrument.name()}`);
+    logger.info(`Pushing code: ${instrument.name()}`);
     const s3Ref = await packager.pushToS3(instrument, `deployables/${physicalName}.zip`, zb);
     const resource = def.get();
     resource.Properties.CodeUri = s3Ref.toUri();
 
     return {
-        s3Ref,
-        resource,
+        s3Ref: S3Ref.EMPTY,
+        resource: def.get(),
         logicalResourceName,
         physicalName
     }

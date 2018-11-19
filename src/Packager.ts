@@ -1,3 +1,4 @@
+import * as util from 'util';
 import * as JSZip from 'jszip';
 import * as child_process from 'child_process';
 import * as fs from 'fs';
@@ -37,14 +38,15 @@ export class Packager {
     }
   }
 
-  compile(relatvieTsFile: string, relativeOutDir: string) {
+  async compile(relatvieTsFile: string, relativeOutDir: string) {
     const outDir = this.newOutDir(relativeOutDir);
     const fileToCompile = this.toAbs(relatvieTsFile);
 
     logger.silly(`Compiling ${fileToCompile}`);
     const command = `tsc --outDir "${outDir}" --preserveConstEnums --strictNullChecks --sourceMap --target es2015 --module commonjs --allowJs --checkJs false --lib es2015 --rootDir "${this.rootDir}" "${fileToCompile}"`
     logger.silly(`Executing: ${command}`);
-    child_process.execSync(command, {encoding: 'utf-8'});
+
+    await util.promisify(child_process.exec)(command, {encoding: 'utf-8'});
     return outDir;
   }
   
@@ -69,9 +71,9 @@ export class Packager {
     return zipBuilder;
   }
 
-  run(relativeTsFile: string, relativeOutDir: string, runtimeDir?: string) {
+  async run(relativeTsFile: string, relativeOutDir: string, runtimeDir?: string) {
     logger.silly(`Packing ${relativeTsFile} into ${relativeOutDir}`);
-    const compiledFilesDir = this.compile(relativeTsFile, relativeOutDir);
+    const compiledFilesDir = await this.compile(relativeTsFile, relativeOutDir);
     return this.createZip(relativeTsFile, compiledFilesDir, runtimeDir);
   }
 

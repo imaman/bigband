@@ -4,7 +4,7 @@ import {loadSpec} from '../MixFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
 
 async function main(mixFile: string, runtimeDir: string, lambdaName: string, input: string) {
-    const spec = loadSpec(mixFile, runtimeDir);
+    const spec = await loadSpec(mixFile, runtimeDir);
 
     let data;
     spec.rigs.forEach(r => {
