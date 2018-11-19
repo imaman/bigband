@@ -34,8 +34,6 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     cfp.peekAtExistingStack();
     
     logger.info(`Shipping rig ${rig.name} to ${rig.region}`);
-    logger.info('#instruments=' + mixSpec.instruments.length);
-    logger.info('names=' + mixSpec.instruments.map(x => x.name()).join(','));
     const ps = mixSpec.instruments
         .map(instrument => pushCode(mixSpec.dir, rig, instrument));
     const pushedInstruments = await Promise.all(ps);
@@ -113,7 +111,6 @@ function checkSpec(spec: MixSpec) {
 }
 
 async function pushCode(d: string, rig: Rig, instrument: Instrument) {
-    logger.info('Doing ' + instrument.name());
     const logicalResourceName = instrument.fullyQualifiedName(NameStyle.CAMEL_CASE);
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
         throw new Error(`Bad value. ${d} is not a directory.`);
