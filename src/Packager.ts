@@ -192,6 +192,10 @@ export class ZipBuilder {
     }
   }
 
+  forEach(consumer: (DeployableAtom) => void){
+    this.fragment.forEach(consumer);
+  }
+
   importFragment(from: DeployableFragment) {
     from.forEach(curr => {
       this.fragment.add(curr);

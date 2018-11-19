@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import * as hash from 'hash.js'
 
 import {AwsFactory} from './AwsFactory';
 import {NameStyle, Rig, Instrument, DeployableAtom} from './runtime/Instrument';
@@ -9,6 +10,7 @@ import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 import { logger } from './logger';
 
 export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: string) {
+    const t0 = Date.now();
     if (Number(process.versions.node.split('.')[0]) < 8) {
         throw new Error('You must use node version >= 8 to run this program');
     }
@@ -20,7 +22,9 @@ export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: 
     if (!rig) {
         throw new Error(`Failed to find a rig named ${rigName} in ${mixSpec.rigs.map(curr => curr.name).join(', ')}`);
     }
-    return runSpec(mixSpec, rig);
+    await runSpec(mixSpec, rig);
+    const dt = (Date.now() - t0) / 1000;
+    return `Rig ${rig.name} shipped in ${dt.toFixed(1)}s`;
 }
 
 export interface MixSpec {
@@ -61,7 +65,6 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
         };    
         return lambda.updateFunctionCode(updateFunctionCodeReq).promise();
     }));
-    return `Rig ${rig.name} shipped.`;
 }
 
 export async function loadSpec(mixFile: string, runtimeDir?: string): Promise<MixSpec> {
@@ -140,6 +143,19 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
     });
     frag.add(new DeployableAtom('bigband/deps.js', 
         `module.exports = ${JSON.stringify(mapping)}`));
+
+    const sha256 = hash.sha256();
+    const atomConsumer = (a: DeployableAtom) => {
+        sha256.update(a.path);
+        sha256.update(a.content);
+    };
+
+    zb.forEach(atomConsumer);
+    frag.forEach(atomConsumer);
+
+    const fp = Buffer.from(sha256.digest()).toString('base64');
+    frag.add(new DeployableAtom('bigband/build_manifest.js',
+        `module.exports = "${fp}";`));
 
     zb.importFragment(frag);
     

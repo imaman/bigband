@@ -118,11 +118,12 @@ class LambdaInstrument extends Instrument {
         const content = `
             const {runLambda} = require('./${pathPrefix}/${this.getEntryPointFile()}');
             const mapping = require('./bigband/deps.js');
+            const fp = require('./bigband/build_manifest.js');
 
             function handle(event, context, callback) {
                 try {
                     Promise.resolve()
-                    .then(() => runLambda(context, event, mapping))
+                    .then(() => runLambda(context, event, mapping, fp))
                     .then(response => callback(null, response))
                     .catch(e => {
                         console.error('Exception caught from promise flow (event=\\n:' + JSON.stringify(event).substring(0, 1000) + ")\\n\\n", e);
