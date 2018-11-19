@@ -104,9 +104,6 @@ export class Packager {
 
     const ret = new S3Ref(this.s3Bucket, s3Key);
     logger.silly(`Comparing fingerprints for ${instrument.fullyQualifiedName()}:\n  ${c}\n  ${fingeprint}`);
-    // fs.writeFileSync('/tmp/a.zip', buf);
-    // console.log('saved in file:///tmp/a.zip');
-    // process.exit(1);
     if (c && c == fingeprint) {
       logger.info(`No code changes in ${instrument.fullyQualifiedName()}`);
       return ret;
