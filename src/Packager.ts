@@ -92,12 +92,12 @@ export class Packager {
 
     const p = factory.newLambda().getFunction({
       FunctionName: instrument.physicalName(this.rig)
-    }).promise();
+    }).promise().catch(e => null);
     zipBuilder.populateZip();
     const buf = await zipBuilder.toBuffer();
     const fingeprint = Buffer.from(hash.sha256().update(buf).digest()).toString('base64');
-    const getFunctionResponse: GetFunctionResponse = await p;
-    const c = getFunctionResponse.Configuration && getFunctionResponse.Configuration.CodeSha256;
+    const getFunctionResponse: GetFunctionResponse|null = await p;
+    const c = getFunctionResponse && getFunctionResponse.Configuration && getFunctionResponse.Configuration.CodeSha256;
 
     const s3Key = `${this.s3Prefix}/${s3Object}`;
     const s3 = factory.newS3();
