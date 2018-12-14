@@ -22,12 +22,7 @@ const statsTable = new DynamoDbInstrument('geography', 'Stats', {name: 'query', 
         writeCapacityUnits: 1
     }
 });
-const distanceTable = new DynamoDbInstrument('geography', 'Distance', {name: 'dist', type: DynamoDbAttributeType.NUMBER}, null, {
-    provisioned: {
-        readCapacityUnits: 2,
-        writeCapacityUnits: 2
-    }
-});
+const distanceTable = new DynamoDbInstrument('geography', 'Distance', {name: 'dist', type: DynamoDbAttributeType.NUMBER}, null);
 
 const queryStream = new KinesisStreamInstrument('geography', 'QueryStream', 2);
 
