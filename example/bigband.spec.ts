@@ -16,8 +16,18 @@ const placeFinder = newLambda('geography', 'placeFinder', 'src/geography/compute
 });
 
 
-const statsTable = new DynamoDbInstrument('geography', 'Stats', {name: 'query', type: DynamoDbAttributeType.STRING}, {name: 'when', type: DynamoDbAttributeType.NUMBER}, 1, 1);
-const distanceTable = new DynamoDbInstrument('geography', 'Distance', {name: 'dist', type: DynamoDbAttributeType.NUMBER}, null, 2, 2);
+const statsTable = new DynamoDbInstrument('geography', 'Stats', {name: 'query', type: DynamoDbAttributeType.STRING}, {name: 'when', type: DynamoDbAttributeType.NUMBER}, {
+    provisioned: {
+        readCapacityUnits: 1,
+        writeCapacityUnits: 1
+    }
+});
+const distanceTable = new DynamoDbInstrument('geography', 'Distance', {name: 'dist', type: DynamoDbAttributeType.NUMBER}, null, {
+    provisioned: {
+        readCapacityUnits: 2,
+        writeCapacityUnits: 2
+    }
+});
 
 const queryStream = new KinesisStreamInstrument('geography', 'QueryStream', 2);
 

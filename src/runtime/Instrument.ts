@@ -173,6 +173,14 @@ interface DynamoDbAttribute {
 }
 
 
+export interface DynamoDbInstrumentOptions {
+    provisioned?: {
+        readCapacityUnits: number
+        writeCapacityUnits: number
+    }
+    cloudFormationProperties?: any
+}
+
 export class DynamoDbInstrument extends Instrument {
 
     private static readonly BASE_DEF = {
@@ -180,7 +188,7 @@ export class DynamoDbInstrument extends Instrument {
         Properties: {}
     }
 
-    constructor(packageName: string, name: string, partitionKey: DynamoDbAttribute, sortKey: DynamoDbAttribute, readCapacityUnits: number, writeCapacityUnits: number, cloudFormationProperties?: any) {
+    constructor(packageName: string, name: string, partitionKey: DynamoDbAttribute, sortKey: DynamoDbAttribute, options: DynamoDbInstrumentOptions = {}) {
         super(packageName, name);
 
         function toAttributeDefinition(a: DynamoDbAttribute) {
@@ -202,15 +210,25 @@ export class DynamoDbInstrument extends Instrument {
         sortKey && keySchema.push({AttributeName: sortKey.name, KeyType: 'RANGE'});
 
         this.definition.overwrite(DynamoDbInstrument.BASE_DEF);
-        this.definition.mutate(o => Object.assign(o.Properties, {
+
+
+        let provisioned: any = {
+            BillingMode: 'PAY_PER_REQUEST'
+        };
+        if (options.provisioned) {
+            provisioned = {
+                ProvisionedThroughput: {
+                    ReadCapacityUnits: options.provisioned.readCapacityUnits,
+                    WriteCapacityUnits: options.provisioned.writeCapacityUnits
+                }    
+            }
+        };
+
+        this.definition.mutate(o => Object.assign(o.Properties, provisioned, {
             AttributeDefinitions: atts,
             KeySchema: keySchema,
-            ProvisionedThroughput: {
-                ReadCapacityUnits: readCapacityUnits,
-                WriteCapacityUnits: writeCapacityUnits
-            }
         }));
-        this.definition.mutate(o => Object.assign(o.Properties, cloudFormationProperties));
+        this.definition.mutate(o => Object.assign(o.Properties, options.cloudFormationProperties));
     }
 
     createFragment(pathPrefix: string): DeployableFragment {
