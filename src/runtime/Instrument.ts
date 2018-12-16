@@ -188,7 +188,8 @@ export class DynamoDbInstrument extends Instrument {
         Properties: {}
     }
 
-    constructor(packageName: string, name: string, partitionKey: DynamoDbAttribute, sortKey?: DynamoDbAttribute, options: DynamoDbInstrumentOptions = {}) {
+    constructor(packageName: string, name: string, partitionKey: DynamoDbAttribute, sortKey?: DynamoDbAttribute,
+            options: DynamoDbInstrumentOptions = {}) {
         super(packageName, name);
 
         function toAttributeDefinition(a: DynamoDbAttribute) {
@@ -217,6 +218,7 @@ export class DynamoDbInstrument extends Instrument {
         };
         if (options.provisioned) {
             provisioned = {
+                BillingMode: 'PROVISIONED',
                 ProvisionedThroughput: {
                     ReadCapacityUnits: options.provisioned.readCapacityUnits,
                     WriteCapacityUnits: options.provisioned.writeCapacityUnits

@@ -94,6 +94,39 @@ describe('Instruments', () => {
                 }
             });
         });
+        it('uses pay-per-request, by default', () => {
+            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', 
+                {name: 'id', type: DynamoDbAttributeType.STRING});
+            const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
+            const rig = new Rig(scope, "eu-central-1", "prod-main");
+            expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
+                Properties: {
+                    BillingMode: 'PAY_PER_REQUEST'
+                }
+            });
+        });
+        it('supports provisioned throughput', () => {
+            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', 
+                {name: 'id', type: DynamoDbAttributeType.STRING}, 
+                undefined,
+                {
+                  provisioned: {
+                      readCapacityUnits: 625,
+                      writeCapacityUnits: 576
+                  }
+                });
+            const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
+            const rig = new Rig(scope, "eu-central-1", "prod-main");
+            expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
+                Properties: {
+                    BillingMode: 'PROVISIONED',
+                    ProvisionedThroughput: {
+                        ReadCapacityUnits: 625,
+                        WriteCapacityUnits: 576
+                    }
+                }
+            });
+        });
     });
 })
 
