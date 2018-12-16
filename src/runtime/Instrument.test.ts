@@ -17,15 +17,12 @@ describe('Instruments', () => {
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Rig(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.deep.equal({
-                "p1-p2-p3-abc": {
-                    Type: "AWS::Serverless::Function",
-                    Properties: {
-                        FunctionName: "scope_1-prod-main-p1-p2-p3-abc",
-                        Handler: "p1-p2-p3-abc_Handler.handle",
-                        Runtime: "nodejs8.10",
-                        Policies: [],
-                        CodeUri: "s3://b_1/s_1/scope_1-prod-main-p1-p2-p3-abc.zip"            
-                    }
+                Type: "AWS::Serverless::Function",
+                Properties: {
+                    FunctionName: "scope_1-prod-main-p1-p2-p3-abc",
+                    Handler: "p1-p2-p3-abc_Handler.handle",
+                    Runtime: "nodejs8.10",
+                    Policies: []
                 }
             });
         });
