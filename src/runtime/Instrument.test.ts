@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 
-import {IsolationScope, Rig, Definition, newLambda, DeployableFragment} from './Instrument'
+import {IsolationScope, Rig, DynamoDbInstrument, newLambda, DynamoDbAttributeType} from './Instrument'
 
 
 describe('Instruments', () => {
@@ -52,6 +52,47 @@ describe('Instruments', () => {
                     }]
                 }]
             }});
+        });
+    });
+    describe('Dynamo', () => {
+        it('produces yml', () => {
+            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', {name: 'id', type: DynamoDbAttributeType.STRING});
+            const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
+            const rig = new Rig(scope, "eu-central-1", "prod-main");
+            expect(instrument.getPhysicalDefinition(rig).get()).to.deep.equal({
+                Type: "AWS::DynamoDB::Table",
+                Properties: {
+                    TableName: "scope_1-prod-main-p1-p2-p3-table_1",
+                    AttributeDefinitions: [{
+                        AttributeName: "id",
+                        AttributeType: "S"
+                    }],
+                    BillingMode: "PAY_PER_REQUEST",
+                    KeySchema: [{
+                        AttributeName: "id",
+                        KeyType: "HASH"
+                    }]
+                }
+            });
+        });
+        it('supports sort key', () => {
+            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', 
+                {name: 'id', type: DynamoDbAttributeType.STRING},
+                {name: 'n', type: DynamoDbAttributeType.NUMBER});
+            const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
+            const rig = new Rig(scope, "eu-central-1", "prod-main");
+            expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
+                Properties: {
+                    AttributeDefinitions: [
+                        { AttributeName: "id", AttributeType: "S" }, 
+                        { AttributeName: "n", AttributeType: "N" }
+                    ],
+                    KeySchema: [
+                        { AttributeName: "id", KeyType: "HASH" },
+                        { AttributeName: "n", KeyType: "RANGE" }
+                    ]
+                }
+            });
         });
     });
 })
