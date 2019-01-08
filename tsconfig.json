@@ -8,7 +8,6 @@
     "outDir": "build",
     // "moduleResolution": "node",
     "module":  "commonjs",
-    "allowJs": true,
     "checkJs": false,
     "lib": [
       "es2015"
