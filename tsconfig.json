@@ -3,11 +3,11 @@
     "preserveConstEnums": true,
     "strictNullChecks": true,
     "sourceMap": true,
+    "declaration": true,
     "target": "es2015",
     "outDir": "build",
     // "moduleResolution": "node",
     "module":  "commonjs",
-    "allowJs": true,
     "checkJs": false,
     "lib": [
       "es2015"

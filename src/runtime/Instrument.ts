@@ -81,7 +81,8 @@ class LambdaInstrument extends Instrument {
         Type: "AWS::Serverless::Function",
         Properties: {
             Runtime: "nodejs8.10",
-            Policies: []
+            Policies: [],
+            Events: {}
         }
     }
 
@@ -91,6 +92,28 @@ class LambdaInstrument extends Instrument {
         this.definition.overwrite(LambdaInstrument.BASE_DEF);
         this.definition.mutate(o => o.Properties.Handler = `${this.getHandlerFile()}.handle`);
         this.definition.mutate(o => Object.assign(o.Properties, cloudFormationProperties));
+    }
+
+    
+    invokeEveryMinutes(durationInMinutes: number) {
+        if (!Number.isInteger(durationInMinutes)) {
+            throw new Error('durationInMinutes must be an integer');
+        }
+
+        if (durationInMinutes < 0 || durationInMinutes > 59) {
+            throw new Error(`durationInMinutes must be >= 0 and <= 59`);
+        }
+        const obj = {
+            Timer: {
+                Type: "Schedule",
+                Properties: {
+                    Schedule: `cron(0/${durationInMinutes} * * * ? *)`
+                }    
+            }
+        };
+
+        this.definition.mutate(o => Object.assign(o.Properties.Events, obj));
+        return this;
     }
     
     arnService(): string {

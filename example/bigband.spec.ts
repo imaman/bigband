@@ -15,6 +15,12 @@ const placeFinder = newLambda('geography', 'placeFinder', 'src/geography/compute
     Timeout: 30      
 });
 
+const healthChecker = newLambda('geography', 'healthChecker', 'src/geography/healthChecker', {
+    Description: 'is everything working correctly',
+    MemorySize: 1024,
+    Timeout: 30      
+}).invokeEveryMinutes(59);
+
 
 const statsTable = new DynamoDbInstrument('geography', 'Stats', {name: 'query', type: DynamoDbAttributeType.STRING}, {name: 'when', type: DynamoDbAttributeType.NUMBER}, {
     provisioned: {
@@ -24,7 +30,7 @@ const statsTable = new DynamoDbInstrument('geography', 'Stats', {name: 'query', 
 });
 const distanceTable = new DynamoDbInstrument('geography', 'Distance', {name: 'dist', type: DynamoDbAttributeType.NUMBER}, null);
 
-const queryStream = new KinesisStreamInstrument('geography', 'QueryStream', 2);
+const queryStream = new KinesisStreamInstrument('geography', 'QueryStream', 1);
 
 const queryStreamAnalyzer = new KinesisStreamConsumer('geography', 'analyzer', 'src/geography/analyzer', queryStream);
 
@@ -35,6 +41,6 @@ placeFinder.uses(queryStream, 'queryStream');
 export function run() {
     return {
         rigs: [prodMajor],
-        instruments: [importantDates, placeFinder, queryStream, distanceTable, queryStreamAnalyzer]
+        instruments: [importantDates, placeFinder, queryStream, distanceTable, queryStreamAnalyzer, healthChecker]
     }
 }

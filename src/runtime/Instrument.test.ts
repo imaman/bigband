@@ -12,7 +12,7 @@ import {IsolationScope, Rig, DynamoDbInstrument, newLambda, DynamoDbAttributeTyp
 
 describe('Instruments', () => {
     describe('Lambda', () => {
-        it('produces yml', () => {
+        it('produces cloudformation', () => {
             const instrument = newLambda('p1-p2-p3', 'abc', '');
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Rig(scope, "eu-central-1", "prod-main");
@@ -22,7 +22,8 @@ describe('Instruments', () => {
                     FunctionName: "scope_1-prod-main-p1-p2-p3-abc",
                     Handler: "p1-p2-p3-abc_Handler.handle",
                     Runtime: "nodejs8.10",
-                    Policies: []
+                    Policies: [],
+                    Events: {}
                 }
             });
         });
