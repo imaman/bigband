@@ -3,7 +3,7 @@ import {AwsFactory} from '../AwsFactory'
 import {loadSpec} from '../MixFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
 
-async function main(mixFile: string, runtimeDir: string, lambdaName: string, input: string) {
+async function invokeFunction(mixFile: string, runtimeDir: string, lambdaName: string, input: string) {
     const spec = await loadSpec(mixFile, runtimeDir);
 
     let data;
@@ -27,11 +27,14 @@ async function main(mixFile: string, runtimeDir: string, lambdaName: string, inp
         Payload: JSON.stringify(JSON.parse(input))
     };
 
-    console.log('params=', JSON.stringify(params));
-
     const ret: any = await lambda.invoke(params).promise();
     if (ret.LogResult) {
         ret.LogResult = new Buffer(ret.LogResult, 'base64').toString().split('\n');
+    }
+
+    const parsedPayload = JSON.parse(ret.Payload);
+    if ((parsedPayload.headers || {})["content-type"] === 'application/json') {
+        ret.Payload = parsedPayload;
     }
     return ret;
 }
@@ -39,7 +42,7 @@ async function main(mixFile: string, runtimeDir: string, lambdaName: string, inp
 
 export class Invoke {
     static async run(argv) {
-        const temp = await main(argv.mixFile, argv.runtimeDir, argv.functionName, argv.input);
+        const temp = await invokeFunction(argv.mixFile, argv.runtimeDir, argv.functionName, argv.input);
         return JSON.stringify(temp, null, 2);
     }
 }
