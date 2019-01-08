@@ -96,6 +96,13 @@ class LambdaInstrument extends Instrument {
 
     
     invokeEveryMinutes(durationInMinutes: number) {
+        if (!Number.isInteger(durationInMinutes)) {
+            throw new Error('durationInMinutes must be an integer');
+        }
+
+        if (durationInMinutes < 0 || durationInMinutes > 59) {
+            throw new Error(`durationInMinutes must be >= 0 and <= 59`);
+        }
         const obj = {
             Timer: {
                 Type: "Schedule",
