@@ -24,7 +24,7 @@ const statsTable = new DynamoDbInstrument('geography', 'Stats', {name: 'query', 
 });
 const distanceTable = new DynamoDbInstrument('geography', 'Distance', {name: 'dist', type: DynamoDbAttributeType.NUMBER}, null);
 
-const queryStream = new KinesisStreamInstrument('geography', 'QueryStream', 2);
+const queryStream = new KinesisStreamInstrument('geography', 'QueryStream', 1);
 
 const queryStreamAnalyzer = new KinesisStreamConsumer('geography', 'analyzer', 'src/geography/analyzer', queryStream);
 
