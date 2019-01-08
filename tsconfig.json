@@ -3,6 +3,7 @@
     "preserveConstEnums": true,
     "strictNullChecks": true,
     "sourceMap": true,
+    "declaration": true,
     "target": "es2015",
     "outDir": "build",
     // "moduleResolution": "node",
