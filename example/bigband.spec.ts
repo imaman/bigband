@@ -19,7 +19,7 @@ const healthChecker = newLambda('geography', 'healthChecker', 'src/geography/hea
     Description: 'is everything working correctly',
     MemorySize: 1024,
     Timeout: 30      
-}).invokeEveryMinutes(59);
+}).invokeEveryMinutes(30);
 
 
 const statsTable = new DynamoDbInstrument('geography', 'Stats', {name: 'query', type: DynamoDbAttributeType.STRING}, {name: 'when', type: DynamoDbAttributeType.NUMBER}, {
