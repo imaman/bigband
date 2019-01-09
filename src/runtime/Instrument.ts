@@ -112,6 +112,22 @@ class LambdaInstrument extends Instrument {
             }
         };
 
+        // Resulting event object passed to the lambda function:
+        // { 
+        //   version: '0',
+        //   id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+        //   'detail-type': 'Scheduled Event',
+        //   source: 'aws.events',
+        //   account: '222266664444',
+        //   time: '2018-03-20T05:06:00Z',
+        //   region: 'eu-west-2',
+        //   resources: [ 
+        //     'arn:aws:events:eu-west-2:222266664444:rule/my-function-name' 
+        //   ],
+        //   detail: {} 
+        // }
+      
+
         this.definition.mutate(o => Object.assign(o.Properties.Events, obj));
         return this;
     }
