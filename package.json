@@ -23,7 +23,6 @@
   "dependencies": {
     "aws-sdk": "^2.353.0",
     "detective-typescript": "^4.1.1",
-    "event-stream": "^3.3.4",
     "hash.js": "^1.1.5",
     "jszip": "^3.1.5",
     "mkdirp": "^0.5.1",
