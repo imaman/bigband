@@ -41,8 +41,9 @@ export class CloudFormationPusher {
         try {
             resp  = await this.cloudFormation.describeStacks(req).promise();
         } catch (e) {
-            console.log(`describeStacks (stack name: ${this.stackName}) failed`, e)
-            throw new Error(`Could not get the details of the existing stack (${this.stackName}).`);
+            logger.silly(`Could not get the details of the stack (${this.stackName}`, e);
+            this.resolver('');
+            return;    
         }
 
         if (!resp.Stacks || resp.Stacks.length !== 1) {
