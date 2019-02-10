@@ -11,6 +11,24 @@ import {IsolationScope, Rig, DynamoDbInstrument, newLambda, DynamoDbAttributeTyp
 
 
 describe('Instruments', () => {
+    describe('cando', () => {
+        it ('adds an IAM policy', () => {
+            const instrument = newLambda('p1-p2-p3', 'abc', '');
+
+            instrument.canDo('uvw:xyz', 'arn:aws:something:foo:bar')
+            expect(instrument.getDefinition().get()).to.containSubset({Properties: {
+                Policies: [{
+                    Statement: [{
+                        Action: ['uvw:xyz'],
+                        Effect: 'Allow',
+                        Resource: 'arn:aws:something:foo:bar'
+                    }]
+                }]
+            }});
+        });
+
+    });
+
     describe('Lambda', () => {
         it('produces cloudformation', () => {
             const instrument = newLambda('p1-p2-p3', 'abc', '');

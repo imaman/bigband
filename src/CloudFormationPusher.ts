@@ -37,8 +37,15 @@ export class CloudFormationPusher {
         const req: DescribeStacksInput = {
             StackName: this.stackName
         };
+        let resp: DescribeStacksOutput;
+        try {
+            resp  = await this.cloudFormation.describeStacks(req).promise();
+        } catch (e) {
+            logger.silly(`Could not get the details of the stack (${this.stackName}`, e);
+            this.resolver('');
+            return;    
+        }
 
-        const resp: DescribeStacksOutput = await this.cloudFormation.describeStacks(req).promise();
         if (!resp.Stacks || resp.Stacks.length !== 1) {
             this.resolver('');
             return;

@@ -1,15 +1,6 @@
 const fs = require('fs');
-var rmdir = require('rmdir');
+const del = require('del');
 const path = require('path');
-
-async function removeDir(d) {
-    return new Promise((resolve, reject) => {
-        rmdir(d, err => {
-            if (err) return reject(err);
-            resolve();
-        });
-    });
-}
 
 async function copyFile(srcDir, dstDir, fileName) {
     const source = path.resolve(srcDir, fileName);
@@ -36,7 +27,8 @@ async function main() {
         throw new Error(`Expected build dir (${buildDir}) to be absolute.`);
     }
     try {
-        await removeDir(buildDir);
+        console.log(`rmdir ${buildDir}`);
+        await del([buildDir]);
     } catch (e) {
         // Intentionally abosrb
     }

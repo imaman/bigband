@@ -29,6 +29,20 @@ export abstract class Instrument {
         this.dependencies.push(new Dependency(this, supplier, name));
     }
 
+    canDo(action: string, arn: string) {
+        this.definition.mutate(o => o.Properties.Policies.push({
+            Version: '2012-10-17',
+            Statement: [{ 
+                Effect: "Allow",
+                Action: [
+                  action,
+                ],
+                Resource: arn
+            }]
+        }));      
+        return this;
+    }
+
     abstract createFragment(pathPrefix: string): DeployableFragment
     abstract contributeToConsumerDefinition(rig: Rig, consumerDef: Definition): void
     abstract arnService(): string
