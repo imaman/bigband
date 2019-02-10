@@ -39,7 +39,8 @@ export abstract class Instrument {
                 ],
                 Resource: arn
             }]
-        }));        
+        }));      
+        return this;
     }
 
     abstract createFragment(pathPrefix: string): DeployableFragment
