@@ -18,7 +18,7 @@ export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: 
         throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
     }
     const mixSpec = await loadSpec(mixFile, runtimeDir);
-    const rig = mixSpec.rigs.find(curr => curr.name === rigName);
+    const rig = mixSpec.rigs.length === 1 && !rigName ? mixSpec.rigs[0] : mixSpec.rigs.find(curr => curr.name === rigName);
     if (!rig) {
         throw new Error(`Failed to find a rig named ${rigName} in ${mixSpec.rigs.map(curr => curr.name).join(', ')}`);
     }

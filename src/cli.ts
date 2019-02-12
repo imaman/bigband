@@ -24,7 +24,7 @@ function specFileAndRigOptions(yargs, rigOptionEnabled) {
             descirbe: 'Name of a rig to deploy',
         })    
     }
-    
+
     yargs.option('runtime-dir', {
         descirbe: 'path to a directory with an Instrument.js file',
     })
@@ -37,7 +37,7 @@ yargs
     .version('1.0.0')
     .strict()
     .command('ship', 'deploy!', yargs => {
-        specFileAndRigOptions(yargs);
+        specFileAndRigOptions(yargs, true);
     }, argv => run(ship, argv))
     .command('logs', 'Watch logs of a function', yargs => {
         specFileAndRigOptions(yargs, false);
