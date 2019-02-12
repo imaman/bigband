@@ -44,7 +44,7 @@ yargs
             descirbe: 'Number of items to show',
             default: 30
         });
-        yargs.demandOption(['function-name', 'rig'])
+        yargs.demandOption(['function-name'])
     }, argv => run(LogsCommand.run, argv))
     .command('invoke', 'Invoke a function', yargs => {
         specFileAndRigOptions(yargs);
