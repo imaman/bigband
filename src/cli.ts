@@ -66,7 +66,7 @@ yargs
     .argv;
 
 async function ship(argv) {
-    return await runMixFile(argv.bigbndFile, argv.rig, argv.runtimeDir && path.resolve(argv.runtimeDir));
+    return await runMixFile(argv.bigbandFile, argv.rig, argv.runtimeDir && path.resolve(argv.runtimeDir));
 }
 
 

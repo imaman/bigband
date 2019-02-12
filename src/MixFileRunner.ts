@@ -68,6 +68,9 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
 }
 
 export async function loadSpec(mixFile: string, runtimeDir?: string): Promise<MixSpec> {
+    if (!mixFile) {
+        throw new Error('mixFile cannot be falsy');
+    }
     const d = path.dirname(path.resolve(mixFile));
     const packager = new Packager(d, d, '', '');
     const file = path.parse(mixFile).name;
