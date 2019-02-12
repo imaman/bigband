@@ -13,14 +13,18 @@ import * as yargs from 'yargs';
 import * as path from 'path';
 
 
-function specFileAndRigOptions(yargs) {
+function specFileAndRigOptions(yargs, rigOptionEnabled) {
     yargs.option('bigband-file', {
         descirbe: 'path to a bigband file (.ts)',
         default: 'bigband.config.ts'
     })
-    yargs.option('rig', {
-        descirbe: 'Name of a rig to deploy',
-    })
+
+    if (rigOptionEnabled) {
+        yargs.option('rig', {
+            descirbe: 'Name of a rig to deploy',
+        })    
+    }
+    
     yargs.option('runtime-dir', {
         descirbe: 'path to a directory with an Instrument.js file',
     })
@@ -34,11 +38,9 @@ yargs
     .strict()
     .command('ship', 'deploy!', yargs => {
         specFileAndRigOptions(yargs);
-        yargs.demandOption(['rig']);
-
     }, argv => run(ship, argv))
     .command('logs', 'Watch logs of a function', yargs => {
-        specFileAndRigOptions(yargs);
+        specFileAndRigOptions(yargs, false);
         yargs.option('function-name', {
             descirbe: 'name of a function',
         });
@@ -49,7 +51,7 @@ yargs
         yargs.demandOption(['function-name'])
     }, argv => run(LogsCommand.run, argv))
     .command('invoke', 'Invoke a function', yargs => {
-        specFileAndRigOptions(yargs);
+        specFileAndRigOptions(yargs, false);
         yargs.option('function-name', {
             descirbe: 'name of a function',
         });
@@ -59,7 +61,7 @@ yargs
         yargs.demandOption(['function-name', 'input'])
     }, argv => run(Invoke.run, argv))
     .command('list', 'Show all currently defined instruments from the bigband file', yargs => {
-        specFileAndRigOptions(yargs);
+        specFileAndRigOptions(yargs, false);
     }, argv => run(ListCommand.run, argv))
     .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')
     .help()
