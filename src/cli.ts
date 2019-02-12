@@ -21,7 +21,7 @@ function specFileAndRigOptions(yargs, rigOptionEnabled) {
 
     if (rigOptionEnabled) {
         yargs.option('rig', {
-            descirbe: 'Name of a rig to deploy',
+            descirbe: 'Name of a rig to deploy. optional if only one rig is defined in the bigband file.',
         })    
     }
 
