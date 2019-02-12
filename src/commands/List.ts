@@ -21,7 +21,7 @@ async function main(mixFile: string, runtimeDir: string) {
 
 export class ListCommand {
     static async run(argv) {
-        const temp = await main(argv.mixFile, argv.runtimeDir);
+        const temp = await main(argv.bigbndFile, argv.runtimeDir);
         return JSON.stringify(temp, null, 2);
     }
 }

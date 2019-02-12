@@ -14,17 +14,18 @@ import * as path from 'path';
 
 
 function specFileAndRigOptions(yargs) {
-    yargs.option('mix-file', {
-        descirbe: 'path to a servicemix.config.ts file',
-        default: 'bigband.spec.ts'
+    yargs.option('bigband-file', {
+        descirbe: 'path to a bigband file (.ts)',
+        default: 'bigband.config.ts'
     })
     yargs.option('rig', {
         descirbe: 'Name of a rig to deploy',
     })
     yargs.option('runtime-dir', {
         descirbe: 'path to a directory with an Instrument.js file',
-    });
-return yargs;
+    })
+    yargs.hide('runtime-dir');
+    return yargs;
 }
 
 yargs
@@ -34,6 +35,7 @@ yargs
     .command('ship', 'deploy!', yargs => {
         specFileAndRigOptions(yargs);
         yargs.demandOption(['rig']);
+
     }, argv => run(ship, argv))
     .command('logs', 'Watch logs of a function', yargs => {
         specFileAndRigOptions(yargs);
@@ -56,7 +58,7 @@ yargs
         });
         yargs.demandOption(['function-name', 'input'])
     }, argv => run(Invoke.run, argv))
-    .command('list', 'Show the spec', yargs => {
+    .command('list', 'Show all currently defined instruments from the bigband file', yargs => {
         specFileAndRigOptions(yargs);
     }, argv => run(ListCommand.run, argv))
     .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')
@@ -64,7 +66,7 @@ yargs
     .argv;
 
 async function ship(argv) {
-    return await runMixFile(argv.mixFile, argv.rig, argv.runtimeDir && path.resolve(argv.runtimeDir));
+    return await runMixFile(argv.bigbndFile, argv.rig, argv.runtimeDir && path.resolve(argv.runtimeDir));
 }
 
 

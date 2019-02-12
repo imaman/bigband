@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/imaman/servicemix.git"
+    "url": "https://github.com/imaman/bigbnad.git"
   },
   "bin": {
     "bigband": "./src/cli.js"

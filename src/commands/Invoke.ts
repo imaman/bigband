@@ -55,7 +55,7 @@ async function invokeFunction(mixFile: string, runtimeDir: string, lambdaName: s
 
 export class Invoke {
     static async run(argv) {
-        const temp = await invokeFunction(argv.mixFile, argv.runtimeDir, argv.functionName, argv.input);
+        const temp = await invokeFunction(argv.bigbndFile, argv.runtimeDir, argv.functionName, argv.input);
         return JSON.stringify(temp, null, 2);
     }
 }
