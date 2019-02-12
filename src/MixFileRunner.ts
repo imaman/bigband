@@ -24,7 +24,7 @@ export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: 
     }
     await runSpec(mixSpec, rig);
     const dt = (Date.now() - t0) / 1000;
-    return `Rig ${rig.name} shipped in ${dt.toFixed(1)}s`;
+    return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;
 }
 
 export interface MixSpec {
@@ -37,7 +37,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     const cfp = new CloudFormationPusher(rig);
     cfp.peekAtExistingStack();
     
-    logger.info(`Shipping rig ${rig.name} to ${rig.region}`);
+    logger.info(`Shipping rig "${rig.name}" to ${rig.region}`);
     const ps = mixSpec.instruments
         .map(instrument => pushCode(mixSpec.dir, rig, instrument));
     const pushedInstruments = await Promise.all(ps);
