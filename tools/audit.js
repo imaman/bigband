@@ -13,7 +13,7 @@ function runProgram(command, args) {
     // output filtering on our side is still needed (and it will be fragile as the list of legal severity values will
     // have to be defined by means of copy-pasting).
     //
-    // Believe, me I tried.
+    // Believe me, I tried.
 
     return new Promise(resolve => execFile(command, args, {maxBuffer: 10 * 1024 * 1024}, (err, stdout, stderr) => {
         resolve({exitCode: err ? err.code : 0, stdout, stderr});
