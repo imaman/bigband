@@ -7,7 +7,7 @@
     "compile": "tsc",
     "copy-files": "node tools/copy_to_build.js",
     "build": "npm-run-all -s copy-files compile",
-    "ship-directly": "npm publish build",
+    "ship-directly": "npm publish build/src",
     "ship": "npm-run-all -s unit build ship-directly",
     "unit": "mocha -r ts-node/register src/**/*.test.ts"
   },
