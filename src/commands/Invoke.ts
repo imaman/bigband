@@ -27,8 +27,8 @@ export function lookupFunction(lambdaName: string, spec: BigbandSpec) {
 
     return matches[0];
 }
-async function invokeFunction(mixFile: string, runtimeDir: string, lambdaName: string, input: string) {
-    const spec = await loadSpec(mixFile, runtimeDir);
+async function invokeFunction(bigbandFile: string, runtimeDir: string, lambdaName: string, input: string) {
+    const spec = await loadSpec(bigbandFile, runtimeDir);
 
     const data = lookupFunction(lambdaName, spec);
 

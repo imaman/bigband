@@ -5,8 +5,8 @@ import {lookupFunction} from './Invoke';
 
 
 
-async function main(mixFile: string, runtimeDir: string, lambdaName: string, limit: number) {
-    const spec = await loadSpec(mixFile, runtimeDir);
+async function main(bigbandFile: string, runtimeDir: string, lambdaName: string, limit: number) {
+    const spec = await loadSpec(bigbandFile, runtimeDir);
     const {rig, instrument} = lookupFunction(lambdaName, spec);
 
     const cloudWatchLogs = new AwsFactory(rig.region, rig.isolationScope.profile).newCloudWatchLogs();
