@@ -14,7 +14,7 @@ export class Teleporter {
 
     private readonly deltaS3: S3Ref;
     constructor(private readonly factory: AwsFactory, private readonly s3Bucket: string, private readonly s3Prefix: string) {
-        this.deltaS3 = new S3Ref(this.s3Bucket, `${this.s3Prefix}/deployables/${uuid()}`);
+        this.deltaS3 = new S3Ref(this.s3Bucket, `${this.s3Prefix}/TTL/7d/deployables/${uuid()}`);
     }
 
     async computeDelta(zipBuilder: ZipBuilder, s3Ref: S3Ref): Promise<Delta> {
