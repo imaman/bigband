@@ -111,7 +111,7 @@ export class CloudFormationPusher {
             showProgress(iteration);
             description = await this.cloudFormation.describeChangeSet(describeReq).promise();
             logger.silly('ChangeSet description=\n' + JSON.stringify(description, null, 2));
-            if (description.Status != "CREATE_IN_PROGRESS") {
+            if (description.Status !== "CREATE_IN_PROGRESS" && description.Status !== 'CREATE_PENDING') {
                 break;
             }
             

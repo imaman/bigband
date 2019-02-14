@@ -18,13 +18,13 @@ export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: 
         throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
     }
     const mixSpec = await loadSpec(mixFile, runtimeDir);
-    const rig = mixSpec.rigs.find(curr => curr.name === rigName);
+    const rig = mixSpec.rigs.length === 1 && !rigName ? mixSpec.rigs[0] : mixSpec.rigs.find(curr => curr.name === rigName);
     if (!rig) {
         throw new Error(`Failed to find a rig named ${rigName} in ${mixSpec.rigs.map(curr => curr.name).join(', ')}`);
     }
     await runSpec(mixSpec, rig);
     const dt = (Date.now() - t0) / 1000;
-    return `Rig ${rig.name} shipped in ${dt.toFixed(1)}s`;
+    return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;
 }
 
 export interface MixSpec {
@@ -37,7 +37,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     const cfp = new CloudFormationPusher(rig);
     cfp.peekAtExistingStack();
     
-    logger.info(`Shipping rig ${rig.name} to ${rig.region}`);
+    logger.info(`Shipping rig "${rig.name}" to ${rig.region}`);
     const ps = mixSpec.instruments
         .map(instrument => pushCode(mixSpec.dir, rig, instrument));
     const pushedInstruments = await Promise.all(ps);
@@ -68,6 +68,9 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
 }
 
 export async function loadSpec(mixFile: string, runtimeDir?: string): Promise<MixSpec> {
+    if (!mixFile) {
+        throw new Error('mixFile cannot be falsy');
+    }
     const d = path.dirname(path.resolve(mixFile));
     const packager = new Packager(d, d, '', '');
     const file = path.parse(mixFile).name;
