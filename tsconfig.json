@@ -18,7 +18,7 @@
     "src/cli.ts",
     "src/Packager.ts",
     "src/NpmPackageResolver.ts",
-    "src/runtime/Instrument.test.ts",
+    "src/instruments/Instrument.test.ts",
     "src/DepsCollector.ts"
   ]
 }

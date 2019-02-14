@@ -38,8 +38,11 @@ async function main() {
     }
 
     fs.mkdirSync(buildDir);
-    await copyFile(baseDir, buildDir, 'package.json');
-    await copyFile(baseDir, buildDir, 'README.md');
+    const buildDirSrc = path.resolve(buildDir, 'src');
+    fs.mkdirSync(buildDirSrc);
+
+    await copyFile(baseDir, buildDirSrc, 'package.json');
+    await copyFile(baseDir, buildDirSrc, 'README.md');
     return '';
 }
 

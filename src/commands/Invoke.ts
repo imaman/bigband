@@ -1,10 +1,10 @@
 import * as AWS from 'aws-sdk'
 import {AwsFactory} from '../AwsFactory'
-import {loadSpec, MixSpec} from '../MixFileRunner';
+import {loadSpec, BigbandSpec} from '../BigbandFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
 
 
-export function lookupFunction(lambdaName: string, spec: MixSpec) {
+export function lookupFunction(lambdaName: string, spec: BigbandSpec) {
     let matches: any[] = [];
     const names: string[] = [];
     spec.rigs.forEach(r => {
@@ -27,8 +27,8 @@ export function lookupFunction(lambdaName: string, spec: MixSpec) {
 
     return matches[0];
 }
-async function invokeFunction(mixFile: string, runtimeDir: string, lambdaName: string, input: string) {
-    const spec = await loadSpec(mixFile, runtimeDir);
+async function invokeFunction(bigbandFile: string, runtimeDir: string, lambdaName: string, input: string) {
+    const spec = await loadSpec(bigbandFile, runtimeDir);
 
     const data = lookupFunction(lambdaName, spec);
 

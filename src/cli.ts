@@ -3,7 +3,7 @@
 import * as sourceMapSupport from 'source-map-support';
 sourceMapSupport.install();
 
-import {runMixFile} from './MixFileRunner';
+import {runBigbandFile} from './BigbandFileRunner';
 import {LogsCommand} from './commands/Logs'
 import {ListCommand} from './commands/List'
 import {Invoke} from './commands/Invoke'
@@ -68,7 +68,7 @@ yargs
     .argv;
 
 async function ship(argv) {
-    return await runMixFile(argv.bigbandFile, argv.rig, argv.runtimeDir && path.resolve(argv.runtimeDir));
+    return await runBigbandFile(argv.bigbandFile, argv.rig, argv.runtimeDir && path.resolve(argv.runtimeDir));
 }
 
 
