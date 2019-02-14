@@ -1,4 +1,4 @@
-import {Rig} from './runtime/Instrument'
+import {Rig} from './instruments/Instrument'
 import * as AWS from 'aws-sdk';
 
 export class AwsFactory {

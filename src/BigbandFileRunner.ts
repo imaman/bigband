@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as hash from 'hash.js'
 
 import {AwsFactory} from './AwsFactory';
-import {NameStyle, Rig, Instrument, DeployableAtom} from './runtime/Instrument';
+import {NameStyle, Rig, Instrument, DeployableAtom} from './instruments/Instrument';
 import {Packager,ZipBuilder,S3Ref} from './Packager'
 import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';

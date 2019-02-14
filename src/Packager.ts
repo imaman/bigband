@@ -12,7 +12,7 @@ import {logger} from './logger';
 import {AwsFactory} from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
-import { Instrument, DeployableFragment, DeployableAtom, Rig } from './runtime/Instrument';
+import { Instrument, DeployableFragment, DeployableAtom, Rig } from './instruments/Instrument';
 import { GetFunctionResponse } from 'aws-sdk/clients/lambda';
 
 export class Packager {
