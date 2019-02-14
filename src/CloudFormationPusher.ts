@@ -185,26 +185,3 @@ function showProgress(n) {
     logger.info(new Array(n + 1).fill('.').join(''));
 }
 
-
-
-/*
-Error { InvalidChangeSetStatus: ChangeSet [arn:aws:cloudformation:eu-central-1:274788167589:stack/algo-qual-prod/ec282ac0-2d5b-11e9-a114-06a005f7522e] cannot be executed in its current status of [CREATE_PENDING]
-    at Request.extractError (/home/imaman/code/data-platform/tagging/backend/node_modules/bigband/node_modules/aws-sdk/lib/protocol/query.js:50:29)
-    at Request.callListeners (/home/imaman/code/data-platform/tagging/backend/node_modules/bigband/node_modules/aws-sdk/lib/sequential_executor.js:106:20)
-    at Request.emit (/home/imaman/code/data-platform/tagging/backend/node_modules/bigband/node_modules/aws-sdk/lib/sequential_executor.js:78:10)
-    at Request.emit (/home/imaman/code/data-platform/tagging/backend/node_modules/bigband/node_modules/aws-sdk/lib/request.js:683:14)
-    at Request.transition (/home/imaman/code/data-platform/tagging/backend/node_modules/bigband/node_modules/aws-sdk/lib/request.js:22:10)
-    at AcceptorStateMachine.runTo (/home/imaman/code/data-platform/tagging/backend/node_modules/bigband/node_modules/aws-sdk/lib/state_machine.js:14:12)
-    at /home/imaman/code/data-platform/tagging/backend/node_modules/bigband/node_modules/aws-sdk/lib/state_machine.js:26:10
-    at Request.<anonymous> (/home/imaman/code/data-platform/tagging/backend/node_modules/bigband/node_modules/aws-sdk/lib/request.js:38:9)
-    at Request.<anonymous> (/home/imaman/code/data-platform/tagging/backend/node_modules/bigband/node_modules/aws-sdk/lib/request.js:685:12)
-    at Request.callListeners (/home/imaman/code/data-platform/tagging/backend/node_modules/bigband/node_modules/aws-sdk/lib/sequential_executor.js:116:18)
-  message: 'ChangeSet [arn:aws:cloudformation:eu-central-1:274788167589:stack/algo-qual-prod/ec282ac0-2d5b-11e9-a114-06a005f7522e] cannot be executed in its current status of [CREATE_PENDING]',
-  code: 'InvalidChangeSetStatus',
-  time: 2019-02-11T13:35:02.532Z,
-  requestId: 'd58e7a4b-2e01-11e9-a03a-f1dd60834d23',
-  statusCode: 400,
-  retryable: false,
-  retryDelay: 8.835192288510573 }
-
-  */
