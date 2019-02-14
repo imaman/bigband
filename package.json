@@ -1,6 +1,6 @@
 {
   "name": "bigband",
-  "version": "0.1.75",
+  "version": "0.1.76",
   "description": "Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.",
   "main": "",
   "scripts": {
@@ -21,7 +21,7 @@
     "url": "https://github.com/imaman/bigband.git"
   },
   "bin": {
-    "bigband": "./src/cli.js"
+    "bigband": "./cli.js"
   },
   "author": "Itay Maman",
   "license": "MIT",
