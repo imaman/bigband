@@ -17,17 +17,17 @@ export class NpmPackageResolver {
     private readonly depsByPackageName: any = {};
 
     /**
-     * during development we want to run this code on samples without actually having servicemix installed
-     * at the node_modules/ directory. To achieve that we provide the injectedServiceMixDir shim: it specifies
-     * it specifies a directory from which servicemix files can be obtained, thus bypassing the standard discovery
+     * during development we want to run this code on samples without actually having bigband installed
+     * at the node_modules/ directory. To achieve that we provide the injectedBigbandDir shim:
+     * it specifies a directory from which bigband files can be obtained, thus bypassing the standard discovery
      * mechanism which is based on 'npm ls --json'.
      * 
      * @param roots 
-     * @param injectedServiceMixDir 
+     * @param injectedBigbandDir 
      */
-    constructor(private readonly roots: string[], private readonly injectedServiceMixDir?: string) {
-        if (injectedServiceMixDir && !path.isAbsolute(injectedServiceMixDir)) {
-            throw new Error(`injectedServiceMixDir (${injectedServiceMixDir}) is not an absolute path`);
+    constructor(private readonly roots: string[], private readonly injectedBigbandDir?: string) {
+        if (injectedBigbandDir && !path.isAbsolute(injectedBigbandDir)) {
+            throw new Error(`injectedBigbandDir (${injectedBigbandDir}) is not an absolute path`);
         }
         const relatives = roots.filter(r => !path.isAbsolute(r));        
         if (relatives.length) {
@@ -72,8 +72,8 @@ export class NpmPackageResolver {
 
         const traverse = (packageName: string) => {
             let obj = this.depsByPackageName[packageName];
-            if (!obj && (packageName === '@servicemix') && this.injectedServiceMixDir) {
-                this.usages.push({packageName, version: "0.0.0", dir: this.injectedServiceMixDir});
+            if (!obj && (packageName === '@servicemix') && this.injectedBigbandDir) {
+                this.usages.push({packageName, version: "0.0.0", dir: this.injectedBigbandDir});
                 return;
             }
             if (!obj) {
