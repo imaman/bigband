@@ -113,7 +113,7 @@ export class Packager {
     const teleporter = new Teleporter(factory, this.s3Bucket, this.s3Prefix);
     const delta = await teleporter.computeDelta(zipBuilder, ret);
     await teleporter.pushDelta(delta);
-    await teleporter.mergeDelta(delta, ret);
+    await teleporter.mergeDelta(delta, ret, instrument.fullyQualifiedName());
 
     return ret;
   }

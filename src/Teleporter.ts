@@ -27,7 +27,7 @@ export class Teleporter {
         return S3Ref.put(this.factory, this.deltaS3, delta.buffer, CONTENT_TYPE);
     }
 
-    async mergeDelta(delta: Delta, s3Ref: S3Ref) {
+    async mergeDelta(delta: Delta, s3Ref: S3Ref, instrumentName: string) {
         console.log('mergeDelta: ' + this.deltaS3 + ' + ' + s3Ref);
         const buf = await S3Ref.get(this.factory, this.deltaS3);        
         if (!buf) {
@@ -35,7 +35,7 @@ export class Teleporter {
             throw new Error('Got a falsy buffer from ' + this.deltaS3);
         }
 
-        console.log(`putting buf ${buf.length} into ${s3Ref}`);
+        console.log(`Uploading ${(buf.length / (1024 * 1024)).toFixed(3)}MB for ${instrumentName}`);
         return S3Ref.put(this.factory, s3Ref, buf, CONTENT_TYPE);
     }    
 }
