@@ -72,7 +72,7 @@ export class NpmPackageResolver {
 
         const traverse = (packageName: string) => {
             let obj = this.depsByPackageName[packageName];
-            if (!obj && (packageName === '@servicemix') && this.injectedBigbandDir) {
+            if (!obj && (packageName === '@bigband') && this.injectedBigbandDir) {
                 this.usages.push({packageName, version: "0.0.0", dir: this.injectedBigbandDir});
                 return;
             }
