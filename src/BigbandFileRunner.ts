@@ -9,7 +9,7 @@ import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 import { logger } from './logger';
 
-export async function runMixFile(mixFile: string, rigName: string, runtimeDir?: string) {
+export async function runBigbandFile(mixFile: string, rigName: string, runtimeDir?: string) {
     const t0 = Date.now();
     if (Number(process.versions.node.split('.')[0]) < 8) {
         throw new Error('You must use node version >= 8 to run this program');
