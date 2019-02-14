@@ -18,19 +18,24 @@ export class Teleporter {
     }
 
     async computeDelta(zipBuilder: ZipBuilder, s3Ref: S3Ref): Promise<Delta> {
+        console.log('computeDelta on ' + s3Ref);
         return new Delta(await zipBuilder.toBuffer());
     }
 
     async pushDelta(delta: Delta) {
+        console.log('pushDelta into ' + this.deltaS3);
         return S3Ref.put(this.factory, this.deltaS3, delta.buffer, CONTENT_TYPE);
     }
 
     async mergeDelta(delta: Delta, s3Ref: S3Ref) {
+        console.log('mergeDelta: ' + this.deltaS3 + ' + ' + s3Ref);
         const buf = await S3Ref.get(this.factory, this.deltaS3);        
         if (!buf) {
+            console.log('buf is falsy');
             throw new Error('Got a falsy buffer from ' + this.deltaS3);
         }
 
+        console.log(`putting buf ${buf.length} into ${s3Ref}`);
         return S3Ref.put(this.factory, s3Ref, buf, CONTENT_TYPE);
     }    
 }
