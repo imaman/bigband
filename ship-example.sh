@@ -5,5 +5,14 @@ dir=`dirname $(readlink -f "$0")`
 
 cd $dir
 
-example/setup.sh  && tsc && node build/src/cli.js ship --bigband-file example/bigband.config.ts  --runtime-dir example/node_modules/@bigband --rig  prod-major
+if [ "$#" == "0" ]; then
+    commandArg="ship"
+else 
+    commandArg="$1"
+    shift 1
+fi
+
+example/setup.sh  && tsc && node build/src/cli.js "${commandArg}" \
+    --bigband-file example/bigband.config.ts  \
+    --runtime-dir example/node_modules/@bigband $*
 
