@@ -9,7 +9,7 @@ import {CloudFormationPusher} from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 import { logger } from './logger';
 
-export async function runBigbandFile(mixFile: string, rigName: string, runtimeDir?: string) {
+export async function runBigbandFile(bigbandFile: string, rigName: string, runtimeDir?: string) {
     const t0 = Date.now();
     if (Number(process.versions.node.split('.')[0]) < 8) {
         throw new Error('You must use node version >= 8 to run this program');
@@ -17,12 +17,12 @@ export async function runBigbandFile(mixFile: string, rigName: string, runtimeDi
     if (runtimeDir && !path.isAbsolute(runtimeDir)) {
         throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
     }
-    const mixSpec = await loadSpec(mixFile, runtimeDir);
-    const rig = mixSpec.rigs.length === 1 && !rigName ? mixSpec.rigs[0] : mixSpec.rigs.find(curr => curr.name === rigName);
+    const bigbandSpec = await loadSpec(bigbandFile, runtimeDir);
+    const rig = bigbandSpec.rigs.length === 1 && !rigName ? bigbandSpec.rigs[0] : bigbandSpec.rigs.find(curr => curr.name === rigName);
     if (!rig) {
-        throw new Error(`Failed to find a rig named ${rigName} in ${mixSpec.rigs.map(curr => curr.name).join(', ')}`);
+        throw new Error(`Failed to find a rig named ${rigName} in ${bigbandSpec.rigs.map(curr => curr.name).join(', ')}`);
     }
-    await runSpec(mixSpec, rig);
+    await runSpec(bigbandSpec, rig);
     const dt = (Date.now() - t0) / 1000;
     return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;
 }
@@ -33,13 +33,13 @@ export interface BigbandSpec {
     dir: string
 }
 
-export async function runSpec(mixSpec: BigbandSpec, rig: Rig) {
+export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     const cfp = new CloudFormationPusher(rig);
     cfp.peekAtExistingStack();
     
     logger.info(`Shipping rig "${rig.name}" to ${rig.region}`);
-    const ps = mixSpec.instruments
-        .map(instrument => pushCode(mixSpec.dir, rig, instrument));
+    const ps = bigbandSpec.instruments
+        .map(instrument => pushCode(bigbandSpec.dir, rig, instrument));
     const pushedInstruments = await Promise.all(ps);
     const stack = {
         AWSTemplateFormatVersion: '2010-09-09',
@@ -67,13 +67,13 @@ export async function runSpec(mixSpec: BigbandSpec, rig: Rig) {
     }));
 }
 
-export async function loadSpec(mixFile: string, runtimeDir?: string): Promise<BigbandSpec> {
-    if (!mixFile) {
-        throw new Error('mixFile cannot be falsy');
+export async function loadSpec(bigbandFile: string, runtimeDir?: string): Promise<BigbandSpec> {
+    if (!bigbandFile) {
+        throw new Error('bigbandFile cannot be falsy');
     }
-    const d = path.dirname(path.resolve(mixFile));
+    const d = path.dirname(path.resolve(bigbandFile));
     const packager = new Packager(d, d, '', '');
-    const file = path.parse(mixFile).name;
+    const file = path.parse(bigbandFile).name;
     const zb = await packager.run(`${file}.ts`, 'spec_compiled', runtimeDir);
     const specDeployedDir = packager.unzip(zb, 'spec_deployed')
     const ret: BigbandSpec = require(path.resolve(specDeployedDir, 'build', `${file}.js`)).run();
