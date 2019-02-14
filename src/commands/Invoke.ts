@@ -1,6 +1,6 @@
 import * as AWS from 'aws-sdk'
 import {AwsFactory} from '../AwsFactory'
-import {loadSpec, MixSpec} from '../MixFileRunner';
+import {loadSpec, MixSpec} from '../BigbandFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
 
 

@@ -3,7 +3,7 @@
 import * as sourceMapSupport from 'source-map-support';
 sourceMapSupport.install();
 
-import {runMixFile} from './MixFileRunner';
+import {runMixFile} from './BigbandFileRunner';
 import {LogsCommand} from './commands/Logs'
 import {ListCommand} from './commands/List'
 import {Invoke} from './commands/Invoke'

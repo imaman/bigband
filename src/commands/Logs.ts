@@ -1,6 +1,6 @@
 import {AwsFactory} from '../AwsFactory'
 import { DescribeLogStreamsRequest, GetLogEventsRequest, GetLogEventsResponse, DescribeLogStreamsResponse } from 'aws-sdk/clients/cloudwatchlogs';
-import {loadSpec} from '../MixFileRunner';
+import {loadSpec} from '../BigbandFileRunner';
 import {lookupFunction} from './Invoke';
 
 

@@ -1,5 +1,5 @@
 import {AwsFactory} from '../AwsFactory'
-import {loadSpec,MixSpec} from '../MixFileRunner';
+import {loadSpec,MixSpec} from '../BigbandFileRunner';
 
 
 
