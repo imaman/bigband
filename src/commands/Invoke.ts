@@ -1,10 +1,10 @@
 import * as AWS from 'aws-sdk'
 import {AwsFactory} from '../AwsFactory'
-import {loadSpec, MixSpec} from '../BigbandFileRunner';
+import {loadSpec, BigbandSpec} from '../BigbandFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
 
 
-export function lookupFunction(lambdaName: string, spec: MixSpec) {
+export function lookupFunction(lambdaName: string, spec: BigbandSpec) {
     let matches: any[] = [];
     const names: string[] = [];
     spec.rigs.forEach(r => {

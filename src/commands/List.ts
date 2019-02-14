@@ -1,10 +1,10 @@
 import {AwsFactory} from '../AwsFactory'
-import {loadSpec,MixSpec} from '../BigbandFileRunner';
+import {loadSpec,BigbandSpec} from '../BigbandFileRunner';
 
 
 
 async function main(mixFile: string, runtimeDir: string) {
-    const spec: MixSpec = await loadSpec(mixFile, runtimeDir);
+    const spec: BigbandSpec = await loadSpec(mixFile, runtimeDir);
     const scopes = spec.rigs.map(r => r.isolationScope);
     const ret = {};
     scopes.forEach(s => ret[s.name] = {});

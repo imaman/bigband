@@ -27,13 +27,13 @@ export async function runBigbandFile(mixFile: string, rigName: string, runtimeDi
     return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;
 }
 
-export interface MixSpec {
+export interface BigbandSpec {
     rigs: Rig[]
     instruments: Instrument[]
     dir: string
 }
 
-export async function runSpec(mixSpec: MixSpec, rig: Rig) {
+export async function runSpec(mixSpec: BigbandSpec, rig: Rig) {
     const cfp = new CloudFormationPusher(rig);
     cfp.peekAtExistingStack();
     
@@ -67,7 +67,7 @@ export async function runSpec(mixSpec: MixSpec, rig: Rig) {
     }));
 }
 
-export async function loadSpec(mixFile: string, runtimeDir?: string): Promise<MixSpec> {
+export async function loadSpec(mixFile: string, runtimeDir?: string): Promise<BigbandSpec> {
     if (!mixFile) {
         throw new Error('mixFile cannot be falsy');
     }
@@ -76,7 +76,7 @@ export async function loadSpec(mixFile: string, runtimeDir?: string): Promise<Mi
     const file = path.parse(mixFile).name;
     const zb = await packager.run(`${file}.ts`, 'spec_compiled', runtimeDir);
     const specDeployedDir = packager.unzip(zb, 'spec_deployed')
-    const ret: MixSpec = require(path.resolve(specDeployedDir, 'build', `${file}.js`)).run();
+    const ret: BigbandSpec = require(path.resolve(specDeployedDir, 'build', `${file}.js`)).run();
     if (!ret.dir) {
         ret.dir = d;
     }
@@ -104,7 +104,7 @@ function checkDuplicates(names: string[]): string[] {
     return ret;
 }
 
-function checkSpec(spec: MixSpec) {
+function checkSpec(spec: BigbandSpec) {
     let dupes = checkDuplicates(spec.rigs.map(r => r.name));
     if (dupes.length) {
         throw new Error(`Found two (or more) rigs with the same name: ${JSON.stringify(dupes)}`);
