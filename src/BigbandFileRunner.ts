@@ -2,10 +2,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as hash from 'hash.js'
 
-import {AwsFactory} from './AwsFactory';
-import {NameStyle, Rig, Instrument, DeployableAtom} from './instruments/Instrument';
-import {Packager,ZipBuilder,S3Ref} from './Packager'
-import {CloudFormationPusher} from './CloudFormationPusher';
+import { AwsFactory } from './AwsFactory';
+import { NameStyle, Rig, Instrument, DeployableAtom } from './instruments/Instrument';
+import { Packager } from './Packager'
+import { ZipBuilder } from './ZipBuilder'
+import { S3Ref } from './S3Ref'
+import { CloudFormationPusher } from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 import { logger } from './logger';
 

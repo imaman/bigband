@@ -1,19 +1,20 @@
 import * as util from 'util';
-import * as JSZip from 'jszip';
 import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as uuidv1 from 'uuid/v1';
 import * as os from 'os';
-import * as mkdirp from 'mkdirp'
 import * as hash from 'hash.js';
 
-import {logger} from './logger';
-import {AwsFactory} from './AwsFactory';
+import { logger } from './logger';
+import { AwsFactory } from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
-import { Instrument, DeployableFragment, DeployableAtom, Rig } from './instruments/Instrument';
+import { Instrument, Rig } from './instruments/Instrument';
 import { GetFunctionResponse } from 'aws-sdk/clients/lambda';
+import { Teleporter } from './Teleporter';
+import { S3Ref } from './S3Ref';
+import { ZipBuilder } from './ZipBuilder';
 
 export class Packager {
   private readonly workingDir: string;
@@ -108,23 +109,15 @@ export class Packager {
       logger.info(`No code changes in ${instrument.fullyQualifiedName()}`);
       return ret;
     }
-    console.log(`Uploading ${(buf.length / (1024 * 1024)).toFixed(3)}MB for ${instrument.fullyQualifiedName()}`);
 
-    try {
-      await s3.putObject({
-        Bucket: this.s3Bucket,
-        Key: s3Key,
-        Body: buf,
-        ContentType: "application/zip"
-      }).promise();
-    } catch (e) {
-      console.log(`S3 putObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${this.s3Bucket}, Key:${s3Key}`);
-      throw e;
-    }
-  
-    logger.silly(`Size: ${buf.byteLength} bytes`);
+    const teleporter = new Teleporter(factory, this.s3Bucket, this.s3Prefix);
+    const delta = await teleporter.computeDelta(zipBuilder, ret);
+    await teleporter.pushDelta(delta);
+    await teleporter.mergeDelta(delta, ret);
+
     return ret;
   }
+
 
   private toAbs(relativeFile: string) {
     if (path.isAbsolute(relativeFile)) {
@@ -152,110 +145,8 @@ export class Packager {
   }
 }
 
-export class S3Ref {
-  constructor(public readonly s3Bucket, public readonly s3Key) {}
-
-  static EMPTY = new S3Ref("", "");
-
-  isOk() {
-    return Boolean(this.s3Bucket) && Boolean(this.s3Key);
-  }
-
-  toUri() {
-    return `s3://${this.s3Bucket}/${this.s3Key}`
-  }
-}
 
 
 function shouldBeIncluded(packageName: string) {
   return packageName !== 'aws-sdk' && !packageName.startsWith('aws-sdk/');
-}
-
-
-
-export class ZipBuilder {
-  private readonly zip: JSZip = new JSZip();
-  public readonly fragment = new DeployableFragment();
-
-  scan(pathInJar: string, absolutePath: string) {
-    if (!path.isAbsolute(absolutePath)) {
-      throw new Error(`path is not absolute (${absolutePath}).`)
-    }
-    if (fs.lstatSync(absolutePath).isDirectory()) {
-      fs.readdirSync(absolutePath).forEach((f: string) => {
-        this.scan(path.join(pathInJar, f), path.join(absolutePath, f));
-      });
-    } else {
-      const content = fs.readFileSync(absolutePath, 'utf-8');
-      const atom = new DeployableAtom(pathInJar, content);
-      this.fragment.add(atom);
-    }
-  }
-
-  forEach(consumer: (DeployableAtom) => void){
-    this.fragment.forEach(consumer);
-  }
-
-  importFragment(from: DeployableFragment) {
-    from.forEach(curr => {
-      this.fragment.add(curr);
-    })
-  }
-
-  add(path, content) {
-    this.fragment.add(new DeployableAtom(path, content));
-  }
-
-  async get(path) {
-    return await this.zip.file(path).async("string");
-  }
-
-  populateZip() {
-      const zipByPath: any = {}
-      zipByPath["."] = this.zip;
-      this.fragment.forEach(atom => {
-          const curr = path.dirname(atom.path);
-          const ps: string[] = [];
-          for (let x = curr; x !== '.'; x = path.dirname(x)) {
-              ps.push(x);
-          }
-          ps.reverse();
-          ps.forEach(p => {
-              if (zipByPath[p]) {
-                  return;
-              }
-              const parZip = zipByPath[path.dirname(p)];
-              parZip.file(path.basename(p), '' ,{date: new Date(1000), dir: true});
-
-              zipByPath[p] = parZip.folder(path.basename(p));
-            });
-      });
-  
-      this.fragment.forEach(atom => {
-        const zz = zipByPath[path.dirname(atom.path)];
-        zz.file(path.basename(atom.path), atom.content, {date: new Date(1000)});
-      });
-  }
-
-  async toBuffer(): Promise<Buffer> {
-    return this.zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 0 } });
-  }
-
-  unzip(outDir: string) {
-    if (!path.isAbsolute(outDir)) {
-      throw new Error(`outDir (${outDir}) must be absolute`);
-    }
-
-    this.fragment.forEach((curr: DeployableAtom) => {
-      const p = path.resolve(outDir, curr.path);
-      mkdirp.sync(path.dirname(p));
-      fs.writeFileSync(p, curr.content, "utf-8");
-    });
-  }
-
-  async dump(outputFile: string) {
-    const buf = await this.toBuffer();
-    fs.writeFileSync(outputFile, buf);
-    console.log('-written-')
-  }
 }
