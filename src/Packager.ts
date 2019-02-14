@@ -101,7 +101,6 @@ export class Packager {
     const c = getFunctionResponse && getFunctionResponse.Configuration && getFunctionResponse.Configuration.CodeSha256;
 
     const s3Key = `${this.s3Prefix}/${s3Object}`;
-    const s3 = factory.newS3();
 
     const ret = new S3Ref(this.s3Bucket, s3Key);
     logger.silly(`Comparing fingerprints for ${instrument.fullyQualifiedName()}:\n  ${c}\n  ${fingeprint}`);
