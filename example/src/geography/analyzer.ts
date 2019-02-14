@@ -1,6 +1,6 @@
 export async function runLambda(context, event, mapping) {
     const records = event.Records.map(r => JSON.parse(new Buffer(r.kinesis.data, 'base64').toString()))
-    console.log(`GOT ${records.length} records: ` + JSON.stringify(records));
+    console.log(`Got ${records.length} records: ` + JSON.stringify(records));
     return {
         statusCode: 200,
         headers: { 
