@@ -32,18 +32,39 @@ export class S3Ref {
       }      
   }
 
-  static async get(factory: AwsFactory, s3Ref: S3Ref): Promise<Buffer|undefined> {
+  static async get(factory: AwsFactory, s3Ref: S3Ref): Promise<Buffer> {
     const s3 = factory.newS3();
+    let resp: AWS.S3.GetObjectOutput;
     try {
         const req: AWS.S3.GetObjectRequest = {
             Bucket: s3Ref.s3Bucket,
             Key: s3Ref.s3Key
         }
-        const resp: AWS.S3.GetObjectOutput = await s3.getObject(req).promise();
-        return resp.Body as Buffer;
+        resp = await s3.getObject(req).promise();
       } catch (e) {
         console.log(`S3 getObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${s3Ref.s3Bucket}, Key:${s3Ref.s3Key}`);
         throw e;
-      }      
+      }  
+
+      const ret = resp.Body;
+      if (!ret) {
+        throw new Error(`Empty body when reading an S3 object. ${factory.profileName}, Region: ${factory.region}, Bucket:${s3Ref.s3Bucket}, Key:${s3Ref.s3Key}`);
+      }
+
+      return ret as Buffer;
+  }
+
+  static async exists(factory: AwsFactory, s3Ref: S3Ref): Promise<boolean> {
+    const s3 = factory.newS3();
+    try {
+        const req: AWS.S3.HeadObjectRequest = {
+            Bucket: s3Ref.s3Bucket,
+            Key: s3Ref.s3Key
+        }
+        await s3.headObject(req).promise();
+        return true;
+      } catch (e) {
+        return false;
+      }  
   }
 }

@@ -10,9 +10,9 @@ import { logger } from './logger';
 import { AwsFactory } from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
-import { Instrument, Rig } from './instruments/Instrument';
+import { Instrument, Rig, DeployableAtom, DeployableFragment } from './instruments/Instrument';
 import { GetFunctionResponse } from 'aws-sdk/clients/lambda';
-import { Teleporter } from './Teleporter';
+import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
 import { ZipBuilder } from './ZipBuilder';
 
@@ -39,7 +39,7 @@ export class Packager {
     }
   }
 
-  async compile(relatvieTsFile: string, relativeOutDir: string) {
+  private async compile(relatvieTsFile: string, relativeOutDir: string) {
     const outDir = this.newOutDir(relativeOutDir);
     const fileToCompile = this.toAbs(relatvieTsFile);
 
@@ -51,7 +51,7 @@ export class Packager {
     return outDir;
   }
   
-  createZip(relativeTsFile: string, compiledFilesDir: string, runtimeDir?: string) {
+  private createZip(relativeTsFile: string, compiledFilesDir: string, runtimeDir?: string) {
     const absoluteTsFile = this.toAbs(relativeTsFile);
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
@@ -63,29 +63,29 @@ export class Packager {
     const usageByPackageName = npmPackageResolver.compute();
   
     const zipBuilder = new ZipBuilder();
+    const nodeModulesFragment = zipBuilder.newFragment();
     Object.keys(usageByPackageName).forEach(k => {
       const usage: Usage = usageByPackageName[k];
-      zipBuilder.scan(`node_modules/${usage.packageName}`, usage.dir);
+      nodeModulesFragment.scan(`node_modules/${usage.packageName}`, usage.dir);
     });
-  
-    zipBuilder.scan('build', compiledFilesDir);
+    
+    zipBuilder.newFragment().scan('build', compiledFilesDir);
     return zipBuilder;
   }
 
-  async run(relativeTsFile: string, relativeOutDir: string, runtimeDir?: string) {
+  public async run(relativeTsFile: string, relativeOutDir: string, runtimeDir?: string) {
     logger.silly(`Packing ${relativeTsFile} into ${relativeOutDir}`);
     const compiledFilesDir = await this.compile(relativeTsFile, relativeOutDir);
     return this.createZip(relativeTsFile, compiledFilesDir, runtimeDir);
   }
 
-  unzip(zipBuilder: ZipBuilder, relativeOutDir: string) {
-    zipBuilder.populateZip();
+  public unzip(zipBuilder: ZipBuilder, relativeOutDir: string) {
     const outDir = this.newOutDir(relativeOutDir);
     zipBuilder.unzip(outDir);
     return outDir;
   }
 
-  async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder): Promise<S3Ref> {      
+  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder): Promise<S3Ref> {      
     if (!this.rig) {
       throw new Error('rig was not set.');
     }
@@ -94,9 +94,8 @@ export class Packager {
     const p = factory.newLambda().getFunction({
       FunctionName: instrument.physicalName(this.rig)
     }).promise().catch(e => null);
-    zipBuilder.populateZip();
     const buf = await zipBuilder.toBuffer();
-    const fingeprint = Buffer.from(hash.sha256().update(buf).digest()).toString('base64');
+    const fingeprint = ZipBuilder.bufferTo256Fingerprint(buf);
     const getFunctionResponse: GetFunctionResponse|null = await p;
     const c = getFunctionResponse && getFunctionResponse.Configuration && getFunctionResponse.Configuration.CodeSha256;
 
@@ -109,10 +108,9 @@ export class Packager {
       return ret;
     }
 
-    const teleporter = new Teleporter(factory, this.s3Bucket, this.s3Prefix);
-    const delta = await teleporter.computeDelta(zipBuilder, ret);
-    await teleporter.pushDelta(delta);
-    await teleporter.mergeDelta(delta, ret, instrument.fullyQualifiedName());
+    const pool = new S3BlobPool(factory, this.s3Bucket, `${this.s3Prefix}/TTL/7d/deployables`);
+    const teleporter = new Teleporter(pool);
+    await teleporter.teleport(zipBuilder, ret, instrument.fullyQualifiedName());
 
     return ret;
   }

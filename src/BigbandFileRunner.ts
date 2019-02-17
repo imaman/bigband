@@ -138,7 +138,6 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
     const packager = new Packager(d, d, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig);
     const pathPrefix = 'build';
     logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
-    const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix);
     const frag = instrument.createFragment(pathPrefix);
 
     const mapping = {};
@@ -155,6 +154,7 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
         sha256.update(a.content);
     };
 
+    const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix);
     zb.forEach(atomConsumer);
     frag.forEach(atomConsumer);
 

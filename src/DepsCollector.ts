@@ -79,10 +79,12 @@ export class DepsCollector {
         const inst = new DepsCollector().scan(path.resolve(fileName), "_ROOT_");
         const npmDeps : string[] = Array.from(inst.npmDeps);
         npmDeps.sort();
-        return {
+        const ret = {
             sourceDeps: [...inst.sourceDeps],
             npmDeps
         }
+        
+        return ret;
     }
 }
 
