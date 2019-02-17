@@ -4,7 +4,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as uuidv1 from 'uuid/v1';
 import * as os from 'os';
-import * as hash from 'hash.js';
 
 import { logger } from './logger';
 import { AwsFactory } from './AwsFactory';
