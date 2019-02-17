@@ -10,7 +10,7 @@ import {ZipBuilder} from './ZipBuilder'
 import * as JSZip from 'jszip';
 import { DeployableAtom, DeployableFragment } from './instruments/Instrument';
 
-import * as fs from 'fs';
+import * as path from 'path';
 
 function jszipToArray(jszip: JSZip) {
     const ret: any[] = [];
@@ -171,5 +171,65 @@ describe('ZipBuilder', () => {
             expect(mergedPojo).to.eql(originalPojo);            
             expect(mergeFingerprint).to.equal(originalFingerprint);
         });
+
+        // 2019-02-17T17:00:46.459Z [main] silly: Comparing fingerprints for chronology-importantDates:
+        //     DhfmFU/JVuW/E5mTHRV9Ko7YI4Cz/9xaMOLKtTAlTdA=
+        //     MgRwaKqyz7Cmz0GW+fDxMjPp7vg2WiKALu7yycgaWzs=
+
+        it('can scan a node_modules directory and merge it', async () => {
+            const zb = new ZipBuilder();
+            const fragA = zb.newFragment();
+            fragA.scan('node_modules/moment', path.resolve(__dirname, '../example/node_modules/moment'));
+            
+            const originalBuffer = await zb.toBuffer();
+            const originalPojo = await ZipBuilder.toPojo(originalBuffer);
+
+            const buffers = await Promise.all([ZipBuilder.fragmentToBuffer(fragA)]);
+            const mergedBuffer = await ZipBuilder.merge(buffers);
+            
+            const mergedPojo = await ZipBuilder.toPojo(mergedBuffer);
+            comparePojos(originalPojo, mergedPojo);
+        });
+        it('roundtrips without losing a bit', async () => {
+            const zb = new ZipBuilder();
+            const fragA = zb.newFragment();
+            fragA.scan('node_modules/moment', path.resolve(__dirname, '../example/node_modules/moment'));
+            
+            const originalBuffer = await zb.toBuffer();
+            const mergedBuffer = await ZipBuilder.merge([originalBuffer]);
+
+            expect(originalBuffer.toString("base64") === mergedBuffer.toString("base64")).to.be.true;
+            
+            const originalPojo = await ZipBuilder.toPojo(originalBuffer);
+            const mergedPojo = await ZipBuilder.toPojo(mergedBuffer);
+            comparePojos(originalPojo, mergedPojo);
+        });
     });    
 });
+
+function comparePojos(a, b) {
+    const orderedNamesA = a.map(x => x.meta.name);
+    const namesA = new Set(orderedNamesA);
+    
+    const orderedNamesB = b.map(x => x.meta.name);
+    const namesB = new Set(orderedNamesB);
+
+    const missingInB = [...namesA.values()].filter(curr => !namesB.has(curr));
+    if (missingInB.length) {
+        throw new Error(`missingInB=${missingInB}.join(', ')`);
+    }
+
+    const missingInA = [...namesB.values()].filter(curr => !namesA.has(curr));
+    if (missingInA.length) {
+        throw new Error(`missingInA=${missingInB}.join(', ')`);
+    }
+
+    expect(orderedNamesA).to.eql(orderedNamesB);
+
+    namesA.forEach(name => {
+        const ea = a.find(x => x.meta.name === name);
+        const eb = b.find(x => x.meta.name === name);
+
+        expect(ea).to.eql(eb);
+    });
+}

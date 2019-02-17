@@ -61,36 +61,38 @@ export class ZipBuilder {
   }
   
   static async merge(buffers: Buffer[]): Promise<Buffer> {
-    const out = new JSZip();
+    const out = new ZipBuilder();
 
     const jszips = await Promise.all(buffers.map(curr => JSZip.loadAsync(curr)));
 
     const promises: Promise<any>[] = [];
 
-    const folderTree = new FolderTree(out);
-
-    jszips.forEach(curr => {
-      curr.forEach(async (_: string, zipObject) => {
+    jszips.forEach(jszip => {
+      const frag = out.newFragment();
+      jszip.forEach(async (_: string, zipObject) => {
           if (zipObject.dir) {
             return;
           }
-          folderTree.addPath(zipObject.name);
+
+          const p = zipObject.async('text').then(text => frag.add(new DeployableAtom(zipObject.name, text)));
+          promises.push(p);
       });
     });
-
-    jszips.forEach(curr => {
-      curr.forEach(async (_: string, zipObject) => {
-        if (zipObject.dir) {
-          return;
-        }
-        const p: Promise<any> = zipObject.async('nodebuffer')
-          .then(b => out.file(zipObject.name, b, {date: DATE}));
-        promises.push(p);
-      });
-    });
-
     await Promise.all(promises);
-    return out.generateAsync({ type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 0 } });
+
+    return out.toBuffer();
+  }
+
+  private populateZip() {
+    const ret = new JSZip();
+    const folderTree = new FolderTree(ret);
+    this.forEach(atom => folderTree.addPath(atom.path));
+
+    this.forEach(atom => {
+      ret.file(atom.path, atom.content, {date: DATE});
+    });
+
+    return ret;
   }
 
   newFragment() {
@@ -100,9 +102,12 @@ export class ZipBuilder {
   }
 
   forEach(consumer: (DeployableAtom) => void) {
+    const atoms: DeployableAtom[] = [];
     for (const frag of this.fragments) {
-      frag.forEach(consumer);
+      frag.forEach(atom => atoms.push(atom));
     }
+    atoms.sort((a, b) => lexicographicallyCompare(a.path, b.path));
+    atoms.forEach(consumer);
   }
 
   getFragments() {
@@ -113,20 +118,9 @@ export class ZipBuilder {
     this.fragments.push(frag);
   }
 
-  private populateZip() {
-      const ret = new JSZip();
-      const folderTree = new FolderTree(ret);
-      this.forEach(atom => folderTree.addPath(atom.path));
-  
-      this.forEach(atom => {
-        ret.file(atom.path, atom.content, {date: DATE});
-      });
-
-      return ret;
-  }
-
   async toBuffer(): Promise<Buffer> {
-    return this.populateZip().generateAsync({ type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 0 } });
+    return this.populateZip().generateAsync(
+      { type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 0 } });
   }
 
   unzip(outDir: string) {
@@ -153,4 +147,12 @@ export class ZipBuilder {
     const ret = await Promise.all(promises);
     return ret;
   }
+}
+
+function lexicographicallyCompare(a, b) {
+  if (a.length !== b.length) {
+    return a.length - b.length;
+  }
+
+  return a.localeCompare(b);
 }
