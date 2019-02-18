@@ -74,8 +74,9 @@ export class Packager {
 
   public async run(relativeTsFile: string, relativeOutDir: string, runtimeDir?: string) {
     logger.silly(`Packing ${relativeTsFile} into ${relativeOutDir}`);
+
     const compiledFilesDir = await this.compile(relativeTsFile, relativeOutDir);
-    return this.createZip(relativeTsFile, compiledFilesDir, runtimeDir);
+    return this.createZip(relativeTsFile, compiledFilesDir, runtimeDir);  
   }
 
   public unzip(zipBuilder: ZipBuilder, relativeOutDir: string) {
@@ -123,23 +124,23 @@ export class Packager {
       Payload: JSON.stringify({teleportRequest})
     };
     
-    // await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
-    // return ret;
-
-    try {
-      const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
-      console.log('invocationResponse=' + JSON.stringify(invocationResponse));
-    } catch (e) {
-      if (e.code !== 'ResourceNotFoundException') {
-        logger.error('Teleporting failed: ' + JSON.stringify(teleportRequest));
-        throw e;
-      }
-
-      throw e;
-      // await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
-    }
-    
+    await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
     return ret;
+
+    // try {
+    //   const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
+    //   console.log('invocationResponse=' + JSON.stringify(invocationResponse));
+    // } catch (e) {
+    //   if (e.code !== 'ResourceNotFoundException') {
+    //     logger.error('Teleporting failed: ' + JSON.stringify(teleportRequest));
+    //     throw e;
+    //   }
+
+    //   throw e;
+    //   // await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
+    // }
+    
+    // return ret;
   }
 
 

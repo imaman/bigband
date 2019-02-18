@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as hash from 'hash.js'
 
 import { AwsFactory } from './AwsFactory';
-import { NameStyle, Rig, Instrument, DeployableAtom } from './instruments/Instrument';
+import { NameStyle, Rig, Instrument, DeployableAtom, newLambda } from './instruments/Instrument';
 import { Packager } from './Packager'
 import { ZipBuilder } from './ZipBuilder'
 import { S3Ref } from './S3Ref'
@@ -24,9 +24,14 @@ export async function runBigbandFile(bigbandFile: string, rigName: string, runti
     if (!rig) {
         throw new Error(`Failed to find a rig named ${rigName} in ${bigbandSpec.rigs.map(curr => curr.name).join(', ')}`);
     }
-    await runSpec(bigbandSpec, rig);
-    const dt = (Date.now() - t0) / 1000;
-    return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;
+    try {
+        await runSpec(bigbandSpec, rig);
+        const dt = (Date.now() - t0) / 1000;
+        return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;        
+    } catch (e) {
+        console.error('Errors found while running ' + bigbandFile, e);
+        process.exit(-1);
+    }
 }
 
 export interface BigbandSpec {
@@ -41,7 +46,12 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     
     logger.info(`Shipping rig "${rig.name}" to ${rig.region}`);
     const ps = bigbandSpec.instruments
-        .map(instrument => pushCode(bigbandSpec.dir, rig, instrument));
+        .map(instrument => pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument));
+
+    const rootDir = path.resolve(__dirname).replace('/build/src', '');
+    const scottyInstrument = newLambda('bigbandBootstrap', 'scotty', 'src/bootstrap/scotty.ts');
+    ps.push(pushCode(rootDir, rootDir, rig, scottyInstrument));
+
     const pushedInstruments = await Promise.all(ps);
     const stack = {
         AWSTemplateFormatVersion: '2010-09-09',
@@ -55,8 +65,6 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     });
 
     await cfp.deploy(stack)
-
-
     const lambda = AwsFactory.fromRig(rig).newLambda();
 
     await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk()).map(curr => {
@@ -118,7 +126,7 @@ function checkSpec(spec: BigbandSpec) {
     }
 }
 
-async function pushCode(d: string, rig: Rig, instrument: Instrument) {
+async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument) {
     const logicalResourceName = instrument.fullyQualifiedName(NameStyle.CAMEL_CASE);
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
         throw new Error(`Bad value. ${d} is not a directory.`);
@@ -135,34 +143,7 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
         }
     }
 
-    const packager = new Packager(d, d, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig);
-    const pathPrefix = 'build';
-    logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
-    const frag = instrument.createFragment(pathPrefix);
-
-    const mapping = {};
-    instrument.dependencies.forEach(d => {
-        mapping[d.name] = {name: d.supplier.physicalName(rig), region: rig.region};
-        d.supplier.contributeToConsumerDefinition(rig, def);
-    });
-    frag.add(new DeployableAtom('bigband/deps.js', 
-        `module.exports = ${JSON.stringify(mapping)}`));
-
-    const sha256 = hash.sha256();
-    const atomConsumer = (a: DeployableAtom) => {
-        sha256.update(a.path);
-        sha256.update(a.content);
-    };
-
-    const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix);
-    zb.forEach(atomConsumer);
-    frag.forEach(atomConsumer);
-
-    const fp = Buffer.from(sha256.digest()).toString('base64');
-    frag.add(new DeployableAtom('bigband/build_manifest.js',
-        `module.exports = "${fp}";`));
-
-    zb.importFragment(frag);
+    const {zb, packager} = await compileInstrument(d, npmPackageDir, rig, instrument);
     
     const s3Ref = await packager.pushToS3(instrument, `deployables/${physicalName}.zip`, zb);
     const resource = def.get();
@@ -173,6 +154,45 @@ async function pushCode(d: string, rig: Rig, instrument: Instrument) {
         resource: def.get(),
         logicalResourceName,
         physicalName
+    }
+}
+
+async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument) {
+    try {
+        const packager = new Packager(d, npmPackageDir, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig);
+        const pathPrefix = 'build';
+        logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
+        const frag = instrument.createFragment(pathPrefix);
+
+        const def = instrument.getPhysicalDefinition(rig);
+        const mapping = {};
+        instrument.dependencies.forEach(d => {
+            mapping[d.name] = {name: d.supplier.physicalName(rig), region: rig.region};
+            d.supplier.contributeToConsumerDefinition(rig, def);
+        });
+        frag.add(new DeployableAtom('bigband/deps.js', 
+            `module.exports = ${JSON.stringify(mapping)}`));
+
+        const sha256 = hash.sha256();
+        const atomConsumer = (a: DeployableAtom) => {
+            sha256.update(a.path);
+            sha256.update(a.content);
+        };
+
+        const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix) as ZipBuilder;
+        zb.forEach(atomConsumer);
+        frag.forEach(atomConsumer);
+
+        const fp = Buffer.from(sha256.digest()).toString('base64');
+        frag.add(new DeployableAtom('bigband/build_manifest.js',
+            `module.exports = "${fp}";`));
+
+        zb.importFragment(frag);
+
+        return {zb, packager}
+    } catch (e) {
+        e.message = `(instrument: "${instrument.fullyQualifiedName()}", rootDir: "${d}", npmPackageDir: "${npmPackageDir}") ${e.message}`;
+        throw e;
     }
 }
 
