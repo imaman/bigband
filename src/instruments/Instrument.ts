@@ -1,6 +1,5 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import * as hash from 'hash.js'
 
 
 
@@ -503,3 +502,4 @@ function camelCase(...args) {
 
     return args.map((curr, i) => i === 0 ? curr : capitalize(curr)).join('');
 }
+

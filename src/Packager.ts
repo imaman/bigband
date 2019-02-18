@@ -10,7 +10,7 @@ import { AwsFactory } from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
 import { Instrument, Rig, DeployableAtom, DeployableFragment } from './instruments/Instrument';
-import { GetFunctionResponse } from 'aws-sdk/clients/lambda';
+import { GetFunctionResponse, InvocationRequest, InvocationResponse } from 'aws-sdk/clients/lambda';
 import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
 import { ZipBuilder } from './ZipBuilder';
@@ -109,8 +109,36 @@ export class Packager {
 
     const pool = new S3BlobPool(factory, this.s3Bucket, `${this.s3Prefix}/TTL/7d/deployables`);
     const teleporter = new Teleporter(pool);
-    await teleporter.teleport(zipBuilder, ret, instrument.fullyQualifiedName());
+    const handlePojos = (await teleporter.teleport(zipBuilder)).map(curr => curr.toPojo()); 
 
+    const teleportRequest = {
+      deployables: handlePojos,
+      destination: ret.toPojo()
+    }
+
+    
+    const invocationRequest: InvocationRequest = {
+      FunctionName: `${this.rig.physicalName()}-bigband-scotty`,
+      InvocationType: 'RequestResponse', 
+      Payload: JSON.stringify({teleportRequest})
+    };
+    
+    // await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
+    // return ret;
+
+    try {
+      const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
+      console.log('invocationResponse=' + JSON.stringify(invocationResponse));
+    } catch (e) {
+      if (e.code !== 'ResourceNotFoundException') {
+        logger.error('Teleporting failed: ' + JSON.stringify(teleportRequest));
+        throw e;
+      }
+
+      throw e;
+      // await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
+    }
+    
     return ret;
   }
 

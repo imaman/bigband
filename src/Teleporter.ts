@@ -4,7 +4,7 @@ import { AwsFactory } from "./AwsFactory";
 import { logger } from './logger';
 import * as hash from 'hash.js'
 
-type BlobPoolKey = string;
+type BlobPoolHandle = string;
 
 export class S3BlobPool {
     constructor(public readonly factory: AwsFactory, private readonly s3Bucket: string, private readonly s3Prefix: string) {
@@ -13,7 +13,7 @@ export class S3BlobPool {
         }
     }
 
-    async put(buf: Buffer): Promise<BlobPoolKey> {
+    public async put(buf: Buffer): Promise<BlobPoolHandle> {
         const base64 = Buffer.from(hash.sha384().update(buf).digest()).toString('base64');
         const ret: string = base64.replace(/\//g, '_').replace(/=/g, '.');
         const s3Ref = new S3Ref(this.s3Bucket, `${this.s3Prefix}/${ret}`);
@@ -26,10 +26,14 @@ export class S3BlobPool {
         return ret;
     }
 
-    async get(key: BlobPoolKey): Promise<Buffer> {
-        const s3Ref = new S3Ref(this.s3Bucket, `${this.s3Prefix}/${key}`);
+    public async get(handle: BlobPoolHandle): Promise<Buffer> {
+        const s3Ref = this.handleToS3Ref(handle);
         logger.silly('  > downloading ' + s3Ref);
         return S3Ref.get(this.factory, s3Ref);
+    }
+
+    public handleToS3Ref(handle: BlobPoolHandle): S3Ref {
+        return new S3Ref(this.s3Bucket, `${this.s3Prefix}/${handle}`);
     }
 }
 
@@ -39,22 +43,27 @@ export class Teleporter {
 
     constructor(private readonly blobPool: S3BlobPool) {}
 
-    private async uploadFragments(zipBuilder: ZipBuilder): Promise<BlobPoolKey[]> {
+    public async uploadFragments(zipBuilder: ZipBuilder): Promise<BlobPoolHandle[]> {
         const promises = zipBuilder.getFragments().map(async curr => this.blobPool.put(await ZipBuilder.fragmentToBuffer(curr)));
-        const keys: BlobPoolKey[] = await Promise.all(promises);
-        return keys;
+        const handles: BlobPoolHandle[] = await Promise.all(promises);
+        return handles;
     }
 
-    private async mergeFragments(keys: BlobPoolKey[], s3Ref: S3Ref, instrumentName: string) {
-        const buffers: Buffer[] = await Promise.all(keys.map(k => this.blobPool.get(k)));
+    private async mergeFragments(handles: BlobPoolHandle[], s3Ref: S3Ref, instrumentName: string) {
+        const buffers: Buffer[] = await Promise.all(handles.map(k => this.blobPool.get(k)));
         const buf: Buffer = await ZipBuilder.merge(buffers);
 
         console.log(`Uploading ${(buf.length / (1024 * 1024)).toFixed(3)}MB for ${instrumentName}`);
         return S3Ref.put(this.blobPool.factory, s3Ref, buf, CONTENT_TYPE);
-    }    
+    }
 
-    public async teleport(zipBuilder: ZipBuilder, destination: S3Ref, instrumentName: string) {
+    public async fakeTeleport(zipBuilder: ZipBuilder, destination: S3Ref, instrumentName: string) {
         const delta = await this.uploadFragments(zipBuilder);
         await this.mergeFragments(delta, destination, instrumentName);    
+    }
+
+    public async teleport(zipBuilder: ZipBuilder) {
+        const handles = await this.uploadFragments(zipBuilder);
+        return handles.map(k => this.blobPool.handleToS3Ref(k));
     }
 }
