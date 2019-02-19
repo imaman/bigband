@@ -41,10 +41,21 @@ const CONTENT_TYPE = 'application/zip';
 
 export class Teleporter {
 
+    private numBytes = 0;
     constructor(private readonly blobPool: S3BlobPool) {}
 
+
+    get bytesSent() {
+        return this.numBytes;
+    }
+
     public async uploadFragments(zipBuilder: ZipBuilder): Promise<BlobPoolHandle[]> {
-        const promises = zipBuilder.getFragments().map(async curr => this.blobPool.put(await ZipBuilder.fragmentToBuffer(curr)));
+        const promises = zipBuilder.getFragments().map(async curr => {
+            const buf = await ZipBuilder.fragmentToBuffer(curr);            
+            const ret = this.blobPool.put(buf);
+            this.numBytes += buf.byteLength;
+            return ret;
+        });
         const handles: BlobPoolHandle[] = await Promise.all(promises);
         return handles;
     }
@@ -53,7 +64,6 @@ export class Teleporter {
         const buffers: Buffer[] = await Promise.all(handles.map(k => this.blobPool.get(k)));
         const buf: Buffer = await ZipBuilder.merge(buffers);
 
-        console.log(`Uploading ${(buf.length / (1024 * 1024)).toFixed(3)}MB for ${instrumentName}`);
         return S3Ref.put(this.blobPool.factory, s3Ref, buf, CONTENT_TYPE);
     }
 

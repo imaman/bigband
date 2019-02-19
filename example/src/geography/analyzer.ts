@@ -1,4 +1,4 @@
-// This is just an atriticial dependency so that for testing purposes.
+// This is just an atriticial dependency for testing purposes.
 import * as byline from 'byline';
 
 export async function runLambda(context, event, mapping) {

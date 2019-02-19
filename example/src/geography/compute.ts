@@ -33,7 +33,7 @@ export async function runLambda(context, event, mapping) {
         headers: { 
           "content-type": 'application/json', 
         },
-        body: {query: q, inputLength: q.length, answers: answers.map(curr => curr.answer)}
+        body: {query: q, inputLength: `12:${q.length}`, answers: answers.map(curr => curr.answer)}
     };
 }
 

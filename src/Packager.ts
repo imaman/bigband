@@ -21,7 +21,7 @@ export class Packager {
   private readonly npmPackageDir;
 
   constructor(private readonly rootDir: string, npmPackageDir: string, private readonly s3Bucket: string,
-      private readonly s3Prefix: string, private readonly rig?: Rig) {
+      private readonly s3Prefix: string, private readonly rig?: Rig, private readonly blobPool?: S3BlobPool) {
     if (s3Prefix.endsWith('/')) {
       throw new Error(`s3Prefix ${s3Prefix} cannot have a trailing slash`)
     }
@@ -85,7 +85,7 @@ export class Packager {
     return outDir;
   }
 
-  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder): Promise<S3Ref> {      
+  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder, scottyLambdaName: string): Promise<S3Ref> {      
     if (!this.rig) {
       throw new Error('rig was not set.');
     }
@@ -108,8 +108,10 @@ export class Packager {
       return ret;
     }
 
-    const pool = new S3BlobPool(factory, this.s3Bucket, `${this.s3Prefix}/TTL/7d/deployables`);
-    const teleporter = new Teleporter(pool);
+    if (!this.blobPool) {
+      throw new Error('a blob pool was not specified');
+    }
+    const teleporter = new Teleporter(this.blobPool);
     const handlePojos = (await teleporter.teleport(zipBuilder)).map(curr => curr.toPojo()); 
 
     const teleportRequest = {
@@ -117,30 +119,36 @@ export class Packager {
       destination: ret.toPojo()
     }
 
+    // await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
+    // return ret;
     
     const invocationRequest: InvocationRequest = {
-      FunctionName: `${this.rig.physicalName()}-bigband-scotty`,
+      FunctionName: scottyLambdaName,
       InvocationType: 'RequestResponse', 
       Payload: JSON.stringify({teleportRequest})
     };
     
+
+    try {
+      const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
+      if (!invocationResponse.FunctionError) {
+        console.log(`Teleported ${(teleporter.bytesSent / (1024 * 1024)).toFixed(3)}MB for ${instrument.fullyQualifiedName()}`);
+        return ret;
+      }
+
+      logger.error('scotty returned an error', invocationResponse);
+      throw new Error(`Teleporting of ${instrument.physicalName(this.rig)} failed: ${invocationResponse.FunctionError}`);
+    } catch (e) {
+      if (e.code !== 'ResourceNotFoundException') {
+        logger.error('Teleporting error', e);
+        throw new Error(`Teleporting of ${instrument.physicalName(this.rig)} could not be started: ${e.message}`);
+      }
+    }
+
+    console.log('fake teleporting');
     await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
-    return ret;
-
-    // try {
-    //   const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
-    //   console.log('invocationResponse=' + JSON.stringify(invocationResponse));
-    // } catch (e) {
-    //   if (e.code !== 'ResourceNotFoundException') {
-    //     logger.error('Teleporting failed: ' + JSON.stringify(teleportRequest));
-    //     throw e;
-    //   }
-
-    //   throw e;
-    //   // await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
-    // }
     
-    // return ret;
+    return ret;
   }
 
 

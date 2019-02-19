@@ -198,6 +198,8 @@ describe('ZipBuilder', () => {
             const originalBuffer = await zb.toBuffer();
             const mergedBuffer = await ZipBuilder.merge([originalBuffer]);
 
+            // The two strings can be long. running expect().equal() on them is highly CPU intensive
+            // (as it computes a diff on two large strings). Therefore, we stick with good-old equality (===).
             expect(originalBuffer.toString("base64") === mergedBuffer.toString("base64")).to.be.true;
             
             const originalPojo = await ZipBuilder.toPojo(originalBuffer);

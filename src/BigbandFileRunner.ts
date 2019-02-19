@@ -10,6 +10,10 @@ import { S3Ref } from './S3Ref'
 import { CloudFormationPusher } from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 import { logger } from './logger';
+import { S3BlobPool } from './Teleporter';
+
+
+const DEPLOYABLES_FOLDER = 'deployables';
 
 export async function runBigbandFile(bigbandFile: string, rigName: string, runtimeDir?: string) {
     const t0 = Date.now();
@@ -24,14 +28,10 @@ export async function runBigbandFile(bigbandFile: string, rigName: string, runti
     if (!rig) {
         throw new Error(`Failed to find a rig named ${rigName} in ${bigbandSpec.rigs.map(curr => curr.name).join(', ')}`);
     }
-    try {
-        await runSpec(bigbandSpec, rig);
-        const dt = (Date.now() - t0) / 1000;
-        return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;        
-    } catch (e) {
-        console.error('Errors found while running ' + bigbandFile, e);
-        process.exit(-1);
-    }
+
+    await runSpec(bigbandSpec, rig);
+    const dt = (Date.now() - t0) / 1000;
+    return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;        
 }
 
 export interface BigbandSpec {
@@ -43,16 +43,34 @@ export interface BigbandSpec {
 export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     const cfp = new CloudFormationPusher(rig);
     cfp.peekAtExistingStack();
+
+
+    const poolPrefix = `${rig.isolationScope.s3Prefix}/TTL/7d/fragments`;
+    const blobPool = new S3BlobPool(AwsFactory.fromRig(rig), rig.isolationScope.s3Bucket, poolPrefix);
+
+    
+    const rootDir = path.resolve(__dirname).replace('/build/src', '');
+
+    const scottyInstrument = newLambda('bigbandBootstrap', 'scotty', 'src/bootstrap/scotty', {
+        Description: 'beam me up',
+        MemorySize: 2560,
+        Timeout: 30
+        })
+        .canDo('s3:GetObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${poolPrefix}/*`)
+        .canDo('s3:PutObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
+
     
     logger.info(`Shipping rig "${rig.name}" to ${rig.region}`);
-    const ps = bigbandSpec.instruments
-        .map(instrument => pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument));
 
-    const rootDir = path.resolve(__dirname).replace('/build/src', '');
-    const scottyInstrument = newLambda('bigbandBootstrap', 'scotty', 'src/bootstrap/scotty.ts');
-    ps.push(pushCode(rootDir, rootDir, rig, scottyInstrument));
-
+    const ps = bigbandSpec.instruments.map(instrument => 
+        pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, scottyInstrument, blobPool));
+    
+    // pushCode of scotty needs slightly different parameters so we run it separately. Then, we can safely add scotty
+    // to the list of instruments.
+    ps.push(pushCode(rootDir, rootDir, rig, scottyInstrument, scottyInstrument, blobPool));
+    
     const pushedInstruments = await Promise.all(ps);
+
     const stack = {
         AWSTemplateFormatVersion: '2010-09-09',
         Transform: 'AWS::Serverless-2016-10-31',
@@ -61,7 +79,16 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     };
 
     pushedInstruments.forEach(curr => {
-        stack.Resources[curr.logicalResourceName] = curr.resource;
+        const def = curr.instrument.getPhysicalDefinition(rig);
+        curr.instrument.dependencies.forEach(d => {
+            d.supplier.contributeToConsumerDefinition(rig, def);
+        });
+
+        if (curr.s3Ref.isOk()) {
+            def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri());
+        }
+
+        stack.Resources[curr.instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)] = def.get();
     });
 
     await cfp.deploy(stack)
@@ -126,8 +153,7 @@ function checkSpec(spec: BigbandSpec) {
     }
 }
 
-async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument) {
-    const logicalResourceName = instrument.fullyQualifiedName(NameStyle.CAMEL_CASE);
+async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument, scottyInstrument: Instrument, blobPool: S3BlobPool) {
     if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
         throw new Error(`Bad value. ${d} is not a directory.`);
     }
@@ -137,38 +163,34 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
     if (!instrument.getEntryPointFile()) {
         return {
             s3Ref: S3Ref.EMPTY,
-            resource: def.get(),
-            logicalResourceName,
-            physicalName
+            physicalName,
+            instrument
         }
     }
 
-    const {zb, packager} = await compileInstrument(d, npmPackageDir, rig, instrument);
+    const {zb, packager} = await compileInstrument(d, npmPackageDir, rig, instrument, blobPool);
     
-    const s3Ref = await packager.pushToS3(instrument, `deployables/${physicalName}.zip`, zb);
+    const s3Ref = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig));
     const resource = def.get();
     resource.Properties.CodeUri = s3Ref.toUri();
 
     return {
         s3Ref: s3Ref,
-        resource: def.get(),
-        logicalResourceName,
-        physicalName
+        physicalName,
+        instrument
     }
 }
 
-async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument) {
+async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument, blobPool: S3BlobPool) {
     try {
-        const packager = new Packager(d, npmPackageDir, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig);
+        const packager = new Packager(d, npmPackageDir, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig, blobPool);
         const pathPrefix = 'build';
         logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
         const frag = instrument.createFragment(pathPrefix);
 
-        const def = instrument.getPhysicalDefinition(rig);
         const mapping = {};
         instrument.dependencies.forEach(d => {
             mapping[d.name] = {name: d.supplier.physicalName(rig), region: rig.region};
-            d.supplier.contributeToConsumerDefinition(rig, def);
         });
         frag.add(new DeployableAtom('bigband/deps.js', 
             `module.exports = ${JSON.stringify(mapping)}`));

@@ -26,11 +26,12 @@ export async function runLambda(context, event) {
     try {
         await s3.putObject(putObjectRequest).promise();
     } catch (e) {
-        throw new Error('failed to write to destination: ' + e.message + '\n' + JSON.stringify(putObjectRequest));
+        const {Bucket, Key} = putObjectRequest;
+        throw new Error(`failed to write to destination (${JSON.stringify({Bucket, Key})}): ${e.message}`);
     }
     return {
         statusCode: 200,
-        body: JSON.stringify({writtenTo: teleportRequest.destination, numFragments: responses.length})
+        body: JSON.stringify({writtenTo: teleportRequest.destination, numFragments: responses.length, mergedSize: merged.length})
     };
 
     // responses.

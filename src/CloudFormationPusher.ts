@@ -123,9 +123,14 @@ export class CloudFormationPusher {
             await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
         }
 
-        if (description.Status == 'FAILED' && description.StatusReason == 'No updates are to be performed.')  {
+        const isFailed = description.Status === 'FAILED';
+        if (isFailed && description.StatusReason === 'No updates are to be performed.')  {
             logger.info('Change set is empty');
             return;
+        }
+
+        if (isFailed) {
+            throw new Error(`Bad changeset (${changeSetName}):\n${description.StatusReason}`);
         }
         const executeChangeSetReq: ExecuteChangeSetInput = {
             StackName: this.stackName,
@@ -133,8 +138,12 @@ export class CloudFormationPusher {
         };
 
         logger.info('Enacting Change set');
-        await this.cloudFormation.executeChangeSet(executeChangeSetReq).promise();
-        await this.waitForStack(description.StackId);
+        try {
+            await this.cloudFormation.executeChangeSet(executeChangeSetReq).promise();
+            await this.waitForStack(description.StackId);
+        } catch (e) {
+            throw new Error(`Changeset enactment failed: ${e.message}\nChangeset description:\n${JSON.stringify(description, null, 2)}`);
+        }
     }
 
     private async waitForStack(stackId?: string) {

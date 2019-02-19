@@ -85,7 +85,6 @@ export abstract class Instrument {
 
     getPhysicalDefinition(rig: Rig) : Definition {
         const copy = JSON.parse(JSON.stringify(this.definition.get()));
-        // copy.Properties.CodeUri = `s3://${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${settings.DEPLOYABLES_FOLDER}/${this.physicalName(rig)}.zip`;
         copy.Properties[this.nameProperty()] = this.physicalName(rig);
         return new Definition(copy);
     }
