@@ -94,7 +94,6 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     const lambda = AwsFactory.fromRig(rig).newLambda();
 
     await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
-        console.log('curr.physicalName=' + curr.physicalName + ' wasPushed=' + curr.wasPushed + ', dest=' + curr.s3Ref.toString());
         const req: UpdateFunctionCodeRequest = {
             FunctionName: curr.physicalName,
             S3Bucket: curr.s3Ref.s3Bucket,
