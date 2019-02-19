@@ -4,7 +4,7 @@ import * as hash from 'hash.js'
 
 import { AwsFactory } from './AwsFactory';
 import { NameStyle, Rig, Instrument, DeployableAtom, newLambda } from './instruments/Instrument';
-import { Packager } from './Packager'
+import { Packager, PushResult } from './Packager'
 import { ZipBuilder } from './ZipBuilder'
 import { S3Ref } from './S3Ref'
 import { CloudFormationPusher } from './CloudFormationPusher';
@@ -29,7 +29,7 @@ export async function runBigbandFile(bigbandFile: string, rigName: string, runti
         throw new Error(`Failed to find a rig named ${rigName} in ${bigbandSpec.rigs.map(curr => curr.name).join(', ')}`);
     }
 
-    await runSpec(bigbandSpec, rig);
+    await Promise.all([runSpec(bigbandSpec, rig), configureBucket(rig)]);
     const dt = (Date.now() - t0) / 1000;
     return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;        
 }
@@ -44,8 +44,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     const cfp = new CloudFormationPusher(rig);
     cfp.peekAtExistingStack();
 
-
-    const poolPrefix = `${rig.isolationScope.s3Prefix}/TTL/7d/fragments`;
+    const poolPrefix = `${ttlPrefix(rig)}/fragments`;
     const blobPool = new S3BlobPool(AwsFactory.fromRig(rig), rig.isolationScope.s3Bucket, poolPrefix);
 
     
@@ -94,13 +93,19 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     await cfp.deploy(stack)
     const lambda = AwsFactory.fromRig(rig).newLambda();
 
-    await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk()).map(curr => {
-        const updateFunctionCodeReq: UpdateFunctionCodeRequest = {
+    await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
+        console.log('curr.physicalName=' + curr.physicalName + ' wasPushed=' + curr.wasPushed + ', dest=' + curr.s3Ref.toString());
+        const req: UpdateFunctionCodeRequest = {
             FunctionName: curr.physicalName,
             S3Bucket: curr.s3Ref.s3Bucket,
             S3Key: curr.s3Ref.s3Key
         };    
-        return lambda.updateFunctionCode(updateFunctionCodeReq).promise();
+        try {
+            return await lambda.updateFunctionCode(req).promise();
+        } catch (e) {
+            logger.error(`lambda.updateFunctionCode failure (${JSON.stringify(req)})`, e);
+            throw new Error(`Failed to update code of ${curr.physicalName}`);
+        }
     }));
 }
 
@@ -163,6 +168,7 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
     if (!instrument.getEntryPointFile()) {
         return {
             s3Ref: S3Ref.EMPTY,
+            wasPushed: false,
             physicalName,
             instrument
         }
@@ -170,12 +176,13 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
 
     const {zb, packager} = await compileInstrument(d, npmPackageDir, rig, instrument, blobPool);
     
-    const s3Ref = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig));
+    const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig));
     const resource = def.get();
-    resource.Properties.CodeUri = s3Ref.toUri();
+    resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
 
     return {
-        s3Ref: s3Ref,
+        s3Ref: pushResult.deployableLocation,
+        wasPushed: pushResult.wasPushed,
         physicalName,
         instrument
     }
@@ -218,3 +225,37 @@ async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, ins
     }
 }
 
+
+function ttlPrefix(rig: Rig) {
+    return `${rig.isolationScope.s3Prefix}/TTL/7d`;
+}
+
+async function configureBucket(rig: Rig) {
+    const s3 = AwsFactory.fromRig(rig).newS3();
+    const prefix = `${ttlPrefix(rig)}/`;
+    const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
+        Bucket: rig.isolationScope.s3Bucket,
+        LifecycleConfiguration: {
+            Rules: [
+                {
+                    Expiration: {
+                        Days: 1 // Temporarily. change back to 7 once proven working.
+                    },
+                    Filter: {
+                        Prefix: prefix
+                    },
+                    ID: "BigbandStandardTTL7D",
+                    Status: "Enabled"
+                }
+            ]
+        }
+    };
+
+    try {
+        await s3.putBucketLifecycleConfiguration(req).promise();
+        logger.silly(`expiration policy set via ${JSON.stringify(req)}`);
+    } catch (e) {
+        console.error(`s3.putBucketLifecycleConfiguration failure (request: ${JSON.stringify(req)})`, e);
+        throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
+    }
+}

@@ -36,7 +36,10 @@ export async function runLambda(context, event, mapping) {
         headers: { 
           "content-type": 'application/json', 
         },
-        body: {query: q, timePassed, bylineKeys: Object.keys(byline), inputLength: `17:${q.length}`, answers: answers.map(curr => curr.answer)}
+        body: {query: q, timePassed, bylineKeys: Object.keys(byline), inputLength: `${q.length}`, answers: answers.map(curr => curr.answer)}
     };
 }
+
+// Run command (from the bigband directory)
+// bigband-example.sh invoke --function-name placeFinder --input '{"query": "United Kingdom"}'
 

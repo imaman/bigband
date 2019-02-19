@@ -15,6 +15,11 @@ import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
 import { ZipBuilder } from './ZipBuilder';
 
+export interface PushResult {
+  deployableLocation: S3Ref
+  wasPushed: boolean
+}
+
 export class Packager {
   private readonly workingDir: string;
   private workingDirCreated = false;
@@ -85,7 +90,7 @@ export class Packager {
     return outDir;
   }
 
-  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder, scottyLambdaName: string): Promise<S3Ref> {      
+  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder, scottyLambdaName: string): Promise<PushResult> {      
     if (!this.rig) {
       throw new Error('rig was not set.');
     }
@@ -101,10 +106,16 @@ export class Packager {
 
     const s3Key = `${this.s3Prefix}/${s3Object}`;
 
-    const ret = new S3Ref(this.s3Bucket, s3Key);
+    const ret: PushResult = {
+      deployableLocation: new S3Ref(this.s3Bucket, s3Key),
+      wasPushed: true
+    };
+
+    const deployableLocation = ret.deployableLocation;
     logger.silly(`Comparing fingerprints for ${instrument.fullyQualifiedName()}:\n  ${c}\n  ${fingeprint}`);
     if (c && c == fingeprint) {
       logger.info(`No code changes in ${instrument.fullyQualifiedName()}`);
+      ret.wasPushed = false;
       return ret;
     }
 
@@ -116,7 +127,7 @@ export class Packager {
 
     const teleportRequest = {
       deployables: handlePojos,
-      destination: ret.toPojo()
+      destination: deployableLocation.toPojo()
     }
 
     // await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
@@ -146,7 +157,7 @@ export class Packager {
     }
 
     console.log('fake teleporting');
-    await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
+    await teleporter.fakeTeleport(zipBuilder, deployableLocation, instrument.physicalName(this.rig));
     
     return ret;
   }
