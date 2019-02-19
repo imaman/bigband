@@ -11,6 +11,11 @@ interface PutResult {
     bytesSent: number
 }
 
+function toS3FriendlyName(s: string) {
+    // Based on https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+    return s.replace(/\//g, '_').replace(/=/g, '.').replace(/\+/g, '-');
+}
+
 export class S3BlobPool {
     constructor(public readonly factory: AwsFactory, private readonly s3Bucket: string, private readonly s3Prefix: string) {
         if (s3Prefix.endsWith('/')) {
@@ -20,7 +25,7 @@ export class S3BlobPool {
 
     public async put(buf: Buffer): Promise<PutResult> {
         const base64 = Buffer.from(hash.sha384().update(buf).digest()).toString('base64');
-        const handle: string = base64.replace(/\//g, '_').replace(/=/g, '.');
+        const handle: string = toS3FriendlyName(base64);
 
         const s3Ref = new S3Ref(this.s3Bucket, `${this.s3Prefix}/${handle}`);
         if (await S3Ref.exists(this.factory, s3Ref)) {
