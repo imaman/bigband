@@ -81,11 +81,13 @@ export class CloudFormationPusher {
             ChangeSetName: changeSetName,
             ChangeSetType: 'UPDATE',
             Capabilities: ['CAPABILITY_IAM'],
+            // TODO(imaman): put it in S3 to get a higher upper limit on the size of the stack.
             TemplateBody: JSON.stringify(stackSpec),
             Tags: [{Key: FINGERPRINT_KEY, Value: newFingerprint}]
         };
 
         logger.silly('StackSpec: ' + JSON.stringify(stackSpec, null, 2));
+        logger.silly('stack size in bytes: ' + JSON.stringify(stackSpec).length);
         logger.silly('createChangeSetReq=\n' + JSON.stringify(createChangeSetReq, null, 2));
         logger.info(`Creating change set`);
         try {

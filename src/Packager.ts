@@ -143,7 +143,7 @@ export class Packager {
     try {
       const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
       if (!invocationResponse.FunctionError) {
-        console.log(`Teleported ${(teleporter.bytesSent / (1024 * 1024)).toFixed(3)}MB for ${instrument.fullyQualifiedName()}`);
+        console.log(`Teleported ${formatBytes(teleporter.bytesSent)} for ${instrument.fullyQualifiedName()}`);
         return ret;
       }
 
@@ -156,8 +156,8 @@ export class Packager {
       }
     }
 
-    console.log('fake teleporting');
-    await teleporter.fakeTeleport(zipBuilder, deployableLocation, instrument.physicalName(this.rig));
+    const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, instrument.physicalName(this.rig));
+    console.log(`Non incremental teleporting of ${formatBytes(numBytes)} for ${instrument.fullyQualifiedName()}`);
     
     return ret;
   }
@@ -193,4 +193,8 @@ export class Packager {
 
 function shouldBeIncluded(packageName: string) {
   return packageName !== 'aws-sdk' && !packageName.startsWith('aws-sdk/');
+}
+
+function formatBytes(n: number) {
+  return `${(n / (1024 * 1024)).toFixed(3)}MB`
 }
