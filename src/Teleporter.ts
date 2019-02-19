@@ -6,6 +6,11 @@ import * as hash from 'hash.js'
 
 type BlobPoolHandle = string;
 
+interface PutResult {
+    handle: BlobPoolHandle,
+    bytesSent: number
+}
+
 export class S3BlobPool {
     constructor(public readonly factory: AwsFactory, private readonly s3Bucket: string, private readonly s3Prefix: string) {
         if (s3Prefix.endsWith('/')) {
@@ -13,17 +18,18 @@ export class S3BlobPool {
         }
     }
 
-    public async put(buf: Buffer): Promise<BlobPoolHandle> {
+    public async put(buf: Buffer): Promise<PutResult> {
         const base64 = Buffer.from(hash.sha384().update(buf).digest()).toString('base64');
-        const ret: string = base64.replace(/\//g, '_').replace(/=/g, '.');
-        const s3Ref = new S3Ref(this.s3Bucket, `${this.s3Prefix}/${ret}`);
+        const handle: string = base64.replace(/\//g, '_').replace(/=/g, '.');
+
+        const s3Ref = new S3Ref(this.s3Bucket, `${this.s3Prefix}/${handle}`);
         if (await S3Ref.exists(this.factory, s3Ref)) {
-            return ret;
+            return {handle, bytesSent: 0};
         }
 
         logger.silly('  > uploading ' + s3Ref);
         await S3Ref.put(this.factory, s3Ref, buf, 'application/octet-stream');
-        return ret;
+        return {handle, bytesSent: buf.byteLength};
     }
 
     public async get(handle: BlobPoolHandle): Promise<Buffer> {
@@ -53,11 +59,12 @@ export class Teleporter {
         const promises = zipBuilder.getFragments().map(async curr => {
             const buf = await ZipBuilder.fragmentToBuffer(curr);            
             const ret = this.blobPool.put(buf);
-            this.numBytes += buf.byteLength;
             return ret;
         });
-        const handles: BlobPoolHandle[] = await Promise.all(promises);
-        return handles;
+
+        const results: PutResult[] = await Promise.all(promises);
+        results.forEach(curr => this.numBytes += curr.bytesSent);
+        return results.map(curr => curr.handle);
     }
 
     private async mergeFragments(handles: BlobPoolHandle[], s3Ref: S3Ref, instrumentName: string) {
