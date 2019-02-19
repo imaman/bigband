@@ -50,7 +50,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     
     const rootDir = path.resolve(__dirname).replace('/build/src', '');
 
-    const scottyInstrument = newLambda('bigbandBootstrap', 'scotty', 'src/bootstrap/scotty', {
+    const scottyInstrument = newLambda('bigband', 'scotty', 'src/bootstrap/scotty', {
         Description: 'beam me up',
         MemorySize: 2560,
         Timeout: 30
