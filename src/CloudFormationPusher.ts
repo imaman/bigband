@@ -71,7 +71,7 @@ export class CloudFormationPusher {
         const existingFingerprint = await this.existingFingerprint;
         logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
         if (newFingerprint === existingFingerprint) {
-            logger.info(`No stack changes####`);
+            logger.info(`No stack changes`);
             return;
         }
 
