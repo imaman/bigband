@@ -19,6 +19,7 @@ tar cf bigband.tar src
 cd ../example
 npm update bigband
 
+# run
 node node_modules/.bin/bigband "${commandArg}" "$1" "$2" "$3" "$4"
 
 
