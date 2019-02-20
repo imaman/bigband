@@ -51,6 +51,7 @@ export class Packager {
     const command = `tsc --outDir "${outDir}" --preserveConstEnums --strictNullChecks --sourceMap --target es2015 --module commonjs --allowJs --checkJs false --lib es2015 --rootDir "${this.rootDir}" "${fileToCompile}"`
     logger.silly(`Executing: ${command}`);
 
+    // TODO(imaman): better output on error.
     await util.promisify(child_process.exec)(command, {encoding: 'utf-8'});
     return outDir;
   }

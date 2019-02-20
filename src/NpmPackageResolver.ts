@@ -54,6 +54,7 @@ export class NpmPackageResolver {
         }
 
         this.roots.forEach(r =>{
+            // TODO(imaman): better output on errors.
             const npmLs = JSON.parse(child_process.execSync('npm ls --json', {cwd: r}).toString('utf-8'));
             this.npmLsByRoot[r] = npmLs;
             store(npmLs, r);

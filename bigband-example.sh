@@ -12,7 +12,13 @@ else
     shift 1
 fi
 
-example/setup.sh  && tsc && node  build/src/cli.js "${commandArg}" \
-    --bigband-file example/bigband.config.ts  \
-    --runtime-dir example/node_modules/@bigband "$1" "$2" "$3" "$4"
+npm run build
+cd build
+tar cf bigband.tar src
+
+cd ../example
+npm update bigband
+
+node node_modules/.bin/bigband "${commandArg}" "$1" "$2" "$3" "$4"
+
 
