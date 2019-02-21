@@ -5,13 +5,12 @@
     "inlineSourceMap": true,
     "declaration": true,
     "target": "es2015",
-    "outDir": "build",
-    // "moduleResolution": "node",
-    "module":  "commonjs",
-    "checkJs": false,
+    "module": "commonjs",
     "lib": [
       "es2015"
     ],
+    "checkJs": false,
+    "outDir": "build",
     "rootDir": "./"    
   },
   "files": [

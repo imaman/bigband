@@ -1,6 +1,6 @@
 import * as JSZip from 'jszip';
 import * as mkdirp from 'mkdirp'
-import { DeployableFragment, DeployableAtom } from './instruments/Instrument';
+import { DeployableFragment, DeployableAtom } from './DeployableFragment';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as hash from 'hash.js';
@@ -12,7 +12,7 @@ const DATE = new Date(1000);
 class FolderTree {
   private readonly zipByPath: any = {}
 
-  constructor(private readonly jszip) {
+  constructor(private readonly jszip: JSZip) {
     this.zipByPath["."] = jszip;
   }
 
@@ -101,7 +101,7 @@ export class ZipBuilder {
     return ret;
   }
 
-  forEach(consumer: (DeployableAtom) => void) {
+  forEach(consumer: (_: DeployableAtom) => void) {
     const atoms: DeployableAtom[] = [];
     for (const frag of this.fragments) {
       frag.forEach(atom => atoms.push(atom));
@@ -149,7 +149,7 @@ export class ZipBuilder {
   }
 }
 
-function lexicographicallyCompare(a, b) {
+function lexicographicallyCompare(a: string, b: string) {
   if (a.length !== b.length) {
     return a.length - b.length;
   }

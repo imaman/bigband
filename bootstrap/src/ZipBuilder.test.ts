@@ -8,7 +8,7 @@ import 'mocha';
 
 import {ZipBuilder} from './ZipBuilder'
 import * as JSZip from 'jszip';
-import { DeployableAtom, DeployableFragment } from './instruments/Instrument';
+import { DeployableAtom, DeployableFragment } from './DeployableFragment';
 
 import * as path from 'path';
 
@@ -80,10 +80,10 @@ describe('ZipBuilder', () => {
     describe('scan', () => {
         it('recurses through directories', async () => {
             const zb = new ZipBuilder();
-            zb.newFragment().scan('a/b', __dirname);
+            zb.newFragment().scan('a/b', path.resolve(__dirname, '../../core/src'));
             const zip = await JSZip.loadAsync(await zb.toBuffer());
 
-            const str = await zip.file('a/b/instruments/Instrument.ts').async('string');
+            const str = await zip.file('a/b/instruments/Instrument.ts').async('text');
             expect(str).to.contain('export abstract class Instrument {');
 
             expect(zip.file('a/b/commands/Invoke.ts')).to.be.not.null;
@@ -178,7 +178,7 @@ describe('ZipBuilder', () => {
         it('can scan a node_modules directory and merge it', async () => {
             const zb = new ZipBuilder();
             const fragA = zb.newFragment();
-            fragA.scan('node_modules/moment', path.resolve(__dirname, '../example/node_modules/moment'));
+            fragA.scan('node_modules/moment', path.resolve(__dirname, '../../example/node_modules/moment'));
             
             const originalBuffer = await zb.toBuffer();
             const originalPojo = await ZipBuilder.toPojo(originalBuffer);
@@ -192,7 +192,7 @@ describe('ZipBuilder', () => {
         it('roundtrips without losing a bit', async () => {
             const zb = new ZipBuilder();
             const fragA = zb.newFragment();
-            fragA.scan('node_modules/moment', path.resolve(__dirname, '../example/node_modules/moment'));
+            fragA.scan('node_modules/moment', path.resolve(__dirname, '../../example/node_modules/moment'));
             
             const originalBuffer = await zb.toBuffer();
             const mergedBuffer = await ZipBuilder.merge([originalBuffer]);
