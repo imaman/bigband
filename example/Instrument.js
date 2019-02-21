@@ -1,0 +1,1 @@
+../build/src/instruments/Instrument.js

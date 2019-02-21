@@ -94,7 +94,7 @@ export abstract class Instrument {
     // }
 }
 
-class LambdaInstrument extends Instrument {
+export class LambdaInstrument extends Instrument {
     private static readonly BASE_DEF = {
         Type: "AWS::Serverless::Function",
         Properties: {
@@ -104,12 +104,23 @@ class LambdaInstrument extends Instrument {
         }
     }
 
+    private npmPackageName: string = '';
+
     constructor(packageName: string, name: string, private readonly controllerPath: string, cloudFormationProperties: any = {}) {
         super(packageName, name);
 
         this.definition.overwrite(LambdaInstrument.BASE_DEF);
         this.definition.mutate(o => o.Properties.Handler = `${this.getHandlerFile()}.handle`);
         this.definition.mutate(o => Object.assign(o.Properties, cloudFormationProperties));
+    }
+
+    fromNpmPackage(npmPackageName: string) {
+        this.npmPackageName = npmPackageName;
+        return this;
+    }
+
+    getNpmPackage() {
+        return this.npmPackageName;
     }
 
     
@@ -172,8 +183,17 @@ class LambdaInstrument extends Instrument {
 
     createFragment(pathPrefix: string) {
         const fragment = new DeployableFragment();
+        let requireExpression = `./${pathPrefix}/${this.getEntryPointFile()}`;
+        if (this.npmPackageName) {
+            requireExpression = `${this.npmPackageName}/${this.getEntryPointFile()}`;
+        }
+        if (requireExpression.includes('"') || requireExpression.includes("'") || requireExpression.includes('\\')) {
+            throw new Error(`Illegal characters in a require expression ("${requireExpression}")`);
+        }
+
+
         const content = `
-            const {runLambda} = require('./${pathPrefix}/${this.getEntryPointFile()}');
+            const {runLambda} = require('${requireExpression}');
             const mapping = require('./bigband/deps.js');
             const fp = require('./bigband/build_manifest.js');
 
@@ -214,6 +234,7 @@ class LambdaInstrument extends Instrument {
 }
 
 
+// TODO(imaman): get rid of this function, let client code use LambdaInstrument directly.
 export function newLambda(packageName: string, name: string, controllerPath: string, cloudFormationProperties?: any) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
 }

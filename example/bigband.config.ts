@@ -1,4 +1,4 @@
-import {DynamoDbAttributeType,IsolationScope,newLambda,DynamoDbInstrument,KinesisStreamInstrument,KinesisStreamConsumer,Rig} from 'bigband/instruments/Instrument';
+import {DynamoDbAttributeType,IsolationScope,newLambda,DynamoDbInstrument,KinesisStreamInstrument,KinesisStreamConsumer,Rig} from './Instrument';
 
 
 const namespace = new IsolationScope('274788167589', 'bb-example', 'bb-example-e-w-2', 'root', 'testim');

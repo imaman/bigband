@@ -2,7 +2,7 @@
   "compilerOptions": {
     "preserveConstEnums": true,
     "strictNullChecks": true,
-    "sourceMap": true,
+    "inlineSourceMap": true,
     "declaration": true,
     "target": "es2015",
     "outDir": "build",
@@ -19,6 +19,7 @@
     "src/Packager.ts",
     "src/NpmPackageResolver.ts",
     "src/instruments/Instrument.test.ts",
-    "src/DepsCollector.ts"
+    "src/DepsCollector.ts",
+    "src/bootstrap/scotty.ts"
   ]
 }

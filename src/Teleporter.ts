@@ -12,7 +12,9 @@ interface PutResult {
 }
 
 function toS3FriendlyName(s: string) {
-    // Based on https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+    // Based on:
+    //   https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+    //   https://en.wikipedia.org/wiki/Base64
     return s.replace(/\//g, '_').replace(/=/g, '.').replace(/\+/g, '-');
 }
 
@@ -32,7 +34,7 @@ export class S3BlobPool {
             return {handle, bytesSent: 0};
         }
 
-        logger.silly('  > uploading ' + s3Ref);
+        logger.silly(`  > uploading (${(buf.byteLength / (1024 * 1024)).toFixed(3)}MB) into ${s3Ref}`);
         await S3Ref.put(this.factory, s3Ref, buf, 'application/octet-stream');
         return {handle, bytesSent: buf.byteLength};
     }

@@ -40,6 +40,6 @@ export async function runLambda(context, event, mapping) {
     };
 }
 
-// Run command (from the bigband directory)
+// Run command (from the bigband directory):
 // bigband-example.sh invoke --function-name placeFinder --input '{"query": "United Kingdom"}'
 

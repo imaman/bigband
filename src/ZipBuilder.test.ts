@@ -30,7 +30,6 @@ describe('ZipBuilder', () => {
                 .add(new DeployableAtom('a/b/c', 'ABC'))
                 .add(new DeployableAtom('a/b/d', 'ABD'));
 
-            debugger;
             const buffer = await zb.toBuffer();
             const zip = await JSZip.loadAsync(buffer);
 

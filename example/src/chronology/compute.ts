@@ -21,3 +21,6 @@ export async function runLambda(context, event) {
     };
 }
 
+// Run command (from the bigband directory):
+// $ bigband-example.sh invoke --function-name chronology-importantDates --input '{"year": 1968}' 
+

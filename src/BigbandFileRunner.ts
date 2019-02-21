@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as hash from 'hash.js'
 
 import { AwsFactory } from './AwsFactory';
-import { NameStyle, Rig, Instrument, DeployableAtom, newLambda } from './instruments/Instrument';
+import { NameStyle, Rig, Instrument, DeployableAtom, newLambda, LambdaInstrument } from './instruments/Instrument';
 import { Packager, PushResult } from './Packager'
 import { ZipBuilder } from './ZipBuilder'
 import { S3Ref } from './S3Ref'
@@ -48,22 +48,23 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     const blobPool = new S3BlobPool(AwsFactory.fromRig(rig), rig.isolationScope.s3Bucket, poolPrefix);
 
     
-    const rootDir = path.resolve(__dirname).replace('/build/src', '');
+    const rootDir = path.resolve(__dirname).replace('/bigband/src', '/bigband');
 
-    const scottyInstrument = newLambda('bigband', 'scotty', 'src/bootstrap/scotty', {
+    const scottyInstrument = newLambda('bigband', 'scotty', 'bootstrap/scotty', {
         Description: 'beam me up',
         MemorySize: 2560,
         Timeout: 30
         })
+        .fromNpmPackage('--bigband-bootstrap--')
         .canDo('s3:GetObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${poolPrefix}/*`)
         .canDo('s3:PutObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
 
     
-    logger.info(`Shipping rig "${rig.name}" to ${rig.region}`);
+    logger.info(`>>> Shipping rig "${rig.name}" to ${rig.region}`);
 
     const ps = bigbandSpec.instruments.map(instrument => 
         pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, scottyInstrument, blobPool));
-    
+
     // pushCode of scotty needs slightly different parameters so we run it separately. Then, we can safely add scotty
     // to the list of instruments.
     ps.push(pushCode(rootDir, rootDir, rig, scottyInstrument, scottyInstrument, blobPool));
@@ -115,7 +116,7 @@ export async function loadSpec(bigbandFile: string, runtimeDir?: string): Promis
     const d = path.dirname(path.resolve(bigbandFile));
     const packager = new Packager(d, d, '', '');
     const file = path.parse(bigbandFile).name;
-    const zb = await packager.run(`${file}.ts`, 'spec_compiled', runtimeDir);
+    const zb = await packager.run(`${file}.ts`, 'spec_compiled', '', runtimeDir);
     const specDeployedDir = packager.unzip(zb, 'spec_deployed')
     const ret: BigbandSpec = require(path.resolve(specDeployedDir, 'build', `${file}.js`)).run();
     if (!ret.dir) {
@@ -174,7 +175,7 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
     }
 
     const {zb, packager} = await compileInstrument(d, npmPackageDir, rig, instrument, blobPool);
-    
+
     const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig));
     const resource = def.get();
     resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
@@ -207,7 +208,8 @@ async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, ins
             sha256.update(a.content);
         };
 
-        const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix) as ZipBuilder;
+
+        const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix, (instrument as LambdaInstrument).getNpmPackage()) as ZipBuilder;
         zb.forEach(atomConsumer);
         frag.forEach(atomConsumer);
 
@@ -230,6 +232,9 @@ function ttlPrefix(rig: Rig) {
 }
 
 async function configureBucket(rig: Rig) {
+    // You can check the content of the TTL folder via:
+    // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
+
     const s3 = AwsFactory.fromRig(rig).newS3();
     const prefix = `${ttlPrefix(rig)}/`;
     const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
@@ -238,7 +243,7 @@ async function configureBucket(rig: Rig) {
             Rules: [
                 {
                     Expiration: {
-                        Days: 1 // Temporarily. change back to 7 once proven working.
+                        Days: 7 // Temporarily. change back to 7 once proven working.
                     },
                     Filter: {
                         Prefix: prefix

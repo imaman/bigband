@@ -56,33 +56,39 @@ export class Packager {
     return outDir;
   }
   
-  private createZip(relativeTsFile: string, compiledFilesDir: string, runtimeDir?: string) {
+  private createZip(relativeTsFile: string, npmPackageName: string, runtimeDir?: string) {
     const absoluteTsFile = this.toAbs(relativeTsFile);
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
-    const deps = DepsCollector.scanFrom(absoluteTsFile);
-    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir], runtimeDir);
-    deps.npmDeps
-      .filter(d => shouldBeIncluded(d))
-      .forEach(d => npmPackageResolver.recordUsage(d));
-    const usageByPackageName = npmPackageResolver.compute();
-  
+    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, findBigbandPackageDir()], shouldBeIncluded, runtimeDir);
+    if (npmPackageName) {
+      npmPackageResolver.recordUsage(npmPackageName);
+    } else {
+      const deps = DepsCollector.scanFrom(absoluteTsFile);
+      deps.npmDeps.forEach(d => npmPackageResolver.recordUsage(d));  
+    } 
+    const usageByPackageName = npmPackageResolver.compute();  
+
     const zipBuilder = new ZipBuilder();
     const nodeModulesFragment = zipBuilder.newFragment();
     Object.keys(usageByPackageName).forEach(k => {
       const usage: Usage = usageByPackageName[k];
       nodeModulesFragment.scan(`node_modules/${usage.packageName}`, usage.dir);
-    });
-    
-    zipBuilder.newFragment().scan('build', compiledFilesDir);
+    });    
+
     return zipBuilder;
   }
 
-  public async run(relativeTsFile: string, relativeOutDir: string, runtimeDir?: string) {
+  public async run(relativeTsFile: string, relativeOutDir: string, npmPackageName: string, runtimeDir?: string, ) {
     logger.silly(`Packing ${relativeTsFile} into ${relativeOutDir}`);
 
-    const compiledFilesDir = await this.compile(relativeTsFile, relativeOutDir);
-    return this.createZip(relativeTsFile, compiledFilesDir, runtimeDir);  
+    const compiledFilesDir = npmPackageName ? '' : await this.compile(relativeTsFile, relativeOutDir);
+    const zipBuilder = this.createZip(relativeTsFile, npmPackageName, runtimeDir);  
+    if (compiledFilesDir.length) {
+      zipBuilder.newFragment().scan('build', compiledFilesDir);
+    }
+    
+    return zipBuilder;
   }
 
   public unzip(zipBuilder: ZipBuilder, relativeOutDir: string) {
@@ -191,6 +197,23 @@ export class Packager {
 }
 
 
+function findBigbandPackageDir() {
+  let ret = path.resolve(__dirname);
+  while (true) {
+    const resolved = path.resolve(ret, 'package.json')
+    console.log('resolved=', resolved);
+    if (fs.existsSync(resolved)) {
+      return ret;
+    }
+
+    const next = path.dirname(ret);
+    if (next === ret) {
+      throw new Error('package dir for bigband was not found');
+    }
+
+    ret = next;
+  }
+}
 
 function shouldBeIncluded(packageName: string) {
   return packageName !== 'aws-sdk' && !packageName.startsWith('aws-sdk/');

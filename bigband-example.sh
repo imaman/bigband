@@ -5,20 +5,22 @@ dir=`dirname $(readlink -f "$0")`
 
 cd $dir
 
-if [ "$#" == "0" ]; then
-    commandArg="ship"
-else 
-    commandArg="$1"
+debugArgs=""
+if [ "$1" == "--d" ]; then
+    debugArgs="--inspect --inspect-brk"
     shift 1
 fi
 
+if [ "$#" == "0" ]; then
+    echo "no args"
+    commandArg="ship"
+else 
+    commandArg="$1"
+    echo "commandArg=$commandArg"
+    shift 1
+    echo "all args=$*"
+fi
+
 npm run build
-cd build
-tar cf bigband.tar src
-
-cd ../example
-npm update bigband
-
-node node_modules/.bin/bigband "${commandArg}" "$1" "$2" "$3" "$4"
-
-
+cd example
+node -r ts-node/register ${debugArgs} ../src/cli.ts "${commandArg}" "$1" "$2" "$3" "$4" "$5" "$6" 
