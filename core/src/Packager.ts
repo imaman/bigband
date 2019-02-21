@@ -199,7 +199,6 @@ function findBigbandPackageDir() {
   while (true) {
     const resolved = path.resolve(ret, 'node_modules')
     if (fs.existsSync(resolved)) {
-      console.log('findBigbandPackageDir() is returning ' + ret);
       return ret;
     }
 
