@@ -5,10 +5,10 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "unit": "mocha -r ts-node/register --exit --timeout 50000 'src/**/*.test.ts'",
+    "unit": "mocha -r ts-node/register --exit --timeout 50000 '__tests__/**/*.test.ts'",
     "build": "tsc",
     "prepare": "npm run build",
-    "prepublishOnly": "npm test",
+    "prepublishOnly": "npm unit",
     "preversion": "",
     "version": "git add -A src",
     "postversion": "git push && git push --tags"

@@ -6,9 +6,9 @@ const {expect} = chai;
 
 import 'mocha';
 
-import {ZipBuilder} from './ZipBuilder'
+import {ZipBuilder} from '../src/ZipBuilder'
 import * as JSZip from 'jszip';
-import { DeployableAtom, DeployableFragment } from './DeployableFragment';
+import { DeployableAtom, DeployableFragment } from '../src/DeployableFragment';
 
 import * as path from 'path';
 
