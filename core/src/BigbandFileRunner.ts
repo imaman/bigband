@@ -3,9 +3,9 @@ import * as fs from 'fs';
 import * as hash from 'hash.js'
 
 import { AwsFactory } from './AwsFactory';
-import { NameStyle, Rig, Instrument, DeployableAtom, newLambda, LambdaInstrument } from './instruments/Instrument';
+import { NameStyle, Rig, Instrument, newLambda, LambdaInstrument } from './instruments/Instrument';
 import { Packager, PushResult } from './Packager'
-import { ZipBuilder } from './ZipBuilder'
+import { ZipBuilder, DeployableAtom } from 'bigband-bootstrap'
 import { S3Ref } from './S3Ref'
 import { CloudFormationPusher } from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';

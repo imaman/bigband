@@ -9,11 +9,11 @@ import { logger } from './logger';
 import { AwsFactory } from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver, Usage } from './NpmPackageResolver'
-import { Instrument, Rig, DeployableAtom, DeployableFragment } from './instruments/Instrument';
+import { Instrument, Rig } from './instruments/Instrument';
 import { GetFunctionResponse, InvocationRequest, InvocationResponse } from 'aws-sdk/clients/lambda';
 import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
-import { ZipBuilder } from './ZipBuilder';
+import { ZipBuilder, DeployableAtom, DeployableFragment } from 'bigband-bootstrap';
 
 export interface PushResult {
   deployableLocation: S3Ref
