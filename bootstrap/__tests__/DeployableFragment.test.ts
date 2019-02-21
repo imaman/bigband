@@ -8,20 +8,29 @@ const {expect} = chai;
 import 'mocha';
 
 
-import {DeployableFragment, DeployableAtom} from './Instrument'
+import {DeployableFragment, DeployableAtom} from '../src/DeployableFragment'
 
 describe('deployablefragment', () => {
     describe('scan', () => {
-        it('scans this file', () => {
+        
+        it('scans the core/src folder', () => {
+            const frag = new DeployableFragment();
+            frag.scan('x/y', path.join(__dirname, '../../core/src'));
+
+            const arr: DeployableAtom[] = [];
+            frag.forEach(a => arr.push(a));
+
+            expect(arr.map(a => a.path)).to.include('x/y/commands/Invoke.ts');
+        });
+
+        it('scans this folder', () => {
             const frag = new DeployableFragment();
             frag.scan('x/y', path.join(__dirname, '..'));
 
             const arr: DeployableAtom[] = [];
             frag.forEach(a => arr.push(a));
 
-            expect(arr.map(a => a.path)).to.include('x/y/commands/Invoke.ts');
-            const a = arr.find(a => a.path === 'x/y/instruments/DeployableFragment.test.ts') as DeployableAtom;
-
+            const a = arr.find(a => a.path === 'x/y/__tests__/DeployableFragment.test.ts') as DeployableAtom;
             expect(a.content).to.include("describe('deployablefragment', () => {");
         });
     });
