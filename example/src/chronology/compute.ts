@@ -4,6 +4,7 @@ const eventByYear: any = {
     1968: 'Apollo 8',
     1967: 'Sgt. Pepper',
     1969: 'Apollo 11',
+    1970: 'Let it be',
     1985: 'Talking Heads: Road to Nowhere',
     'NONE': 'Please specify a year'
 };
