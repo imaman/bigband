@@ -8,7 +8,7 @@
     "unit": "mocha -r ts-node/register --exit --timeout 50000 '__tests__/**/*.test.ts'",
     "build": "tsc",
     "prepare": "npm run build",
-    "prepublishOnly": "npm unit",
+    "prepublishOnly": "npm run unit",
     "preversion": "",
     "version": "",
     "postversion": ""
