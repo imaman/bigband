@@ -1,4 +1,4 @@
-
+import {DeployableAtom, DeployableFragment} from 'bigband-bootstrap';
 
 const settings: any = {
     DEPLOYABLES_FOLDER: 'deployables'
