@@ -1,6 +1,6 @@
 {
   "name": "bigband",
-  "version": "0.1.78",
+  "version": "0.1.79",
   "description": "Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
