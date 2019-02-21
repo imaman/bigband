@@ -1,6 +1,6 @@
 {
   "name": "bigband-bootstrap",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "description": "Essentials part of bigband",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -10,8 +10,8 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm unit",
     "preversion": "",
-    "version": "git add -A src",
-    "postversion": "git push && git push --tags"
+    "version": "",
+    "postversion": ""
   },
   "repository": {
     "type": "git"
