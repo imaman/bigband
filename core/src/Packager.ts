@@ -13,7 +13,7 @@ import { Instrument, Rig } from './instruments/Instrument';
 import { GetFunctionResponse, InvocationRequest, InvocationResponse } from 'aws-sdk/clients/lambda';
 import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
-import { ZipBuilder, DeployableAtom, DeployableFragment } from 'bigband-bootstrap';
+import { ZipBuilder, findBigbandBootstrapPackageDir } from 'bigband-bootstrap';
 
 export interface PushResult {
   deployableLocation: S3Ref
@@ -48,7 +48,7 @@ export class Packager {
     const fileToCompile = this.toAbs(relatvieTsFile);
 
     logger.silly(`Compiling ${fileToCompile}`);
-    const command = `tsc --outDir "${outDir}" --preserveConstEnums --strictNullChecks --sourceMap --target es2015 --module commonjs --allowJs --checkJs false --lib es2015 --rootDir "${this.rootDir}" "${fileToCompile}"`
+    const command = `tsc --outDir "${outDir}" --preserveConstEnums --strictNullChecks --sourceMap --target es2015 --module commonjs --allowJs --checkJs false --lib es2015,dom --rootDir "${this.rootDir}" "${fileToCompile}"`
     logger.silly(`Executing: ${command}`);
 
     // TODO(imaman): better output on error.
@@ -60,6 +60,7 @@ export class Packager {
     const absoluteTsFile = this.toAbs(relativeTsFile);
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
+    debugger;
     const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, findBigbandPackageDir()], shouldBeIncluded, runtimeDir);
     if (npmPackageName) {
       npmPackageResolver.recordUsage(npmPackageName);
@@ -154,13 +155,10 @@ export class Packager {
         return ret;
       }
 
-      logger.error('scotty returned an error', invocationResponse);
+      logger.silly('scotty returned an error:\n' + JSON.stringify(invocationResponse));
       throw new Error(`Teleporting of ${instrument.physicalName(this.rig)} failed: ${invocationResponse.FunctionError}`);
     } catch (e) {
-      if (e.code !== 'ResourceNotFoundException') {
-        logger.error('Teleporting error', e);
-        throw new Error(`Teleporting of ${instrument.physicalName(this.rig)} could not be started: ${e.message}`);
-      }
+      logger.silly('Teleporting error', e);
     }
 
     const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, instrument.physicalName(this.rig));
@@ -200,9 +198,9 @@ export class Packager {
 function findBigbandPackageDir() {
   let ret = path.resolve(__dirname);
   while (true) {
-    const resolved = path.resolve(ret, 'package.json')
-    console.log('resolved=', resolved);
+    const resolved = path.resolve(ret, 'node_modules')
     if (fs.existsSync(resolved)) {
+      console.log('findBigbandPackageDir() is returning ' + ret);
       return ret;
     }
 

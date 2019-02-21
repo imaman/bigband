@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as hash from 'hash.js'
+const Module = require('module');
 
 import { AwsFactory } from './AwsFactory';
 import { NameStyle, Rig, Instrument, newLambda, LambdaInstrument } from './instruments/Instrument';
@@ -48,9 +49,8 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     const blobPool = new S3BlobPool(AwsFactory.fromRig(rig), rig.isolationScope.s3Bucket, poolPrefix);
 
     
-    const rootDir = path.resolve(__dirname).replace('/bigband/src', '/bigband');
 
-    const scottyInstrument = newLambda('bigband', 'scotty', 'scotty', {
+    const scottyInstrument = newLambda('bigband', 'scotty', 'lib/scotty', {
         Description: 'beam me up',
         MemorySize: 2560,
         Timeout: 30
@@ -65,8 +65,8 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     const ps = bigbandSpec.instruments.map(instrument => 
         pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, scottyInstrument, blobPool));
 
-    // pushCode of scotty needs slightly different parameters so we run it separately. Then, we can safely add scotty
-    // to the list of instruments.
+    // scotty needs slightly different parameters so we pushCode() it separately. 
+    const rootDir = findBigbandPackageDir();
     ps.push(pushCode(rootDir, rootDir, rig, scottyInstrument, scottyInstrument, blobPool));
     
     const pushedInstruments = await Promise.all(ps);
@@ -109,6 +109,42 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     }));
 }
 
+let n = 0;
+function changeReq() {
+    if (n > 0) {
+        throw new Error('n=' + n);
+    }
+
+    n += 1;
+    const originalRequire = Module.prototype.require;
+
+    function runOriginalRequire(m, arg) {
+        return originalRequire.apply(m, [arg]);
+    }
+
+    Module.prototype.require = function(arg) {
+        try {
+            return runOriginalRequire(this, arg);
+        } catch (err) {
+            if (!err.message.startsWith("Cannot find module ")) {
+                throw err;
+            }
+
+            try {
+                return runOriginalRequire(this, `/home/imaman/code/bigband/bootstrap/node_modules/${arg}`);
+            } catch (err) {
+                if (!err.message.startsWith("Cannot find module ")) {
+                    throw err;
+                }
+
+                return runOriginalRequire(this, `/home/imaman/code/bigband/core/node_modules/${arg}`);                
+            }
+        }
+    };
+
+    return originalRequire;
+}
+
 export async function loadSpec(bigbandFile: string, runtimeDir?: string): Promise<BigbandSpec> {
     if (!bigbandFile) {
         throw new Error('bigbandFile cannot be falsy');
@@ -117,8 +153,11 @@ export async function loadSpec(bigbandFile: string, runtimeDir?: string): Promis
     const packager = new Packager(d, d, '', '');
     const file = path.parse(bigbandFile).name;
     const zb = await packager.run(`${file}.ts`, 'spec_compiled', '', runtimeDir);
-    const specDeployedDir = packager.unzip(zb, 'spec_deployed')
-    const ret: BigbandSpec = require(path.resolve(specDeployedDir, 'build', `${file}.js`)).run();
+    const specDeployedDir = packager.unzip(zb, 'spec_deployed');
+    const pathToRequire = path.resolve(specDeployedDir, 'build', `${file}.js`);
+    const orig = changeReq();
+    const ret: BigbandSpec = require(pathToRequire).run();
+    Module.prototype.require = orig;
     if (!ret.dir) {
         ret.dir = d;
     }
@@ -175,6 +214,7 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
     }
 
     const {zb, packager} = await compileInstrument(d, npmPackageDir, rig, instrument, blobPool);
+    zb.unzip(`/tmp/${instrument.fullyQualifiedName()}`);
 
     const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig));
     const resource = def.get();
@@ -189,6 +229,7 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
 }
 
 async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument, blobPool: S3BlobPool) {
+    console.log('compileInstrument: d=' + d + ', npmPackageDir=' + npmPackageDir + ', instrument=' + instrument.fullyQualifiedName());
     try {
         const packager = new Packager(d, npmPackageDir, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig, blobPool);
         const pathPrefix = 'build';
@@ -263,3 +304,22 @@ async function configureBucket(rig: Rig) {
         throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
     }
 }
+
+function findBigbandPackageDir() {
+    let ret = path.resolve(__dirname);
+    while (true) {
+      const resolved = path.resolve(ret, 'node_modules')
+      if (fs.existsSync(resolved)) {
+        console.log('findBigbandPackageDir() is returning ' + ret);
+        return ret;
+      }
+  
+      const next = path.dirname(ret);
+      if (next === ret) {
+        throw new Error('package dir for bigband was not found');
+      }
+  
+      ret = next;
+    }
+  }
+  

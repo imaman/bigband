@@ -80,7 +80,6 @@ export class NpmPackageResolver {
             packageName = temp;
         }
 
-
         const traverse = (packageName: string) => {
             const isBootstrap = packageName === '--bigband-bootstrap--'
 
@@ -143,21 +142,3 @@ export class NpmPackageResolver {
     }
 }
 
-function findBigbandPackageDir() {
-    let ret = path.resolve(__dirname);
-    while (true) {
-      const resolved = path.resolve(ret, 'package.json')
-      console.log('resolved=', resolved);
-      if (fs.existsSync(resolved)) {
-        return ret;
-      }
-  
-      const next = path.dirname(ret);
-      if (next === ret) {
-        throw new Error('package dir for bigband was not found');
-      }
-  
-      ret = next;
-    }
-}
-  
