@@ -1,1 +1,1 @@
-../core/build/src/instruments/Instrument.js
+../core/lib/instruments/Instrument.js
