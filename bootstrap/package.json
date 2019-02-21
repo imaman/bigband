@@ -1,28 +1,28 @@
 {
-    "name": "bigband-bootstrap",
-    "version": "0.0.0",
-    "description": "Essentials part of bigband",
-    "main": "lib/index.js",
-    "types": "lib/index.d.ts",
-    "scripts": {
-      "test": "",
-      "build": "tsc",
-      "prepare": "npm run build",
-      "prepublishOnly": "npm test",
-      "preversion": "",
-      "version": "git add -A src",
-      "postversion": "git push && git push --tags"
-    },
-    "repository": {
-      "type": "git"
-    },
-    "keywords": [],
-    "author": "Itay Maman",
-    "license": "MIT",
-    "devDependencies": {
-    },
-    "files": [
-      "lib/**/*"
-    ]
-  }
-  
+  "name": "bigband-bootstrap",
+  "version": "0.0.0",
+  "description": "Essentials part of bigband",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "test": "",
+    "build": "tsc",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test",
+    "preversion": "",
+    "version": "git add -A src",
+    "postversion": "git push && git push --tags"
+  },
+  "repository": {
+    "type": "git"
+  },
+  "keywords": [],
+  "author": "Itay Maman",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^3.3.3"
+  },
+  "files": [
+    "lib/**/*"
+  ]
+}
