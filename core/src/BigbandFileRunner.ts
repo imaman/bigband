@@ -50,12 +50,12 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     
     const rootDir = path.resolve(__dirname).replace('/bigband/src', '/bigband');
 
-    const scottyInstrument = newLambda('bigband', 'scotty', 'bootstrap/scotty', {
+    const scottyInstrument = newLambda('bigband', 'scotty', 'scotty', {
         Description: 'beam me up',
         MemorySize: 2560,
         Timeout: 30
         })
-        .fromNpmPackage('--bigband-bootstrap--')
+        .fromNpmPackage('bigband-bootstrap')
         .canDo('s3:GetObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${poolPrefix}/*`)
         .canDo('s3:PutObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
 
