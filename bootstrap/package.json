@@ -1,6 +1,6 @@
 {
   "name": "bigband-bootstrap",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Essentials part of bigband",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -39,6 +39,8 @@
     "lib/**/*"
   ],
   "dependencies": {
-    "jszip": "^3.1.5"
+    "hash.js": "^1.1.7",
+    "jszip": "^3.2.0",
+    "mkdirp": "^0.5.1"
   }
 }
