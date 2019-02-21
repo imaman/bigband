@@ -60,7 +60,6 @@ export class Packager {
     const absoluteTsFile = this.toAbs(relativeTsFile);
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
-    debugger;
     const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, findBigbandPackageDir()], shouldBeIncluded, runtimeDir);
     if (npmPackageName) {
       npmPackageResolver.recordUsage(npmPackageName);

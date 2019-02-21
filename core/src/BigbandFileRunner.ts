@@ -214,7 +214,6 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
     }
 
     const {zb, packager} = await compileInstrument(d, npmPackageDir, rig, instrument, blobPool);
-    zb.unzip(`/tmp/${instrument.fullyQualifiedName()}`);
 
     const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig));
     const resource = def.get();
@@ -229,7 +228,6 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
 }
 
 async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument, blobPool: S3BlobPool) {
-    console.log('compileInstrument: d=' + d + ', npmPackageDir=' + npmPackageDir + ', instrument=' + instrument.fullyQualifiedName());
     try {
         const packager = new Packager(d, npmPackageDir, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig, blobPool);
         const pathPrefix = 'build';
@@ -310,7 +308,6 @@ function findBigbandPackageDir() {
     while (true) {
       const resolved = path.resolve(ret, 'node_modules')
       if (fs.existsSync(resolved)) {
-        console.log('findBigbandPackageDir() is returning ' + ret);
         return ret;
       }
   
