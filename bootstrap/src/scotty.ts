@@ -1,5 +1,5 @@
 import * as AWS from 'aws-sdk';
-import { ZipBuilder } from 'bigband-bootstrap'
+import { ZipBuilder } from './ZipBuilder'
 
 
 export async function runLambda(context, event) {
