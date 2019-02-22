@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 
+// HERE
 export function findBigbandBootstrapPackageDir() {
   let ret = path.resolve(__dirname);
   while (true) {
