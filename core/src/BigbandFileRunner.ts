@@ -109,13 +109,13 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     }));
 }
 
-let n = 0;
-function changeReq() {
-    if (n > 0) {
-        throw new Error('n=' + n);
+let numChangesToModuleRequire = 0;
+function installCustomRequire() {
+    if (numChangesToModuleRequire > 0) {
+        throw new Error(`numChangesToModuleRequire expected to be zero (was: ${numChangesToModuleRequire})`);
     }
 
-    n += 1;
+    numChangesToModuleRequire += 1;
     const originalRequire = Module.prototype.require;
 
     function runOriginalRequire(m, arg) {
@@ -144,7 +144,13 @@ function changeReq() {
         }
     };
 
-    return originalRequire;
+    return () => { 
+        if (numChangesToModuleRequire !== 1) {
+            throw new Error('More than one change to Module.require()');
+        }
+        Module.prototype.require = originalRequire;
+        --numChangesToModuleRequire;
+    };
 }
 
 export async function loadSpec(bigbandFile: string, runtimeDir?: string): Promise<BigbandSpec> {
@@ -157,10 +163,15 @@ export async function loadSpec(bigbandFile: string, runtimeDir?: string): Promis
     const zb = await packager.run(`${file}.ts`, 'spec_compiled', '', runtimeDir);
     const specDeployedDir = packager.unzip(zb, 'spec_deployed');
     const pathToRequire = path.resolve(specDeployedDir, 'build', `${file}.js`);
-    const orig = changeReq();
-// HERE
-    const ret: BigbandSpec = require(pathToRequire).run();
-    Module.prototype.require = orig;
+
+    const uninstall = installCustomRequire();
+    let ret: BigbandSpec
+    try {
+        ret = require(pathToRequire).run();
+    } finally {
+        uninstall();
+    }
+
     if (!ret.dir) {
         ret.dir = d;
     }
