@@ -131,12 +131,14 @@ function changeReq() {
             }
 
             try {
+// HERE
                 return runOriginalRequire(this, `/home/imaman/code/bigband/bootstrap/node_modules/${arg}`);
             } catch (err) {
                 if (!err.message.startsWith("Cannot find module ")) {
                     throw err;
                 }
 
+// HERE
                 return runOriginalRequire(this, `/home/imaman/code/bigband/core/node_modules/${arg}`);                
             }
         }
@@ -156,6 +158,7 @@ export async function loadSpec(bigbandFile: string, runtimeDir?: string): Promis
     const specDeployedDir = packager.unzip(zb, 'spec_deployed');
     const pathToRequire = path.resolve(specDeployedDir, 'build', `${file}.js`);
     const orig = changeReq();
+// HERE
     const ret: BigbandSpec = require(pathToRequire).run();
     Module.prototype.require = orig;
     if (!ret.dir) {
