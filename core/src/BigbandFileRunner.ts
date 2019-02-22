@@ -16,15 +16,12 @@ import { S3BlobPool } from './Teleporter';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
-export async function runBigbandFile(bigbandFile: string, rigName: string, runtimeDir?: string) {
+export async function runBigbandFile(bigbandFile: string, rigName: string) {
     const t0 = Date.now();
     if (Number(process.versions.node.split('.')[0]) < 8) {
         throw new Error('You must use node version >= 8 to run this program');
     }
-    if (runtimeDir && !path.isAbsolute(runtimeDir)) {
-        throw new Error(`runtimeDir (${runtimeDir}) is not an absolute path`);
-    }
-    const bigbandSpec = await loadSpec(bigbandFile, runtimeDir);
+    const bigbandSpec = await loadSpec(bigbandFile);
     const rig = bigbandSpec.rigs.length === 1 && !rigName ? bigbandSpec.rigs[0] : bigbandSpec.rigs.find(curr => curr.name === rigName);
     if (!rig) {
         throw new Error(`Failed to find a rig named ${rigName} in ${bigbandSpec.rigs.map(curr => curr.name).join(', ')}`);
@@ -143,14 +140,14 @@ function installCustomRequire() {
     };
 }
 
-export async function loadSpec(bigbandFile: string, runtimeDir?: string): Promise<BigbandSpec> {
+export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
     if (!bigbandFile) {
         throw new Error('bigbandFile cannot be falsy');
     }
     const d = path.dirname(path.resolve(bigbandFile));
     const packager = new Packager(d, d, '', '');
     const file = path.parse(bigbandFile).name;
-    const zb = await packager.run(`${file}.ts`, 'spec_compiled', '', runtimeDir);
+    const zb = await packager.run(`${file}.ts`, 'spec_compiled', '');
     const specDeployedDir = packager.unzip(zb, 'spec_deployed');
     const pathToRequire = path.resolve(specDeployedDir, 'build', `${file}.js`);
 
@@ -252,7 +249,10 @@ async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, ins
         };
 
 
-        const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix, (instrument as LambdaInstrument).getNpmPackage()) as ZipBuilder;
+        const zb: ZipBuilder = await packager.run(
+            instrument.getEntryPointFile(), 
+            pathPrefix, 
+            (instrument as LambdaInstrument).getNpmPackage()) as ZipBuilder;
         zb.forEach(atomConsumer);
         frag.forEach(atomConsumer);
 

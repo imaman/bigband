@@ -56,11 +56,11 @@ export class Packager {
     return outDir;
   }
   
-  private createZip(relativeTsFile: string, npmPackageName: string, runtimeDir?: string) {
+  private createZip(relativeTsFile: string, npmPackageName: string) {
     const absoluteTsFile = this.toAbs(relativeTsFile);
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
-    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, findBigbandPackageDir()], shouldBeIncluded, runtimeDir);
+    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, findBigbandPackageDir()], shouldBeIncluded);
     if (npmPackageName) {
       npmPackageResolver.recordUsage(npmPackageName);
     } else {
@@ -79,11 +79,11 @@ export class Packager {
     return zipBuilder;
   }
 
-  public async run(relativeTsFile: string, relativeOutDir: string, npmPackageName: string, runtimeDir?: string, ) {
+  public async run(relativeTsFile: string, relativeOutDir: string, npmPackageName: string) {
     logger.silly(`Packing ${relativeTsFile} into ${relativeOutDir}`);
 
     const compiledFilesDir = npmPackageName ? '' : await this.compile(relativeTsFile, relativeOutDir);
-    const zipBuilder = this.createZip(relativeTsFile, npmPackageName, runtimeDir);  
+    const zipBuilder = this.createZip(relativeTsFile, npmPackageName);  
     if (compiledFilesDir.length) {
       zipBuilder.newFragment().scan('build', compiledFilesDir);
     }

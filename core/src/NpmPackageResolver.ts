@@ -25,10 +25,7 @@ export class NpmPackageResolver {
      * @param roots 
      * @param injectedBigbandDir 
      */
-    constructor(private readonly roots: string[], private readonly filter: (string) => boolean, private readonly injectedBigbandDir?: string) {
-        if (injectedBigbandDir && !path.isAbsolute(injectedBigbandDir)) {
-            throw new Error(`injectedBigbandDir (${injectedBigbandDir}) is not an absolute path`);
-        }
+    constructor(private readonly roots: string[], private readonly filter: (string) => boolean) {
         const relatives = roots.filter(r => !path.isAbsolute(r));        
         if (relatives.length) {
             throw new Error(`Roots must be absolute but found some which are not:\n${relatives.join('\n')}`);
