@@ -37,5 +37,7 @@
   "files": [
     "lib/**/*"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "bigband": "^0.1.83"
+  }
 }
