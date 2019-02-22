@@ -13,6 +13,7 @@ export interface Usage {
 export class NpmPackageResolver {
 
     private readonly usages: Usage[] = [];
+    // TODO(imaman): use Map<,>
     private readonly depsByPackageName: any = {};
 
     /**
@@ -81,38 +82,16 @@ export class NpmPackageResolver {
         }
 
         const traverse = (packageName: string) => {
-            const isBootstrap = packageName === '--bigband-bootstrap--'
-
-            let obj = this.depsByPackageName[packageName];
-            if (isBootstrap) {
-                debugger;
-                obj = {
-                    root: '_contrived_',
-                    // Should refelct the dependencies of scotty.ts (sans builtins).
-                    dependencies: {
-                        'jszip': true,
-                        'mkdirp': true,
-                        'hash.js': true
-                    },
-                    version: '*'
-                };
-            }
-            if (!obj && (packageName === '@bigband') && this.injectedBigbandDir) {
-                this.usages.push({packageName, version: "0.0.0", dir: this.injectedBigbandDir});
-                return;
-            }
+            const obj = this.depsByPackageName[packageName];
             if (!obj) {
                 throw new Error(`Arrived at an uninstalled package: "${packageName}".`);
             }
 
-            if (obj.root !== '_contrived_') {
-                const dir = path.join(obj.root, 'node_modules', packageName);            
-                if (!fs.existsSync(dir)) {
-                    debugger;
-                    throw new Error(`Directory ${dir} does not exist`);
-                }
-                this.usages.push({packageName, version: obj.version, dir});
+            const dir = path.join(obj.root, 'node_modules', packageName);            
+            if (!fs.existsSync(dir)) {
+                throw new Error(`Directory ${dir} does not exist`);
             }
+            this.usages.push({packageName, version: obj.version, dir});
 
             const deps = obj.dependencies || {};
             for (const k of Object.keys(deps)) {
