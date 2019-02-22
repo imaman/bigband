@@ -60,7 +60,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
         .canDo('s3:PutObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
 
     
-    logger.info(`>>> Shipping rig "${rig.name}" to ${rig.region}`);
+    logger.info(`Shipping rig "${rig.name}" to ${rig.region}`);
 
     const ps = bigbandSpec.instruments.map(instrument => 
         pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, scottyInstrument, blobPool));
@@ -130,17 +130,7 @@ function installCustomRequire() {
                 throw err;
             }
 
-            try {
-// HERE
-                return runOriginalRequire(this, `/home/imaman/code/bigband/bootstrap/node_modules/${arg}`);
-            } catch (err) {
-                if (!err.message.startsWith("Cannot find module ")) {
-                    throw err;
-                }
-
-// HERE
-                return runOriginalRequire(this, `/home/imaman/code/bigband/core/node_modules/${arg}`);                
-            }
+            return runOriginalRequire(this, path.resolve(findBigbandPackageDir(), 'node_modules', arg));
         }
     };
 
