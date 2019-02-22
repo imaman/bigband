@@ -27,8 +27,8 @@ export function lookupFunction(lambdaName: string, spec: BigbandSpec) {
 
     return matches[0];
 }
-async function invokeFunction(bigbandFile: string, runtimeDir: string, lambdaName: string, input: string) {
-    const spec = await loadSpec(bigbandFile, runtimeDir);
+async function invokeFunction(bigbandFile: string, lambdaName: string, input: string) {
+    const spec = await loadSpec(bigbandFile);
 
     const data = lookupFunction(lambdaName, spec);
 
@@ -55,7 +55,7 @@ async function invokeFunction(bigbandFile: string, runtimeDir: string, lambdaNam
 
 export class Invoke {
     static async run(argv) {
-        const temp = await invokeFunction(argv.bigbandFile, argv.runtimeDir, argv.functionName, argv.input);
+        const temp = await invokeFunction(argv.bigbandFile, argv.functionName, argv.input);
         return JSON.stringify(temp, null, 2);
     }
 }

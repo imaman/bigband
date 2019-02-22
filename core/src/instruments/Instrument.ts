@@ -1,3 +1,5 @@
+import {DeployableAtom, DeployableFragment} from 'bigband-bootstrap';
+
 const settings: any = {
     DEPLOYABLES_FOLDER: 'deployables'
 };
@@ -80,7 +82,6 @@ export abstract class Instrument {
 
     getPhysicalDefinition(rig: Rig) : Definition {
         const copy = JSON.parse(JSON.stringify(this.definition.get()));
-        // copy.Properties.CodeUri = `s3://${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${settings.DEPLOYABLES_FOLDER}/${this.physicalName(rig)}.zip`;
         copy.Properties[this.nameProperty()] = this.physicalName(rig);
         return new Definition(copy);
     }
@@ -90,7 +91,7 @@ export abstract class Instrument {
     // }
 }
 
-class LambdaInstrument extends Instrument {
+export class LambdaInstrument extends Instrument {
     private static readonly BASE_DEF = {
         Type: "AWS::Serverless::Function",
         Properties: {
@@ -100,12 +101,23 @@ class LambdaInstrument extends Instrument {
         }
     }
 
+    private npmPackageName: string = '';
+
     constructor(packageName: string, name: string, private readonly controllerPath: string, cloudFormationProperties: any = {}) {
         super(packageName, name);
 
         this.definition.overwrite(LambdaInstrument.BASE_DEF);
         this.definition.mutate(o => o.Properties.Handler = `${this.getHandlerFile()}.handle`);
         this.definition.mutate(o => Object.assign(o.Properties, cloudFormationProperties));
+    }
+
+    fromNpmPackage(npmPackageName: string) {
+        this.npmPackageName = npmPackageName;
+        return this;
+    }
+
+    getNpmPackage() {
+        return this.npmPackageName;
     }
 
     
@@ -168,8 +180,17 @@ class LambdaInstrument extends Instrument {
 
     createFragment(pathPrefix: string) {
         const fragment = new DeployableFragment();
+        let requireExpression = `./${pathPrefix}/${this.getEntryPointFile()}`;
+        if (this.npmPackageName) {
+            requireExpression = `${this.npmPackageName}/${this.getEntryPointFile()}`;
+        }
+        if (requireExpression.includes('"') || requireExpression.includes("'") || requireExpression.includes('\\')) {
+            throw new Error(`Illegal characters in a require expression ("${requireExpression}")`);
+        }
+
+
         const content = `
-            const {runLambda} = require('./${pathPrefix}/${this.getEntryPointFile()}');
+            const {runLambda} = require('${requireExpression}');
             const mapping = require('./bigband/deps.js');
             const fp = require('./bigband/build_manifest.js');
 
@@ -210,6 +231,7 @@ class LambdaInstrument extends Instrument {
 }
 
 
+// TODO(imaman): get rid of this function, let client code use LambdaInstrument directly.
 export function newLambda(packageName: string, name: string, controllerPath: string, cloudFormationProperties?: any) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
 }
@@ -421,35 +443,6 @@ export class Definition {
 }
 
 
-export class DeployableAtom {
-    constructor(readonly path: string, readonly content: string) {}
-
-    toString() {
-        return `Path: ${this.path}/`;
-    }
-}
-
-export class DeployableFragment {
-    private readonly usedPaths = new Set<string>();
-    private readonly atoms: DeployableAtom[] = [];
-
-    add(atom: DeployableAtom) {
-        if (this.usedPaths.has(atom.path)) {
-            throw new Error(`Duplicate path: ${atom.path}`);
-        }
-        this.usedPaths.add(atom.path);
-        this.atoms.push(atom);
-    }
-
-    forEach(f: (DeployableAtom) => void) {
-        this.atoms.sort((lhs, rhs) => lhs.path.localeCompare(rhs.path));
-        this.atoms.forEach(f);
-    }
-
-    toString() {
-        return `#Atoms: ${this.atoms.length} -- ${this.atoms.slice(0, 10).join('; ')}...`;
-    }
-}
 
 // export class Deployable {
 //     private readonly fragments: DeployableFragment[] = [];
@@ -480,3 +473,4 @@ function camelCase(...args) {
 
     return args.map((curr, i) => i === 0 ? curr : capitalize(curr)).join('');
 }
+

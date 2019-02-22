@@ -11,7 +11,11 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.354.0",
+    "byline": "^5.0.0",
     "fast-levenshtein": "^2.0.6",
     "moment": "^2.22.2"
+  },
+  "devDependencies": {
+    "@types/node": "^11.9.4"
   }
 }

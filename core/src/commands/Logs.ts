@@ -5,8 +5,8 @@ import {lookupFunction} from './Invoke';
 
 
 
-async function main(bigbandFile: string, runtimeDir: string, lambdaName: string, limit: number) {
-    const spec = await loadSpec(bigbandFile, runtimeDir);
+async function main(bigbandFile: string, lambdaName: string, limit: number) {
+    const spec = await loadSpec(bigbandFile);
     const {rig, instrument} = lookupFunction(lambdaName, spec);
 
     const cloudWatchLogs = new AwsFactory(rig.region, rig.isolationScope.profile).newCloudWatchLogs();
@@ -107,7 +107,7 @@ function shouldKeep(message?: string) {
 
 export class LogsCommand {
     static async run(argv) {
-        const temp = await main(argv.bigbandFile, argv.runtimeDir, argv.functionName, argv.limit);
+        const temp = await main(argv.bigbandFile, argv.functionName, argv.limit);
         return JSON.stringify(temp, null, 2);
     }
 }

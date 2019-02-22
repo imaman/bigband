@@ -1,15 +1,17 @@
 {
   "name": "bigband",
-  "version": "0.1.77",
+  "version": "0.1.83",
   "description": "Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.",
-  "main": "",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "compile": "tsc",
-    "copy-files": "node tools/copy_to_build.js",
-    "build": "npm-run-all -s copy-files compile",
-    "ship-directly": "npm publish build/src",
-    "ship": "npm-run-all -s unit build ship-directly",
-    "unit": "mocha -r ts-node/register src/**/*.test.ts"
+    "unit": "mocha -r ts-node/register --exit --timeout 50000 'src/**/*.test.ts'",
+    "build": "tsc",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run unit",
+    "preversion": "",
+    "version": "",
+    "postversion": ""
   },
   "husky": {
     "hooks": {
@@ -20,13 +22,17 @@
     "type": "git",
     "url": "https://github.com/imaman/bigband.git"
   },
+  "files": [
+    "lib/**/*"
+  ],
   "bin": {
-    "bigband": "./cli.js"
+    "bigband": "./lib/cli.js"
   },
   "author": "Itay Maman",
   "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.353.0",
+    "bigband-bootstrap": "0.0.5",
     "del": "^3.0.0",
     "detective-typescript": "^4.1.1",
     "hash.js": "^1.1.5",

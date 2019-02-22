@@ -27,7 +27,7 @@ export class AwsFactory {
         return new AWS.Lambda(this.options);
     }
 
-    newS3() {
+    newS3(): AWS.S3 {
         return new AWS.S3(this.options);
     }
 } 

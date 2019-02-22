@@ -1,6 +1,7 @@
 import {lookup} from './model';
 import AWS = require('aws-sdk');
 import { PutRecordInput } from 'aws-sdk/clients/kinesis';
+import * as byline from 'byline';
 
 
 export async function runLambda(context, event, mapping) {
@@ -28,12 +29,17 @@ export async function runLambda(context, event, mapping) {
     const putResp = kinesis.putRecord(putReq).promise();
     console.log('putResp=' + JSON.stringify(putResp));
 
+    const timePassed = 'N/A'; //moment(`2015-09-21`).fromNow();
+
     return {
         statusCode: 200,
         headers: { 
           "content-type": 'application/json', 
         },
-        body: {query: q, answers: answers.map(curr => curr.answer)}
+        body: {query: q, timePassed, bylineKeys: Object.keys(byline), inputLength: 'A3:'+q.length, answers: answers.map(curr => curr.answer)}
     };
 }
+
+// Run command (from the bigband directory):
+// bigband-example.sh invoke --function-name placeFinder --input '{"query": "United Kingdom"}'
 

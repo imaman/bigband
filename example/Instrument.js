@@ -1,0 +1,1 @@
+../core/lib/instruments/Instrument.js

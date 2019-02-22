@@ -10,7 +10,6 @@ import {Invoke} from './commands/Invoke'
 import {logger} from './logger'
 
 import * as yargs from 'yargs';
-import * as path from 'path';
 
 
 function specFileAndRigOptions(yargs, rigOptionEnabled) {
@@ -24,11 +23,6 @@ function specFileAndRigOptions(yargs, rigOptionEnabled) {
             descirbe: 'Name of a rig to deploy. optional if only one rig is defined in the bigband file.',
         })    
     }
-
-    yargs.option('runtime-dir', {
-        descirbe: 'path to a directory with an Instrument.js file',
-    })
-    yargs.hide('runtime-dir');
     return yargs;
 }
 
@@ -68,14 +62,11 @@ yargs
     .argv;
 
 async function ship(argv) {
-    return await runBigbandFile(argv.bigbandFile, argv.rig, argv.runtimeDir && path.resolve(argv.runtimeDir));
+    return await runBigbandFile(argv.bigbandFile, argv.rig);
 }
 
 
 function run(handler, argv) {
-    if (argv.runtimeDir) {
-        argv.runtimeDir = path.resolve(argv.runtimeDir)
-    }
     Promise.resolve()
         .then(() => handler(argv))
         .then(output => logger.info(output))

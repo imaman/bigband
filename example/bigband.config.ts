@@ -1,4 +1,4 @@
-import {DynamoDbAttributeType,IsolationScope,newLambda,DynamoDbInstrument,KinesisStreamInstrument,KinesisStreamConsumer,Rig} from '@bigband/instruments/Instrument.js';
+import {DynamoDbAttributeType,IsolationScope,newLambda,DynamoDbInstrument,KinesisStreamInstrument,KinesisStreamConsumer,Rig} from './Instrument';
 
 
 const namespace = new IsolationScope('274788167589', 'bb-example', 'bb-example-e-w-2', 'root', 'testim');
@@ -28,11 +28,11 @@ const statsTable = new DynamoDbInstrument('geography', 'Stats', {name: 'query', 
         writeCapacityUnits: 1
     }
 });
-const distanceTable = new DynamoDbInstrument('geography', 'Distance', {name: 'dist', type: DynamoDbAttributeType.NUMBER}, null);
+const distanceTable = new DynamoDbInstrument('geography', 'Distance', {name: 'dist', type: DynamoDbAttributeType.NUMBER});
 
 const queryStream = new KinesisStreamInstrument('geography', 'QueryStream', 1);
 
-const queryStreamAnalyzer = new KinesisStreamConsumer('geography', 'analyzer', 'src/geography/analyzer', queryStream);
+const queryStreamAnalyzer = new KinesisStreamConsumer('geography', 'analyzer', 'src/geography/analyzer', queryStream, 1);
 
 
 placeFinder.uses(distanceTable, "distanceTable");

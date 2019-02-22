@@ -13,7 +13,7 @@ export interface Usage {
 export class NpmPackageResolver {
 
     private readonly usages: Usage[] = [];
-    private readonly npmLsByRoot: any = {};
+    // TODO(imaman): use Map<,>
     private readonly depsByPackageName: any = {};
 
     /**
@@ -25,42 +25,51 @@ export class NpmPackageResolver {
      * @param roots 
      * @param injectedBigbandDir 
      */
-    constructor(private readonly roots: string[], private readonly injectedBigbandDir?: string) {
-        if (injectedBigbandDir && !path.isAbsolute(injectedBigbandDir)) {
-            throw new Error(`injectedBigbandDir (${injectedBigbandDir}) is not an absolute path`);
-        }
+    constructor(private readonly roots: string[], private readonly filter: (string) => boolean) {
         const relatives = roots.filter(r => !path.isAbsolute(r));        
         if (relatives.length) {
             throw new Error(`Roots must be absolute but found some which are not:\n${relatives.join('\n')}`);
         }
 
-        const store = (e, root) => {
-            if (!e) {
+        const store = (outerPojo, root) => {
+            if (!outerPojo) {
                 return;
             }          
 
-            const deps = e['dependencies'] || {};
-            Object.keys(deps).forEach(d => {
-                const x = deps[d];
-                if (!x) {
-                    throw new Error(`Null entry for ${d}`);
+            const dependencies = outerPojo.dependencies || {};
+            Object.keys(dependencies).forEach(depName => {
+                const innerPojo = dependencies[depName];
+                if (!innerPojo) {
+                    throw new Error(`Null entry for ${depName}`);
                 }
-                const existing = this.depsByPackageName[d];
-                if (!existing || x['dependencies']) {
-                    this.depsByPackageName[d] = {root, ent: x}
+
+                if (innerPojo._development) {
+                    return;
                 }
-                store(x, root);
+                const existing = this.depsByPackageName[depName];
+                if (!existing || innerPojo.dependencies) {
+                    createDepRecord(depName, root, innerPojo);
+                }
+                store(innerPojo, root);
             })
         }
 
-        this.roots.forEach(r =>{
-            const npmLs = JSON.parse(child_process.execSync('npm ls --json', {cwd: r}).toString('utf-8'));
-            this.npmLsByRoot[r] = npmLs;
-            store(npmLs, r);
+        const createDepRecord = (depName: string, root: string, pojo: any) => {
+            this.depsByPackageName[depName] = {root, dependencies: pojo.dependencies, version: pojo.version };
+        }
+
+        this.roots.forEach(r => {
+            // TODO(imaman): better output on errors.
+            const npmLsPojo = JSON.parse(child_process.execSync('npm ls --json', {cwd: r}).toString('utf-8'));
+            createDepRecord(npmLsPojo.name, r, npmLsPojo);
+            store(npmLsPojo, r);
         });
     }
 
     recordUsage(packageName) {
+        if (!this.filter(packageName)) {
+            return;
+        }
         while (true) {
             const temp = path.dirname(packageName);
             if (temp == '.') {
@@ -69,25 +78,22 @@ export class NpmPackageResolver {
             packageName = temp;
         }
 
-
         const traverse = (packageName: string) => {
-            let obj = this.depsByPackageName[packageName];
-            if (!obj && (packageName === '@bigband') && this.injectedBigbandDir) {
-                this.usages.push({packageName, version: "0.0.0", dir: this.injectedBigbandDir});
-                return;
-            }
+            const obj = this.depsByPackageName[packageName];
             if (!obj) {
-                throw new Error(`Arrived at an uninstalled package: ${packageName}.`);
+                throw new Error(`Arrived at an uninstalled package: "${packageName}".`);
             }
 
-            const dir = path.join(obj.root, 'node_modules', packageName);
+            const dir = path.join(obj.root, 'node_modules', packageName);            
             if (!fs.existsSync(dir)) {
                 throw new Error(`Directory ${dir} does not exist`);
             }
+            this.usages.push({packageName, version: obj.version, dir});
 
-            this.usages.push({packageName, version: obj.ent.version, dir});
-            const deps = obj.ent['dependencies'] || {};
-            Object.keys(deps).forEach(k => traverse(k));
+            const deps = obj.dependencies || {};
+            for (const k of Object.keys(deps)) {
+                traverse(k);
+            }
         }
 
         traverse(packageName);
@@ -111,3 +117,4 @@ export class NpmPackageResolver {
         return usageByPackageName;
     }
 }
+

@@ -3,8 +3,8 @@ import {loadSpec,BigbandSpec} from '../BigbandFileRunner';
 
 
 
-async function main(bigbandFile: string, runtimeDir: string) {
-    const spec: BigbandSpec = await loadSpec(bigbandFile, runtimeDir);
+async function main(bigbandFile: string) {
+    const spec: BigbandSpec = await loadSpec(bigbandFile);
     const scopes = spec.rigs.map(r => r.isolationScope);
     const ret = {};
     scopes.forEach(s => ret[s.name] = {});
@@ -21,7 +21,7 @@ async function main(bigbandFile: string, runtimeDir: string) {
 
 export class ListCommand {
     static async run(argv) {
-        const temp = await main(argv.bigbandFile, argv.runtimeDir);
+        const temp = await main(argv.bigbandFile);
         return JSON.stringify(temp, null, 2);
     }
 }
