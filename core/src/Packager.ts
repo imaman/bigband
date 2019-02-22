@@ -14,6 +14,7 @@ import { GetFunctionResponse, InvocationRequest, InvocationResponse } from 'aws-
 import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
 import { ZipBuilder } from 'bigband-bootstrap';
+import { Misc } from './Misc';
 
 export interface PushResult {
   deployableLocation: S3Ref
@@ -60,7 +61,7 @@ export class Packager {
     const absoluteTsFile = this.toAbs(relativeTsFile);
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
-    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, findBigbandPackageDir()], shouldBeIncluded);
+    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, Misc.bigbandPackageDir()], shouldBeIncluded);
     if (npmPackageName) {
       npmPackageResolver.recordUsage(npmPackageName);
     } else {
@@ -190,24 +191,6 @@ export class Packager {
     }
     fs.mkdirSync(ret);
     return ret;
-  }
-}
-
-
-function findBigbandPackageDir() {
-  let ret = path.resolve(__dirname);
-  while (true) {
-    const resolved = path.resolve(ret, 'node_modules')
-    if (fs.existsSync(resolved)) {
-      return ret;
-    }
-
-    const next = path.dirname(ret);
-    if (next === ret) {
-      throw new Error('package dir for bigband was not found');
-    }
-
-    ret = next;
   }
 }
 

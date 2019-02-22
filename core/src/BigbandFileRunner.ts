@@ -12,7 +12,7 @@ import { CloudFormationPusher } from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 import { logger } from './logger';
 import { S3BlobPool } from './Teleporter';
-
+import { Misc } from './Misc';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
@@ -63,8 +63,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
         pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, scottyInstrument, blobPool));
 
     // scotty needs slightly different parameters so we pushCode() it separately. 
-    const rootDir = findBigbandPackageDir();
-    ps.push(pushCode(rootDir, rootDir, rig, scottyInstrument, scottyInstrument, blobPool));
+    ps.push(pushCode(Misc.bigbandPackageDir(), Misc.bigbandPackageDir(), rig, scottyInstrument, scottyInstrument, blobPool));
     
     const pushedInstruments = await Promise.all(ps);
 
@@ -127,7 +126,7 @@ function installCustomRequire() {
                 throw err;
             }
 
-            return runOriginalRequire(this, path.resolve(findBigbandPackageDir(), 'node_modules', arg));
+            return runOriginalRequire(this, path.resolve(Misc.bigbandPackageDir(), 'node_modules', arg));
         }
     };
 
@@ -306,21 +305,3 @@ async function configureBucket(rig: Rig) {
         throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
     }
 }
-
-function findBigbandPackageDir() {
-    let ret = path.resolve(__dirname);
-    while (true) {
-      const resolved = path.resolve(ret, 'node_modules')
-      if (fs.existsSync(resolved)) {
-        return ret;
-      }
-  
-      const next = path.dirname(ret);
-      if (next === ret) {
-        throw new Error('package dir for bigband was not found');
-      }
-  
-      ret = next;
-    }
-  }
-  
