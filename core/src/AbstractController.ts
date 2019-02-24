@@ -23,7 +23,7 @@ export abstract class AbstractController<T, R> {
     
     }
 
-    async runLambdaGuarded(input: T, context: any) {
+    async runLambda(input: T, context: any) {
         try {
             const output = await this.compute(input);
             return {
