@@ -33,6 +33,7 @@
   "dependencies": {
     "aws-sdk": "^2.353.0",
     "bigband-bootstrap": "0.0.5",
+    "bigband-core": "0.0.2",
     "del": "^3.0.0",
     "detective-typescript": "^4.1.1",
     "hash.js": "^1.1.5",

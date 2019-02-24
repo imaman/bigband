@@ -1,4 +1,4 @@
-export * from './instruments/Instrument';
+export * from 'bigband-core';
 
 
 
