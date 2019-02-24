@@ -37,6 +37,7 @@
     "lib/**/*"
   ],
   "dependencies": {
-    "bigband-core": "^0.1.0"
+    "bigband-core": "^0.1.0",
+    "denque": "^1.4.0"
   }
 }

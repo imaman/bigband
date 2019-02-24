@@ -7,7 +7,8 @@ export function newErrorSink(packageName: string, name: string) {
         Timeout: 15,
         ReservedConcurrentExecutions: 1
     };
-    return new LambdaInstrument(packageName, name, 'lib/errorSinkController', props).fromNpmPackage('bigband-kit');
+    return new LambdaInstrument(packageName, name, 'lib/errorSinkController', props)
+        .fromNpmPackage('bigband-kit');
 }
 
 export function newLogSampler(packageName: string, name: string) {
@@ -17,5 +18,9 @@ export function newLogSampler(packageName: string, name: string) {
         Timeout: 15,
         ReservedConcurrentExecutions: 1
     };
-    return new LambdaInstrument(packageName, name, 'lib/logSamplerController', props).fromNpmPackage('bigband-kit');
+    return new LambdaInstrument(packageName, name, 'lib/logSamplerController', props)
+        .fromNpmPackage('bigband-kit')
+        .invokeEveryMinutes(5);
 }
+
+export {LogSamplerFetchRequest, LogSamplerStoreRequest} from './logSamplerController';
