@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 
-import {IsolationScope, Rig, DynamoDbInstrument, newLambda, DynamoDbAttributeType} from './Instrument'
+import {IsolationScope, Rig, DynamoDbInstrument, newLambda, DynamoDbAttributeType} from '../src'
 
 
 describe('Instruments', () => {
