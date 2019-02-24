@@ -1,4 +1,4 @@
-import {LambdaInstrument} from 'bigband';
+import {LambdaInstrument} from 'bigband-core';
 
 export function newErrorSink(packageName: string, name: string) {
     const props = {
