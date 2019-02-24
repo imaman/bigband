@@ -25,6 +25,9 @@
   "files": [
     "lib/**/*"
   ],
+  "bin": {
+    "bigband": "./lib/cli.js"
+  },
   "author": "Itay Maman",
   "license": "MIT",
   "dependencies": {
