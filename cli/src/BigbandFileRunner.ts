@@ -195,6 +195,8 @@ function checkSpec(spec: BigbandSpec) {
     if (dupes.length) {
         throw new Error(`Found two (or more) instruments with the same name: ${JSON.stringify(dupes)}`);
     }
+
+    // TODO(imaman): validate names!
 }
 
 async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument, scottyInstrument: Instrument, blobPool: S3BlobPool) {
