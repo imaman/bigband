@@ -2,13 +2,13 @@ import { LogSamplerStoreRequest } from "./logSamplerController";
 
 
 interface Node<T> {
-    data: T|null
+    value: T|null
     prev: Node<T>|null
     next: Node<T>|null
 }
 
 function newNode<T>(data: T|null): Node<T> {
-    return {prev: null, data, next: null};
+    return {prev: null, value: data, next: null};
 }
 
 function attach<T>(lhs: Node<T>|null, rhs: Node<T>|null) {
@@ -67,14 +67,14 @@ class LinkedList<T> {
         }
 
         this.remove(ret);
-        return ret.data as T;
+        return ret.value as T;
     }
 }
 
 
 export interface Item {
     key: string
-    data: any
+    logData: any
 }
 
 export class LogSamplerModel {
@@ -91,7 +91,7 @@ export class LogSamplerModel {
             throw new Error('key cannot be falsy');
         }
 
-        if (request.data === undefined) {
+        if (request.logData === undefined) {
             throw new Error('data cannot be undefined');
         }
 
@@ -117,9 +117,9 @@ export class LogSamplerModel {
             return undefined;
         }
 
-        if (!item.data) {
+        if (!item.value) {
             throw new Error('item.data should not be null');
         }
-        return item.data.data;
+        return item.value.data;
     }
 }
