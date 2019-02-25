@@ -46,6 +46,7 @@ export class LogSamplerController extends AbstractController<any, any> {
     }
 
     private store(request: LogSamplerStoreRequest) {
+        console.log(`storing "${request.key}"`);
         const item: Item = {
             key: request.key,
             logData: request.data
@@ -54,6 +55,7 @@ export class LogSamplerController extends AbstractController<any, any> {
     }
 
     private fetch(request: LogSamplerFetchRequest) {
+        console.log(`fetching "${request.key}"`);
         return this.model.fetch(request.key);
     }
 
@@ -76,7 +78,7 @@ let c: LogSamplerController;
 
 export async function runLambda(context, event, mapping, buildFingerprint) {
     c = c || new LogSamplerController(mapping, buildFingerprint);
-    return c.runLambda(event, context);
+    return await c.runLambda(event, context);
 }
  
 
