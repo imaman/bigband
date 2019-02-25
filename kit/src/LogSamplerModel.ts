@@ -1,5 +1,3 @@
-import { LogSamplerStoreRequest } from "./logSamplerController";
-
 
 interface Node<T> {
     value: T|null
@@ -33,11 +31,11 @@ class LinkedList<T> {
         return this.count;
     }
 
-    pushHead(data: T): Node<T> {
-        if (!data) {
+    pushHead(t: T): Node<T> {
+        if (!t) {
             throw new Error('cannot insert falsy data');
         }
-        const n = newNode(data);
+        const n = newNode(t);
         attach(n, this.head.next);
         attach(this.head, n);
         this.count += 1;
@@ -78,24 +76,24 @@ export interface Item {
 }
 
 export class LogSamplerModel {
-    private readonly map = new Map<string, Node<LogSamplerStoreRequest>>(); 
-    private readonly fifo = new LinkedList<LogSamplerStoreRequest>();
+    private readonly map = new Map<string, Node<Item>>(); 
+    private readonly fifo = new LinkedList<Item>();
     constructor(private readonly limit: number) {}
 
     get size() {
         return this.fifo.size;
     }
  
-    store(request: Item) {
-        if (!request.key) {
+    store(item: Item) {
+        if (!item.key) {
             throw new Error('key cannot be falsy');
         }
 
-        if (request.logData === undefined) {
+        if (item.logData === undefined) {
             throw new Error('data cannot be undefined');
         }
 
-        const node = this.map.get(request.key);
+        const node = this.map.get(item.key);
         if (node) {
             this.fifo.remove(node);
         }
@@ -107,8 +105,8 @@ export class LogSamplerModel {
             this.map.delete(dropMe.key);
         }
 
-        const newNode = this.fifo.pushHead(request);
-        this.map.set(request.key, newNode);
+        const newNode = this.fifo.pushHead(item);
+        this.map.set(item.key, newNode);
     }
 
     fetch(key: string) {
@@ -120,6 +118,6 @@ export class LogSamplerModel {
         if (!item.value) {
             throw new Error('item.data should not be null');
         }
-        return item.value.data;
+        return item.value.logData;
     }
 }
