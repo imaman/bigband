@@ -13,7 +13,7 @@ export class LogSamplerModel {
     get size() {
         return this.fifo.length;
     }
-
+ 
     store(request: Item) {
         if (!request.key) {
             throw new Error('key cannot be falsy');
@@ -21,6 +21,16 @@ export class LogSamplerModel {
 
         if (request.data === undefined) {
             throw new Error('data cannot be undefined');
+        }
+
+        if (this.map.has(request.key)) {
+            debugger;
+            const index = this.fifo.findIndex(item => item.key === request.key);
+            if (index < 0) {
+                throw new Error(`Key (${request.key}) not found`);
+            }
+
+            this.fifo.splice(index, 1);
         }
         while (this.fifo.length >= this.limit) {
             const dropMe = this.fifo.shift();
