@@ -26,7 +26,7 @@ export abstract class Instrument {
     uses(supplier: Instrument, name: string) {
         const existingDep = this.dependencies.find(d => d.name === name);
         if (existingDep) {
-            throw new Error(`Name conflict. There is already a dependency named ${name} on ${existingDep.supplier.fullyQualifiedName()}`);
+            throw new Error(`Name conflict. This instrument (${this.fullyQualifiedName()}) already has a dependency named ${name} (on ${existingDep.supplier.fullyQualifiedName()})`);
         }
         this.dependencies.push(new Dependency(this, supplier, name));
     }
