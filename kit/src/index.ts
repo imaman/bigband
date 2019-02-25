@@ -13,7 +13,7 @@ export function newErrorSink(packageName: string, name: string) {
 
 export function newLogSampler(packageName: string, name: string) {
     const props = {
-        Description: "Track logs messages by buckets",
+        Description: "Track log messages by buckets",
         MemorySize: 1024,
         Timeout: 15,
         ReservedConcurrentExecutions: 1
