@@ -1,7 +1,7 @@
 import {AwsFactory} from './AwsFactory';
 
 import { CreateChangeSetInput, ExecuteChangeSetInput, DescribeChangeSetInput, DescribeChangeSetOutput, DescribeStacksInput, DescribeStacksOutput } from 'aws-sdk/clients/cloudformation';
-import {Rig} from './instruments/Instrument';
+import {Rig} from 'bigband-core';
 import * as uuid from 'uuid/v1';
 import * as hash from 'hash.js';
 import {logger} from './logger';

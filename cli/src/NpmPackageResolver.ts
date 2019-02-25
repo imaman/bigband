@@ -67,9 +67,6 @@ export class NpmPackageResolver {
     }
 
     recordUsage(packageName) {
-        if (!this.filter(packageName)) {
-            return;
-        }
         while (true) {
             const temp = path.dirname(packageName);
             if (temp == '.') {
@@ -79,6 +76,10 @@ export class NpmPackageResolver {
         }
 
         const traverse = (packageName: string) => {
+            if (!this.filter(packageName)) {
+                return;
+            }
+
             const obj = this.depsByPackageName[packageName];
             if (!obj) {
                 throw new Error(`Arrived at an uninstalled package: "${packageName}".`);

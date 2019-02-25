@@ -1,5 +1,2 @@
-export * from './instruments/Instrument';
-
-
-
-
+export * from './Instrument';
+export * from './AbstractController';

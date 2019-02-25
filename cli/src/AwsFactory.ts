@@ -1,4 +1,4 @@
-import {Rig} from './instruments/Instrument'
+import {Rig} from 'bigband-core'
 import * as AWS from 'aws-sdk';
 
 export class AwsFactory {

@@ -4,7 +4,7 @@ import * as hash from 'hash.js'
 const Module = require('module');
 
 import { AwsFactory } from './AwsFactory';
-import { NameStyle, Rig, Instrument, newLambda, LambdaInstrument } from './instruments/Instrument';
+import { NameStyle, Rig, Instrument, newLambda, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult } from './Packager'
 import { ZipBuilder, DeployableAtom } from 'bigband-bootstrap'
 import { S3Ref } from './S3Ref'
@@ -195,6 +195,8 @@ function checkSpec(spec: BigbandSpec) {
     if (dupes.length) {
         throw new Error(`Found two (or more) instruments with the same name: ${JSON.stringify(dupes)}`);
     }
+
+    // TODO(imaman): validate names!
 }
 
 async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument, scottyInstrument: Instrument, blobPool: S3BlobPool) {

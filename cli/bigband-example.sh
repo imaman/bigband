@@ -21,4 +21,4 @@ fi
 npm run build
 
 cd ../example
-node  ${debugArgs} ../core/lib/cli.js "${commandArg}" "$1" "$2" "$3" "$4" "$5" "$6" 
+node  ${debugArgs} ../cli/lib/cli.js "${commandArg}" "$1" "$2" "$3" "$4" "$5" "$6" 
