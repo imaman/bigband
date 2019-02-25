@@ -1,5 +1,4 @@
 import {AbstractController} from 'bigband-core';
-import * as Denque from 'denque';
 
 // import * as AWS from 'aws-sdk';
 
@@ -39,7 +38,7 @@ export interface LogSamplerFetchRequest {
 
 class Model {
     private readonly map = new Map<string, LogSamplerStoreRequest>();
-    private readonly fifo = new Denque();
+    private readonly fifo: LogSamplerStoreRequest[] = [];
     constructor(private readonly limit: number) {}
 
     store(request: LogSamplerStoreRequest) {
@@ -48,6 +47,9 @@ class Model {
         }
         while (this.fifo.length > this.limit) {
             const dropMe = this.fifo.shift();
+            if (!dropMe) {
+                throw new Error('dropMe is falsy');
+            }
             this.map.delete(dropMe.key);
         }
 
