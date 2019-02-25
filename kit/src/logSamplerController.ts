@@ -1,4 +1,5 @@
 import {AbstractController} from 'bigband-core';
+import {LogSamplerModel} from './LogSamplerModel';
 
 // import * as AWS from 'aws-sdk';
 
@@ -36,34 +37,9 @@ export interface LogSamplerFetchRequest {
     key: string
 }
 
-class Model {
-    private readonly map = new Map<string, LogSamplerStoreRequest>();
-    private readonly fifo: LogSamplerStoreRequest[] = [];
-    constructor(private readonly limit: number) {}
-
-    store(request: LogSamplerStoreRequest) {
-        if (!request.key) {
-            throw new Error('key cannot be falsy');
-        }
-        while (this.fifo.length > this.limit) {
-            const dropMe = this.fifo.shift();
-            if (!dropMe) {
-                throw new Error('dropMe is falsy');
-            }
-            this.map.delete(dropMe.key);
-        }
-
-        this.fifo.push(request);
-        this.map.set(request.key, request);
-    }
-
-    fetch(key: string) {
-        return this.map.get(key);
-    }
-}
 
 class LogSamplerController extends AbstractController<any, any> {
-    private readonly model = new Model(1000);
+    private readonly model = new LogSamplerModel(1000);
 
     executeScheduledEvent(): void {
         // NOP
