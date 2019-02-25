@@ -45,9 +45,11 @@ async function invokeFunction(bigbandFile: string, lambdaName: string, input: st
         ret.LogResult = new Buffer(ret.LogResult, 'base64').toString().split('\n');
     }
 
-    const parsedPayload = JSON.parse(ret.Payload);
-    if ((parsedPayload.headers || {})["content-type"] === 'application/json') {
+    try {
+        const parsedPayload = JSON.parse(ret.Payload);
         ret.Payload = parsedPayload;
+    } catch (e) {
+        // 
     }
     return ret;
 }
