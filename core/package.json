@@ -39,6 +39,6 @@
     "lib/**/*"
   ],
   "dependencies": {
-    "bigband-bootstrap": "0.0.5"
+    "bigband-bootstrap": "^0.1.0"
   }
 }
