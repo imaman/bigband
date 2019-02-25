@@ -80,11 +80,11 @@ describe('ZipBuilder', () => {
     describe('scan', () => {
         it('recurses through directories', async () => {
             const zb = new ZipBuilder();
-            zb.newFragment().scan('a/b', path.resolve(__dirname, '../../core/src'));
+            zb.newFragment().scan('a/b', path.resolve(__dirname, '../../cli/src'));
             const zip = await JSZip.loadAsync(await zb.toBuffer());
 
-            const str = await zip.file('a/b/instruments/Instrument.ts').async('text');
-            expect(str).to.contain('export abstract class Instrument {');
+            const str = await zip.file('a/b/commands/Logs.ts').async('text');
+            expect(str).to.contain('let describeLogStreamsResp: DescribeLogStreamsResponse');
 
             expect(zip.file('a/b/commands/Invoke.ts')).to.be.not.null;
             expect(zip.file('a/b/commands/fdkm39mfdndmf')).to.be.null;

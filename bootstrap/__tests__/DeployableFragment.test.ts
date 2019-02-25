@@ -15,7 +15,7 @@ describe('deployablefragment', () => {
         
         it('scans the core/src folder', () => {
             const frag = new DeployableFragment();
-            frag.scan('x/y', path.join(__dirname, '../../core/src'));
+            frag.scan('x/y', path.join(__dirname, '../../cli/src'));
 
             const arr: DeployableAtom[] = [];
             frag.forEach(a => arr.push(a));
