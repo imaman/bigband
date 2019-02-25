@@ -1,5 +1,5 @@
 import {AbstractController} from 'bigband-core';
-import {LogSamplerModel} from './LogSamplerModel';
+import {LogSamplerModel, Item} from './LogSamplerModel';
 
 // import * as AWS from 'aws-sdk';
 
@@ -38,7 +38,7 @@ export interface LogSamplerFetchRequest {
 }
 
 
-class LogSamplerController extends AbstractController<any, any> {
+export class LogSamplerController extends AbstractController<any, any> {
     private readonly model = new LogSamplerModel(1000);
 
     executeScheduledEvent(): void {
@@ -46,22 +46,28 @@ class LogSamplerController extends AbstractController<any, any> {
     }
 
     private store(request: LogSamplerStoreRequest) {
-        this.model.store(request);
+        const item: Item = {
+            key: request.key,
+            logData: request.data
+        };
+        this.model.store(item);
     }
 
     private fetch(request: LogSamplerFetchRequest) {
         return this.model.fetch(request.key);
     }
 
-    async executeInputEvent(input: any): Promise<any> {
+    executeInputEvent(input: any): any {
         if (input.logSamplerStoreRequest) {
             this.store(input.logSamplerStoreRequest);
             return {}
         }
 
         if (input.logSamplerFetchRequest) {
-            return this.fetch(input.logSamplerStoreRequest);
+            return this.fetch(input.logSamplerFetchRequest);
         }
+
+        throw new Error('Bad input');
     }
 
 }
