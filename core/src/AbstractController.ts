@@ -2,6 +2,7 @@
 export abstract class AbstractController<T, R> {
     protected readonly mapping: any;
     protected readonly buildFingerprint: string;
+    protected context: any = {};
      
     constructor(mapping, buildFingerprint) {
         this.mapping = mapping;
@@ -24,6 +25,7 @@ export abstract class AbstractController<T, R> {
     }
 
     async runLambda(input: T, context: any) {
+        this.context = context;
         try {
             const output = await this.compute(input);
             return {
