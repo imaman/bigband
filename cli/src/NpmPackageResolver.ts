@@ -16,15 +16,6 @@ export class NpmPackageResolver {
     // TODO(imaman): use Map<,>
     private readonly depsByPackageName: any = {};
 
-    /**
-     * during development we want to run this code on samples without actually having bigband installed
-     * at the node_modules/ directory. To achieve that we provide the injectedBigbandDir shim:
-     * it specifies a directory from which bigband files can be obtained, thus bypassing the standard discovery
-     * mechanism which is based on 'npm ls --json'.
-     * 
-     * @param roots 
-     * @param injectedBigbandDir 
-     */
     constructor(private readonly roots: string[], private readonly filter: (string) => boolean) {
         const relatives = roots.filter(r => !path.isAbsolute(r));        
         if (relatives.length) {
