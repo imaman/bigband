@@ -1,5 +1,7 @@
 import {DeployableAtom, DeployableFragment} from 'bigband-bootstrap';
-import {Instrument, Rig, Definition } from './Instrument'
+import { Rig } from './Rig'
+import { Definition } from './Definition'
+import { Instrument } from './Instrument'
 
 export class LambdaInstrument extends Instrument {
     private static readonly BASE_DEF = {
