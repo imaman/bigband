@@ -21,40 +21,45 @@ export class NpmPackageResolver {
         if (relatives.length) {
             throw new Error(`Roots must be absolute but found some which are not:\n${relatives.join('\n')}`);
         }
+    }
 
-        const store = (outerPojo, root) => {
-            if (!outerPojo) {
+    private createDepRecord(depName: string, root: string, pojo: any) {
+        this.depsByPackageName[depName] = {root, dependencies: pojo.dependencies, version: pojo.version };
+    }
+
+    private store(outerPojo, root) {
+        if (!outerPojo) {
+            return;
+        }          
+
+        const dependencies = outerPojo.dependencies || {};
+        Object.keys(dependencies).forEach(depName => {
+            const innerPojo = dependencies[depName];
+            if (!innerPojo) {
+                throw new Error(`Null entry for ${depName}`);
+            }
+
+            if (innerPojo._development) {
                 return;
-            }          
+            }
+            const existing = this.depsByPackageName[depName];
+            if (!existing || innerPojo.dependencies) {
+                this.createDepRecord(depName, root, innerPojo);
+            }
+            this.store(innerPojo, root);
+        })
+    }
 
-            const dependencies = outerPojo.dependencies || {};
-            Object.keys(dependencies).forEach(depName => {
-                const innerPojo = dependencies[depName];
-                if (!innerPojo) {
-                    throw new Error(`Null entry for ${depName}`);
-                }
-
-                if (innerPojo._development) {
-                    return;
-                }
-                const existing = this.depsByPackageName[depName];
-                if (!existing || innerPojo.dependencies) {
-                    createDepRecord(depName, root, innerPojo);
-                }
-                store(innerPojo, root);
-            })
-        }
-
-        const createDepRecord = (depName: string, root: string, pojo: any) => {
-            this.depsByPackageName[depName] = {root, dependencies: pojo.dependencies, version: pojo.version };
-        }
-
-        this.roots.forEach(r => {
+    async prepopulate() {
+        for (const r of this.roots) {
             // TODO(imaman): better output on errors.
-            const npmLsPojo = JSON.parse(child_process.execSync('npm ls --json', {cwd: r}).toString('utf-8'));
-            createDepRecord(npmLsPojo.name, r, npmLsPojo);
-            store(npmLsPojo, r);
-        });
+            const execution = await new Promise<{err, stdout, stderr}>(resolve => 
+                child_process.exec('npm ls --json', {cwd: r, maxBuffer: 20 * 1024 * 1024 }, 
+                    (err, stdout, stderr) => resolve({err, stdout, stderr})));
+            const npmLsPojo = JSON.parse(execution.stdout);
+            this.createDepRecord(npmLsPojo.name, r, npmLsPojo);
+            this.store(npmLsPojo, r);
+        }
     }
 
     recordUsage(packageName) {
