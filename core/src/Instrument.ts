@@ -442,21 +442,6 @@ export class Definition {
     }
 }
 
-
-
-// export class Deployable {
-//     private readonly fragments: DeployableFragment[] = [];
-//     add(fragment: DeployableFragment) {
-//         this.fragments.push(fragment);
-//     }
-
-//     storeIn(jsZip: JSZip) {
-//         this.fragments.forEach(fragment => {
-//             fragment.forEach(atom => jsZip.file(atom.path, atom.content));
-//         });
-//     }
-// }
-
 export class IsolationScope {
     constructor(public readonly awsAccount: string, public readonly name: string,
         public readonly s3Bucket: string, public readonly s3Prefix: string,
