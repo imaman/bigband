@@ -126,8 +126,13 @@ function installCustomRequire() {
                 throw err;
             }
 
-            logger.info('requiring ' + arg + ' from '  + Misc.bigbandPackageDir() + '/node_modules');
-            return runOriginalRequire(this, path.resolve(Misc.bigbandPackageDir(), 'node_modules', arg));
+            let dir = Misc.bigbandPackageDir();
+            if (path.basename(path.dirname(dir)) === 'node_modules') {
+                dir = path.dirname(path.dirname(dir));
+            }
+
+            logger.info('requiring ' + arg + ' from '  + dir + '/node_modules');
+            return runOriginalRequire(this, path.resolve(dir, 'node_modules', arg));
         }
     };
 
@@ -152,13 +157,13 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
     const specDeployedDir = packager.unzip(zb, 'spec_deployed');
     const pathToRequire = path.resolve(specDeployedDir, 'build', `${file}.js`);
 
-    // const uninstall = installCustomRequire();
+    const uninstall = installCustomRequire();
     let ret: BigbandSpec
     try {
         console.log('loadSpec from ' + pathToRequire);
         ret = require(pathToRequire).run();
     } finally {
-        // uninstall();
+        uninstall();
     }
 
     if (!ret.dir) {
