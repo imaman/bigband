@@ -1,21 +1,21 @@
-import {DynamoDbAttributeType,IsolationScope,newLambda,DynamoDbInstrument,KinesisStreamInstrument,KinesisStreamConsumer,Rig} from './Instrument';
+import {DynamoDbAttributeType,IsolationScope,DynamoDbInstrument,KinesisStreamInstrument,KinesisStreamConsumer,Rig, LambdaInstrument} from './Instrument';
 
 
 const namespace = new IsolationScope('274788167589', 'bb-example', 'bb-example-e-w-2', 'root', 'testim');
 const prodMajor = new Rig(namespace, 'eu-west-2', 'prod-major');
-const importantDates = newLambda('chronology', 'importantDates', 'src/chronology/compute', {
+const importantDates = new LambdaInstrument('chronology', 'importantDates', 'src/chronology/compute', {
     Description: "returns important dates for a year",
     MemorySize: 1024,
     Timeout: 15   
 });
 
-const placeFinder = newLambda('geography', 'placeFinder', 'src/geography/compute', {
+const placeFinder = new LambdaInstrument('geography', 'placeFinder', 'src/geography/compute', {
     Description: 'returns names of places that best match the given query',
     MemorySize: 1024,
     Timeout: 30      
 });
 
-const healthChecker = newLambda('geography', 'healthChecker', 'src/geography/healthChecker', {
+const healthChecker = new LambdaInstrument('geography', 'healthChecker', 'src/geography/healthChecker', {
     Description: 'is everything working correctly',
     MemorySize: 1024,
     Timeout: 30      

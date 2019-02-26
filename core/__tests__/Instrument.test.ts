@@ -7,7 +7,11 @@ const {expect} = chai;
 import 'mocha';
 
 
-import {IsolationScope, Rig, DynamoDbInstrument, newLambda, DynamoDbAttributeType} from '../src'
+import {IsolationScope, Rig, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType} from '../src'
+
+function newLambda(packageName: string, name: string, controllerPath: string, cloudFormationProperties?) {
+    return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
+}
 
 
 describe('Instruments', () => {

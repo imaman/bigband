@@ -4,7 +4,7 @@ import * as hash from 'hash.js'
 const Module = require('module');
 
 import { AwsFactory } from './AwsFactory';
-import { NameStyle, Rig, Instrument, newLambda, LambdaInstrument } from 'bigband-core';
+import { NameStyle, Rig, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult } from './Packager'
 import { ZipBuilder, DeployableAtom } from 'bigband-bootstrap'
 import { S3Ref } from './S3Ref'
@@ -47,7 +47,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
 
     
 
-    const scottyInstrument = newLambda('bigband', 'scotty', 'lib/scotty', {
+    const scottyInstrument = new LambdaInstrument('bigband', 'scotty', 'lib/scotty', {
         Description: 'beam me up',
         MemorySize: 2560,
         Timeout: 30
