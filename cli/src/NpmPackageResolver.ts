@@ -51,12 +51,16 @@ export class NpmPackageResolver {
     }
 
     async prepopulate() {
+        const command = 'npm ls --json';
         for (const r of this.roots) {
             // TODO(imaman): better output on errors.
             const execution = await new Promise<{err, stdout, stderr}>(resolve => 
-                child_process.exec('npm ls --json', {cwd: r, maxBuffer: 20 * 1024 * 1024 }, 
+                child_process.exec(command, {cwd: r, maxBuffer: 20 * 1024 * 1024 }, 
                     (err, stdout, stderr) => resolve({err, stdout, stderr})));
             const npmLsPojo = JSON.parse(execution.stdout);
+            if (!npmLsPojo.name || !npmLsPojo.version) {
+                throw new Error(`Running ${command} in ${r} resulted in a failure:\n${execution.stdout}\n${execution.err}}`);
+            }
             this.createDepRecord(npmLsPojo.name, r, npmLsPojo);
             this.store(npmLsPojo, r);
         }
