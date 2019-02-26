@@ -1,4 +1,4 @@
-import {DynamoDbAttributeType,IsolationScope,DynamoDbInstrument,KinesisStreamInstrument,KinesisStreamConsumer,Rig, LambdaInstrument} from './Instrument';
+import { KinesisStreamConsumer, KinesisStreamInstrument, LambdaInstrument, DynamoDbAttributeType, IsolationScope, DynamoDbInstrument, Rig } from './core_lib_symlink';
 
 
 const namespace = new IsolationScope('274788167589', 'bb-example', 'bb-example-e-w-2', 'root', 'testim');
