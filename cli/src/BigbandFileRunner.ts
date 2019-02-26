@@ -131,7 +131,6 @@ function installCustomRequire() {
                 dir = path.dirname(path.dirname(dir));
             }
 
-            logger.info('requiring ' + arg + ' from '  + dir + '/node_modules');
             return runOriginalRequire(this, path.resolve(dir, 'node_modules', arg));
         }
     };

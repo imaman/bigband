@@ -85,9 +85,15 @@ export class NpmPackageResolver {
                 throw new Error(`Arrived at an uninstalled package: "${packageName}".`);
             }
 
-            const dir = path.join(obj.root, 'node_modules', packageName);            
+            let dir = path.join(obj.root, 'node_modules', packageName);            
             if (!fs.existsSync(dir)) {
-                throw new Error(`Directory ${dir} does not exist`);
+                if (path.basename(path.dirname(dir)) === 'node_modules') {
+                    dir = path.dirname(path.dirname(dir));
+                }
+
+                if (!fs.existsSync(dir)) {
+                    throw new Error(`Directory ${dir}, for package ${packageName}, does not exist (${JSON.stringify(obj)})`);
+                }
             }
             this.usages.push({packageName, version: obj.version, dir});
 
