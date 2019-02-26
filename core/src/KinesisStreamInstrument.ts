@@ -1,4 +1,6 @@
-import {Instrument, Rig, Definition} from './Instrument'
+import {Instrument} from './Instrument'
+import {Rig} from './Rig'
+import {Definition} from './Definition'
 import {DeployableFragment} from 'bigband-bootstrap'
 
 export class KinesisStreamInstrument extends Instrument {
