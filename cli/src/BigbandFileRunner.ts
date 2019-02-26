@@ -126,9 +126,11 @@ function installCustomRequire() {
                 throw err;
             }
 
+            logger.info('requiring ' + arg + ' from '  + Misc.bigbandPackageDir() + '/node_modules');
             return runOriginalRequire(this, path.resolve(Misc.bigbandPackageDir(), 'node_modules', arg));
         }
     };
+
 
     return () => { 
         if (numChangesToModuleRequire !== 1) {
