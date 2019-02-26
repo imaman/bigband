@@ -1,4 +1,6 @@
 import {DeployableFragment} from 'bigband-bootstrap';
+import {Rig} from './Rig';
+import {Definition} from './Definition';
 
 export enum NameStyle {
     DASH,
@@ -9,6 +11,7 @@ export enum NameStyle {
 class Dependency {
     constructor(readonly consumer: Instrument, readonly supplier: Instrument, readonly name: string) {}
 }
+
 export abstract class Instrument {
 
     protected readonly definition = new Definition();
@@ -190,42 +193,6 @@ export class DynamoDbInstrument extends Instrument {
     getEntryPointFile(): string {
         return "";
     }
-}
-
-export class Rig {
-    constructor(public readonly isolationScope: IsolationScope, 
-        public readonly region: string, public readonly name: string) {}    
-
-    physicalName() {
-        return `${this.isolationScope.name}-${this.name}`;
-    }        
-}
-
-export class Definition {
-    private readonly obj;
-
-    constructor(obj: any = {}) { 
-        this.obj = obj;
-    }
-
-    mutate(f: (any) => void) {
-        f(this.obj);
-    }
-
-    overwrite(o: any) {
-        const copy = JSON.parse(JSON.stringify(o));
-        Object.assign(this.obj, copy);
-    }
-
-    get() {
-        return this.obj;
-    }
-}
-
-export class IsolationScope {
-    constructor(public readonly awsAccount: string, public readonly name: string,
-        public readonly s3Bucket: string, public readonly s3Prefix: string,
-        public readonly profile: string) {}
 }
 
 function camelCase(...args) {
