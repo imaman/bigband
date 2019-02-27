@@ -1,4 +1,4 @@
-import {DeployableFragment} from 'bigband-bootstrap';
+import {DeployableFragment} from './DeployableFragment';
 import {Rig} from './Rig';
 import {Definition} from './Definition';
 

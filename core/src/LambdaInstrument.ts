@@ -1,4 +1,4 @@
-import {DeployableAtom, DeployableFragment} from 'bigband-bootstrap';
+import {DeployableAtom, DeployableFragment} from './DeployableFragment';
 import { Rig } from './Rig'
 import { Definition } from './Definition'
 import { Instrument } from './Instrument'

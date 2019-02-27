@@ -1,7 +1,7 @@
 import {Instrument} from './Instrument'
 import {Rig} from './Rig'
 import {Definition} from './Definition'
-import {DeployableFragment} from 'bigband-bootstrap'
+import {DeployableFragment} from './DeployableFragment'
 
 export enum DynamoDbAttributeType {
     STRING = 'S',
