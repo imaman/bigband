@@ -8,6 +8,10 @@ import * as hash from 'hash.js';
 
 const DATE = new Date(1000);
 
+interface Frag {
+  addText(path: string, content: string);
+}
+
 
 class FolderTree {
   private readonly zipByPath: any = {}
@@ -60,7 +64,7 @@ export class ZipBuilder {
     return zb.toBuffer();
   }
   
-  static async merge(buffers: Buffer[]): Promise<Buffer> {
+  static async merge(buffers: Buffer[], fragmentFactory: () => Frag): Promise<Buffer> {
     const out = new ZipBuilder();
 
     const jszips = await Promise.all(buffers.map(curr => JSZip.loadAsync(curr)));
@@ -68,13 +72,13 @@ export class ZipBuilder {
     const promises: Promise<any>[] = [];
 
     jszips.forEach(jszip => {
-      const frag = out.newFragment();
+      const frag = fragmentFactory();
       jszip.forEach(async (_: string, zipObject) => {
           if (zipObject.dir) {
             return;
           }
 
-          const p = zipObject.async('text').then(text => frag.add(new DeployableAtom(zipObject.name, text)));
+          const p = zipObject.async('text').then(text => frag.addText(zipObject.name, text));
           promises.push(p);
       });
     });
@@ -95,12 +99,6 @@ export class ZipBuilder {
     return ret;
   }
 
-  newFragment() {
-    const ret = new DeployableFragment();
-    this.importFragment(ret);
-    return ret;
-  }
-
   forEach(consumer: (_: DeployableAtom) => void) {
     const atoms: DeployableAtom[] = [];
     for (const frag of this.fragments) {
@@ -116,6 +114,7 @@ export class ZipBuilder {
 
   importFragment(frag: DeployableFragment) {
     this.fragments.push(frag);
+    return frag;
   }
 
   async toBuffer(): Promise<Buffer> {

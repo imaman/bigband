@@ -22,6 +22,10 @@ export class DeployableFragment {
         this.atoms.push(atom);
         return this;
     }
+    
+    addText(path: string, content: string) {
+        this.add(new DeployableAtom(path, content));
+    }
 
     forEach(f: (_: DeployableAtom) => void) {
         this.atoms.sort((lhs, rhs) => lhs.path.localeCompare(rhs.path));
