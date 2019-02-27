@@ -39,5 +39,6 @@
   ],
   "dependencies": {
     "bigband-core": "^0.1.9"
-  }
+  },
+  "gitHead": "d1cdccc64fe3434f1786b2bb8cc173558058f063"
 }

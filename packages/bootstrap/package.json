@@ -43,5 +43,6 @@
     "hash.js": "^1.1.7",
     "jszip": "^3.2.0",
     "mkdirp": "^0.5.1"
-  }
+  },
+  "gitHead": "d1cdccc64fe3434f1786b2bb8cc173558058f063"
 }
