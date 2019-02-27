@@ -14,6 +14,7 @@ import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
 import { logger } from './logger';
 import { S3BlobPool } from './Teleporter';
 import { Misc } from './Misc';
+import {CONTRIVED_NPM_PACAKGE_NAME as CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME, CONTRIVED_OUT_FILE_NAME} from './scotty';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
@@ -48,12 +49,12 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
 
     
 
-    const scottyInstrument = new LambdaInstrument('bigband', 'scotty', 'lib/scotty', {
+    const scottyInstrument = new LambdaInstrument('bigband', 'scotty', CONTRIVED_IN_FILE_NAME, {
         Description: 'beam me up',
         MemorySize: 2560,
         Timeout: 30
         })
-        .fromNpmPackage('bigband')
+        .fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME)
         .canDo('s3:GetObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${poolPrefix}/*`)
         .canDo('s3:PutObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
 
@@ -223,6 +224,10 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
     }
 
     const {zb, packager} = await compileInstrument(d, npmPackageDir, rig, instrument, blobPool);
+    if (instrument.fullyQualifiedName() === 'bigband-scotty') {
+        await zb.unzip('/tmp/xx/zz');
+        console.log('full zip saved to /tmp/xx/zz');
+    }
 
     const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig));
     const resource = def.get();

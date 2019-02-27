@@ -8,4 +8,4 @@ export * from './KinesisStreamInstrument'
 export * from './KinesisStreamConsumer'
 export * from './AbstractController'
 export * from './DeployableFragment'
-
+export * from './SourceExporter'

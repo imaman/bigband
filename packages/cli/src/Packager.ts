@@ -8,13 +8,14 @@ import * as os from 'os';
 import { logger } from './logger';
 import { AwsFactory } from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
-import { NpmPackageResolver, Usage } from './NpmPackageResolver'
-import { Instrument, Rig} from 'bigband-core';
+import { NpmPackageResolver } from './NpmPackageResolver'
+import { Instrument, Rig, SourceExporter } from 'bigband-core';
 import { GetFunctionResponse, InvocationRequest, InvocationResponse } from 'aws-sdk/clients/lambda';
 import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
 import { ZipBuilder } from './ZipBuilder';
 import { Misc } from './Misc';
+import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME, CONTRIVED_OUT_FILE_NAME } from './scotty'
 
 export interface PushResult {
   deployableLocation: S3Ref
@@ -73,6 +74,7 @@ export class Packager {
       npmPackageResolver.recordUsage('jszip');
       npmPackageResolver.recordUsage('mkdirp');
       npmPackageResolver.recordUsage('hash.js');
+      console.log('isscotty added hardcoded deps');
       // import { DeployableFragment, DeployableAtom } from 'bigband-core';
     }
     else if (npmPackageName) {
@@ -143,12 +145,21 @@ export class Packager {
     const zipBuilder = await this.createZip(relativeTsFile, npmPackageName);  
     if (compiledFilesDir.length) {
       zipBuilder.newFragment().scan('build', compiledFilesDir);
-    }
+    } 
 
-    if (relativeTsFile === 'lib/scotty') {
-      console.log('contents of scotty\'s zipbuilder:');
-      zipBuilder.forEach(a => console.log('   ' + a.path));
-      process.exit(-1);
+    console.log('relativetsfile=' + relativeTsFile);
+    // Special treatment for scotty.
+    if (relativeTsFile === CONTRIVED_IN_FILE_NAME) {
+      console.log('this-is-scotty!!!');
+      const frag = zipBuilder.newFragment();
+      frag.addText('node_modules/bigband-core/index.js', SourceExporter.exportBigbandCoreSourceCode('DeployableFragment.js'));
+      frag.addText(`node_modules/${CONTRIVED_NPM_PACAKGE_NAME}/${CONTRIVED_OUT_FILE_NAME}`, fs.readFileSync(path.resolve(__dirname, 'scotty.js'), 'utf-8'));
+      frag.addText(`node_modules/${CONTRIVED_NPM_PACAKGE_NAME}/ZipBuilder.js`, fs.readFileSync(path.resolve(__dirname, 'ZipBuilder.js'), 'utf-8'));
+      // SourceExporter.exportBigbandCoreSourceCode('DeployableFragment.js'));
+      // console.log('contents of scotty\'s zipbuilder:');
+      // zipBuilder.forEach(a => console.log('   ' + a.path));
+      await zipBuilder.unzip('/tmp/xx/yy');
+      console.log('zip saved to /tmp/xx/yy_');
     }
     
     return zipBuilder;
@@ -257,7 +268,7 @@ export class Packager {
 }
 
 function shouldBeIncluded(packageName: string) {
-  return packageName !== 'aws-sdk' && !packageName.startsWith('aws-sdk/');
+  return packageName !== 'aws-sdk' && !packageName.startsWith('aws-sdk/') && packageName !== CONTRIVED_NPM_PACAKGE_NAME;
 }
 
 function formatBytes(n: number) {
