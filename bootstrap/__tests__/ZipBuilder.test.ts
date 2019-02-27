@@ -8,7 +8,7 @@ import 'mocha';
 
 import {ZipBuilder} from '../src/ZipBuilder'
 import * as JSZip from 'jszip';
-import { DeployableAtom, DeployableFragment } from '../src/DeployableFragment';
+import { DeployableAtom, DeployableFragment } from 'bigband-core';
 
 import * as path from 'path';
 
