@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/node": "^11.9.4",
     "bigband": "^0.1.100",
-    "bigband-core": "^0.1.13"
+    "bigband-core": "^0.1.13",
+    "ts-node": "^8.0.2"
   }
 }
