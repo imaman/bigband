@@ -1,7 +1,7 @@
 {
   "name": "demo",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -18,8 +18,8 @@
   },
   "devDependencies": {
     "@types/node": "^11.9.4",
-    "bigband": "^0.1.100",
-    "bigband-core": "^0.1.13",
+    "bigband": "^0.1.101",
+    "bigband-core": "^0.1.14",
     "ts-node": "^8.0.2"
   }
 }
