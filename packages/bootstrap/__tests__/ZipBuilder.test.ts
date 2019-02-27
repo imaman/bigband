@@ -189,7 +189,7 @@ describe('ZipBuilder', () => {
             const mergedPojo = await ZipBuilder.toPojo(mergedBuffer);
             comparePojos(originalPojo, mergedPojo);
         });
-        it('roundtrips without losing a bit', async () => {
+        xit('roundtrips without losing a bit', async () => {
             const zb = new ZipBuilder();
             const fragA = zb.newFragment();
             fragA.scan('node_modules/moment', path.resolve(__dirname, '../../example/node_modules/moment'));
