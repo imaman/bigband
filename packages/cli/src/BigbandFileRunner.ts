@@ -53,7 +53,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
         MemorySize: 2560,
         Timeout: 30
         })
-        .fromNpmPackage('bigband-bootstrap')
+        .fromNpmPackage('bigband')
         .canDo('s3:GetObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${poolPrefix}/*`)
         .canDo('s3:PutObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
 
