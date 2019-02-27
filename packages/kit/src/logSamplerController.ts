@@ -46,7 +46,6 @@ export class LogSamplerController extends AbstractController<any, any> {
     }
 
     private store(request: LogSamplerStoreRequest) {
-        console.log(`storing "${request.key}"`);
         const item: Item = {
             key: request.key,
             logData: request.data
@@ -55,7 +54,6 @@ export class LogSamplerController extends AbstractController<any, any> {
     }
 
     private fetch(request: LogSamplerFetchRequest) {
-        console.log(`fetching "${request.key}"`);
         return this.model.fetch(request.key);
     }
 

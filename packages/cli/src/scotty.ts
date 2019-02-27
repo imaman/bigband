@@ -38,22 +38,6 @@ export async function runLambda(context, event) {
         statusCode: 200,
         body: JSON.stringify({writtenTo: teleportRequest.destination, numFragments: responses.length, mergedSize: merged.length})
     };
-
-    // responses.
-    // deployables: handlePojos,
-    // destination: ret.toPojo()
-
-
-    // const t = eventByYear[event.year || 'NONE'] || 'NOTHING';
-    // const timePassed = event.year ? moment(`${event.year}-01-01`).fromNow(): undefined;
-    // console.log(`Time since ${event.year}: ${timePassed}`);
-    // return {
-    //     statusCode: 200,
-    //     headers: { 
-    //       "content-type": 'application/json', 
-    //     },
-    //     body: JSON.stringify({year: event.year, description: t, howLongAgo: timePassed})
-    // };
 }
 
 

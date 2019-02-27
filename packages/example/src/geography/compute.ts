@@ -26,8 +26,7 @@ export async function runLambda(context, event, mapping) {
         Data: JSON.stringify({streamedQuery: q, timestamp: Date.now()}),
         PartitionKey: 'q1'
     };
-    const putResp = kinesis.putRecord(putReq).promise();
-    // console.log('putResp=' + JSON.stringify(putResp));
+    await kinesis.putRecord(putReq).promise();
 
     const timePassed = 'N/A'; //moment(`2015-09-21`).fromNow();
 

@@ -224,11 +224,6 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
     }
 
     const {zb, packager} = await compileInstrument(d, npmPackageDir, rig, instrument, blobPool);
-    if (instrument.fullyQualifiedName() === 'bigband-scotty') {
-        await zb.unzip('/tmp/xx/zz');
-        console.log('full zip saved to /tmp/xx/zz');
-    }
-
     const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig));
     const resource = def.get();
     resource.Properties.CodeUri = pushResult.deployableLocation.toUri();

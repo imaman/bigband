@@ -67,67 +67,17 @@ export class Packager {
 
     const isScotty = relativeTsFile === CONTRIVED_IN_FILE_NAME;
     if (isScotty) {
-      debugger;
-    }
-
-    if (isScotty) {
+      // This should reflect the immediate deps of scotty.ts
       npmPackageResolver.recordUsage('jszip');
       npmPackageResolver.recordUsage('mkdirp');
       npmPackageResolver.recordUsage('hash.js');
-      console.log('isscotty added hardcoded deps');
-      debugger;
-      // import { DeployableFragment, DeployableAtom } from 'bigband-core';
-    }
-    else if (npmPackageName) {
+    } else if (npmPackageName) {
       npmPackageResolver.recordUsage(npmPackageName);
     } else {
       const deps = DepsCollector.scanFrom(absoluteTsFile);
       deps.npmDeps.forEach(d => npmPackageResolver.recordUsage(d));  
     } 
     const usageByPackageName = npmPackageResolver.compute();  
-    logger.silly('usageByPackageName of ' + relativeTsFile + '\n' + JSON.stringify(usageByPackageName, null, 2));
-    /*
-      2019-02-27T11:47:02.314Z [main] silly: usageByPackageName of src/chronology/compute
-      {
-        "moment": {
-          "packageName": "moment",
-          "version": "2.24.0",
-          "dir": "/home/imaman/code/bigband/packages/example/node_modules/moment"
-        }
-      }
-      2019-02-27T11:47:03.202Z [main] silly: Comparing fingerprints for chronology-importantDates:
-        ksmZqMaAWa12l5efP72K8Sa5cDbzUEmL4WG+l+6JdBQ=
-        xMDkYKmyJnehORVbWqPM3Rd89BMQ9Mtlv0/AnqJcw1c=
-      2019-02-27T11:47:03.724Z [main] silly: usageByPackageName of src/geography/analyzer
-      {
-        "byline": {
-          "packageName": "byline",
-          "version": "5.0.0",
-          "dir": "/home/imaman/code/bigband/packages/example/node_modules/byline"
-        }
-      }
-      2019-02-27T11:47:03.730Z [main] silly: usageByPackageName of src/geography/healthChecker
-      {}
-      2019-02-27T11:47:03.833Z [main] silly: usageByPackageName of src/geography/compute
-      {
-        "byline": {
-          "packageName": "byline",
-          "version": "5.0.0",
-          "dir": "/home/imaman/code/bigband/packages/example/node_modules/byline"
-        },
-        "fast-levenshtein": {
-          "packageName": "fast-levenshtein",
-          "version": "2.0.6",
-          "dir": "/home/imaman/code/bigband/packages/example/node_modules/fast-levenshtein"
-        }
-      }
-    */
-
-   if (isScotty) {
-    console.log('scotty deps=' + JSON.stringify(usageByPackageName, null, 2));
-    // process.exit(-1);
-  }
-
     const zipBuilder = new ZipBuilder();
     const nodeModulesFragment = zipBuilder.newFragment();
     for (const k in usageByPackageName) {
@@ -148,19 +98,12 @@ export class Packager {
       zipBuilder.newFragment().scan('build', compiledFilesDir);
     } 
 
-    console.log('relativetsfile=' + relativeTsFile);
     // Special treatment for scotty.
     if (relativeTsFile === CONTRIVED_IN_FILE_NAME) {
-      console.log('this-is-scotty!!!');
       const frag = zipBuilder.newFragment();
       frag.addText('node_modules/bigband-core/index.js', SourceExporter.exportBigbandCoreSourceCode('DeployableFragment.js'));
       frag.addText(`node_modules/${CONTRIVED_NPM_PACAKGE_NAME}/${CONTRIVED_OUT_FILE_NAME}`, fs.readFileSync(path.resolve(__dirname, 'scotty.js'), 'utf-8'));
       frag.addText(`node_modules/${CONTRIVED_NPM_PACAKGE_NAME}/ZipBuilder.js`, fs.readFileSync(path.resolve(__dirname, 'ZipBuilder.js'), 'utf-8'));
-      // SourceExporter.exportBigbandCoreSourceCode('DeployableFragment.js'));
-      // console.log('contents of scotty\'s zipbuilder:');
-      // zipBuilder.forEach(a => console.log('   ' + a.path));
-      await zipBuilder.unzip('/tmp/xx/yy');
-      console.log('zip saved to /tmp/xx/yy_');
     }
     
     return zipBuilder;
@@ -212,9 +155,6 @@ export class Packager {
       destination: deployableLocation.toPojo()
     }
 
-    // await teleporter.fakeTeleport(zipBuilder, ret, instrument.physicalName(this.rig));
-    // return ret;
-    
     const invocationRequest: InvocationRequest = {
       FunctionName: scottyLambdaName,
       InvocationType: 'RequestResponse', 
@@ -225,7 +165,7 @@ export class Packager {
     try {
       const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
       if (!invocationResponse.FunctionError) {
-        console.log(`Teleported ${formatBytes(teleporter.bytesSent)} for ${instrument.fullyQualifiedName()}`);
+        logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${instrument.fullyQualifiedName()}`);
         return ret;
       }
 
@@ -236,7 +176,7 @@ export class Packager {
     }
 
     const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, instrument.physicalName(this.rig));
-    console.log(`Non incremental teleporting of ${formatBytes(numBytes)} for ${instrument.fullyQualifiedName()}`);
+    logger.info(`Non incremental teleporting of ${formatBytes(numBytes)} for ${instrument.fullyQualifiedName()}`);
     
     return ret;
   }
