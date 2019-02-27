@@ -64,20 +64,74 @@ export class Packager {
     const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, Misc.bigbandPackageDir()], shouldBeIncluded);
     await npmPackageResolver.prepopulate();
 
-    if (npmPackageName) {
+    const isScotty = absoluteTsFile === '/home/imaman/code/bigband/packages/cli/lib/scotty';
+    if (isScotty) {
+      debugger;
+    }
+
+    if (isScotty) {
+      npmPackageResolver.recordUsage('jszip');
+      npmPackageResolver.recordUsage('mkdirp');
+      npmPackageResolver.recordUsage('hash.js');
+      // import { DeployableFragment, DeployableAtom } from 'bigband-core';
+    }
+    else if (npmPackageName) {
       npmPackageResolver.recordUsage(npmPackageName);
     } else {
       const deps = DepsCollector.scanFrom(absoluteTsFile);
       deps.npmDeps.forEach(d => npmPackageResolver.recordUsage(d));  
     } 
     const usageByPackageName = npmPackageResolver.compute();  
+    logger.silly('usageByPackageName of ' + relativeTsFile + '\n' + JSON.stringify(usageByPackageName, null, 2));
+    /*
+      2019-02-27T11:47:02.314Z [main] silly: usageByPackageName of src/chronology/compute
+      {
+        "moment": {
+          "packageName": "moment",
+          "version": "2.24.0",
+          "dir": "/home/imaman/code/bigband/packages/example/node_modules/moment"
+        }
+      }
+      2019-02-27T11:47:03.202Z [main] silly: Comparing fingerprints for chronology-importantDates:
+        ksmZqMaAWa12l5efP72K8Sa5cDbzUEmL4WG+l+6JdBQ=
+        xMDkYKmyJnehORVbWqPM3Rd89BMQ9Mtlv0/AnqJcw1c=
+      2019-02-27T11:47:03.724Z [main] silly: usageByPackageName of src/geography/analyzer
+      {
+        "byline": {
+          "packageName": "byline",
+          "version": "5.0.0",
+          "dir": "/home/imaman/code/bigband/packages/example/node_modules/byline"
+        }
+      }
+      2019-02-27T11:47:03.730Z [main] silly: usageByPackageName of src/geography/healthChecker
+      {}
+      2019-02-27T11:47:03.833Z [main] silly: usageByPackageName of src/geography/compute
+      {
+        "byline": {
+          "packageName": "byline",
+          "version": "5.0.0",
+          "dir": "/home/imaman/code/bigband/packages/example/node_modules/byline"
+        },
+        "fast-levenshtein": {
+          "packageName": "fast-levenshtein",
+          "version": "2.0.6",
+          "dir": "/home/imaman/code/bigband/packages/example/node_modules/fast-levenshtein"
+        }
+      }
+    */
+
+   if (isScotty) {
+    console.log('scotty deps=' + JSON.stringify(usageByPackageName, null, 2));
+    // process.exit(-1);
+  }
 
     const zipBuilder = new ZipBuilder();
     const nodeModulesFragment = zipBuilder.newFragment();
-    Object.keys(usageByPackageName).forEach(k => {
-      const usage: Usage = usageByPackageName[k];
+    for (const k in usageByPackageName) {
+      const usage = usageByPackageName[k];
       nodeModulesFragment.scan(`node_modules/${usage.packageName}`, usage.dir);
-    });    
+    }
+
 
     return zipBuilder;
   }
@@ -89,6 +143,12 @@ export class Packager {
     const zipBuilder = await this.createZip(relativeTsFile, npmPackageName);  
     if (compiledFilesDir.length) {
       zipBuilder.newFragment().scan('build', compiledFilesDir);
+    }
+
+    if (relativeTsFile === 'lib/scotty') {
+      console.log('contents of scotty\'s zipbuilder:');
+      zipBuilder.forEach(a => console.log('   ' + a.path));
+      process.exit(-1);
     }
     
     return zipBuilder;
