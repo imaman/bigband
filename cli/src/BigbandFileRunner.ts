@@ -160,7 +160,6 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
     const uninstall = installCustomRequire();
     let ret: BigbandSpec
     try {
-        console.log('loadSpec from ' + pathToRequire);
         ret = require(pathToRequire).run();
     } finally {
         uninstall();
