@@ -6,7 +6,8 @@ const Module = require('module');
 import { AwsFactory } from './AwsFactory';
 import { NameStyle, Rig, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult } from './Packager'
-import { ZipBuilder, DeployableAtom } from 'bigband-bootstrap'
+import { DeployableAtom } from 'bigband-core'
+import { ZipBuilder } from 'bigband-bootstrap'
 import { S3Ref } from './S3Ref'
 import { CloudFormationPusher } from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
