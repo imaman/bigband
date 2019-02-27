@@ -1,6 +1,6 @@
 {
   "name": "bigband-core",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "core components of bigband",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -38,6 +38,5 @@
   "files": [
     "lib/**/*"
   ],
-  "dependencies": {
-  }
+  "dependencies": {}
 }
