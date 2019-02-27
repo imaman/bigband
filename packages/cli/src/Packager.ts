@@ -65,7 +65,7 @@ export class Packager {
     const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, Misc.bigbandPackageDir()], shouldBeIncluded);
     await npmPackageResolver.prepopulate();
 
-    const isScotty = absoluteTsFile === '/home/imaman/code/bigband/packages/cli/lib/scotty';
+    const isScotty = relativeTsFile === CONTRIVED_IN_FILE_NAME;
     if (isScotty) {
       debugger;
     }
@@ -75,6 +75,7 @@ export class Packager {
       npmPackageResolver.recordUsage('mkdirp');
       npmPackageResolver.recordUsage('hash.js');
       console.log('isscotty added hardcoded deps');
+      debugger;
       // import { DeployableFragment, DeployableAtom } from 'bigband-core';
     }
     else if (npmPackageName) {
