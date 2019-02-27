@@ -7,4 +7,5 @@ export * from './DynamoDbInstrument'
 export * from './KinesisStreamInstrument'
 export * from './KinesisStreamConsumer'
 export * from './AbstractController'
+export * from './DeployableFragment'
 

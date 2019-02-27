@@ -1,6 +1,6 @@
 import * as JSZip from 'jszip';
 import * as mkdirp from 'mkdirp'
-import { DeployableFragment, DeployableAtom } from './DeployableFragment';
+import { DeployableFragment, DeployableAtom } from 'bigband-core';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as hash from 'hash.js';
