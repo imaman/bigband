@@ -32,14 +32,18 @@ export class DeployableFragment {
         if (!path.isAbsolute(absolutePath)) {
             throw new Error(`path is not absolute (${absolutePath}).`)
         }
-        if (fs.lstatSync(absolutePath).isDirectory()) {
+        if (fs.statSync(absolutePath).isDirectory()) {
             fs.readdirSync(absolutePath).forEach((f: string) => {
                 this.scan(path.join(pathInFragment, f), path.join(absolutePath, f));
             });
         } else {
-            const content = fs.readFileSync(absolutePath, 'utf-8');
-            const atom = new DeployableAtom(pathInFragment, content);
-            this.add(atom);
+            try {
+                const content = fs.readFileSync(absolutePath, 'utf-8');
+                const atom = new DeployableAtom(pathInFragment, content);
+                this.add(atom);
+            } catch (e) {
+                throw new Error(`Scanning failed when trying to read ${absolutePath} (pathInFragment: "${pathInFragment}")`);
+            }
         }
     }    
 
