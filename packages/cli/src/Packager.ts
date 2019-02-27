@@ -76,7 +76,6 @@ export class Packager {
     const nodeModulesFragment = zipBuilder.newFragment();
     Object.keys(usageByPackageName).forEach(k => {
       const usage: Usage = usageByPackageName[k];
-      console.log(`Starting to scan. usage=${JSON.stringify(usage)}`);
       nodeModulesFragment.scan(`node_modules/${usage.packageName}`, usage.dir);
     });    
 

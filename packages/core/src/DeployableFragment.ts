@@ -37,13 +37,9 @@ export class DeployableFragment {
                 this.scan(path.join(pathInFragment, f), path.join(absolutePath, f));
             });
         } else {
-            try {
-                const content = fs.readFileSync(absolutePath, 'utf-8');
-                const atom = new DeployableAtom(pathInFragment, content);
-                this.add(atom);
-            } catch (e) {
-                throw new Error(`Scanning failed when trying to read ${absolutePath} (pathInFragment: "${pathInFragment}")`);
-            }
+            const content = fs.readFileSync(absolutePath, 'utf-8');
+            const atom = new DeployableAtom(pathInFragment, content);
+            this.add(atom);
         }
     }    
 
