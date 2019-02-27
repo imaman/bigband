@@ -1,5 +1,5 @@
 import { S3Ref } from "./S3Ref";
-import { ZipBuilder } from "bigband-bootstrap";
+import { ZipBuilder } from "./ZipBuilder";
 import { AwsFactory } from "./AwsFactory";
 import { logger } from './logger';
 import * as hash from 'hash.js'

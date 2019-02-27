@@ -13,7 +13,7 @@ import { Instrument, Rig} from 'bigband-core';
 import { GetFunctionResponse, InvocationRequest, InvocationResponse } from 'aws-sdk/clients/lambda';
 import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
-import { ZipBuilder } from 'bigband-bootstrap';
+import { ZipBuilder } from './ZipBuilder';
 import { Misc } from './Misc';
 
 export interface PushResult {

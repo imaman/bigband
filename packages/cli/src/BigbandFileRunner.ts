@@ -7,7 +7,7 @@ import { AwsFactory } from './AwsFactory';
 import { NameStyle, Rig, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult } from './Packager'
 import { DeployableAtom } from 'bigband-core'
-import { ZipBuilder } from 'bigband-bootstrap'
+import { ZipBuilder } from './ZipBuilder'
 import { S3Ref } from './S3Ref'
 import { CloudFormationPusher } from './CloudFormationPusher';
 import { UpdateFunctionCodeRequest } from 'aws-sdk/clients/lambda';
