@@ -32,6 +32,7 @@ export class NpmPackageResolver {
     private saveDepRecord(depName: string, pojo: any) {
         const existing: DepRecord = this.depRecordByPackageName[depName];
         const record: DepRecord = {dir: pojo.path, dependencies: Object.keys(pojo.dependencies || {}), version: pojo.version };
+        logger.silly(`#dep_record#: ${depName}: ${JSON.stringify(record)}`);
         if (existing) {
             record.dir = record.dir || existing.dir;
             record.dependencies = record.dependencies.length ? record.dependencies : existing.dependencies;
@@ -84,7 +85,7 @@ export class NpmPackageResolver {
             packageName = temp;
         }
 
-        const traverse = (packageName: string) => {
+        const traverseUsage = (packageName: string) => {
             if (!this.filter(packageName)) {
                 return;
             }
@@ -101,11 +102,11 @@ export class NpmPackageResolver {
 
             const deps = depRecord.dependencies || [];
             for (const curr of deps) {
-                traverse(curr);
+                traverseUsage(curr);
             }
         }
 
-        traverse(packageName);
+        traverseUsage(packageName);
     }
 
     compute(): {[s: string]: Usage} {
