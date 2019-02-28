@@ -30,6 +30,9 @@ export class NpmPackageResolver {
     }
 
     private saveDepRecord(depName: string, pojo: any) {
+        if (!pojo.path) {
+            throw new Error(`Found a falsy dir for ${depName}. pojo=\n${JSON.stringify(pojo, null, 2)}`);
+        }
         const record: DepRecord = {dir: pojo.path, dependencies: Object.keys(pojo.dependencies || {}), version: pojo.version };
         this.depRecordByPackageName[depName] = record;
     }
