@@ -62,7 +62,7 @@ export class Packager {
     const absoluteTsFile = this.toAbs(relativeTsFile);
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
-    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, Misc.bigbandPackageDir()], shouldBeIncluded);
+    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir], shouldBeIncluded);
     await npmPackageResolver.prepopulate();
 
     const isScotty = relativeTsFile === CONTRIVED_IN_FILE_NAME;

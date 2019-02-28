@@ -30,10 +30,12 @@ export class NpmPackageResolver {
     }
 
     private saveDepRecord(depName: string, pojo: any) {
-        if (!pojo.path) {
-            throw new Error(`Found a falsy dir for ${depName}. pojo=\n${JSON.stringify(pojo, null, 2)}`);
-        }
+        const existing: DepRecord = this.depRecordByPackageName[depName];
         const record: DepRecord = {dir: pojo.path, dependencies: Object.keys(pojo.dependencies || {}), version: pojo.version };
+        if (existing) {
+            record.dir = record.dir || existing.dir;
+            record.dependencies = record.dependencies.length ? record.dependencies : existing.dependencies;
+        }
         this.depRecordByPackageName[depName] = record;
     }
 
@@ -49,13 +51,10 @@ export class NpmPackageResolver {
                 throw new Error(`Null entry for ${depName}`);
             }
 
-            if (innerPojo._development) {
+            if (innerPojo._development && depName !== 'bigband-core') {
                 return;
             }
-            const existing = this.depRecordByPackageName[depName];
-            if (!existing || innerPojo.dependencies) {
-                this.saveDepRecord(depName, innerPojo);
-            }
+            this.saveDepRecord(depName, innerPojo);
             this.store(innerPojo, root);
         })
     }
