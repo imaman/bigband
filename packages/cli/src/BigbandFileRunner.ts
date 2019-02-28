@@ -65,7 +65,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
         pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, scottyInstrument, blobPool));
 
     // scotty needs slightly different parameters so we pushCode() it separately. 
-    ps.push(pushCode(Misc.bigbandPackageDir(), Misc.bigbandPackageDir(), rig, scottyInstrument, scottyInstrument, blobPool));
+    ps.push(pushCode(Misc.bigbandPackageDir(), bigbandSpec.dir, rig, scottyInstrument, scottyInstrument, blobPool));
     
     const pushedInstruments = await Promise.all(ps);
 
@@ -207,9 +207,9 @@ function checkSpec(spec: BigbandSpec) {
     // TODO(imaman): validate names!
 }
 
-async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument, scottyInstrument: Instrument, blobPool: S3BlobPool) {
-    if (!fs.existsSync(d) || !fs.statSync(d).isDirectory()) {
-        throw new Error(`Bad value. ${d} is not a directory.`);
+async function pushCode(dir: string, npmPackageDir: string, rig: Rig, instrument: Instrument, scottyInstrument: Instrument, blobPool: S3BlobPool) {
+    if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+        throw new Error(`Bad value. ${dir} is not a directory.`);
     }
     
     const physicalName = instrument.physicalName(rig);
@@ -223,7 +223,7 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
         }
     }
 
-    const {zb, packager} = await compileInstrument(d, npmPackageDir, rig, instrument, blobPool);
+    const {zb, packager} = await compileInstrument(dir, npmPackageDir, rig, instrument, blobPool);
     const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig));
     const resource = def.get();
     resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
