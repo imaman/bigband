@@ -3,6 +3,11 @@ import * as fs from 'fs';
 import * as semver from 'semver';
 import * as child_process from 'child_process'
 import {logger} from './logger';
+import { DepGraph, DepNode } from './DepGraph';
+
+
+const LABEL_DEV = 'DEV';
+const LABEL_PROD = 'PROD';
 
 export interface Usage {
     packageName: string
@@ -16,7 +21,14 @@ interface DepRecord {
     version: string
 }
 
+interface NodeData {
+    dir: string
+    version: string
+}
+
 export class NpmPackageResolver {
+
+    private readonly graph = new DepGraph<NodeData>();
 
     private readonly usages: Usage[] = [];
     // TODO(imaman): use Map<,>
@@ -29,36 +41,30 @@ export class NpmPackageResolver {
         }
     }
 
-    private saveDepRecord(pojo: any) {
+    private createNode(pojo: any, parent: DepNode<NodeData>) {
         const depName: string = pojo.name;
         if (!depName) {
             throw new Error('Found a nameless package');
         }
+        const node = this.graph.addDepToNode(parent, pojo.name, pojo._development ? LABEL_DEV: LABEL_PROD);
         
-        const existing: DepRecord = this.depRecordByPackageName[depName];
-        const record: DepRecord = {dir: pojo.path, dependencies: Object.keys(pojo.dependencies || {}), version: pojo.version };
+        const existing: NodeData|null = node.data;
+        const record: NodeData = {dir: pojo.path, version: pojo.version };
         logger.silly(`#dep_record# ${depName}: ${JSON.stringify(record)}`);
         if (existing) {
             record.dir = record.dir || existing.dir;
-            record.dependencies = record.dependencies.length ? record.dependencies : existing.dependencies;
         }
-        this.depRecordByPackageName[depName] = record;
+
+        node.data = record;
+        return node;
     }
 
-    private scanDeps(pojo, parentPackage: string) {
+    private scanDeps(pojo, parent: DepNode<NodeData>) {
         if (!pojo || pojo.missing) {
             return;
         }          
 
-        function isSpecial(n) {
-            return n === 'bigband' || n === 'bigband-core';
-        }
-
-        if (pojo._development && !isSpecial(pojo.name) && !isSpecial(parentPackage)) {
-            return;
-        }
-
-        this.saveDepRecord(pojo);
+        const node = this.createNode(pojo, parent);
 
         const dependencies = pojo.dependencies || {};
         for (const depName in dependencies) {
@@ -67,7 +73,7 @@ export class NpmPackageResolver {
                 throw new Error(`Null entry for ${depName}`);
             }
 
-            this.scanDeps(curr, pojo.name);
+            this.scanDeps(curr, node);
         }
     }
 
@@ -82,7 +88,7 @@ export class NpmPackageResolver {
             if (!npmLsPojo.name || !npmLsPojo.version) {
                 throw new Error(`Running ${command} in ${r} resulted in a failure:\n${execution.stdout}\n${execution.err}}`);
             }
-            this.scanDeps(npmLsPojo, '');
+            this.scanDeps(npmLsPojo, this.graph.rootNode);
         }
     }
 
@@ -95,28 +101,23 @@ export class NpmPackageResolver {
             packageName = temp;
         }
 
-        const traverseUsage = (packageName: string) => {
-            if (!this.filter(packageName)) {
+        const startNode = this.graph.getNode(packageName);
+        const nodes = startNode.dfs();
+        for (const curr of nodes) {
+            if (!this.filter(curr.name)) {
                 return;
             }
 
-            const depRecord: DepRecord = this.depRecordByPackageName[packageName];
+            const depRecord: NodeData|null = curr.data;
             if (!depRecord) {
-                throw new Error(`Arrived at an uninstalled package: "${packageName}".`);
+                throw new Error(`Arrived at a node with no data: "${curr.name}".`);
             }
 
             if (!fs.existsSync(depRecord.dir)) {
-                throw new Error(`Directory ${depRecord.dir}, for package ${packageName}, does not exist (${JSON.stringify(depRecord)})`);
+                throw new Error(`Package "${curr.name}" specifies a non-existing directory (${depRecord.dir})`);
             }
-            this.usages.push({packageName, version: depRecord.version, dir: depRecord.dir});
-
-            const deps = depRecord.dependencies || [];
-            for (const curr of deps) {
-                traverseUsage(curr);
-            }
+            this.usages.push({packageName: curr.name, version: depRecord.version, dir: depRecord.dir});
         }
-
-        traverseUsage(packageName);
     }
 
     compute(): {[s: string]: Usage} {
