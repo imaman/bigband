@@ -222,3 +222,19 @@ function shouldBeIncluded(packageName: string) {
 function formatBytes(n: number) {
   return `${(n / (1024 * 1024)).toFixed(3)}MB`
 }
+
+
+// Deployment size from a sample section:
+//     Shipping rig "prod" to eu-central-1
+//     Compiling tagging-backend
+//     Compiling tagging-scoreAll
+//     Compiling tagging-scoreTaggingSet
+//     Compiling tagging-scoreTaggingPair
+//     Compiling bigband-scotty
+//     Non-teleporting deployment (0.532MB) of bigband-scotty
+//     Non-teleporting deployment (0.035MB) of tagging-scoreAll
+//     Non-teleporting deployment (0.049MB) of tagging-scoreTaggingSet
+//     Non-teleporting deployment (0.690MB) of tagging-backend
+//     Non-teleporting deployment (3.999MB) of tagging-scoreTaggingPair
+//     No stack changes
+//     Rig "prod" shipped in 40.0s
