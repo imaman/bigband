@@ -47,11 +47,12 @@ export class NpmPackageResolver {
             throw new Error('Found a nameless package');
         }
 
-        const node = this.graph.addDepToNode(parent, name, pojo._development ? LABEL_DEV: LABEL_PROD);
+        const label = pojo._development ? LABEL_DEV: LABEL_PROD;
+        const node = this.graph.addDepToNode(parent, name, label);
         
         const existing: NodeData|null = node.data;
         const record: NodeData = {dir: pojo.path, version: pojo.version };
-        logger.silly(`#dep_record# ${name} (parent: ${parent.name}): ${JSON.stringify(record)}`);
+        logger.silly(`#dep_record# ${name} ("${label}" dep of "${parent.name}"): ${JSON.stringify(record)}`);
         if (existing) {
             record.dir = record.dir || existing.dir;
         }
