@@ -47,9 +47,6 @@ export class NpmPackageResolver {
             throw new Error('Found a nameless package');
         }
 
-        if (name === 'jszip') {
-            console.log('pojo=' + JSON.stringify(pojo, null, 2));
-        }
         const node = this.graph.addDepToNode(parent, name, pojo._development ? LABEL_DEV: LABEL_PROD);
         
         const existing: NodeData|null = node.data;
