@@ -52,7 +52,7 @@ export class NpmPackageResolver {
                 throw new Error(`Null entry for ${depName}`);
             }
 
-            if (innerPojo._development && depName !== 'bigband-core') {
+            if (innerPojo._development && depName !== 'bigband-core' && depName !== 'bigband') {
                 return;
             }
             this.saveDepRecord(depName, innerPojo);
