@@ -46,7 +46,7 @@ export class NpmPackageResolver {
     }
 
     private scanDeps(pojo, parentPackage: string) {
-        if (!pojo) {
+        if (!pojo || pojo.missing) {
             return;
         }          
 
