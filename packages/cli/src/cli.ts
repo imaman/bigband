@@ -32,6 +32,11 @@ yargs
     .strict()
     .command('ship', 'deploy!', yargs => {
         specFileAndRigOptions(yargs, true);
+        yargs.option('teleporting', {
+            describe: 'whether to enable teleporting to significantly reduce deployment time',
+            default: true,
+            type: 'boolean'
+        });
     }, argv => run(ship, argv))
     .command('logs', 'Watch logs of a function', yargs => {
         specFileAndRigOptions(yargs, false);
@@ -62,7 +67,7 @@ yargs
     .argv;
 
 async function ship(argv) {
-    return await runBigbandFile(argv.bigbandFile, argv.rig);
+    return await runBigbandFile(argv.bigbandFile, argv.rig, argv.teleporting);
 }
 
 

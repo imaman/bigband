@@ -15,10 +15,11 @@ import { logger } from './logger';
 import { S3BlobPool } from './Teleporter';
 import { Misc } from './Misc';
 import {CONTRIVED_NPM_PACAKGE_NAME as CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME, CONTRIVED_OUT_FILE_NAME} from './scotty';
+import { bool } from 'aws-sdk/clients/signer';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
-export async function runBigbandFile(bigbandFile: string, rigName: string) {
+export async function runBigbandFile(bigbandFile: string, rigName: string, teleportingEnabled: boolean) {
     const t0 = Date.now();
     if (Number(process.versions.node.split('.')[0]) < 8) {
         throw new Error('You must use node version >= 8 to run this program');
@@ -29,7 +30,7 @@ export async function runBigbandFile(bigbandFile: string, rigName: string) {
         throw new Error(`Failed to find a rig named ${rigName} in ${bigbandSpec.rigs.map(curr => curr.name).join(', ')}`);
     }
 
-    await Promise.all([runSpec(bigbandSpec, rig), configureBucket(rig)]);
+    await Promise.all([runSpec(bigbandSpec, rig), configureBucket(rig), teleportingEnabled]);
     const dt = (Date.now() - t0) / 1000;
     return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;        
 }
@@ -40,7 +41,7 @@ export interface BigbandSpec {
     dir: string
 }
 
-export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
+export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig, teleportingEnabled: boolean) {
     const cfp = new CloudFormationPusher(rig);
     cfp.peekAtExistingStack();
 
@@ -62,10 +63,10 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
     logger.info(`Shipping rig "${rig.name}" to ${rig.region}`);
 
     const ps = bigbandSpec.instruments.map(instrument => 
-        pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, scottyInstrument, blobPool));
+        pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, scottyInstrument, blobPool, teleportingEnabled));
 
     // scotty needs slightly different parameters so we pushCode() it separately. 
-    ps.push(pushCode(Misc.bigbandPackageDir(), bigbandSpec.dir, rig, scottyInstrument, scottyInstrument, blobPool));
+    ps.push(pushCode(Misc.bigbandPackageDir(), bigbandSpec.dir, rig, scottyInstrument, scottyInstrument, blobPool, teleportingEnabled));
     
     const pushedInstruments = await Promise.all(ps);
 
@@ -207,7 +208,7 @@ function checkSpec(spec: BigbandSpec) {
     // TODO(imaman): validate names!
 }
 
-async function pushCode(dir: string, npmPackageDir: string, rig: Rig, instrument: Instrument, scottyInstrument: Instrument, blobPool: S3BlobPool) {
+async function pushCode(dir: string, npmPackageDir: string, rig: Rig, instrument: Instrument, scottyInstrument: Instrument, blobPool: S3BlobPool, teleportingEnabled: boolean) {
     if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
         throw new Error(`Bad value. ${dir} is not a directory.`);
     }
@@ -224,7 +225,7 @@ async function pushCode(dir: string, npmPackageDir: string, rig: Rig, instrument
     }
 
     const {zb, packager} = await compileInstrument(dir, npmPackageDir, rig, instrument, blobPool);
-    const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig));
+    const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig), teleportingEnabled);
     const resource = def.get();
     resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
 

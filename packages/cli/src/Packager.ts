@@ -115,7 +115,7 @@ export class Packager {
     return outDir;
   }
 
-  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder, scottyLambdaName: string): Promise<PushResult> {      
+  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder, scottyLambdaName: string, teleportingEnabled: boolean): Promise<PushResult> {      
     if (!this.rig) {
       throw new Error('rig was not set.');
     }
@@ -161,22 +161,23 @@ export class Packager {
       Payload: JSON.stringify({teleportRequest})
     };
     
-
-    try {
-      const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
-      if (!invocationResponse.FunctionError) {
-        logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${instrument.fullyQualifiedName()}`);
-        return ret;
-      }
-
-      logger.silly('scotty returned an error:\n' + JSON.stringify(invocationResponse));
-      throw new Error(`Teleporting of ${instrument.physicalName(this.rig)} failed: ${invocationResponse.FunctionError}`);
-    } catch (e) {
-      logger.silly('Teleporting error', e);
+    if (teleportingEnabled) {
+      try {
+        const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
+        if (!invocationResponse.FunctionError) {
+          logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${instrument.fullyQualifiedName()}`);
+          return ret;
+        }
+  
+        logger.silly('scotty returned an error:\n' + JSON.stringify(invocationResponse));
+        throw new Error(`Teleporting of ${instrument.physicalName(this.rig)} failed: ${invocationResponse.FunctionError}`);
+      } catch (e) {
+        logger.silly('Teleporting error', e);
+      }  
     }
 
     const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, instrument.physicalName(this.rig));
-    logger.info(`Non incremental teleporting of ${formatBytes(numBytes)} for ${instrument.fullyQualifiedName()}`);
+    logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${instrument.fullyQualifiedName()}`);
     
     return ret;
   }
