@@ -45,7 +45,7 @@ export class NpmPackageResolver {
         this.depRecordByPackageName[depName] = record;
     }
 
-    private store(outerPojo, scanDevDeps) {
+    private scanDeps(outerPojo, scanDevDeps) {
         if (!outerPojo) {
             return;
         }          
@@ -62,7 +62,7 @@ export class NpmPackageResolver {
             if (innerPojo._development && !scanDevDeps && depName !== 'bigband' && depName !== 'bigband-core') {
                 return;
             }
-            this.store(innerPojo, scanDevDeps);
+            this.scanDeps(innerPojo, scanDevDeps);
         })
     }
 
@@ -77,7 +77,7 @@ export class NpmPackageResolver {
             if (!npmLsPojo.name || !npmLsPojo.version) {
                 throw new Error(`Running ${command} in ${r} resulted in a failure:\n${execution.stdout}\n${execution.err}}`);
             }
-            this.store(npmLsPojo, false);
+            this.scanDeps(npmLsPojo, false);
         }
     }
 
