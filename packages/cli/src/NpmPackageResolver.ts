@@ -24,7 +24,7 @@ export class NpmPackageResolver {
     }
 
     private createDepRecord(depName: string, root: string, pojo: any) {
-        this.depsByPackageName[depName] = {root, dependencies: pojo.dependencies, version: pojo.version };
+        this.depsByPackageName[depName] = {root: pojo.path, dependencies: Object.keys(pojo.dependencies), version: pojo.version };
     }
 
     private store(outerPojo, root) {
@@ -51,7 +51,7 @@ export class NpmPackageResolver {
     }
 
     async prepopulate() {
-        const command = 'npm ls --json';
+        const command = 'npm ls --long --json';
         for (const r of this.roots) {
             // TODO(imaman): better output on errors.
             const execution = await new Promise<{err, stdout, stderr}>(resolve => 
@@ -76,6 +76,7 @@ export class NpmPackageResolver {
         }
 
         const traverse = (packageName: string) => {
+            console.log('  - packageName=' + packageName);
             if (!this.filter(packageName)) {
                 return;
             }
@@ -85,24 +86,19 @@ export class NpmPackageResolver {
                 throw new Error(`Arrived at an uninstalled package: "${packageName}".`);
             }
 
-            let dir = path.join(obj.root, 'node_modules', packageName);            
+            let dir = obj.root; //path.join(obj.root, 'node_modules', packageName);            
             if (!fs.existsSync(dir)) {
-                if (path.basename(path.dirname(dir)) === 'node_modules') {
-                    dir = path.dirname(path.dirname(dir));
-                }
-
-                if (!fs.existsSync(dir)) {
-                    throw new Error(`Directory ${dir}, for package ${packageName}, does not exist (${JSON.stringify(obj)})`);
-                }
+                throw new Error(`Directory ${dir}, for package ${packageName}, does not exist (${JSON.stringify(obj)})`);
             }
             this.usages.push({packageName, version: obj.version, dir});
 
-            const deps = obj.dependencies || {};
-            for (const k of Object.keys(deps)) {
-                traverse(k);
+            const deps = obj.dependencies || [];
+            for (const curr of deps) {
+                traverse(curr);
             }
         }
 
+        console.log('TRAVERSE starting from ' + packageName);
         traverse(packageName);
     }
 

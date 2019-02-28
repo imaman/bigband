@@ -89,6 +89,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig) {
         stack.Resources[curr.instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)] = def.get();
     });
 
+
     await cfp.deploy(stack)
     const lambda = AwsFactory.fromRig(rig).newLambda();
 
@@ -224,6 +225,14 @@ async function pushCode(d: string, npmPackageDir: string, rig: Rig, instrument: 
     }
 
     const {zb, packager} = await compileInstrument(d, npmPackageDir, rig, instrument, blobPool);
+    const unzipDir = '/tmp/' + instrument.fullyQualifiedName();
+    try {
+        fs.mkdirSync(unzipDir);
+    } catch (e) {
+        //
+    }
+    await zb.unzip(unzipDir);
+    console.log('unzipped into ' + unzipDir);
     const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig));
     const resource = def.get();
     resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
