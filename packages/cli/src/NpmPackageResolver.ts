@@ -29,10 +29,12 @@ export class NpmPackageResolver {
         }
     }
 
-    private saveDepRecord(depName: string, pojo: any) {
-        if (depName !== pojo.name) {
-            throw new Error('name mismatch: ' + depName + ', ' + pojo.name);
+    private saveDepRecord(pojo: any) {
+        const depName: string = pojo.name;
+        if (!depName) {
+            throw new Error('Found a nameless package');
         }
+        
         const existing: DepRecord = this.depRecordByPackageName[depName];
         const record: DepRecord = {dir: pojo.path, dependencies: Object.keys(pojo.dependencies || {}), version: pojo.version };
         logger.silly(`#dep_record# ${depName}: ${JSON.stringify(record)}`);
@@ -58,7 +60,7 @@ export class NpmPackageResolver {
             if (innerPojo._development && !scanDevDeps && depName !== 'bigband' && depName !== 'bigband-core') {
                 return;
             }
-            this.saveDepRecord(depName, innerPojo);
+            this.saveDepRecord(innerPojo);
             this.store(innerPojo, root, scanDevDeps);
         })
     }
@@ -74,7 +76,7 @@ export class NpmPackageResolver {
             if (!npmLsPojo.name || !npmLsPojo.version) {
                 throw new Error(`Running ${command} in ${r} resulted in a failure:\n${execution.stdout}\n${execution.err}}`);
             }
-            this.saveDepRecord(npmLsPojo.name, npmLsPojo);
+            this.saveDepRecord(npmLsPojo);
             this.store(npmLsPojo, r, false);
         }
     }
