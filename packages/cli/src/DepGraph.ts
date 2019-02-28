@@ -1,6 +1,11 @@
 export class DepGraph<T> {
 
     private readonly nodeByName = new Map<string, DepNode<T>>();
+    public readonly rootNode = new DepNode<T>('');
+
+    constructor() {
+        this.nodeByName.set(this.rootNode.name, this.rootNode);
+    }
 
     addDep(from: string, to: string) {
         const fromNode = this.getNode(from);
@@ -8,7 +13,16 @@ export class DepGraph<T> {
         fromNode.add(toNode);
     }
 
+    addDepToNode(fromNode: DepNode<T>, to: string, label: string): DepNode<T> {
+        const toNode = this.getNode(to);
+        fromNode.add(toNode, label);
+        return toNode;
+    }
+
     getNode(name: string): DepNode<T> {
+        if (!name) {
+            throw new Error('Name cannot be falsy');
+        }
         let ret = this.nodeByName.get(name);
         if (ret) {
             return ret;
@@ -20,21 +34,23 @@ export class DepGraph<T> {
     }
 }
 
-class DepNode<T> {
-    private readonly children: DepNode[] = [];
+interface Edge<T> {
+    to: DepNode<T>
+    label?: string
+}
+
+export class DepNode<T> {
+    private readonly edges: Edge<T>[] = [];
     public data: T|null = null;
 
     constructor(public readonly name: string) {
-        if (!name) {
-            throw new Error('Name cannot be falsy');
-        }
     }
 
-    add(child: DepNode<T>) {
-        this.children.push(child);
+    add(child: DepNode<T>, label?: string) {
+        this.edges.push({to: child, label});
     }
 
-    dfs() {
+    dfs(edgeLabelFilter: (string?) => boolean = () => true) {
         const visited = new Set<DepNode<T>>();
         
         function run(node: DepNode<T>) {
@@ -43,8 +59,9 @@ class DepNode<T> {
             }
 
             visited.add(node);
-            for (const curr of node.children) {
-                run(curr);
+            for (const curr of node.edges) {
+                if (edgeLabelFilter(curr.label))
+                    run(curr.to);
             }
         }
 
