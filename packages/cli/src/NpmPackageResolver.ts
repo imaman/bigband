@@ -10,11 +10,17 @@ export interface Usage {
     dir: string
 }
 
+interface DepRecord {
+    dir: string,
+    dependencies: string[]
+    version: string
+}
+
 export class NpmPackageResolver {
 
     private readonly usages: Usage[] = [];
     // TODO(imaman): use Map<,>
-    private readonly depsByPackageName: any = {};
+    private readonly depRecordByPackageName: any = {};
 
     constructor(private readonly roots: string[], private readonly filter: (string) => boolean) {
         const relatives = roots.filter(r => !path.isAbsolute(r));        
@@ -23,8 +29,9 @@ export class NpmPackageResolver {
         }
     }
 
-    private createDepRecord(depName: string, root: string, pojo: any) {
-        this.depsByPackageName[depName] = {root: pojo.path, dependencies: Object.keys(pojo.dependencies), version: pojo.version };
+    private saveDepRecord(depName: string, pojo: any) {
+        const record: DepRecord = {dir: pojo.path, dependencies: Object.keys(pojo.dependencies), version: pojo.version };
+        this.depRecordByPackageName[depName] = record;
     }
 
     private store(outerPojo, root) {
@@ -42,9 +49,9 @@ export class NpmPackageResolver {
             if (innerPojo._development) {
                 return;
             }
-            const existing = this.depsByPackageName[depName];
+            const existing = this.depRecordByPackageName[depName];
             if (!existing || innerPojo.dependencies) {
-                this.createDepRecord(depName, root, innerPojo);
+                this.saveDepRecord(depName, innerPojo);
             }
             this.store(innerPojo, root);
         })
@@ -61,7 +68,7 @@ export class NpmPackageResolver {
             if (!npmLsPojo.name || !npmLsPojo.version) {
                 throw new Error(`Running ${command} in ${r} resulted in a failure:\n${execution.stdout}\n${execution.err}}`);
             }
-            this.createDepRecord(npmLsPojo.name, r, npmLsPojo);
+            this.saveDepRecord(npmLsPojo.name, npmLsPojo);
             this.store(npmLsPojo, r);
         }
     }
@@ -80,18 +87,17 @@ export class NpmPackageResolver {
                 return;
             }
 
-            const obj = this.depsByPackageName[packageName];
-            if (!obj) {
+            const depRecord: DepRecord = this.depRecordByPackageName[packageName];
+            if (!depRecord) {
                 throw new Error(`Arrived at an uninstalled package: "${packageName}".`);
             }
 
-            let dir = obj.root; 
-            if (!fs.existsSync(dir)) {
-                throw new Error(`Directory ${dir}, for package ${packageName}, does not exist (${JSON.stringify(obj)})`);
+            if (!fs.existsSync(depRecord.dir)) {
+                throw new Error(`Directory ${depRecord.dir}, for package ${packageName}, does not exist (${JSON.stringify(depRecord)})`);
             }
-            this.usages.push({packageName, version: obj.version, dir});
+            this.usages.push({packageName, version: depRecord.version, dir: depRecord.dir});
 
-            const deps = obj.dependencies || [];
+            const deps = depRecord.dependencies || [];
             for (const curr of deps) {
                 traverse(curr);
             }
