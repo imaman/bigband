@@ -76,7 +76,6 @@ export class NpmPackageResolver {
         }
 
         const traverse = (packageName: string) => {
-            console.log('  - packageName=' + packageName);
             if (!this.filter(packageName)) {
                 return;
             }
@@ -86,7 +85,7 @@ export class NpmPackageResolver {
                 throw new Error(`Arrived at an uninstalled package: "${packageName}".`);
             }
 
-            let dir = obj.root; //path.join(obj.root, 'node_modules', packageName);            
+            let dir = obj.root; 
             if (!fs.existsSync(dir)) {
                 throw new Error(`Directory ${dir}, for package ${packageName}, does not exist (${JSON.stringify(obj)})`);
             }
@@ -98,7 +97,6 @@ export class NpmPackageResolver {
             }
         }
 
-        console.log('TRAVERSE starting from ' + packageName);
         traverse(packageName);
     }
 
