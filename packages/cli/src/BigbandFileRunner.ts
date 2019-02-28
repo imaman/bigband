@@ -30,7 +30,7 @@ export async function runBigbandFile(bigbandFile: string, rigName: string, telep
         throw new Error(`Failed to find a rig named ${rigName} in ${bigbandSpec.rigs.map(curr => curr.name).join(', ')}`);
     }
 
-    await Promise.all([runSpec(bigbandSpec, rig), configureBucket(rig), teleportingEnabled]);
+    await Promise.all([runSpec(bigbandSpec, rig, teleportingEnabled), configureBucket(rig)]);
     const dt = (Date.now() - t0) / 1000;
     return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;        
 }
