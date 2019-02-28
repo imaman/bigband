@@ -224,7 +224,9 @@ function formatBytes(n: number) {
 }
 
 
-// Deployment size from a sample section:
+// Deployment size from a sample section
+//
+// Incl. dev deps:
 //     Shipping rig "prod" to eu-central-1
 //     Compiling tagging-backend
 //     Compiling tagging-scoreAll
@@ -238,3 +240,18 @@ function formatBytes(n: number) {
 //     Non-teleporting deployment (3.999MB) of tagging-scoreTaggingPair
 //     No stack changes
 //     Rig "prod" shipped in 40.0s
+//
+// Excl. dev deps:
+//     Shipping rig "prod" to eu-central-1
+//     Compiling tagging-backend
+//     Compiling tagging-scoreAll
+//     Compiling tagging-scoreTaggingSet
+//     Compiling tagging-scoreTaggingPair
+//     Compiling bigband-scotty
+//     Non-teleporting deployment (0.297MB) of bigband-scotty
+//     Non-teleporting deployment (0.035MB) of tagging-scoreAll
+//     Non-teleporting deployment (0.049MB) of tagging-scoreTaggingSet
+//     Non-teleporting deployment (0.690MB) of tagging-backend
+//     Non-teleporting deployment (3.999MB) of tagging-scoreTaggingPair
+//     No stack changes
+//     Rig "prod" shipped in 41.5s

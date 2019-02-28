@@ -103,7 +103,7 @@ export class NpmPackageResolver {
         }
 
         const startNode = this.graph.getNode(packageName);
-        const nodes = startNode.dfs();
+        const nodes = startNode.dfs(label => label === LABEL_PROD);
         for (const curr of nodes) {
             if (!this.filter(curr.name)) {
                 return;
