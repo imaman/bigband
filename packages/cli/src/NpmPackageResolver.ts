@@ -45,24 +45,24 @@ export class NpmPackageResolver {
         this.depRecordByPackageName[depName] = record;
     }
 
-    private scanDeps(outerPojo, scanDevDeps) {
-        if (!outerPojo) {
+    private scanDeps(pojo, scanDevDeps) {
+        if (!pojo) {
             return;
         }          
 
-        this.saveDepRecord(outerPojo);
+        this.saveDepRecord(pojo);
 
-        const dependencies = outerPojo.dependencies || {};
-        Object.keys(dependencies).forEach(depName => {
-            const innerPojo = dependencies[depName];
-            if (!innerPojo) {
+        const dependencies = pojo.dependencies || {};
+        for (const depName in dependencies) {
+            const curr = dependencies[depName];
+            if (!curr) {
                 throw new Error(`Null entry for ${depName}`);
             }
 
-            if (innerPojo._development && !scanDevDeps && depName !== 'bigband' && depName !== 'bigband-core') {
+            if (curr._development && !scanDevDeps && depName !== 'bigband' && depName !== 'bigband-core') {
                 return;
             }
-            this.scanDeps(innerPojo, scanDevDeps);
+            this.scanDeps(curr, scanDevDeps);
         })
     }
 
