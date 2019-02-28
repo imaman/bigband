@@ -30,7 +30,7 @@ export class NpmPackageResolver {
     }
 
     private saveDepRecord(depName: string, pojo: any) {
-        const record: DepRecord = {dir: pojo.path, dependencies: Object.keys(pojo.dependencies), version: pojo.version };
+        const record: DepRecord = {dir: pojo.path, dependencies: Object.keys(pojo.dependencies || {}), version: pojo.version };
         this.depRecordByPackageName[depName] = record;
     }
 
