@@ -15,7 +15,6 @@ import { logger } from './logger';
 import { S3BlobPool } from './Teleporter';
 import { Misc } from './Misc';
 import {CONTRIVED_NPM_PACAKGE_NAME as CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME, CONTRIVED_OUT_FILE_NAME} from './scotty';
-import { bool } from 'aws-sdk/clients/signer';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
