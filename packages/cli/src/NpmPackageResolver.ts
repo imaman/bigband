@@ -30,9 +30,12 @@ export class NpmPackageResolver {
     }
 
     private saveDepRecord(depName: string, pojo: any) {
+        if (depName !== pojo.name) {
+            throw new Error('name mismatch: ' + depName + ', ' + pojo.name);
+        }
         const existing: DepRecord = this.depRecordByPackageName[depName];
         const record: DepRecord = {dir: pojo.path, dependencies: Object.keys(pojo.dependencies || {}), version: pojo.version };
-        logger.silly(`#dep_record#: ${depName}: ${JSON.stringify(record)}`);
+        logger.silly(`#dep_record# ${depName}: ${JSON.stringify(record)}`);
         if (existing) {
             record.dir = record.dir || existing.dir;
             record.dependencies = record.dependencies.length ? record.dependencies : existing.dependencies;
@@ -40,7 +43,7 @@ export class NpmPackageResolver {
         this.depRecordByPackageName[depName] = record;
     }
 
-    private store(outerPojo, root) {
+    private store(outerPojo, root, scanDevDeps) {
         if (!outerPojo) {
             return;
         }          
@@ -52,11 +55,11 @@ export class NpmPackageResolver {
                 throw new Error(`Null entry for ${depName}`);
             }
 
-            if (innerPojo._development && depName !== 'bigband-core' && depName !== 'bigband') {
+            if (innerPojo._development && !scanDevDeps && depName !== 'bigband' && depName !== 'bigband-core') {
                 return;
             }
             this.saveDepRecord(depName, innerPojo);
-            this.store(innerPojo, root);
+            this.store(innerPojo, root, scanDevDeps);
         })
     }
 
@@ -72,7 +75,7 @@ export class NpmPackageResolver {
                 throw new Error(`Running ${command} in ${r} resulted in a failure:\n${execution.stdout}\n${execution.err}}`);
             }
             this.saveDepRecord(npmLsPojo.name, npmLsPojo);
-            this.store(npmLsPojo, r);
+            this.store(npmLsPojo, r, false);
         }
     }
 
