@@ -3,7 +3,7 @@
 import * as sourceMapSupport from 'source-map-support';
 sourceMapSupport.install();
 
-import {runBigbandFile} from './BigbandFileRunner';
+import {runBigbandFile, DeployMode} from './BigbandFileRunner';
 import {LogsCommand} from './commands/Logs'
 import {ListCommand} from './commands/List'
 import {Invoke} from './commands/Invoke'
@@ -37,6 +37,11 @@ yargs
             default: true,
             type: 'boolean'
         });
+        yargs.option('deploy-mode', {
+            choices: ['ALWAYS', 'IF_CHANGED'],
+            describe: 'When should lambda instruments be deployed',
+            default: 'IF_CHANGED'
+        });
     }, argv => run(ship, argv))
     .command('logs', 'Watch logs of a function', yargs => {
         specFileAndRigOptions(yargs, false);
@@ -67,7 +72,8 @@ yargs
     .argv;
 
 async function ship(argv) {
-    return await runBigbandFile(argv.bigbandFile, argv.rig, argv.teleporting);
+    const deployMode: DeployMode = (argv.deployMode === 'ALWAYS') ? DeployMode.ALWAYS : DeployMode.IF_CHANGED;
+    return await runBigbandFile(argv.bigbandFile, argv.rig, argv.teleporting, deployMode);
 }
 
 
