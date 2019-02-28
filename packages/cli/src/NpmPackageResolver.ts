@@ -45,10 +45,18 @@ export class NpmPackageResolver {
         this.depRecordByPackageName[depName] = record;
     }
 
-    private scanDeps(pojo, scanDevDeps) {
+    private scanDeps(pojo, parentPackage: string) {
         if (!pojo) {
             return;
         }          
+
+        function isSpecial(n) {
+            return n === 'bigband' || n === 'bigband-core';
+        }
+
+        if (pojo._development && !isSpecial(pojo.name) && !isSpecial(parentPackage)) {
+            return;
+        }
 
         this.saveDepRecord(pojo);
 
@@ -59,11 +67,8 @@ export class NpmPackageResolver {
                 throw new Error(`Null entry for ${depName}`);
             }
 
-            if (curr._development && !scanDevDeps && depName !== 'bigband' && depName !== 'bigband-core') {
-                return;
-            }
-            this.scanDeps(curr, scanDevDeps);
-        })
+            this.scanDeps(curr, pojo.name);
+        }
     }
 
     async prepopulate() {
@@ -77,7 +82,7 @@ export class NpmPackageResolver {
             if (!npmLsPojo.name || !npmLsPojo.version) {
                 throw new Error(`Running ${command} in ${r} resulted in a failure:\n${execution.stdout}\n${execution.err}}`);
             }
-            this.scanDeps(npmLsPojo, false);
+            this.scanDeps(npmLsPojo, '');
         }
     }
 
