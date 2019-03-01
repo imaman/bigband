@@ -331,4 +331,5 @@ async function configureBucket(rig: Section) {
 // - unit tests for as much of /cli/src/ as possible
 // - rename scotty to bigand-system-teleport
 // - show telport in the CLI (logs, list)
+// - hard to understand error message when tsc compilation fails (for instance, error in the bigband file)
 
