@@ -316,3 +316,17 @@ async function configureBucket(rig: Rig) {
         throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
     }
 }
+
+
+// TODO list:
+// - rig -> section
+// - injected stubs
+// - migrate dataplatform lambdas to the new stubs. get rid of the rogue abstratcontroller there
+// - add a special version indication at dataplatform
+// - introduce a metric-monster npm with intruments + source code for superclasses
+// - migrate metric-machine to reuse metric-monster
+// - new CLI language
+// - deploy the tagging ui to github.testim.io
+// - bigbandfilerunner should be a class
+// - unit tests for as much of /cli/src/ as possible
+
