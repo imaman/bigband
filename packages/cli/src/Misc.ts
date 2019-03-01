@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 
-function findBigbandPackageDir() {
+function findPackageDir() {
     let ret = path.resolve(__dirname);
     while (true) {
         const resolved = path.resolve(ret, 'node_modules')
@@ -22,7 +22,7 @@ let bigbandPackageDir: string = '';
 
 export class Misc {
     static bigbandPackageDir() {
-        bigbandPackageDir = bigbandPackageDir || findBigbandPackageDir();
+        bigbandPackageDir = bigbandPackageDir || findPackageDir();
         return bigbandPackageDir;
     }
 }
