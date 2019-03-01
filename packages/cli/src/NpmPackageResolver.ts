@@ -47,8 +47,7 @@ export class NpmPackageResolver {
             throw new Error('Found a nameless package');
         }
 
-        const label = pojo._development ? LABEL_DEV: LABEL_PROD;
-        const node = this.graph.addDepToNode(parent, name, label);
+        const node = this.graph.addDepToNode(parent, name, LABEL_PROD);
         
         const existing: NodeData|null = node.data;
         const record: NodeData = {dir: pojo.path, version: pojo.version };
