@@ -1,6 +1,6 @@
 import {IsolationScope} from './IsolationScope'
 
-export class Rig {
+export class Section {
     constructor(public readonly isolationScope: IsolationScope, 
         public readonly region: string, public readonly name: string) {}    
 

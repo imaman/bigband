@@ -1,5 +1,5 @@
 import {DeployableAtom, DeployableFragment} from './DeployableFragment';
-import { Rig } from './Rig'
+import { Section } from './Rig'
 import { Definition } from './Definition'
 import { Instrument } from './Instrument'
 
@@ -128,7 +128,7 @@ export class LambdaInstrument extends Instrument {
         return fragment;
     }
 
-    contributeToConsumerDefinition(rig: Rig, consumerDef: Definition) {
+    contributeToConsumerDefinition(rig: Section, consumerDef: Definition) {
         consumerDef.mutate(o => o.Properties.Policies.push({
             Version: '2012-10-17',
             Statement: [{ 

@@ -1,5 +1,5 @@
 import {DeployableFragment} from './DeployableFragment';
-import {Rig} from './Rig';
+import {Section} from './Rig';
 import {Definition} from './Definition';
 
 export enum NameStyle {
@@ -44,7 +44,7 @@ export abstract class Instrument {
     }
 
     abstract createFragment(pathPrefix: string): DeployableFragment
-    abstract contributeToConsumerDefinition(rig: Rig, consumerDef: Definition): void
+    abstract contributeToConsumerDefinition(rig: Section, consumerDef: Definition): void
     abstract arnService(): string
     abstract arnType(): string
     abstract nameProperty(): string
@@ -62,7 +62,7 @@ export abstract class Instrument {
         return camelCase(this.packageName, this.name());
     }
 
-    physicalName(rig: Rig, style: NameStyle = NameStyle.DASH) {
+    physicalName(rig: Section, style: NameStyle = NameStyle.DASH) {
         if (style == NameStyle.DASH) {
             return `${rig.isolationScope.name}-${rig.name}-${this.fullyQualifiedName()}`;
         }
@@ -70,7 +70,7 @@ export abstract class Instrument {
         return camelCase(rig.isolationScope.name, rig.name, this.packageName, this.name());
     }
     
-    arn(rig: Rig): string {
+    arn(rig: Section): string {
         return `arn:aws:${this.arnService()}:${rig.region}:${rig.isolationScope.awsAccount}:${this.arnType()}${this.physicalName(rig)}`;
     }
 
@@ -78,7 +78,7 @@ export abstract class Instrument {
         return this.definition;
     }
 
-    getPhysicalDefinition(rig: Rig) : Definition {
+    getPhysicalDefinition(rig: Section) : Definition {
         const copy = JSON.parse(JSON.stringify(this.definition.get()));
         copy.Properties[this.nameProperty()] = this.physicalName(rig);
         return new Definition(copy);
