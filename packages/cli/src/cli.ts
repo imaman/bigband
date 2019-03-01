@@ -80,9 +80,9 @@ async function ship(argv) {
 function run(handler, argv) {
     Promise.resolve()
         .then(() => handler(argv))
-        .then(output => logger.info(output))
+        .then(output => logger.info(output, () => process.exit(0)))
         .catch(e => {
             console.log('Error', e);
-            process.exit(-1);
+            logger.error('Exiting: ', e, () => process.exit(-1));
         });
 }
