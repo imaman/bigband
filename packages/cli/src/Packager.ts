@@ -15,6 +15,7 @@ import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
 import { ZipBuilder } from './ZipBuilder';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME, CONTRIVED_OUT_FILE_NAME } from './scotty'
+import { Misc } from './Misc';
 
 export enum DeployMode {
   ALWAYS = 1,
@@ -66,7 +67,7 @@ export class Packager {
     const absoluteTsFile = this.toAbs(relativeTsFile);
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
-    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir], shouldBeIncluded);
+    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, SourceExporter.bigbandCorePackageDir()], shouldBeIncluded);
     await npmPackageResolver.prepopulate();
 
     const isScotty = relativeTsFile === CONTRIVED_IN_FILE_NAME;
