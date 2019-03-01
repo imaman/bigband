@@ -26,9 +26,9 @@ export async function runBigbandFile(bigbandFile: string, rigName: string, telep
         throw new Error('You must use node version >= 8 to run this program');
     }
     const bigbandSpec = await loadSpec(bigbandFile);
-    const rig = bigbandSpec.rigs.length === 1 && !rigName ? bigbandSpec.rigs[0] : bigbandSpec.rigs.find(curr => curr.name === rigName);
+    const rig = bigbandSpec.sections.length === 1 && !rigName ? bigbandSpec.sections[0] : bigbandSpec.sections.find(curr => curr.name === rigName);
     if (!rig) {
-        throw new Error(`Failed to find a rig named ${rigName} in ${bigbandSpec.rigs.map(curr => curr.name).join(', ')}`);
+        throw new Error(`Failed to find a rig named ${rigName} in ${bigbandSpec.sections.map(curr => curr.name).join(', ')}`);
     }
 
     await Promise.all([runSpec(bigbandSpec, rig, teleportingEnabled, deployMode), configureBucket(rig)]);
@@ -37,7 +37,7 @@ export async function runBigbandFile(bigbandFile: string, rigName: string, telep
 }
 
 export interface BigbandSpec {
-    rigs: Section[]
+    sections: Section[]
     instruments: Instrument[]
     dir: string
 }
@@ -196,7 +196,7 @@ function checkDuplicates(names: string[]): string[] {
 }
 
 function checkSpec(spec: BigbandSpec) {
-    let dupes = checkDuplicates(spec.rigs.map(r => r.name));
+    let dupes = checkDuplicates(spec.sections.map(r => r.name));
     if (dupes.length) {
         throw new Error(`Found two (or more) rigs with the same name: ${JSON.stringify(dupes)}`);
     }
