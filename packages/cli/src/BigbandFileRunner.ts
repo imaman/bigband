@@ -20,15 +20,15 @@ const DEPLOYABLES_FOLDER = 'deployables';
 
 export {DeployMode} from './Packager'
 
-export async function runBigbandFile(bigbandFile: string, rigName: string, teleportingEnabled: boolean, deployMode: DeployMode) {
+export async function runBigbandFile(bigbandFile: string, sectionName: string, teleportingEnabled: boolean, deployMode: DeployMode) {
     const t0 = Date.now();
     if (Number(process.versions.node.split('.')[0]) < 8) {
         throw new Error('You must use node version >= 8 to run this program');
     }
     const bigbandSpec = await loadSpec(bigbandFile);
-    const rig = bigbandSpec.sections.length === 1 && !rigName ? bigbandSpec.sections[0] : bigbandSpec.sections.find(curr => curr.name === rigName);
+    const rig = bigbandSpec.sections.length === 1 && !sectionName ? bigbandSpec.sections[0] : bigbandSpec.sections.find(curr => curr.name === sectionName);
     if (!rig) {
-        throw new Error(`Failed to find a rig named ${rigName} in ${bigbandSpec.sections.map(curr => curr.name).join(', ')}`);
+        throw new Error(`Failed to find a rig named ${sectionName} in ${bigbandSpec.sections.map(curr => curr.name).join(', ')}`);
     }
 
     await Promise.all([runSpec(bigbandSpec, rig, teleportingEnabled, deployMode), configureBucket(rig)]);

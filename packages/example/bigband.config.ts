@@ -40,7 +40,7 @@ placeFinder.uses(queryStream, 'queryStream');
 
 export function run() {
     return {
-        rigs: [prodMajor],
+        sections: [prodMajor],
         instruments: [importantDates, placeFinder, queryStream, distanceTable, queryStreamAnalyzer, healthChecker]
     }
 }
