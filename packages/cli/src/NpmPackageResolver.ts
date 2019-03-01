@@ -39,6 +39,7 @@ export class NpmPackageResolver {
         const existing: NodeData|null = node.data;
         const record: NodeData = {dir: pojo.path, version: pojo.version };
         logger.silly(`#dep_record# ${name} (dep of "${parent.name}"): ${JSON.stringify(record)}`);
+        console.log('logged dep_record for ' + name);
         if (existing) {
             record.dir = record.dir || existing.dir;
         }
@@ -48,6 +49,7 @@ export class NpmPackageResolver {
     }
 
     private scanDeps(pojo, parent: DepNode<NodeData>) {
+        console.log('pojo.name=' + pojo.name);
         if (!pojo || pojo.missing) {
             return;
         }          
@@ -71,6 +73,7 @@ export class NpmPackageResolver {
     async prepopulate() {
         const command = 'npm ls --long --json';
         for (const r of this.roots) {
+            logger.silly('starting scan of ' + r);
             // TODO(imaman): better output on errors.
             const execution = await new Promise<{err, stdout, stderr}>(resolve => 
                 child_process.exec(command, {cwd: r, maxBuffer: 20 * 1024 * 1024 }, 
