@@ -1,0 +1,25 @@
+{
+  "name": "demo",
+  "private": true,
+  "version": "1.0.22",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.354.0",
+    "byline": "^5.0.0",
+    "fast-levenshtein": "^2.0.6",
+    "moment": "^2.22.2"
+  },
+  "devDependencies": {
+    "@types/node": "^11.9.4",
+    "bigband": "^0.1.122",
+    "bigband-core": "^0.1.15",
+    "ts-node": "^8.0.2"
+  }
+}
