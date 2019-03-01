@@ -319,18 +319,24 @@ async function configureBucket(rig: Section) {
 
 
 // TODO list:
-// - rig -> section
+// + rig -> section (in the public API)
+// - rename scotty to bigand-system-teleport
 // - injected stubs
 // - migrate dataplatform lambdas to the new stubs. get rid of the rogue abstratcontroller there
 // - add a special version indication at dataplatform
 // - introduce a metric-monster npm with intruments + source code for superclasses
 // - migrate metric-machine to reuse metric-monster
 // - new CLI language
-// - deploy the tagging ui to github.testim.io
-// - bigbandfilerunner should be a class
-// - unit tests for as much of /cli/src/ as possible
-// - rename scotty to bigand-system-teleport
 // - show telport in the CLI (logs, list)
+// - deploy the tagging ui to github.testim.io
+//
 // - hard to understand error message when tsc compilation fails (for instance, error in the bigband file)
 // - improve parsing of the output of npm ls. Sepcficially, it looks like the devDependencies just mentions the names of deps.
 //     These deps are listed under "dependencies" so cross filtering is needed.
+// - add checking of names. in particular, "bigband" and "bigband-system" should be reserved.
+//     We probably want to disallow the use of hyphens inside logical names as they are used as separators.
+// - consider changing "package" to something different (to avoid collision with "NPM packages")
+// - bigbandfilerunner should be a class
+// - rig -> section (in the impl)
+// - unit tests for as much of /cli/src/ as possible
+
