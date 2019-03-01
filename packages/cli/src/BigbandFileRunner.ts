@@ -26,14 +26,14 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
         throw new Error('You must use node version >= 8 to run this program');
     }
     const bigbandSpec = await loadSpec(bigbandFile);
-    const rig = bigbandSpec.sections.length === 1 && !sectionName ? bigbandSpec.sections[0] : bigbandSpec.sections.find(curr => curr.name === sectionName);
-    if (!rig) {
+    const section = bigbandSpec.sections.length === 1 && !sectionName ? bigbandSpec.sections[0] : bigbandSpec.sections.find(curr => curr.name === sectionName);
+    if (!section) {
         throw new Error(`Failed to find a rig named ${sectionName} in ${bigbandSpec.sections.map(curr => curr.name).join(', ')}`);
     }
 
-    await Promise.all([runSpec(bigbandSpec, rig, teleportingEnabled, deployMode), configureBucket(rig)]);
+    await Promise.all([runSpec(bigbandSpec, section, teleportingEnabled, deployMode), configureBucket(section)]);
     const dt = (Date.now() - t0) / 1000;
-    return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;        
+    return `Section "${section.name}" shipped in ${dt.toFixed(1)}s`;        
 }
 
 export interface BigbandSpec {
@@ -61,7 +61,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportin
         .canDo('s3:PutObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
 
     
-    logger.info(`Shipping rig "${rig.name}" to ${rig.region}`);
+    logger.info(`Shipping section "${rig.name}" to ${rig.region}`);
 
     const ps = bigbandSpec.instruments.map(instrument => 
         pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, scottyInstrument, blobPool, teleportingEnabled, deployMode));
