@@ -19,10 +19,7 @@ interface NodeData {
 export class NpmPackageResolver {
 
     private readonly graph = new DepGraph<NodeData>();
-
     private readonly usages: Usage[] = [];
-    // TODO(imaman): use Map<,>
-    private readonly depRecordByPackageName: any = {};
 
     constructor(private readonly roots: string[], private readonly filter: (string) => boolean) {
         const relatives = roots.filter(r => !path.isAbsolute(r));        
@@ -57,9 +54,12 @@ export class NpmPackageResolver {
 
         const node = this.createNode(pojo, parent);
 
-        const dependencies = pojo.dependencies || {};
-        for (const depName in dependencies) {
-            const curr = dependencies[depName];
+        // pojo.dependencies - prod dependencies.
+        // pojo.devDependencies - dev dependencies. 
+        // We scan only the former.
+        const prodDependencies = pojo.dependencies || {};
+        for (const depName in prodDependencies) {
+            const curr = prodDependencies[depName];
             if (!curr) {
                 throw new Error(`Null entry for ${depName}`);
             }
