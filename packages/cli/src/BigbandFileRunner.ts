@@ -329,4 +329,6 @@ async function configureBucket(rig: Rig) {
 // - deploy the tagging ui to github.testim.io
 // - bigbandfilerunner should be a class
 // - unit tests for as much of /cli/src/ as possible
+// - rename scotty to bigand-system-teleport
+// - show telport in the CLI (logs, list)
 
