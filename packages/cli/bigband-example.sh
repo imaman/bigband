@@ -20,5 +20,5 @@ fi
 
 npm run build
 
-cd ../example
-node  ${debugArgs} ../cli/lib/cli.js "${commandArg}" "$1" "$2" "$3" "$4" "$5" "$6" 
+node  ${debugArgs} lib/cli.js --bigband-file ../example/bigband.config.ts "${commandArg}" "$1" "$2" "$3" "$4" "$5" "$6" 
+
