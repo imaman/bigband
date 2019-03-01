@@ -13,7 +13,7 @@ export class DepGraph<T> {
         fromNode.add(toNode);
     }
 
-    addDepToNode(fromNode: DepNode<T>, to: string, label: string): DepNode<T> {
+    addDepToNode(fromNode: DepNode<T>, to: string, label?: string): DepNode<T> {
         const toNode = this.getNode(to);
         fromNode.add(toNode, label);
         return toNode;
