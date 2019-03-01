@@ -1,4 +1,4 @@
-import {Rig} from 'bigband-core'
+import {Section} from 'bigband-core'
 import * as AWS from 'aws-sdk';
 
 export class AwsFactory {
@@ -11,7 +11,7 @@ export class AwsFactory {
         };
     }
 
-    static fromRig(r: Rig) {
+    static fromRig(r: Section) {
         return new AwsFactory(r.region, r.isolationScope.profile);
     }
 

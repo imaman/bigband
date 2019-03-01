@@ -1,5 +1,5 @@
 import {DeployableFragment} from './DeployableFragment';
-import {Section} from './Rig';
+import {Section} from './Section';
 import {Definition} from './Definition';
 
 export enum NameStyle {

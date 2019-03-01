@@ -9,7 +9,7 @@ import { logger } from './logger';
 import { AwsFactory } from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver } from './NpmPackageResolver'
-import { Instrument, Rig, SourceExporter } from 'bigband-core';
+import { Instrument, Section, SourceExporter } from 'bigband-core';
 import { GetFunctionResponse, InvocationRequest, InvocationResponse } from 'aws-sdk/clients/lambda';
 import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
@@ -32,7 +32,7 @@ export class Packager {
   private readonly npmPackageDir;
 
   constructor(private readonly rootDir: string, npmPackageDir: string, private readonly s3Bucket: string,
-      private readonly s3Prefix: string, private readonly rig?: Rig, private readonly blobPool?: S3BlobPool) {
+      private readonly s3Prefix: string, private readonly rig?: Section, private readonly blobPool?: S3BlobPool) {
     if (s3Prefix.endsWith('/')) {
       throw new Error(`s3Prefix ${s3Prefix} cannot have a trailing slash`)
     }

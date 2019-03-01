@@ -1,5 +1,5 @@
 import {DeployableAtom, DeployableFragment} from './DeployableFragment';
-import { Section } from './Rig'
+import { Section } from './Section'
 import { Definition } from './Definition'
 import { Instrument } from './Instrument'
 

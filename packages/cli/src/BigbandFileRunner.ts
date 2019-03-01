@@ -4,7 +4,7 @@ import * as hash from 'hash.js'
 const Module = require('module');
 
 import { AwsFactory } from './AwsFactory';
-import { NameStyle, Rig, Instrument, LambdaInstrument } from 'bigband-core';
+import { NameStyle, Section, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult, DeployMode } from './Packager'
 import { DeployableAtom } from 'bigband-core'
 import { ZipBuilder } from './ZipBuilder'
@@ -37,12 +37,12 @@ export async function runBigbandFile(bigbandFile: string, rigName: string, telep
 }
 
 export interface BigbandSpec {
-    rigs: Rig[]
+    rigs: Section[]
     instruments: Instrument[]
     dir: string
 }
 
-export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig, teleportingEnabled: boolean, deployMode: DeployMode) {
+export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportingEnabled: boolean, deployMode: DeployMode) {
     const cfp = new CloudFormationPusher(rig);
     cfp.peekAtExistingStack();
 
@@ -209,7 +209,7 @@ function checkSpec(spec: BigbandSpec) {
     // TODO(imaman): validate names!
 }
 
-async function pushCode(dir: string, npmPackageDir: string, rig: Rig, instrument: Instrument, scottyInstrument: Instrument, blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode) {
+async function pushCode(dir: string, npmPackageDir: string, rig: Section, instrument: Instrument, scottyInstrument: Instrument, blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode) {
     if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
         throw new Error(`Bad value. ${dir} is not a directory.`);
     }
@@ -238,7 +238,7 @@ async function pushCode(dir: string, npmPackageDir: string, rig: Rig, instrument
     }
 }
 
-async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument, blobPool: S3BlobPool) {
+async function compileInstrument(d: string, npmPackageDir: string, rig: Section, instrument: Instrument, blobPool: S3BlobPool) {
     try {
         const packager = new Packager(d, npmPackageDir, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig, blobPool);
         const pathPrefix = 'build';
@@ -280,11 +280,11 @@ async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, ins
 }
 
 
-function ttlPrefix(rig: Rig) {
+function ttlPrefix(rig: Section) {
     return `${rig.isolationScope.s3Prefix}/TTL/7d`;
 }
 
-async function configureBucket(rig: Rig) {
+async function configureBucket(rig: Section) {
     // You can check the content of the TTL folder via:
     // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
 
