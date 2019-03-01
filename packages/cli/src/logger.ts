@@ -1,8 +1,8 @@
 import * as winston from 'winston';
 
-const justMessageFormat = winston.format.printf(info => `${info.message}`);
-const timestampLabelMessageFormat = winston.format.printf(info => 
-  `${info.timestamp} [${info.label}] ${info.level}: ${info.message}`);
+const justMessageFormat = winston.format.printf(arg => `${arg.message}`);
+const timestampLabelMessageFormat = winston.format.printf(arg => 
+  `${arg.timestamp} [${arg.label}] ${arg.level}: ${arg.message}`);
 
 export const logger = winston.createLogger({
     levels: winston.config.npm.levels,
@@ -15,7 +15,10 @@ export const logger = winston.createLogger({
               justMessageFormat)
         }),
         new winston.transports.File({
-            filename: 'combined.log',
+            filename: '.bigband.log',
+            options: {
+              flags: 'w'
+            },
             level: 'silly',
             format: winston.format.combine(
               winston.format.timestamp(), 
