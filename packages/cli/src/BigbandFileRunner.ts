@@ -296,7 +296,7 @@ async function configureBucket(rig: Rig) {
             Rules: [
                 {
                     Expiration: {
-                        Days: 7 // Temporarily. change back to 7 once proven working.
+                        Days: 7
                     },
                     Filter: {
                         Prefix: prefix
