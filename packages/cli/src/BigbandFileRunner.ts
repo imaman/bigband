@@ -332,4 +332,5 @@ async function configureBucket(rig: Section) {
 // - rename scotty to bigand-system-teleport
 // - show telport in the CLI (logs, list)
 // - hard to understand error message when tsc compilation fails (for instance, error in the bigband file)
-
+// - improve parsing of the output of npm ls. Sepcficially, it looks like the devDependencies just mentions the names of deps.
+//     These deps are listed under "dependencies" so cross filtering is needed.
