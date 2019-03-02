@@ -43,6 +43,12 @@ export interface BigbandSpec {
 }
 
 export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportingEnabled: boolean, deployMode: DeployMode) {
+    const violation = bigbandSpec.instruments.find(curr => curr.packageName.toLowerCase().startsWith('bigband'))
+    if (violation) {
+        throw new Error(`Instrument "${violation.fullyQualifiedName()}" has a bad name: the fully qualified name of\n`
+            + `an\n instrument is not allowed to start with "bigband"`);
+    }
+
     const cfp = new CloudFormationPusher(rig);
     cfp.peekAtExistingStack();
 

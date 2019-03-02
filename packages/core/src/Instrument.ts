@@ -18,7 +18,7 @@ export abstract class Instrument {
     public readonly dependencies: Dependency[] = [];
 
     constructor(
-        private readonly packageName: string,
+        public readonly packageName: string,
         private readonly _name: string) {}
 
     uses(supplier: Instrument, name: string) {
