@@ -9,7 +9,7 @@ import 'mocha';
 
 import {IsolationScope, Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType} from '../src'
 
-function newLambda(packageName: string|string[], name: string, controllerPath: string, cloudFormationProperties?) {
+function newLambda(packageName: string[], name: string, controllerPath: string, cloudFormationProperties?) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
 }
 
@@ -17,7 +17,7 @@ function newLambda(packageName: string|string[], name: string, controllerPath: s
 describe('Instruments', () => {
     describe('cando', () => {
         it ('adds an IAM policy', () => {
-            const instrument = newLambda('p1-p2-p3', 'abc', '');
+            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
 
             instrument.canDo('uvw:xyz', 'arn:aws:something:foo:bar')
             expect(instrument.getDefinition().get()).to.containSubset({Properties: {
@@ -35,7 +35,7 @@ describe('Instruments', () => {
 
     describe('Lambda', () => {
         it('produces cloudformation', () => {
-            const instrument = newLambda('p1-p2-p3', 'abc', '');
+            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.deep.equal({
