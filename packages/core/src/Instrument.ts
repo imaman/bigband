@@ -44,7 +44,7 @@ export abstract class Instrument {
     }
 
     abstract createFragment(pathPrefix: string): DeployableFragment
-    abstract contributeToConsumerDefinition(rig: Section, consumerDef: Definition): void
+    abstract contributeToConsumerDefinition(section: Section, consumerDef: Definition): void
     abstract arnService(): string
     abstract arnType(): string
     abstract nameProperty(): string
@@ -62,25 +62,25 @@ export abstract class Instrument {
         return camelCase(this.packageName, this.name());
     }
 
-    physicalName(rig: Section, style: NameStyle = NameStyle.DASH) {
+    physicalName(section: Section, style: NameStyle = NameStyle.DASH) {
         if (style == NameStyle.DASH) {
-            return `${rig.isolationScope.name}-${rig.name}-${this.fullyQualifiedName()}`;
+            return `${section.isolationScope.name}-${section.name}-${this.fullyQualifiedName()}`;
         }
 
-        return camelCase(rig.isolationScope.name, rig.name, this.packageName, this.name());
+        return camelCase(section.isolationScope.name, section.name, this.packageName, this.name());
     }
     
-    arn(rig: Section): string {
-        return `arn:aws:${this.arnService()}:${rig.region}:${rig.isolationScope.awsAccount}:${this.arnType()}${this.physicalName(rig)}`;
+    arn(section: Section): string {
+        return `arn:aws:${this.arnService()}:${section.region}:${section.isolationScope.awsAccount}:${this.arnType()}${this.physicalName(section)}`;
     }
 
     getDefinition() : Definition {
         return this.definition;
     }
 
-    getPhysicalDefinition(rig: Section) : Definition {
+    getPhysicalDefinition(section: Section) : Definition {
         const copy = JSON.parse(JSON.stringify(this.definition.get()));
-        copy.Properties[this.nameProperty()] = this.physicalName(rig);
+        copy.Properties[this.nameProperty()] = this.physicalName(section);
         return new Definition(copy);
     }
 
