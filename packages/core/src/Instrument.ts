@@ -16,10 +16,18 @@ export abstract class Instrument {
 
     protected readonly definition = new Definition();
     public readonly dependencies: Dependency[] = [];
+    private readonly packageName: string[];
 
-    constructor(
-        public readonly packageName: string,
-        private readonly _name: string) {}
+    constructor(packageName: string|string[], private readonly _name: string) {
+        this.packageName = (Array.isArray(packageName) ? packageName : [packageName]);
+        if (!this.packageName.join('').trim().length) {
+            throw new Error('pacakge name cannot be empty');
+        }
+
+        if (!this._name.trim().length) {
+            throw new Error('name cannot be empty');
+        }
+    }
 
     uses(supplier: Instrument, name: string) {
         const existingDep = this.dependencies.find(d => d.name === name);
