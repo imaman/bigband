@@ -21,6 +21,12 @@ const healthChecker = new LambdaInstrument('geography', 'healthChecker', 'src/ge
     Timeout: 30      
 }).invokeEveryMinutes(30);
 
+const v = new LambdaInstrument('bigband', 'v', 'src/geography/healthChecker', {
+    Description: 'is everything working correctly',
+    MemorySize: 1024,
+    Timeout: 30      
+});
+
 
 const statsTable = new DynamoDbInstrument('geography', 'Stats', {name: 'query', type: DynamoDbAttributeType.STRING}, {name: 'when', type: DynamoDbAttributeType.NUMBER}, {
     provisioned: {
@@ -41,6 +47,6 @@ placeFinder.uses(queryStream, 'queryStream');
 export function run() {
     return {
         sections: [prodMajor],
-        instruments: [importantDates, placeFinder, queryStream, distanceTable, queryStreamAnalyzer, healthChecker]
+        instruments: [importantDates, placeFinder, queryStream, distanceTable, queryStreamAnalyzer, healthChecker, v]
     }
 }
