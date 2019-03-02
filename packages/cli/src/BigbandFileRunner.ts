@@ -326,7 +326,7 @@ async function configureBucket(rig: Section) {
 
 // TODO list:
 // + rig -> section (in the public API)
-// - rename scotty to bigand-system-teleport
+// + rename scotty to bigand-system-teleport
 // - injected stubs
 // - migrate dataplatform lambdas to the new stubs. get rid of the rogue abstratcontroller there
 // - add a special version indication at dataplatform
