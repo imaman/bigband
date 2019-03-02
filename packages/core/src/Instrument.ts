@@ -64,7 +64,7 @@ export abstract class Instrument {
 
     fullyQualifiedName(style: NameStyle = NameStyle.DASH) {
         if (style == NameStyle.DASH) {
-            return `${this.packageName}-${this.name()}`;
+            return `${this.packageName.concat(this.name()).join('-')}`;
         }
 
         return camelCase(this.packageName, this.name());

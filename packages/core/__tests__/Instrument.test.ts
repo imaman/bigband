@@ -9,7 +9,7 @@ import 'mocha';
 
 import {IsolationScope, Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType} from '../src'
 
-function newLambda(packageName: string, name: string, controllerPath: string, cloudFormationProperties?) {
+function newLambda(packageName: string|string[], name: string, controllerPath: string, cloudFormationProperties?) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
 }
 
@@ -50,18 +50,18 @@ describe('Instruments', () => {
             });
         });
         it('has FQN', () => {
-            const instrument = newLambda('p1-p2-p3', 'abc', '');
+            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
             expect(instrument.fullyQualifiedName()).to.equal('p1-p2-p3-abc');
         });
         it('has ARN', () => {
-            const instrument = newLambda('p1-p2-p3', 'abc', '');
+            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.arn(rig)).to.equal('arn:aws:lambda:eu-central-1:acc_100:function:scope_1-prod-main-p1-p2-p3-abc');
         });
         it('contributes to consumers', () => {
-            const consumer = newLambda('p1-p2-p3', 'c1', '');
-            const supplier = newLambda('p4-p5-p6', 'c2', '');
+            const consumer = newLambda(['p1', 'p2', 'p3'], 'c1', '');
+            const supplier = newLambda(['p4', 'p5', 'p6'], 'c2', '');
 
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_2");
             const rig = new Section(scope, "eu-central-1", "prod-main");

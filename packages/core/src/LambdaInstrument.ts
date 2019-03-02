@@ -15,7 +15,7 @@ export class LambdaInstrument extends Instrument {
 
     private npmPackageName: string = '';
 
-    constructor(packageName: string, name: string, private readonly controllerPath: string, cloudFormationProperties: any = {}) {
+    constructor(packageName: string|string[], name: string, private readonly controllerPath: string, cloudFormationProperties: any = {}) {
         super(packageName, name);
 
         this.definition.overwrite(LambdaInstrument.BASE_DEF);
