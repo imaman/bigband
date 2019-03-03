@@ -1,4 +1,4 @@
-export * from './Rig'
+export * from './Section'
 export * from './Definition'
 export * from './IsolationScope'
 export * from './Instrument'

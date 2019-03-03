@@ -7,9 +7,9 @@ const {expect} = chai;
 import 'mocha';
 
 
-import {IsolationScope, Rig, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType} from '../src'
+import {IsolationScope, Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType, NameStyle} from '../src'
 
-function newLambda(packageName: string, name: string, controllerPath: string, cloudFormationProperties?) {
+function newLambda(packageName: string[], name: string, controllerPath: string, cloudFormationProperties?) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
 }
 
@@ -17,7 +17,7 @@ function newLambda(packageName: string, name: string, controllerPath: string, cl
 describe('Instruments', () => {
     describe('cando', () => {
         it ('adds an IAM policy', () => {
-            const instrument = newLambda('p1-p2-p3', 'abc', '');
+            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
 
             instrument.canDo('uvw:xyz', 'arn:aws:something:foo:bar')
             expect(instrument.getDefinition().get()).to.containSubset({Properties: {
@@ -31,13 +31,23 @@ describe('Instruments', () => {
             }});
         });
 
+        it ('rejects package name that contain dashses', () => {
+            expect(() => newLambda(['x-y'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "x-y"');
+            expect(() => newLambda(['xy-'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "xy-"');
+            expect(() => newLambda(['x', '-', 'y'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "-"');
+        });
+        it ('rejects package name that contain uppercase letters', () => {
+            expect(() => newLambda(['foo', 'Bar'], 'abc', '')).to.throw('Upper-case symbols are not allowed in package names. Found: "Bar"');
+            expect(() => newLambda(['Foo', 'bar'], 'abc', '')).to.throw('Upper-case symbols are not allowed in package names. Found: "Foo"');
+            expect(() => newLambda(['foo', 'bAr'], 'abc', '')).to.throw('Upper-case symbols are not allowed in package names. Found: "bAr"');
+        });
     });
 
     describe('Lambda', () => {
         it('produces cloudformation', () => {
-            const instrument = newLambda('p1-p2-p3', 'abc', '');
+            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Rig(scope, "eu-central-1", "prod-main");
+            const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.deep.equal({
                 Type: "AWS::Serverless::Function",
                 Properties: {
@@ -50,21 +60,25 @@ describe('Instruments', () => {
             });
         });
         it('has FQN', () => {
-            const instrument = newLambda('p1-p2-p3', 'abc', '');
+            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
             expect(instrument.fullyQualifiedName()).to.equal('p1-p2-p3-abc');
         });
+        it('has a camel case name (for cloudformation)', () => {
+            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
+            expect(instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)).to.equal('p1P2P3Abc');
+        });
         it('has ARN', () => {
-            const instrument = newLambda('p1-p2-p3', 'abc', '');
+            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Rig(scope, "eu-central-1", "prod-main");
+            const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.arn(rig)).to.equal('arn:aws:lambda:eu-central-1:acc_100:function:scope_1-prod-main-p1-p2-p3-abc');
         });
         it('contributes to consumers', () => {
-            const consumer = newLambda('p1-p2-p3', 'c1', '');
-            const supplier = newLambda('p4-p5-p6', 'c2', '');
+            const consumer = newLambda(['p1', 'p2', 'p3'], 'c1', '');
+            const supplier = newLambda(['p4', 'p5', 'p6'], 'c2', '');
 
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_2");
-            const rig = new Rig(scope, "eu-central-1", "prod-main");
+            const rig = new Section(scope, "eu-central-1", "prod-main");
             supplier.contributeToConsumerDefinition(rig, consumer.getDefinition());
             expect(consumer.getDefinition().get()).to.containSubset({Properties: {
                 Policies: [{
@@ -79,9 +93,10 @@ describe('Instruments', () => {
     });
     describe('Dynamo', () => {
         it('produces yml', () => {
-            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', {name: 'id', type: DynamoDbAttributeType.STRING});
+            debugger;
+            const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', {name: 'id', type: DynamoDbAttributeType.STRING});
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Rig(scope, "eu-central-1", "prod-main");
+            const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.deep.equal({
                 Type: "AWS::DynamoDB::Table",
                 Properties: {
@@ -99,11 +114,11 @@ describe('Instruments', () => {
             });
         });
         it('supports sort key', () => {
-            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', 
+            const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING},
                 {name: 'n', type: DynamoDbAttributeType.NUMBER});
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Rig(scope, "eu-central-1", "prod-main");
+            const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
                 Properties: {
                     AttributeDefinitions: [
@@ -118,10 +133,10 @@ describe('Instruments', () => {
             });
         });
         it('uses pay-per-request, by default', () => {
-            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', 
+            const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING});
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Rig(scope, "eu-central-1", "prod-main");
+            const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
                 Properties: {
                     BillingMode: 'PAY_PER_REQUEST'
@@ -129,7 +144,7 @@ describe('Instruments', () => {
             });
         });
         it('supports provisioned throughput', () => {
-            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', 
+            const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING}, 
                 undefined,
                 {
@@ -139,7 +154,7 @@ describe('Instruments', () => {
                   }
                 });
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Rig(scope, "eu-central-1", "prod-main");
+            const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
                 Properties: {
                     BillingMode: 'PROVISIONED',

@@ -1,7 +1,7 @@
 import {AwsFactory} from './AwsFactory';
 
 import { CreateChangeSetInput, ExecuteChangeSetInput, DescribeChangeSetInput, DescribeChangeSetOutput, DescribeStacksInput, DescribeStacksOutput } from 'aws-sdk/clients/cloudformation';
-import {Rig} from 'bigband-core';
+import {Section} from 'bigband-core';
 import * as uuid from 'uuid/v1';
 import * as hash from 'hash.js';
 import {logger} from './logger';
@@ -24,9 +24,9 @@ export class CloudFormationPusher {
     private readonly existingFingerprint;
     private resolver;
 
-    constructor(rig: Rig) {
-        this.cloudFormation = AwsFactory.fromRig(rig).newCloudFormation();
-        this.stackName = rig.physicalName();
+    constructor(section: Section) {
+        this.cloudFormation = AwsFactory.fromRig(section).newCloudFormation();
+        this.stackName = section.physicalName();
 
         this.existingFingerprint = new Promise<string>(resolver => {
             this.resolver = resolver;

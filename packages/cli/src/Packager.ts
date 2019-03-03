@@ -9,12 +9,13 @@ import { logger } from './logger';
 import { AwsFactory } from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver } from './NpmPackageResolver'
-import { Instrument, Rig, SourceExporter } from 'bigband-core';
+import { Instrument, Section, SourceExporter } from 'bigband-core';
 import { GetFunctionResponse, InvocationRequest, InvocationResponse } from 'aws-sdk/clients/lambda';
 import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
 import { ZipBuilder } from './ZipBuilder';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME, CONTRIVED_OUT_FILE_NAME } from './scotty'
+import { Misc } from './Misc';
 
 export enum DeployMode {
   ALWAYS = 1,
@@ -32,7 +33,7 @@ export class Packager {
   private readonly npmPackageDir;
 
   constructor(private readonly rootDir: string, npmPackageDir: string, private readonly s3Bucket: string,
-      private readonly s3Prefix: string, private readonly rig?: Rig, private readonly blobPool?: S3BlobPool) {
+      private readonly s3Prefix: string, private readonly rig?: Section, private readonly blobPool?: S3BlobPool) {
     if (s3Prefix.endsWith('/')) {
       throw new Error(`s3Prefix ${s3Prefix} cannot have a trailing slash`)
     }
@@ -66,7 +67,7 @@ export class Packager {
     const absoluteTsFile = this.toAbs(relativeTsFile);
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
-    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir], shouldBeIncluded);
+    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, SourceExporter.bigbandCorePackageDir(), Misc.bigbandPackageDir()], shouldBeIncluded);
     await npmPackageResolver.prepopulate();
 
     const isScotty = relativeTsFile === CONTRIVED_IN_FILE_NAME;
@@ -119,7 +120,7 @@ export class Packager {
     return outDir;
   }
 
-  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder, scottyLambdaName: string, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
+  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder, teleportLambdaName: string, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
     if (!this.rig) {
       throw new Error('rig was not set.');
     }
@@ -162,7 +163,7 @@ export class Packager {
     }
 
     const invocationRequest: InvocationRequest = {
-      FunctionName: scottyLambdaName,
+      FunctionName: teleportLambdaName,
       InvocationType: 'RequestResponse', 
       Payload: JSON.stringify({teleportRequest})
     };

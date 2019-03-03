@@ -1,5 +1,5 @@
 import {DeployableAtom, DeployableFragment} from './DeployableFragment';
-import { Rig } from './Rig'
+import { Section } from './Section'
 import { Definition } from './Definition'
 import { Instrument } from './Instrument'
 
@@ -15,7 +15,7 @@ export class LambdaInstrument extends Instrument {
 
     private npmPackageName: string = '';
 
-    constructor(packageName: string, name: string, private readonly controllerPath: string, cloudFormationProperties: any = {}) {
+    constructor(packageName: string|string[], name: string, private readonly controllerPath: string, cloudFormationProperties: any = {}) {
         super(packageName, name);
 
         this.definition.overwrite(LambdaInstrument.BASE_DEF);
@@ -128,7 +128,7 @@ export class LambdaInstrument extends Instrument {
         return fragment;
     }
 
-    contributeToConsumerDefinition(rig: Rig, consumerDef: Definition) {
+    contributeToConsumerDefinition(rig: Section, consumerDef: Definition) {
         consumerDef.mutate(o => o.Properties.Policies.push({
             Version: '2012-10-17',
             Statement: [{ 

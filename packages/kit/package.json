@@ -1,6 +1,6 @@
 {
   "name": "bigband-kit",
-  "version": "0.1.34",
+  "version": "0.1.42",
   "description": "A standrd library of reusable instruments",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -27,7 +27,7 @@
     "@types/mkdirp": "^0.5.2",
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.9.4",
-    "bigband": "^0.1.122",
+    "bigband": "^0.1.130",
     "chai": "^4.2.0",
     "chai-subset": "^1.6.0",
     "mocha": "^6.0.0",
@@ -38,7 +38,7 @@
     "lib/**/*"
   ],
   "dependencies": {
-    "bigband-core": "^0.1.15"
+    "bigband-core": "^0.1.22"
   },
-  "gitHead": "0f67d2542617ff424ec85b88d3359f2d5928c4e1"
+  "gitHead": "7144bb6f6ec5f9e4bf5e1bbc68a035c70a3656ca"
 }

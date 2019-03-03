@@ -7,7 +7,7 @@ import { InvocationRequest } from 'aws-sdk/clients/lambda';
 export function lookupFunction(lambdaName: string, spec: BigbandSpec) {
     let matches: any[] = [];
     const names: string[] = [];
-    spec.rigs.forEach(r => {
+    spec.sections.forEach(r => {
         spec.instruments.forEach(curr => {
             const name = curr.physicalName(r);
             names.push(name);

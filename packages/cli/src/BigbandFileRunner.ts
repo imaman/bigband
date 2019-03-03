@@ -4,7 +4,7 @@ import * as hash from 'hash.js'
 const Module = require('module');
 
 import { AwsFactory } from './AwsFactory';
-import { NameStyle, Rig, Instrument, LambdaInstrument } from 'bigband-core';
+import { NameStyle, Section, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult, DeployMode } from './Packager'
 import { DeployableAtom } from 'bigband-core'
 import { ZipBuilder } from './ZipBuilder'
@@ -20,39 +20,46 @@ const DEPLOYABLES_FOLDER = 'deployables';
 
 export {DeployMode} from './Packager'
 
-export async function runBigbandFile(bigbandFile: string, rigName: string, teleportingEnabled: boolean, deployMode: DeployMode) {
+export async function runBigbandFile(bigbandFile: string, sectionName: string, teleportingEnabled: boolean, deployMode: DeployMode) {
     const t0 = Date.now();
     if (Number(process.versions.node.split('.')[0]) < 8) {
         throw new Error('You must use node version >= 8 to run this program');
     }
     const bigbandSpec = await loadSpec(bigbandFile);
-    const rig = bigbandSpec.rigs.length === 1 && !rigName ? bigbandSpec.rigs[0] : bigbandSpec.rigs.find(curr => curr.name === rigName);
-    if (!rig) {
-        throw new Error(`Failed to find a rig named ${rigName} in ${bigbandSpec.rigs.map(curr => curr.name).join(', ')}`);
+    const section = bigbandSpec.sections.length === 1 && !sectionName ? bigbandSpec.sections[0] : bigbandSpec.sections.find(curr => curr.name === sectionName);
+    if (!section) {
+        throw new Error(`Failed to find a rig named ${sectionName} in ${bigbandSpec.sections.map(curr => curr.name).join(', ')}`);
     }
 
-    await Promise.all([runSpec(bigbandSpec, rig, teleportingEnabled, deployMode), configureBucket(rig)]);
+    await Promise.all([runSpec(bigbandSpec, section, teleportingEnabled, deployMode), configureBucket(section)]);
     const dt = (Date.now() - t0) / 1000;
-    return `Rig "${rig.name}" shipped in ${dt.toFixed(1)}s`;        
+    return `Section "${section.name}" shipped in ${dt.toFixed(1)}s`;        
 }
 
 export interface BigbandSpec {
-    rigs: Rig[]
+    sections: Section[]
     instruments: Instrument[]
     dir: string
 }
 
-export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig, teleportingEnabled: boolean, deployMode: DeployMode) {
+export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportingEnabled: boolean, deployMode: DeployMode) {
+    // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is
+    // reserved for bigband's own use).
+    // Naturally, this check must take place before we introduce bigband's own instruments.
+    const violation = bigbandSpec.instruments.find(curr => curr.fullyQualifiedName().toLowerCase().startsWith('bigband'))
+    if (violation) {
+        throw new Error(`Instrument "${violation.fullyQualifiedName()}" has a bad name: the fully qualified name of\n`
+            + `an\n instrument is not allowed to start with "bigband"`);
+    }
+
     const cfp = new CloudFormationPusher(rig);
     cfp.peekAtExistingStack();
 
     const poolPrefix = `${ttlPrefix(rig)}/fragments`;
     const blobPool = new S3BlobPool(AwsFactory.fromRig(rig), rig.isolationScope.s3Bucket, poolPrefix);
 
-    
-
-    const scottyInstrument = new LambdaInstrument('bigband', 'scotty', CONTRIVED_IN_FILE_NAME, {
-        Description: 'beam me up',
+    const teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
+        Description: 'Rematerializes a deployable at the deployment site',
         MemorySize: 2560,
         Timeout: 30
         })
@@ -60,14 +67,14 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Rig, teleportingEna
         .canDo('s3:GetObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${poolPrefix}/*`)
         .canDo('s3:PutObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
 
-    
-    logger.info(`Shipping rig "${rig.name}" to ${rig.region}`);
+
+    logger.info(`Shipping section "${rig.name}" to ${rig.region}`);
 
     const ps = bigbandSpec.instruments.map(instrument => 
-        pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, scottyInstrument, blobPool, teleportingEnabled, deployMode));
+        pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
 
     // scotty needs slightly different parameters so we pushCode() it separately. 
-    ps.push(pushCode(Misc.bigbandPackageDir(), bigbandSpec.dir, rig, scottyInstrument, scottyInstrument, blobPool, teleportingEnabled, deployMode));
+    ps.push(pushCode(Misc.bigbandPackageDir(), bigbandSpec.dir, rig, teleportInstrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
     
     const pushedInstruments = await Promise.all(ps);
 
@@ -149,11 +156,23 @@ function installCustomRequire() {
     };
 }
 
+function readVersionFromRcFile(dir: string) {
+    try {
+        const p = path.resolve(path.resolve(dir, '.bigbandrc'));
+        const pojo = JSON.parse(fs.readFileSync(p, 'utf-8'));
+        return pojo.bigbandFileProtocolVersion;
+    } catch (e) {
+        return -1;
+    }
+}
+
 export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
     if (!bigbandFile) {
         throw new Error('bigbandFile cannot be falsy');
     }
+
     const d = path.dirname(path.resolve(bigbandFile));
+    const protcolVersion = readVersionFromRcFile(d);
     const packager = new Packager(d, d, '', '');
     const file = path.parse(bigbandFile).name;
     const zb = await packager.run(`${file}.ts`, 'spec_compiled', '');
@@ -163,6 +182,7 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
     const uninstall = installCustomRequire();
     let ret: BigbandSpec
     try {
+        logger.silly(`Loading compiled bigbandfile from ${pathToRequire} using protocolversion ${protcolVersion}`);
         ret = require(pathToRequire).run();
     } finally {
         uninstall();
@@ -196,7 +216,7 @@ function checkDuplicates(names: string[]): string[] {
 }
 
 function checkSpec(spec: BigbandSpec) {
-    let dupes = checkDuplicates(spec.rigs.map(r => r.name));
+    let dupes = checkDuplicates(spec.sections.map(r => r.name));
     if (dupes.length) {
         throw new Error(`Found two (or more) rigs with the same name: ${JSON.stringify(dupes)}`);
     }
@@ -209,7 +229,8 @@ function checkSpec(spec: BigbandSpec) {
     // TODO(imaman): validate names!
 }
 
-async function pushCode(dir: string, npmPackageDir: string, rig: Rig, instrument: Instrument, scottyInstrument: Instrument, blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode) {
+async function pushCode(dir: string, npmPackageDir: string, rig: Section, instrument: Instrument, 
+    teleportInstrument: Instrument,  blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode) {
     if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
         throw new Error(`Bad value. ${dir} is not a directory.`);
     }
@@ -226,7 +247,8 @@ async function pushCode(dir: string, npmPackageDir: string, rig: Rig, instrument
     }
 
     const {zb, packager} = await compileInstrument(dir, npmPackageDir, rig, instrument, blobPool);
-    const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig), teleportingEnabled, deployMode);
+    const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
+        zb, teleportInstrument.physicalName(rig), teleportingEnabled, deployMode);
     const resource = def.get();
     resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
 
@@ -238,7 +260,7 @@ async function pushCode(dir: string, npmPackageDir: string, rig: Rig, instrument
     }
 }
 
-async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, instrument: Instrument, blobPool: S3BlobPool) {
+async function compileInstrument(d: string, npmPackageDir: string, rig: Section, instrument: Instrument, blobPool: S3BlobPool) {
     try {
         const packager = new Packager(d, npmPackageDir, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig, blobPool);
         const pathPrefix = 'build';
@@ -280,11 +302,11 @@ async function compileInstrument(d: string, npmPackageDir: string, rig: Rig, ins
 }
 
 
-function ttlPrefix(rig: Rig) {
+function ttlPrefix(rig: Section) {
     return `${rig.isolationScope.s3Prefix}/TTL/7d`;
 }
 
-async function configureBucket(rig: Rig) {
+async function configureBucket(rig: Section) {
     // You can check the content of the TTL folder via:
     // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
 
@@ -296,7 +318,7 @@ async function configureBucket(rig: Rig) {
             Rules: [
                 {
                     Expiration: {
-                        Days: 7 // Temporarily. change back to 7 once proven working.
+                        Days: 7
                     },
                     Filter: {
                         Prefix: prefix
@@ -316,3 +338,27 @@ async function configureBucket(rig: Rig) {
         throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
     }
 }
+
+
+// TODO list:
+// + rig -> section (in the public API)
+// + rename scotty to bigand-system-teleport
+// + add a special version indication at dataplatform
+// - introduce a metric-monster npm with intruments + source code for superclasses
+// - migrate metric-machine to reuse metric-monster
+// - deploy the tagging ui to github.testim.io
+// - new CLI language
+// - show telport in the CLI (logs, list)
+// - migrate dataplatform lambdas to the new stubs. get rid of the rogue abstratcontroller there
+// - injected stubs
+//
+// - hard to understand error message when tsc compilation fails (for instance, error in the bigband file)
+// - improve parsing of the output of npm ls. Sepcficially, it looks like the devDependencies just mentions the names of deps.
+//     These deps are listed under "dependencies" so cross filtering is needed.
+// - add checking of names. in particular, "bigband" and "bigband-system" should be reserved.
+//     We probably want to disallow the use of hyphens inside logical names as they are used as separators.
+// - consider changing "package" to something different (to avoid collision with "NPM packages")
+// - bigbandfilerunner should be a class
+// - rig -> section (in the impl)
+// - unit tests for as much of /cli/src/ as possible
+

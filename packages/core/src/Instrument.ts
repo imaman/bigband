@@ -1,5 +1,5 @@
 import {DeployableFragment} from './DeployableFragment';
-import {Rig} from './Rig';
+import {Section} from './Section';
 import {Definition} from './Definition';
 
 export enum NameStyle {
@@ -16,10 +16,27 @@ export abstract class Instrument {
 
     protected readonly definition = new Definition();
     public readonly dependencies: Dependency[] = [];
+    private readonly packageName: string[];
 
-    constructor(
-        private readonly packageName: string,
-        private readonly _name: string) {}
+    constructor(packageName: string|string[], private readonly _name: string) {
+        this.packageName = (Array.isArray(packageName) ? packageName : [packageName]);
+        if (!this.packageName.join('').trim().length) {
+            throw new Error('pacakge name cannot be empty');
+        }
+
+        const wihtHypen = this.packageName.find(curr => curr.includes('-'));
+        if (wihtHypen) {
+            throw new Error(`The hyphen symbol is not allowed in package names. Found: "${wihtHypen}"`);
+        }
+
+        const withUpperCase = this.packageName.find(curr => curr.search(/[A-Z]/) >= 0)
+        if (withUpperCase) {
+            throw new Error(`Upper-case symbols are not allowed in package names. Found: "${withUpperCase}"`);
+        }
+        if (!this._name.trim().length) {
+            throw new Error('name cannot be empty');
+        }
+    }
 
     uses(supplier: Instrument, name: string) {
         const existingDep = this.dependencies.find(d => d.name === name);
@@ -44,7 +61,7 @@ export abstract class Instrument {
     }
 
     abstract createFragment(pathPrefix: string): DeployableFragment
-    abstract contributeToConsumerDefinition(rig: Rig, consumerDef: Definition): void
+    abstract contributeToConsumerDefinition(section: Section, consumerDef: Definition): void
     abstract arnService(): string
     abstract arnType(): string
     abstract nameProperty(): string
@@ -56,31 +73,29 @@ export abstract class Instrument {
 
     fullyQualifiedName(style: NameStyle = NameStyle.DASH) {
         if (style == NameStyle.DASH) {
-            return `${this.packageName}-${this.name()}`;
+            return this.packageName.concat(this.name()).join('-');
         }
+        debugger;
 
-        return camelCase(this.packageName, this.name());
+        const ret = camelCase(this.packageName.concat(this.name()));
+        return ret;
     }
 
-    physicalName(rig: Rig, style: NameStyle = NameStyle.DASH) {
-        if (style == NameStyle.DASH) {
-            return `${rig.isolationScope.name}-${rig.name}-${this.fullyQualifiedName()}`;
-        }
-
-        return camelCase(rig.isolationScope.name, rig.name, this.packageName, this.name());
+    physicalName(section: Section) {
+        return `${section.isolationScope.name}-${section.name}-${this.fullyQualifiedName()}`;
     }
     
-    arn(rig: Rig): string {
-        return `arn:aws:${this.arnService()}:${rig.region}:${rig.isolationScope.awsAccount}:${this.arnType()}${this.physicalName(rig)}`;
+    arn(section: Section): string {
+        return `arn:aws:${this.arnService()}:${section.region}:${section.isolationScope.awsAccount}:${this.arnType()}${this.physicalName(section)}`;
     }
 
     getDefinition() : Definition {
         return this.definition;
     }
 
-    getPhysicalDefinition(rig: Rig) : Definition {
+    getPhysicalDefinition(section: Section) : Definition {
         const copy = JSON.parse(JSON.stringify(this.definition.get()));
-        copy.Properties[this.nameProperty()] = this.physicalName(rig);
+        copy.Properties[this.nameProperty()] = this.physicalName(section);
         return new Definition(copy);
     }
 
@@ -97,5 +112,5 @@ function camelCase(...args) {
         return s[0].toUpperCase() + s.substr(1);
     }
 
-    return args.map((curr, i) => i === 0 ? curr : capitalize(curr)).join('');
+    return [].concat(...args).map((curr, i) => i === 0 ? curr : capitalize(curr)).join('');
 }

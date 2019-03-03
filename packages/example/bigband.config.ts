@@ -1,8 +1,8 @@
-import { KinesisStreamConsumer, KinesisStreamInstrument, LambdaInstrument, DynamoDbAttributeType, IsolationScope, DynamoDbInstrument, Rig } from 'bigband/lib/index';
+import { KinesisStreamConsumer, KinesisStreamInstrument, LambdaInstrument, DynamoDbAttributeType, IsolationScope, DynamoDbInstrument, Section } from 'bigband-core/lib/index';
 
 
 const namespace = new IsolationScope('274788167589', 'bb-example', 'bb-example-e-w-2', 'root', 'testim');
-const prodMajor = new Rig(namespace, 'eu-west-2', 'prod-major');
+const prodMajor = new Section(namespace, 'eu-west-2', 'prod-major');
 const importantDates = new LambdaInstrument('chronology', 'importantDates', 'src/chronology/compute', {
     Description: "returns important dates for a year",
     MemorySize: 1024,
@@ -40,7 +40,7 @@ placeFinder.uses(queryStream, 'queryStream');
 
 export function run() {
     return {
-        rigs: [prodMajor],
+        sections: [prodMajor],
         instruments: [importantDates, placeFinder, queryStream, distanceTable, queryStreamAnalyzer, healthChecker]
     }
 }

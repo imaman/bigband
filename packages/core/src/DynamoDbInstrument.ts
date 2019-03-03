@@ -1,5 +1,5 @@
 import {Instrument} from './Instrument'
-import {Rig} from './Rig'
+import {Section} from './Section'
 import {Definition} from './Definition'
 import {DeployableFragment} from './DeployableFragment'
 
@@ -30,7 +30,7 @@ export class DynamoDbInstrument extends Instrument {
         Properties: {}
     }
 
-    constructor(packageName: string, name: string, partitionKey: DynamoDbAttribute, sortKey?: DynamoDbAttribute,
+    constructor(packageName: string|string[], name: string, partitionKey: DynamoDbAttribute, sortKey?: DynamoDbAttribute,
             options: DynamoDbInstrumentOptions = {}) {
         super(packageName, name);
 
@@ -79,7 +79,7 @@ export class DynamoDbInstrument extends Instrument {
         return new DeployableFragment();
     }
 
-    contributeToConsumerDefinition(rig: Rig, consumerDef: Definition): void {
+    contributeToConsumerDefinition(rig: Section, consumerDef: Definition): void {
         consumerDef.mutate(o => o.Properties.Policies.push({
             Version: '2012-10-17',
             Statement: [{ 

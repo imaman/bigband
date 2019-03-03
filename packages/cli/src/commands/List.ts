@@ -1,14 +1,13 @@
-import {AwsFactory} from '../AwsFactory'
 import {loadSpec,BigbandSpec} from '../BigbandFileRunner';
 
 
 
 async function main(bigbandFile: string) {
     const spec: BigbandSpec = await loadSpec(bigbandFile);
-    const scopes = spec.rigs.map(r => r.isolationScope);
+    const scopes = spec.sections.map(r => r.isolationScope);
     const ret = {};
     scopes.forEach(s => ret[s.name] = {});
-    spec.rigs.forEach(r => {
+    spec.sections.forEach(r => {
         const e = ret[r.isolationScope.name];
         const d = {};
         e[r.name] = d;
