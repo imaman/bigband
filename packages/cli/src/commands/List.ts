@@ -1,4 +1,3 @@
-import {AwsFactory} from '../AwsFactory'
 import {loadSpec,BigbandSpec} from '../BigbandFileRunner';
 
 
