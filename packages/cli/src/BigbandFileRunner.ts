@@ -343,7 +343,7 @@ async function configureBucket(rig: Section) {
 // TODO list:
 // + rig -> section (in the public API)
 // + rename scotty to bigand-system-teleport
-// - add a special version indication at dataplatform
+// + add a special version indication at dataplatform
 // - introduce a metric-monster npm with intruments + source code for superclasses
 // - migrate metric-machine to reuse metric-monster
 // - deploy the tagging ui to github.testim.io
