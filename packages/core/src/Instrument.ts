@@ -29,6 +29,10 @@ export abstract class Instrument {
             throw new Error(`The hyphen symbol is not allowed in package names. Found: "${wihtHypen}"`);
         }
 
+        const withUpperCase = this.packageName.find(curr => curr.search(/[A-Z]/) >= 0)
+        if (withUpperCase) {
+            throw new Error(`Upper-case symbols are not allowed in package names. Found: "${withUpperCase}"`);
+        }
         if (!this._name.trim().length) {
             throw new Error('name cannot be empty');
         }

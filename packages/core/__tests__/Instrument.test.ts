@@ -33,6 +33,13 @@ describe('Instruments', () => {
 
         it ('rejects package name that contain dashses', () => {
             expect(() => newLambda(['x-y'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "x-y"');
+            expect(() => newLambda(['xy-'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "xy-"');
+            expect(() => newLambda(['x', '-', 'y'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "-"');
+        });
+        it ('rejects package name that contain uppercase letters', () => {
+            expect(() => newLambda(['foo', 'Bar'], 'abc', '')).to.throw('Upper-case symbols are not allowed in package names. Found: "Bar"');
+            expect(() => newLambda(['Foo', 'bar'], 'abc', '')).to.throw('Upper-case symbols are not allowed in package names. Found: "Foo"');
+            expect(() => newLambda(['foo', 'bAr'], 'abc', '')).to.throw('Upper-case symbols are not allowed in package names. Found: "bAr"');
         });
     });
 
