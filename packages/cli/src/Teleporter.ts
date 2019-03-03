@@ -52,6 +52,10 @@ export class S3BlobPool {
 
 const CONTENT_TYPE = 'application/zip';
 
+// The telportation functionality is implemented by this class
+// and by a lambda function (referred to in the code as "teleportInstrument"). This class takes care
+// sending the individual fragments into S3 (and thus can be thought of as the "beam" in "beam me up, scotty"). 
+// the teleportInstrument takes care of assembling the fragments back into a coherent zip ("rematerizlier").
 export class Teleporter {
 
     private numBytes = 0;
