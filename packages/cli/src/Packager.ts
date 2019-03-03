@@ -120,7 +120,7 @@ export class Packager {
     return outDir;
   }
 
-  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder, scottyLambdaName: string, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
+  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder, teleportLambdaName: string, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
     if (!this.rig) {
       throw new Error('rig was not set.');
     }
@@ -163,7 +163,7 @@ export class Packager {
     }
 
     const invocationRequest: InvocationRequest = {
-      FunctionName: scottyLambdaName,
+      FunctionName: teleportLambdaName,
       InvocationType: 'RequestResponse', 
       Payload: JSON.stringify({teleportRequest})
     };

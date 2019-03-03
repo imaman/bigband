@@ -58,7 +58,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportin
     const poolPrefix = `${ttlPrefix(rig)}/fragments`;
     const blobPool = new S3BlobPool(AwsFactory.fromRig(rig), rig.isolationScope.s3Bucket, poolPrefix);
 
-    const scottyInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
+    const teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
         Description: 'Rematerializes a deployable at the deployment site',
         MemorySize: 2560,
         Timeout: 30
@@ -71,10 +71,10 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportin
     logger.info(`Shipping section "${rig.name}" to ${rig.region}`);
 
     const ps = bigbandSpec.instruments.map(instrument => 
-        pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, scottyInstrument, blobPool, teleportingEnabled, deployMode));
+        pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
 
     // scotty needs slightly different parameters so we pushCode() it separately. 
-    ps.push(pushCode(Misc.bigbandPackageDir(), bigbandSpec.dir, rig, scottyInstrument, scottyInstrument, blobPool, teleportingEnabled, deployMode));
+    ps.push(pushCode(Misc.bigbandPackageDir(), bigbandSpec.dir, rig, teleportInstrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
     
     const pushedInstruments = await Promise.all(ps);
 
@@ -216,7 +216,8 @@ function checkSpec(spec: BigbandSpec) {
     // TODO(imaman): validate names!
 }
 
-async function pushCode(dir: string, npmPackageDir: string, rig: Section, instrument: Instrument, scottyInstrument: Instrument, blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode) {
+async function pushCode(dir: string, npmPackageDir: string, rig: Section, instrument: Instrument, 
+    teleportInstrument: Instrument,  blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode) {
     if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
         throw new Error(`Bad value. ${dir} is not a directory.`);
     }
@@ -233,7 +234,8 @@ async function pushCode(dir: string, npmPackageDir: string, rig: Section, instru
     }
 
     const {zb, packager} = await compileInstrument(dir, npmPackageDir, rig, instrument, blobPool);
-    const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, zb, scottyInstrument.physicalName(rig), teleportingEnabled, deployMode);
+    const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
+        zb, teleportInstrument.physicalName(rig), teleportingEnabled, deployMode);
     const resource = def.get();
     resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
 
