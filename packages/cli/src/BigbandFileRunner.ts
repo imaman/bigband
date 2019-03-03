@@ -43,7 +43,10 @@ export interface BigbandSpec {
 }
 
 export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportingEnabled: boolean, deployMode: DeployMode) {
-    const violation = bigbandSpec.instruments.find(curr => curr.packageName.toLowerCase().startsWith('bigband'))
+    // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is
+    // reserved for bigband's own use).
+    // Naturally, this check must take place before we introduce bigband's own instruments.
+    const violation = bigbandSpec.instruments.find(curr => curr.fullyQualifiedName().toLowerCase().startsWith('bigband'))
     if (violation) {
         throw new Error(`Instrument "${violation.fullyQualifiedName()}" has a bad name: the fully qualified name of\n`
             + `an\n instrument is not allowed to start with "bigband"`);
@@ -55,10 +58,8 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportin
     const poolPrefix = `${ttlPrefix(rig)}/fragments`;
     const blobPool = new S3BlobPool(AwsFactory.fromRig(rig), rig.isolationScope.s3Bucket, poolPrefix);
 
-    
-
     const scottyInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
-        Description: 'beam me up',
+        Description: 'Rematerializes a deployable at the deployment site',
         MemorySize: 2560,
         Timeout: 30
         })
@@ -66,7 +67,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportin
         .canDo('s3:GetObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${poolPrefix}/*`)
         .canDo('s3:PutObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
 
-    
+
     logger.info(`Shipping section "${rig.name}" to ${rig.region}`);
 
     const ps = bigbandSpec.instruments.map(instrument => 
