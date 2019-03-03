@@ -57,7 +57,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportin
 
     
 
-    const scottyInstrument = new LambdaInstrument('bigbandSystem', 'teleport', CONTRIVED_IN_FILE_NAME, {
+    const scottyInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
         Description: 'beam me up',
         MemorySize: 2560,
         Timeout: 30
