@@ -8,7 +8,6 @@ import {LogsCommand} from './commands/Logs'
 import {ListCommand} from './commands/List'
 import {Invoke} from './commands/Invoke'
 import {logger} from './logger'
-
 import * as yargs from 'yargs';
 
 
@@ -75,7 +74,6 @@ async function ship(argv) {
     const deployMode: DeployMode = (argv.deployMode === 'ALWAYS') ? DeployMode.ALWAYS : DeployMode.IF_CHANGED;
     return await runBigbandFile(argv.bigbandFile, argv.section, argv.teleporting, deployMode);
 }
-
 
 function run(handler, argv) {
     Promise.resolve()

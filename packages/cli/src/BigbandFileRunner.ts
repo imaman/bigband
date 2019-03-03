@@ -156,11 +156,23 @@ function installCustomRequire() {
     };
 }
 
+function readVersionFromRcFile(dir: string) {
+    try {
+        const p = path.resolve(path.resolve(dir, '.bigbandrc'));
+        const pojo = JSON.parse(fs.readFileSync(p, 'utf-8'));
+        return pojo.bigbandFileProtocolVersion;
+    } catch (e) {
+        return -1;
+    }
+}
+
 export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
     if (!bigbandFile) {
         throw new Error('bigbandFile cannot be falsy');
     }
+
     const d = path.dirname(path.resolve(bigbandFile));
+    const protcolVersion = readVersionFromRcFile(d);
     const packager = new Packager(d, d, '', '');
     const file = path.parse(bigbandFile).name;
     const zb = await packager.run(`${file}.ts`, 'spec_compiled', '');
@@ -170,6 +182,7 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
     const uninstall = installCustomRequire();
     let ret: BigbandSpec
     try {
+        logger.silly(`Loading compiled bigbandfile from ${pathToRequire} using protocolversion ${protcolVersion}`);
         ret = require(pathToRequire).run();
     } finally {
         uninstall();
@@ -330,14 +343,14 @@ async function configureBucket(rig: Section) {
 // TODO list:
 // + rig -> section (in the public API)
 // + rename scotty to bigand-system-teleport
-// - injected stubs
-// - migrate dataplatform lambdas to the new stubs. get rid of the rogue abstratcontroller there
 // - add a special version indication at dataplatform
 // - introduce a metric-monster npm with intruments + source code for superclasses
 // - migrate metric-machine to reuse metric-monster
+// - deploy the tagging ui to github.testim.io
 // - new CLI language
 // - show telport in the CLI (logs, list)
-// - deploy the tagging ui to github.testim.io
+// - migrate dataplatform lambdas to the new stubs. get rid of the rogue abstratcontroller there
+// - injected stubs
 //
 // - hard to understand error message when tsc compilation fails (for instance, error in the bigband file)
 // - improve parsing of the output of npm ls. Sepcficially, it looks like the devDependencies just mentions the names of deps.
