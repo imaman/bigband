@@ -24,6 +24,11 @@ export abstract class Instrument {
             throw new Error('pacakge name cannot be empty');
         }
 
+        const wihtHypen = this.packageName.find(curr => curr.includes('-'));
+        if (wihtHypen) {
+            throw new Error(`The hyphen symbol is not allowed in package names. Found: "${wihtHypen}"`);
+        }
+
         if (!this._name.trim().length) {
             throw new Error('name cannot be empty');
         }
@@ -64,18 +69,16 @@ export abstract class Instrument {
 
     fullyQualifiedName(style: NameStyle = NameStyle.DASH) {
         if (style == NameStyle.DASH) {
-            return `${this.packageName.concat(this.name()).join('-')}`;
+            return this.packageName.concat(this.name()).join('-');
         }
+        debugger;
 
-        return camelCase(this.packageName, this.name());
+        const ret = camelCase(this.packageName.concat(this.name()));
+        return ret;
     }
 
-    physicalName(section: Section, style: NameStyle = NameStyle.DASH) {
-        if (style == NameStyle.DASH) {
-            return `${section.isolationScope.name}-${section.name}-${this.fullyQualifiedName()}`;
-        }
-
-        return camelCase(section.isolationScope.name, section.name, this.packageName, this.name());
+    physicalName(section: Section) {
+        return `${section.isolationScope.name}-${section.name}-${this.fullyQualifiedName()}`;
     }
     
     arn(section: Section): string {
@@ -105,5 +108,5 @@ function camelCase(...args) {
         return s[0].toUpperCase() + s.substr(1);
     }
 
-    return args.map((curr, i) => i === 0 ? curr : capitalize(curr)).join('');
+    return [].concat(...args).map((curr, i) => i === 0 ? curr : capitalize(curr)).join('');
 }

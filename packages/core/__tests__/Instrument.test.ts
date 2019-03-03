@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 
-import {IsolationScope, Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType} from '../src'
+import {IsolationScope, Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType, NameStyle} from '../src'
 
 function newLambda(packageName: string[], name: string, controllerPath: string, cloudFormationProperties?) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
@@ -31,6 +31,9 @@ describe('Instruments', () => {
             }});
         });
 
+        it ('rejects package name that contain dashses', () => {
+            expect(() => newLambda(['x-y'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "x-y"');
+        });
     });
 
     describe('Lambda', () => {
@@ -52,6 +55,10 @@ describe('Instruments', () => {
         it('has FQN', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
             expect(instrument.fullyQualifiedName()).to.equal('p1-p2-p3-abc');
+        });
+        it('has a camel case name (for cloudformation)', () => {
+            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
+            expect(instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)).to.equal('p1P2P3Abc');
         });
         it('has ARN', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
@@ -79,7 +86,8 @@ describe('Instruments', () => {
     });
     describe('Dynamo', () => {
         it('produces yml', () => {
-            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', {name: 'id', type: DynamoDbAttributeType.STRING});
+            debugger;
+            const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', {name: 'id', type: DynamoDbAttributeType.STRING});
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.deep.equal({
@@ -99,7 +107,7 @@ describe('Instruments', () => {
             });
         });
         it('supports sort key', () => {
-            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', 
+            const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING},
                 {name: 'n', type: DynamoDbAttributeType.NUMBER});
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
@@ -118,7 +126,7 @@ describe('Instruments', () => {
             });
         });
         it('uses pay-per-request, by default', () => {
-            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', 
+            const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING});
             const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Section(scope, "eu-central-1", "prod-main");
@@ -129,7 +137,7 @@ describe('Instruments', () => {
             });
         });
         it('supports provisioned throughput', () => {
-            const instrument = new DynamoDbInstrument('p1-p2-p3', 'table_1', 
+            const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING}, 
                 undefined,
                 {
