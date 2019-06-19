@@ -1,7 +1,7 @@
 import { KinesisStreamConsumer, KinesisStreamInstrument, LambdaInstrument, DynamoDbAttributeType, IsolationScope, DynamoDbInstrument, Section } from 'bigband-core/lib/index';
 
 
-const namespace = new IsolationScope('274788167589', 'bb-example', 'bb-example-e-w-2', 'root', 'testim');
+const namespace = new IsolationScope('196625562809', 'bb-example', 'bigband-example', 'root', 'imaman');
 const prodMajor = new Section(namespace, 'eu-west-2', 'prod-major');
 const importantDates = new LambdaInstrument('chronology', 'importantDates', 'src/chronology/compute', {
     Description: "returns important dates for a year",
