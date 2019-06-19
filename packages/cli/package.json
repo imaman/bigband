@@ -10,13 +10,7 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm run unit",
     "preversion": "",
-    "version": "",
-    "postversion": ""
-  },
-  "husky": {
-    "hooks": {
-      "pre-push": "node tools/audit.js"
-    }
+    "version": ""
   },
   "repository": {
     "type": "git",

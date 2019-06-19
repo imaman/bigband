@@ -10,8 +10,7 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm run unit",
     "preversion": "",
-    "version": "",
-    "postversion": ""
+    "version": ""
   },
   "repository": {
     "type": "git",
