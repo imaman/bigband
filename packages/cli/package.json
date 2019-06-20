@@ -2,6 +2,13 @@
   "name": "bigband",
   "version": "0.1.136",
   "description": "Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.",
+  "keywords": [
+    "serverless",
+    "lambda",
+    "AWS",
+    "dynamodb",
+    "typescript"
+  ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
