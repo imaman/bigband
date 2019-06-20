@@ -1,7 +1,14 @@
 {
   "name": "bigband",
-  "version": "0.1.135",
+  "version": "0.1.137",
   "description": "Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.",
+  "keywords": [
+    "serverless",
+    "lambda",
+    "AWS",
+    "dynamodb",
+    "typescript"
+  ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
@@ -27,7 +34,7 @@
   "dependencies": {
     "@types/node": "^10.12.5",
     "aws-sdk": "^2.353.0",
-    "bigband-core": "^0.1.26",
+    "bigband-core": "^0.1.27",
     "del": "^3.0.0",
     "detective-typescript": "^4.1.1",
     "hash.js": "^1.1.5",
