@@ -47,14 +47,14 @@ describe('Instruments', () => {
         it('can be initialized from an object', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
             const scope = IsolationScope.create({
-                awsAccount: "acc_200",
+                awsAccount: "acc_300",
                 scopeName: "scope_1",
                 s3Bucket: "b_1",
                 s3Prefix: "s_1",
                 profileName: "p_1"
             });
             const rig = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.arn(rig)).to.equal('arn:aws:lambda:eu-central-1:acc_200:function:scope_1-prod-main-p1-p2-p3-abc');
+            expect(instrument.arn(rig)).to.equal('arn:aws:lambda:eu-central-1:acc_300:function:scope_1-prod-main-p1-p2-p3-abc');
         })
     })
 
