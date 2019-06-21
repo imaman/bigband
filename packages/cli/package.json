@@ -1,7 +1,7 @@
 {
   "name": "bigband",
   "version": "0.1.139",
-  "description": "Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.",
+  "description": "Build production grade serverless systems.",
   "keywords": [
     "serverless",
     "lambda",
