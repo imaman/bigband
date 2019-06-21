@@ -1,6 +1,6 @@
 {
   "name": "bigband",
-  "version": "0.1.139",
+  "version": "0.1.140",
   "description": "Build production grade serverless systems.",
   "keywords": [
     "serverless",
@@ -34,7 +34,7 @@
   "dependencies": {
     "@types/node": "^10.12.5",
     "aws-sdk": "^2.353.0",
-    "bigband-core": "^0.1.28",
+    "bigband-core": "^0.1.29",
     "del": "^3.0.0",
     "detective-typescript": "^4.1.1",
     "hash.js": "^1.1.5",
