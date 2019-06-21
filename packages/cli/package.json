@@ -3,11 +3,11 @@
   "version": "0.1.140",
   "description": "Build production grade serverless systems.",
   "keywords": [
+    "typescript",
+    "AWS",
     "serverless",
     "lambda",
-    "AWS",
-    "dynamodb",
-    "typescript"
+    "dynamodb"
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
