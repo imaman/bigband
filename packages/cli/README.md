@@ -1,31 +1,57 @@
 # Bigband
 
-Build production grade systems by securely assmebling Lambda functions, storage servcies, identity providers, etc.
+Build production grade serveless systems.
 
-## Prerequisites
+* [Why Bigband](#why)
+* [What is Bigband](#what)
+* [Three core concepts](#concepts)
+* [Quick Start](#quick-start)
 
-- Have an AWS profile setup on your local machine ([instructions](https://docs.aws.amazon.com/cli/latestn/userguide/cli-configure-profiles.html))
+## <a name="why"></a>Why Bigband?
+- Super-fast deployments.
+- Proven - came out of [testim.io](https://www.testim.io/) where it is used to drive two business-critical large-scale projects.
+- Reusability - say goodbye to copy-pasting huge YAML snippets.
+- IAM permissions are automatically managed for you - say goodebye to getting a `___ is not authorized to perform: ___ on resource ___` at runtime.
+- Dependencies are injected into your code wrapped by high-level APIs - say goodebye to getting a runtime errors due to a mis-constructed an ARN.
+- Secure - Bigband does its best to protect you from potentially costly mistakes. For instance, it will guard against cycles of lambda functions.
+
+## <a name="what"></a>What is Bigband?
+The Bigband system has three main parts:
+- A command line tool
+- A Typescript API for configuring the architecture of your system
+- A Typescript API to be used at runtime by Lambda functions 
+
+## <a name="concepts"></a>Three core concepts
+- *Instrument*: the basic building-block, usually corresponds to an AWS resources such as: a Lambda function, a DynamoDB table, a Kinesis stream, etc.
+- *Section*: A set of instruments. This is the unit of deployment: depending on your exact needs you can define, for instance, a `prod` section and a `staging` section, or you can define a `storage` section and a `business-logic` section.
+- *Bigband*: a set of sections. This is the unit of isolation: instruments within the same bigband can be wired together to create a cohesive application/service-mesh. 
+
+## <a name="quick-start"></a>Quick start
+
+### Prerequisites
+
+- Have an AWS profile setup on your local machine ([instructions](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html))
 - Optional: have [npx](https://www.npmjs.com/package/npx) installed (if you do not want to use `npx` you can run `bigband` directly via `node_modules/.bin/bigband`)
 
 
-## Install
+### Install
 
-```bash
+```
 npm install --save-dev bigband
 ```
 
-## Prepare an S3 bucket
+### Prepare an S3 bucket
 Bigband uses AWS' S3 for pushing data/code into the AWS cloud. You can either:
 
 - use a pre-existing S3 bucket (all Bigband writes take place under a key-prefix which you control) 
 - or, you can create a new bucket.
 
-If you choose the latter use the following command:
+If you chose the latter use the following command:
 ```bash
 aws s3 mb s3://<YOUR-S3-BUCKET-NAME>
 ```
 
-## Define your bigband
+### Define your bigband
 Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. Don't forget to *replace the placeholder values* (`<YOUR-AWS-ACCOUNT-ID>`, `<YOUR-AWS-PROFILE-NAME>`, and `<YOUR-S3-BUCKET-NAME>`) with your own values.
 
 ```typescript
@@ -55,7 +81,7 @@ export function run() {
 }
 ```
 
-## Implement a greeter function
+### Implement a greeter function
 Add an `src/greeter.ts` file, as follows:
 
 ```typescript
@@ -70,7 +96,7 @@ This function expects to receive an input with two string fields `lastName`, `fi
 
 
 
-## Time to ship
+### Time to ship
 We deploy via Bigband's `ship` command. This will setup everything in the AWS cloud as needed.
 
 ```bash
@@ -104,7 +130,7 @@ Bottom line: freely run `bigband ship` whenever you need to deploy.
 
 
 
-## Let's greet
+### Let's greet
 Use Bigband's `invoke` command to send a payload of your choice to a lambda instrument. The general format is as follows:
 
 ```
@@ -131,8 +157,6 @@ $ npx bigband invoke --function-name greeter --input '{"firstName": "James", "la
 ```
 
 
-## Congratulations!
+### Congratulations!
 Your first bigband is up-and-playing.
-
-
 

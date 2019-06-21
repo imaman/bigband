@@ -24,9 +24,9 @@ export abstract class Instrument {
             throw new Error('pacakge name cannot be empty');
         }
 
-        const wihtHypen = this.packageName.find(curr => curr.includes('-'));
-        if (wihtHypen) {
-            throw new Error(`The hyphen symbol is not allowed in package names. Found: "${wihtHypen}"`);
+        const withHyphen = this.packageName.find(curr => curr.includes('-'));
+        if (withHyphen) {
+            throw new Error(`The hyphen symbol is not allowed in package names. Found: "${withHyphen}"`);
         }
 
         const withUpperCase = this.packageName.find(curr => curr.search(/[A-Z]/) >= 0)
@@ -75,8 +75,6 @@ export abstract class Instrument {
         if (style == NameStyle.DASH) {
             return this.packageName.concat(this.name()).join('-');
         }
-        debugger;
-
         const ret = camelCase(this.packageName.concat(this.name()));
         return ret;
     }
