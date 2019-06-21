@@ -12,7 +12,7 @@ export class AwsFactory {
     }
 
     static fromRig(r: Section) {
-        return new AwsFactory(r.region, r.isolationScope.profile);
+        return new AwsFactory(r.region, r.isolationScope.profileName);
     }
 
     newCloudFormation() {
