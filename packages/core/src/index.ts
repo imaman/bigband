@@ -1,3 +1,4 @@
+export * from './Bigband'
 export * from './Section'
 export * from './Definition'
 export * from './IsolationScope'

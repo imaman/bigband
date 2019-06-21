@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 
-import {IsolationScope, Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType, NameStyle} from '../src'
+import {IsolationScope, Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType, NameStyle, Bigband} from '../src'
 
 function newLambda(packageName: string[], name: string, controllerPath: string, cloudFormationProperties?) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
@@ -43,18 +43,18 @@ describe('Instruments', () => {
         });
     });
 
-    describe('isolationscope', () => {
+    describe('bigband', () => {
         it('can be initialized from an object', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-            const scope = IsolationScope.create({
+            const bigband = new Bigband({
+                name: "bigband_1",
                 awsAccount: "acc_300",
-                scopeName: "scope_1",
+                profileName: "p_1",
                 s3Bucket: "b_1",
-                s3Prefix: "s_1",
-                profileName: "p_1"
+                s3Prefix: "s_1"
             });
-            const rig = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.arn(rig)).to.equal('arn:aws:lambda:eu-central-1:acc_300:function:scope_1-prod-main-p1-p2-p3-abc');
+            const rig = new Section(bigband, "eu-central-1", "prod-main");
+            expect(instrument.arn(rig)).to.equal('arn:aws:lambda:eu-central-1:acc_300:function:bigband_1-prod-main-p1-p2-p3-abc');
         })
     })
 
