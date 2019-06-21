@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 
-import {IsolationScope, Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType, NameStyle, Bigband} from '../src'
+import {Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType, NameStyle, Bigband} from '../src'
 
 function newLambda(packageName: string[], name: string, controllerPath: string, cloudFormationProperties?) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
@@ -58,10 +58,14 @@ describe('Instruments', () => {
         })
     })
 
+    function newBigband(awsAccount, name, s3Bucket, s3Prefix, profileName) {
+        return new Bigband({awsAccount, name, s3Bucket, s3Prefix, profileName})
+    }
+
     describe('Lambda', () => {
         it('produces cloudformation', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-            const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
+            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.deep.equal({
                 Type: "AWS::Serverless::Function",
@@ -84,7 +88,7 @@ describe('Instruments', () => {
         });
         it('has ARN', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-            const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
+            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.arn(rig)).to.equal('arn:aws:lambda:eu-central-1:acc_100:function:scope_1-prod-main-p1-p2-p3-abc');
         });
@@ -92,7 +96,7 @@ describe('Instruments', () => {
             const consumer = newLambda(['p1', 'p2', 'p3'], 'c1', '');
             const supplier = newLambda(['p4', 'p5', 'p6'], 'c2', '');
 
-            const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_2");
+            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_2");
             const rig = new Section(scope, "eu-central-1", "prod-main");
             supplier.contributeToConsumerDefinition(rig, consumer.getDefinition());
             expect(consumer.getDefinition().get()).to.containSubset({Properties: {
@@ -110,7 +114,7 @@ describe('Instruments', () => {
         it('produces yml', () => {
             debugger;
             const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', {name: 'id', type: DynamoDbAttributeType.STRING});
-            const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
+            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.deep.equal({
                 Type: "AWS::DynamoDB::Table",
@@ -132,7 +136,7 @@ describe('Instruments', () => {
             const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING},
                 {name: 'n', type: DynamoDbAttributeType.NUMBER});
-            const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
+            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
                 Properties: {
@@ -150,7 +154,7 @@ describe('Instruments', () => {
         it('uses pay-per-request, by default', () => {
             const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING});
-            const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
+            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
                 Properties: {
@@ -168,7 +172,7 @@ describe('Instruments', () => {
                       writeCapacityUnits: 576
                   }
                 });
-            const scope = new IsolationScope("acc_100", "scope_1", "b_1", "s_1", "p_1");
+            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
             const rig = new Section(scope, "eu-central-1", "prod-main");
             expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
                 Properties: {
