@@ -40,8 +40,6 @@
 
 \+ **new AbstractController**(`mapping`: any, `buildFingerprint`: any): *[AbstractController](_abstractcontroller_.abstractcontroller.md)*
 
-*Defined in [AbstractController.ts:5](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/AbstractController.ts#L5)*
-
 **Parameters:**
 
 Name | Type |
@@ -59,23 +57,17 @@ ___
 
 ● **buildFingerprint**: *string*
 
-*Defined in [AbstractController.ts:4](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/AbstractController.ts#L4)*
-
 ___
 
 ### `Protected` context
 
 ● **context**: *any*
 
-*Defined in [AbstractController.ts:5](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/AbstractController.ts#L5)*
-
 ___
 
 ### `Protected` mapping
 
 ● **mapping**: *any*
-
-*Defined in [AbstractController.ts:3](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/AbstractController.ts#L3)*
 
 ___
 
@@ -84,8 +76,6 @@ ___
 ### `Protected` compute
 
 ▸ **compute**(`event`: any): *`Promise<undefined | R>`*
-
-*Defined in [AbstractController.ts:17](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/AbstractController.ts#L17)*
 
 **Parameters:**
 
@@ -101,8 +91,6 @@ ___
 
 ▸ **executeInputEvent**(`input`: `T`): *`R`*
 
-*Defined in [AbstractController.ts:13](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/AbstractController.ts#L13)*
-
 **Parameters:**
 
 Name | Type |
@@ -117,8 +105,6 @@ ___
 
 ▸ **executeScheduledEvent**(): *void*
 
-*Defined in [AbstractController.ts:12](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/AbstractController.ts#L12)*
-
 **Returns:** *void*
 
 ___
@@ -126,8 +112,6 @@ ___
 ### `Protected` onError
 
 ▸ **onError**(`e`: `Error`): *`Promise<void>`*
-
-*Defined in [AbstractController.ts:15](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/AbstractController.ts#L15)*
 
 **Parameters:**
 
@@ -142,8 +126,6 @@ ___
 ###  runLambda
 
 ▸ **runLambda**(`input`: `T`, `context`: any): *`Promise<object>`*
-
-*Defined in [AbstractController.ts:27](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/AbstractController.ts#L27)*
 
 **Parameters:**
 

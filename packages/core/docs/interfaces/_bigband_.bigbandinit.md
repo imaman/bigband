@@ -24,15 +24,11 @@
 
 ● **awsAccount**: *string*
 
-*Defined in [Bigband.ts:19](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Bigband.ts#L19)*
-
 ___
 
 ###  name
 
 ● **name**: *string*
-
-*Defined in [Bigband.ts:18](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Bigband.ts#L18)*
 
 ___
 
@@ -40,22 +36,16 @@ ___
 
 ● **profileName**: *string*
 
-*Defined in [Bigband.ts:20](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Bigband.ts#L20)*
-
 ___
 
 ###  s3Bucket
 
 ● **s3Bucket**: *string*
 
-*Defined in [Bigband.ts:21](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Bigband.ts#L21)*
-
 ___
 
 ###  s3Prefix
 
 ● **s3Prefix**: *string*
-
-*Defined in [Bigband.ts:22](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Bigband.ts#L22)*
 
 ___

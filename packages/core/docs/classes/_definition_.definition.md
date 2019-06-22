@@ -26,8 +26,6 @@
 
 \+ **new Definition**(`obj`: any): *[Definition](_definition_.definition.md)*
 
-*Defined in [Definition.ts:2](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Definition.ts#L2)*
-
 **Parameters:**
 
 Name | Type | Default |
@@ -44,8 +42,6 @@ ___
 
 ▸ **get**(): *any*
 
-*Defined in [Definition.ts:17](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Definition.ts#L17)*
-
 **Returns:** *any*
 
 ___
@@ -53,8 +49,6 @@ ___
 ###  mutate
 
 ▸ **mutate**(`f`: function): *void*
-
-*Defined in [Definition.ts:8](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Definition.ts#L8)*
 
 **Parameters:**
 
@@ -75,8 +69,6 @@ ___
 ###  overwrite
 
 ▸ **overwrite**(`o`: any): *void*
-
-*Defined in [Definition.ts:12](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Definition.ts#L12)*
 
 **Parameters:**
 

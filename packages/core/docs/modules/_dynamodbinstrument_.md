@@ -16,5 +16,4 @@
 
 #### Interfaces
 
-* [DynamoDbAttribute](../interfaces/_dynamodbinstrument_.dynamodbattribute.md)
 * [DynamoDbInstrumentOptions](../interfaces/_dynamodbinstrument_.dynamodbinstrumentoptions.md)

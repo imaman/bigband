@@ -21,14 +21,10 @@
 
 ● **cloudFormationProperties**? : *any*
 
-*Defined in [DynamoDbInstrument.ts:23](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DynamoDbInstrument.ts#L23)*
-
 ___
 
 ### `Optional` provisioned
 
 ● **provisioned**? : *undefined | object*
-
-*Defined in [DynamoDbInstrument.ts:19](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DynamoDbInstrument.ts#L19)*
 
 ___

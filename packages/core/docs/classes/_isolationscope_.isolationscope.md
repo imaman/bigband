@@ -33,8 +33,6 @@
 
 \+ **new IsolationScope**(`awsAccount`: string, `name`: string, `s3Bucket`: string, `s3Prefix`: string, `profile`: string): *[IsolationScope](_isolationscope_.isolationscope.md)*
 
-*Defined in [IsolationScope.ts:4](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L4)*
-
 **Parameters:**
 
 Name | Type |
@@ -55,15 +53,11 @@ ___
 
 ● **awsAccount**: *string*
 
-*Defined in [IsolationScope.ts:5](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L5)*
-
 ___
 
 ###  name
 
 ● **name**: *string*
-
-*Defined in [IsolationScope.ts:5](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L5)*
 
 ___
 
@@ -71,15 +65,11 @@ ___
 
 ● **profile**: *string*
 
-*Defined in [IsolationScope.ts:7](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L7)*
-
 ___
 
 ###  profileName
 
 ● **profileName**: *string*
-
-*Defined in [IsolationScope.ts:4](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L4)*
 
 ___
 
@@ -87,15 +77,11 @@ ___
 
 ● **s3Bucket**: *string*
 
-*Defined in [IsolationScope.ts:6](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L6)*
-
 ___
 
 ###  s3Prefix
 
 ● **s3Prefix**: *string*
-
-*Defined in [IsolationScope.ts:6](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L6)*
 
 ___
 
@@ -104,8 +90,6 @@ ___
 ### `Static` create
 
 ▸ **create**(`init`: [IsolationScopeInit](../interfaces/_isolationscope_.isolationscopeinit.md)): *[IsolationScope](_isolationscope_.isolationscope.md)*
-
-*Defined in [IsolationScope.ts:11](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L11)*
 
 **Parameters:**
 

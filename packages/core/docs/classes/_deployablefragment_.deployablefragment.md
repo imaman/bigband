@@ -24,8 +24,6 @@
 
 ▸ **add**(`atom`: [DeployableAtom](_deployablefragment_.deployableatom.md)): *[DeployableFragment](_deployablefragment_.deployablefragment.md)*
 
-*Defined in [DeployableFragment.ts:17](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DeployableFragment.ts#L17)*
-
 **Parameters:**
 
 Name | Type |
@@ -39,8 +37,6 @@ ___
 ###  addText
 
 ▸ **addText**(`path`: string, `content`: string): *void*
-
-*Defined in [DeployableFragment.ts:26](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DeployableFragment.ts#L26)*
 
 **Parameters:**
 
@@ -56,8 +52,6 @@ ___
 ###  forEach
 
 ▸ **forEach**(`f`: function): *void*
-
-*Defined in [DeployableFragment.ts:30](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DeployableFragment.ts#L30)*
 
 **Parameters:**
 
@@ -79,8 +73,6 @@ ___
 
 ▸ **scan**(`pathInFragment`: string, `absolutePath`: string): *void*
 
-*Defined in [DeployableFragment.ts:35](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DeployableFragment.ts#L35)*
-
 **Parameters:**
 
 Name | Type |
@@ -95,8 +87,6 @@ ___
 ###  toString
 
 ▸ **toString**(): *string*
-
-*Defined in [DeployableFragment.ts:50](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DeployableFragment.ts#L50)*
 
 **Returns:** *string*
 
