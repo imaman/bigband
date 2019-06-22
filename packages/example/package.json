@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/node": "^11.9.4",
     "bigband-core": "^0.1.32",
-    "ts-node": "^8.0.2"
+    "ts-node": "^8.0.2",
+    "typedoc": "^0.14.2"
   }
 }
