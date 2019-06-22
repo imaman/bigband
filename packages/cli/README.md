@@ -55,23 +55,21 @@ aws s3 mb s3://<YOUR-S3-BUCKET-NAME>
 Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. Don't forget to *replace the placeholder values* (`<YOUR-AWS-ACCOUNT-ID>`, `<YOUR-AWS-PROFILE-NAME>`, and `<YOUR-S3-BUCKET-NAME>`) with your own values.
 
 ```typescript
-import { LambdaInstrument, IsolationScope, Section } from 'bigband-core/lib/index';
+import { Bigband, LambdaInstrument, Section } from 'bigband-core/lib/index';
 
-const namespace = IsolationScope.create({
+const bigband = new Bigband({
+    name: 'hello-bigband',
     awsAccount: '<YOUR-AWS-ACCOUNT-ID>',
     profileName: '<YOUR-AWS-PROFILE-NAME>',
     s3Bucket: '<YOUR-S3-BUCKET-NAME>',
-    s3Prefix: 'hello-bigband-root',
-    scopeName: 'hello-bigband'});
-
-const prod = new Section(namespace, 'eu-west-2', 'prod');
+    s3Prefix: 'hello-bigband-root'});
+const prod = new Section(bigband, 'eu-west-2', 'prod');
 
 const greeter = new LambdaInstrument('misc', 'greeter', 'src/greeter', {
     Description: "plain old greeter",
     MemorySize: 1024,
     Timeout: 15   
 });
-
 
 export function run() {
     return {
