@@ -1,7 +1,7 @@
-import { KinesisStreamConsumer, KinesisStreamInstrument, LambdaInstrument, DynamoDbAttributeType, IsolationScope, DynamoDbInstrument, Section } from 'bigband-core/lib/index';
+import { KinesisStreamConsumer, KinesisStreamInstrument, LambdaInstrument, DynamoDbAttributeType, Bigband, DynamoDbInstrument, Section } from 'bigband-core/lib/index';
 
 
-const namespace = new IsolationScope('196625562809', 'bb-example', 'bigband-example', 'root', 'imaman');
+const namespace = new Bigband({name: 'bb-example', awsAccount: '196625562809', profileName: 'imaman', s3Bucket: 'bigband-example', s3Prefix: 'root'});
 const prodMajor = new Section(namespace, 'eu-west-2', 'prod-major');
 const importantDates = new LambdaInstrument('chronology', 'importantDates', 'src/chronology/compute', {
     Description: "returns important dates for a year",
