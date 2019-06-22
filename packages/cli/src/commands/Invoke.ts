@@ -2,9 +2,16 @@ import * as AWS from 'aws-sdk'
 import {AwsFactory} from '../AwsFactory'
 import {loadSpec, BigbandSpec} from '../BigbandFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
+import { Section, Instrument } from 'bigband-core';
 
 
-export function lookupFunction(lambdaName: string, spec: BigbandSpec) {
+interface LookupResult {
+    rig: Section
+    instrument: Instrument
+    name: string
+}
+
+export function lookupFunction(lambdaName: string, spec: BigbandSpec): LookupResult {
     let matches: any[] = [];
     const names: string[] = [];
     spec.sections.forEach(r => {
@@ -32,7 +39,7 @@ async function invokeFunction(bigbandFile: string, lambdaName: string, input: st
 
     const data = lookupFunction(lambdaName, spec);
 
-    var lambda: AWS.Lambda = new AwsFactory(data.rig.region, data.rig.isolationScope.profile).newLambda();
+    var lambda: AWS.Lambda = new AwsFactory(data.rig.region, data.rig.isolationScope.profileName).newLambda();
     const params: InvocationRequest = {
         FunctionName: data.instrument.physicalName(data.rig),
         InvocationType: 'RequestResponse', 
