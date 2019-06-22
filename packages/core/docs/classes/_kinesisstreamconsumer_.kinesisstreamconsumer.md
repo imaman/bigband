@@ -49,7 +49,7 @@
 
 *Overrides [LambdaInstrument](_lambdainstrument_.lambdainstrument.md).[constructor](_lambdainstrument_.lambdainstrument.md#constructor)*
 
-*Defined in [KinesisStreamConsumer.ts:5](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/KinesisStreamConsumer.ts#L5)*
+*Defined in [KinesisStreamConsumer.ts:5](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/KinesisStreamConsumer.ts#L5)*
 
 **Parameters:**
 
@@ -74,7 +74,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[definition](_instrument_.instrument.md#protected-definition)*
 
-*Defined in [Instrument.ts:17](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L17)*
+*Defined in [Instrument.ts:17](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L17)*
 
 ___
 
@@ -84,7 +84,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[dependencies](_instrument_.instrument.md#dependencies)*
 
-*Defined in [Instrument.ts:18](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L18)*
+*Defined in [Instrument.ts:18](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L18)*
 
 ___
 
@@ -96,7 +96,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[arn](_instrument_.instrument.md#arn)*
 
-*Defined in [Instrument.ts:86](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L86)*
+*Defined in [Instrument.ts:86](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L86)*
 
 **Parameters:**
 
@@ -116,7 +116,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[arnService](_instrument_.instrument.md#abstract-arnservice)*
 
-*Defined in [LambdaInstrument.ts:73](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L73)*
+*Defined in [LambdaInstrument.ts:73](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L73)*
 
 **Returns:** *string*
 
@@ -130,7 +130,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[arnType](_instrument_.instrument.md#abstract-arntype)*
 
-*Defined in [LambdaInstrument.ts:77](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L77)*
+*Defined in [LambdaInstrument.ts:77](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L77)*
 
 **Returns:** *string*
 
@@ -142,7 +142,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[canDo](_instrument_.instrument.md#cando)*
 
-*Defined in [Instrument.ts:49](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L49)*
+*Defined in [Instrument.ts:49](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L49)*
 
 **Parameters:**
 
@@ -163,7 +163,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[contributeToConsumerDefinition](_instrument_.instrument.md#abstract-contributetoconsumerdefinition)*
 
-*Defined in [LambdaInstrument.ts:131](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L131)*
+*Defined in [LambdaInstrument.ts:131](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L131)*
 
 **Parameters:**
 
@@ -184,7 +184,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[createFragment](_instrument_.instrument.md#abstract-createfragment)*
 
-*Defined in [LambdaInstrument.ts:93](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L93)*
+*Defined in [LambdaInstrument.ts:93](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L93)*
 
 **Parameters:**
 
@@ -202,7 +202,7 @@ ___
 
 *Inherited from [LambdaInstrument](_lambdainstrument_.lambdainstrument.md).[fromNpmPackage](_lambdainstrument_.lambdainstrument.md#fromnpmpackage)*
 
-*Defined in [LambdaInstrument.ts:26](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L26)*
+*Defined in [LambdaInstrument.ts:26](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L26)*
 
 **Parameters:**
 
@@ -220,7 +220,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[fullyQualifiedName](_instrument_.instrument.md#fullyqualifiedname)*
 
-*Defined in [Instrument.ts:74](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L74)*
+*Defined in [Instrument.ts:74](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L74)*
 
 **Parameters:**
 
@@ -238,7 +238,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[getDefinition](_instrument_.instrument.md#getdefinition)*
 
-*Defined in [Instrument.ts:90](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L90)*
+*Defined in [Instrument.ts:90](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L90)*
 
 **Returns:** *[Definition](_definition_.definition.md)*
 
@@ -252,7 +252,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[getEntryPointFile](_instrument_.instrument.md#abstract-getentrypointfile)*
 
-*Defined in [LambdaInstrument.ts:85](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L85)*
+*Defined in [LambdaInstrument.ts:85](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L85)*
 
 **Returns:** *string*
 
@@ -264,7 +264,7 @@ ___
 
 *Inherited from [LambdaInstrument](_lambdainstrument_.lambdainstrument.md).[getNpmPackage](_lambdainstrument_.lambdainstrument.md#getnpmpackage)*
 
-*Defined in [LambdaInstrument.ts:31](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L31)*
+*Defined in [LambdaInstrument.ts:31](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L31)*
 
 **Returns:** *string*
 
@@ -276,7 +276,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[getPhysicalDefinition](_instrument_.instrument.md#getphysicaldefinition)*
 
-*Defined in [Instrument.ts:94](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L94)*
+*Defined in [Instrument.ts:94](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L94)*
 
 **Parameters:**
 
@@ -294,7 +294,7 @@ ___
 
 *Inherited from [LambdaInstrument](_lambdainstrument_.lambdainstrument.md).[invokeEveryMinutes](_lambdainstrument_.lambdainstrument.md#invokeeveryminutes)*
 
-*Defined in [LambdaInstrument.ts:36](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L36)*
+*Defined in [LambdaInstrument.ts:36](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L36)*
 
 **Parameters:**
 
@@ -312,7 +312,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[name](_instrument_.instrument.md#name)*
 
-*Defined in [Instrument.ts:70](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L70)*
+*Defined in [Instrument.ts:70](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L70)*
 
 **Returns:** *string*
 
@@ -326,7 +326,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[nameProperty](_instrument_.instrument.md#abstract-nameproperty)*
 
-*Defined in [LambdaInstrument.ts:81](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L81)*
+*Defined in [LambdaInstrument.ts:81](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L81)*
 
 **Returns:** *string*
 
@@ -338,7 +338,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[physicalName](_instrument_.instrument.md#physicalname)*
 
-*Defined in [Instrument.ts:82](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L82)*
+*Defined in [Instrument.ts:82](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L82)*
 
 **Parameters:**
 
@@ -356,7 +356,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[uses](_instrument_.instrument.md#uses)*
 
-*Defined in [Instrument.ts:41](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L41)*
+*Defined in [Instrument.ts:41](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L41)*
 
 **Parameters:**
 

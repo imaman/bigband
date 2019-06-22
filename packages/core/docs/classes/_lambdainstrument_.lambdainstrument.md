@@ -20,10 +20,8 @@
 
 #### Properties
 
-* [controllerPath](_lambdainstrument_.lambdainstrument.md#private-controllerpath)
 * [definition](_lambdainstrument_.lambdainstrument.md#protected-definition)
 * [dependencies](_lambdainstrument_.lambdainstrument.md#dependencies)
-* [npmPackageName](_lambdainstrument_.lambdainstrument.md#private-npmpackagename)
 
 #### Methods
 
@@ -37,7 +35,6 @@
 * [fullyQualifiedName](_lambdainstrument_.lambdainstrument.md#fullyqualifiedname)
 * [getDefinition](_lambdainstrument_.lambdainstrument.md#getdefinition)
 * [getEntryPointFile](_lambdainstrument_.lambdainstrument.md#getentrypointfile)
-* [getHandlerFile](_lambdainstrument_.lambdainstrument.md#private-gethandlerfile)
 * [getNpmPackage](_lambdainstrument_.lambdainstrument.md#getnpmpackage)
 * [getPhysicalDefinition](_lambdainstrument_.lambdainstrument.md#getphysicaldefinition)
 * [invokeEveryMinutes](_lambdainstrument_.lambdainstrument.md#invokeeveryminutes)
@@ -45,10 +42,6 @@
 * [nameProperty](_lambdainstrument_.lambdainstrument.md#nameproperty)
 * [physicalName](_lambdainstrument_.lambdainstrument.md#physicalname)
 * [uses](_lambdainstrument_.lambdainstrument.md#uses)
-
-#### Object literals
-
-* [BASE_DEF](_lambdainstrument_.lambdainstrument.md#static-private-base_def)
 
 ## Constructors
 
@@ -58,7 +51,7 @@
 
 *Overrides [Instrument](_instrument_.instrument.md).[constructor](_instrument_.instrument.md#constructor)*
 
-*Defined in [LambdaInstrument.ts:16](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L16)*
+*Defined in [LambdaInstrument.ts:16](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L16)*
 
 **Parameters:**
 
@@ -75,21 +68,13 @@ ___
 
 ## Properties
 
-### `Private` controllerPath
-
-● **controllerPath**: *string*
-
-*Defined in [LambdaInstrument.ts:18](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L18)*
-
-___
-
 ### `Protected` definition
 
 ● **definition**: *[Definition](_definition_.definition.md)* =  new Definition()
 
 *Inherited from [Instrument](_instrument_.instrument.md).[definition](_instrument_.instrument.md#protected-definition)*
 
-*Defined in [Instrument.ts:17](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L17)*
+*Defined in [Instrument.ts:17](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L17)*
 
 ___
 
@@ -99,15 +84,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[dependencies](_instrument_.instrument.md#dependencies)*
 
-*Defined in [Instrument.ts:18](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L18)*
-
-___
-
-### `Private` npmPackageName
-
-● **npmPackageName**: *string* = ""
-
-*Defined in [LambdaInstrument.ts:16](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L16)*
+*Defined in [Instrument.ts:18](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L18)*
 
 ___
 
@@ -119,7 +96,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[arn](_instrument_.instrument.md#arn)*
 
-*Defined in [Instrument.ts:86](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L86)*
+*Defined in [Instrument.ts:86](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L86)*
 
 **Parameters:**
 
@@ -137,7 +114,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[arnService](_instrument_.instrument.md#abstract-arnservice)*
 
-*Defined in [LambdaInstrument.ts:73](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L73)*
+*Defined in [LambdaInstrument.ts:73](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L73)*
 
 **Returns:** *string*
 
@@ -149,7 +126,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[arnType](_instrument_.instrument.md#abstract-arntype)*
 
-*Defined in [LambdaInstrument.ts:77](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L77)*
+*Defined in [LambdaInstrument.ts:77](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L77)*
 
 **Returns:** *string*
 
@@ -161,7 +138,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[canDo](_instrument_.instrument.md#cando)*
 
-*Defined in [Instrument.ts:49](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L49)*
+*Defined in [Instrument.ts:49](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L49)*
 
 **Parameters:**
 
@@ -180,7 +157,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[contributeToConsumerDefinition](_instrument_.instrument.md#abstract-contributetoconsumerdefinition)*
 
-*Defined in [LambdaInstrument.ts:131](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L131)*
+*Defined in [LambdaInstrument.ts:131](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L131)*
 
 **Parameters:**
 
@@ -199,7 +176,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[createFragment](_instrument_.instrument.md#abstract-createfragment)*
 
-*Defined in [LambdaInstrument.ts:93](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L93)*
+*Defined in [LambdaInstrument.ts:93](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L93)*
 
 **Parameters:**
 
@@ -215,7 +192,7 @@ ___
 
 ▸ **fromNpmPackage**(`npmPackageName`: string): *`this`*
 
-*Defined in [LambdaInstrument.ts:26](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L26)*
+*Defined in [LambdaInstrument.ts:26](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L26)*
 
 **Parameters:**
 
@@ -233,7 +210,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[fullyQualifiedName](_instrument_.instrument.md#fullyqualifiedname)*
 
-*Defined in [Instrument.ts:74](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L74)*
+*Defined in [Instrument.ts:74](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L74)*
 
 **Parameters:**
 
@@ -251,7 +228,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[getDefinition](_instrument_.instrument.md#getdefinition)*
 
-*Defined in [Instrument.ts:90](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L90)*
+*Defined in [Instrument.ts:90](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L90)*
 
 **Returns:** *[Definition](_definition_.definition.md)*
 
@@ -263,17 +240,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[getEntryPointFile](_instrument_.instrument.md#abstract-getentrypointfile)*
 
-*Defined in [LambdaInstrument.ts:85](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L85)*
-
-**Returns:** *string*
-
-___
-
-### `Private` getHandlerFile
-
-▸ **getHandlerFile**(): *string*
-
-*Defined in [LambdaInstrument.ts:89](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L89)*
+*Defined in [LambdaInstrument.ts:85](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L85)*
 
 **Returns:** *string*
 
@@ -283,7 +250,7 @@ ___
 
 ▸ **getNpmPackage**(): *string*
 
-*Defined in [LambdaInstrument.ts:31](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L31)*
+*Defined in [LambdaInstrument.ts:31](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L31)*
 
 **Returns:** *string*
 
@@ -295,7 +262,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[getPhysicalDefinition](_instrument_.instrument.md#getphysicaldefinition)*
 
-*Defined in [Instrument.ts:94](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L94)*
+*Defined in [Instrument.ts:94](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L94)*
 
 **Parameters:**
 
@@ -311,7 +278,7 @@ ___
 
 ▸ **invokeEveryMinutes**(`durationInMinutes`: number): *`this`*
 
-*Defined in [LambdaInstrument.ts:36](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L36)*
+*Defined in [LambdaInstrument.ts:36](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L36)*
 
 **Parameters:**
 
@@ -329,7 +296,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[name](_instrument_.instrument.md#name)*
 
-*Defined in [Instrument.ts:70](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L70)*
+*Defined in [Instrument.ts:70](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L70)*
 
 **Returns:** *string*
 
@@ -341,7 +308,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[nameProperty](_instrument_.instrument.md#abstract-nameproperty)*
 
-*Defined in [LambdaInstrument.ts:81](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L81)*
+*Defined in [LambdaInstrument.ts:81](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/LambdaInstrument.ts#L81)*
 
 **Returns:** *string*
 
@@ -353,7 +320,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[physicalName](_instrument_.instrument.md#physicalname)*
 
-*Defined in [Instrument.ts:82](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L82)*
+*Defined in [Instrument.ts:82](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L82)*
 
 **Parameters:**
 
@@ -371,7 +338,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[uses](_instrument_.instrument.md#uses)*
 
-*Defined in [Instrument.ts:41](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L41)*
+*Defined in [Instrument.ts:41](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L41)*
 
 **Parameters:**
 
@@ -381,31 +348,5 @@ Name | Type |
 `name` | string |
 
 **Returns:** *void*
-
-___
-
-## Object literals
-
-### `Static` `Private` BASE_DEF
-
-### ■ **BASE_DEF**: *object*
-
-*Defined in [LambdaInstrument.ts:7](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L7)*
-
-###  Type
-
-● **Type**: *string* = "AWS::Serverless::Function"
-
-*Defined in [LambdaInstrument.ts:8](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L8)*
-
-■ **Properties**: *object*
-
-*Defined in [LambdaInstrument.ts:9](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/LambdaInstrument.ts#L9)*
-
-* **Events**(): *object*
-
-* **Policies**: *never[]* =  []
-
-* **Runtime**: *string* = "nodejs8.10"
 
 ___

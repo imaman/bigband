@@ -26,7 +26,7 @@
 
 \+ **new Dependency**(`consumer`: [Instrument](_instrument_.instrument.md), `supplier`: [Instrument](_instrument_.instrument.md), `name`: string): *[Dependency](_instrument_.dependency.md)*
 
-*Defined in [Instrument.ts:11](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L11)*
+*Defined in [Instrument.ts:11](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L11)*
 
 **Parameters:**
 
@@ -46,7 +46,7 @@ ___
 
 ● **consumer**: *[Instrument](_instrument_.instrument.md)*
 
-*Defined in [Instrument.ts:12](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L12)*
+*Defined in [Instrument.ts:12](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L12)*
 
 ___
 
@@ -54,7 +54,7 @@ ___
 
 ● **name**: *string*
 
-*Defined in [Instrument.ts:12](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L12)*
+*Defined in [Instrument.ts:12](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L12)*
 
 ___
 
@@ -62,6 +62,6 @@ ___
 
 ● **supplier**: *[Instrument](_instrument_.instrument.md)*
 
-*Defined in [Instrument.ts:12](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L12)*
+*Defined in [Instrument.ts:12](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L12)*
 
 ___

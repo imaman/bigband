@@ -24,7 +24,7 @@
 
 ● **awsAccount**: *string*
 
-*Defined in [IsolationScope.ts:17](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/IsolationScope.ts#L17)*
+*Defined in [IsolationScope.ts:17](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L17)*
 
 ___
 
@@ -32,7 +32,7 @@ ___
 
 ● **profileName**: *string*
 
-*Defined in [IsolationScope.ts:21](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/IsolationScope.ts#L21)*
+*Defined in [IsolationScope.ts:21](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L21)*
 
 ___
 
@@ -40,7 +40,7 @@ ___
 
 ● **s3Bucket**: *string*
 
-*Defined in [IsolationScope.ts:19](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/IsolationScope.ts#L19)*
+*Defined in [IsolationScope.ts:19](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L19)*
 
 ___
 
@@ -48,7 +48,7 @@ ___
 
 ● **s3Prefix**: *string*
 
-*Defined in [IsolationScope.ts:20](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/IsolationScope.ts#L20)*
+*Defined in [IsolationScope.ts:20](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L20)*
 
 ___
 
@@ -56,6 +56,6 @@ ___
 
 ● **scopeName**: *string*
 
-*Defined in [IsolationScope.ts:18](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/IsolationScope.ts#L18)*
+*Defined in [IsolationScope.ts:18](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L18)*
 
 ___

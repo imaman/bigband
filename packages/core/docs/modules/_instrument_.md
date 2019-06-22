@@ -25,7 +25,7 @@
 
 ▸ **camelCase**(...`args`: any[]): *string*
 
-*Defined in [Instrument.ts:105](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L105)*
+*Defined in [Instrument.ts:105](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L105)*
 
 **Parameters:**
 

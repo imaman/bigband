@@ -17,7 +17,7 @@
 
 ● **CAMEL_CASE**:
 
-*Defined in [Instrument.ts:7](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L7)*
+*Defined in [Instrument.ts:7](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L7)*
 
 ___
 
@@ -25,6 +25,6 @@ ___
 
 ● **DASH**:
 
-*Defined in [Instrument.ts:6](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L6)*
+*Defined in [Instrument.ts:6](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L6)*
 
 ___

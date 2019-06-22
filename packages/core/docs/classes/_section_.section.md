@@ -30,7 +30,7 @@
 
 \+ **new Section**(`bigband`: [Bigband](_bigband_.bigband.md) | [IsolationScope](_isolationscope_.isolationscope.md), `region`: string, `name`: string): *[Section](_section_.section.md)*
 
-*Defined in [Section.ts:6](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Section.ts#L6)*
+*Defined in [Section.ts:6](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Section.ts#L6)*
 
 **Parameters:**
 
@@ -50,7 +50,7 @@ ___
 
 ● **isolationScope**: *[Bigband](_bigband_.bigband.md)*
 
-*Defined in [Section.ts:6](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Section.ts#L6)*
+*Defined in [Section.ts:6](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Section.ts#L6)*
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 ● **name**: *string*
 
-*Defined in [Section.ts:9](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Section.ts#L9)*
+*Defined in [Section.ts:9](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Section.ts#L9)*
 
 ___
 
@@ -66,7 +66,7 @@ ___
 
 ● **region**: *string*
 
-*Defined in [Section.ts:9](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Section.ts#L9)*
+*Defined in [Section.ts:9](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Section.ts#L9)*
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 ▸ **physicalName**(): *string*
 
-*Defined in [Section.ts:13](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Section.ts#L13)*
+*Defined in [Section.ts:13](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Section.ts#L13)*
 
 **Returns:** *string*
 

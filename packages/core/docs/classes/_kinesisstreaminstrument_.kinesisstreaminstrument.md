@@ -38,10 +38,6 @@
 * [physicalName](_kinesisstreaminstrument_.kinesisstreaminstrument.md#physicalname)
 * [uses](_kinesisstreaminstrument_.kinesisstreaminstrument.md#uses)
 
-#### Object literals
-
-* [BASE_DEF](_kinesisstreaminstrument_.kinesisstreaminstrument.md#static-private-base_def)
-
 ## Constructors
 
 ###  constructor
@@ -50,7 +46,7 @@
 
 *Overrides [Instrument](_instrument_.instrument.md).[constructor](_instrument_.instrument.md#constructor)*
 
-*Defined in [KinesisStreamInstrument.ts:12](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/KinesisStreamInstrument.ts#L12)*
+*Defined in [KinesisStreamInstrument.ts:12](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/KinesisStreamInstrument.ts#L12)*
 
 **Parameters:**
 
@@ -72,7 +68,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[definition](_instrument_.instrument.md#protected-definition)*
 
-*Defined in [Instrument.ts:17](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L17)*
+*Defined in [Instrument.ts:17](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L17)*
 
 ___
 
@@ -82,7 +78,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[dependencies](_instrument_.instrument.md#dependencies)*
 
-*Defined in [Instrument.ts:18](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L18)*
+*Defined in [Instrument.ts:18](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L18)*
 
 ___
 
@@ -94,7 +90,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[arn](_instrument_.instrument.md#arn)*
 
-*Defined in [Instrument.ts:86](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L86)*
+*Defined in [Instrument.ts:86](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L86)*
 
 **Parameters:**
 
@@ -112,7 +108,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[arnService](_instrument_.instrument.md#abstract-arnservice)*
 
-*Defined in [KinesisStreamInstrument.ts:23](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/KinesisStreamInstrument.ts#L23)*
+*Defined in [KinesisStreamInstrument.ts:23](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/KinesisStreamInstrument.ts#L23)*
 
 **Returns:** *string*
 
@@ -124,7 +120,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[arnType](_instrument_.instrument.md#abstract-arntype)*
 
-*Defined in [KinesisStreamInstrument.ts:27](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/KinesisStreamInstrument.ts#L27)*
+*Defined in [KinesisStreamInstrument.ts:27](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/KinesisStreamInstrument.ts#L27)*
 
 **Returns:** *string*
 
@@ -136,7 +132,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[canDo](_instrument_.instrument.md#cando)*
 
-*Defined in [Instrument.ts:49](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L49)*
+*Defined in [Instrument.ts:49](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L49)*
 
 **Parameters:**
 
@@ -155,7 +151,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[contributeToConsumerDefinition](_instrument_.instrument.md#abstract-contributetoconsumerdefinition)*
 
-*Defined in [KinesisStreamInstrument.ts:35](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/KinesisStreamInstrument.ts#L35)*
+*Defined in [KinesisStreamInstrument.ts:35](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/KinesisStreamInstrument.ts#L35)*
 
 **Parameters:**
 
@@ -174,7 +170,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[createFragment](_instrument_.instrument.md#abstract-createfragment)*
 
-*Defined in [KinesisStreamInstrument.ts:31](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/KinesisStreamInstrument.ts#L31)*
+*Defined in [KinesisStreamInstrument.ts:31](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/KinesisStreamInstrument.ts#L31)*
 
 **Parameters:**
 
@@ -192,7 +188,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[fullyQualifiedName](_instrument_.instrument.md#fullyqualifiedname)*
 
-*Defined in [Instrument.ts:74](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L74)*
+*Defined in [Instrument.ts:74](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L74)*
 
 **Parameters:**
 
@@ -210,7 +206,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[getDefinition](_instrument_.instrument.md#getdefinition)*
 
-*Defined in [Instrument.ts:90](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L90)*
+*Defined in [Instrument.ts:90](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L90)*
 
 **Returns:** *[Definition](_definition_.definition.md)*
 
@@ -222,7 +218,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[getEntryPointFile](_instrument_.instrument.md#abstract-getentrypointfile)*
 
-*Defined in [KinesisStreamInstrument.ts:52](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/KinesisStreamInstrument.ts#L52)*
+*Defined in [KinesisStreamInstrument.ts:52](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/KinesisStreamInstrument.ts#L52)*
 
 **Returns:** *string*
 
@@ -234,7 +230,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[getPhysicalDefinition](_instrument_.instrument.md#getphysicaldefinition)*
 
-*Defined in [Instrument.ts:94](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L94)*
+*Defined in [Instrument.ts:94](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L94)*
 
 **Parameters:**
 
@@ -252,7 +248,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[name](_instrument_.instrument.md#name)*
 
-*Defined in [Instrument.ts:70](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L70)*
+*Defined in [Instrument.ts:70](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L70)*
 
 **Returns:** *string*
 
@@ -264,7 +260,7 @@ ___
 
 *Overrides [Instrument](_instrument_.instrument.md).[nameProperty](_instrument_.instrument.md#abstract-nameproperty)*
 
-*Defined in [KinesisStreamInstrument.ts:48](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/KinesisStreamInstrument.ts#L48)*
+*Defined in [KinesisStreamInstrument.ts:48](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/KinesisStreamInstrument.ts#L48)*
 
 **Returns:** *string*
 
@@ -276,7 +272,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[physicalName](_instrument_.instrument.md#physicalname)*
 
-*Defined in [Instrument.ts:82](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L82)*
+*Defined in [Instrument.ts:82](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L82)*
 
 **Parameters:**
 
@@ -294,7 +290,7 @@ ___
 
 *Inherited from [Instrument](_instrument_.instrument.md).[uses](_instrument_.instrument.md#uses)*
 
-*Defined in [Instrument.ts:41](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Instrument.ts#L41)*
+*Defined in [Instrument.ts:41](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L41)*
 
 **Parameters:**
 
@@ -304,27 +300,5 @@ Name | Type |
 `name` | string |
 
 **Returns:** *void*
-
-___
-
-## Object literals
-
-### `Static` `Private` BASE_DEF
-
-### ■ **BASE_DEF**: *object*
-
-*Defined in [KinesisStreamInstrument.ts:7](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/KinesisStreamInstrument.ts#L7)*
-
-###  Type
-
-● **Type**: *string* = "AWS::Kinesis::Stream"
-
-*Defined in [KinesisStreamInstrument.ts:8](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/KinesisStreamInstrument.ts#L8)*
-
-■ **Properties**: *object*
-
-*Defined in [KinesisStreamInstrument.ts:9](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/KinesisStreamInstrument.ts#L9)*
-
-* **RetentionPeriodHours**: *number* = 24
 
 ___

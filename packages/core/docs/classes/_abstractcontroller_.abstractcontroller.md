@@ -40,7 +40,7 @@
 
 \+ **new AbstractController**(`mapping`: any, `buildFingerprint`: any): *[AbstractController](_abstractcontroller_.abstractcontroller.md)*
 
-*Defined in [AbstractController.ts:5](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/AbstractController.ts#L5)*
+*Defined in [AbstractController.ts:5](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/AbstractController.ts#L5)*
 
 **Parameters:**
 
@@ -59,7 +59,7 @@ ___
 
 ● **buildFingerprint**: *string*
 
-*Defined in [AbstractController.ts:4](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/AbstractController.ts#L4)*
+*Defined in [AbstractController.ts:4](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/AbstractController.ts#L4)*
 
 ___
 
@@ -67,7 +67,7 @@ ___
 
 ● **context**: *any*
 
-*Defined in [AbstractController.ts:5](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/AbstractController.ts#L5)*
+*Defined in [AbstractController.ts:5](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/AbstractController.ts#L5)*
 
 ___
 
@@ -75,7 +75,7 @@ ___
 
 ● **mapping**: *any*
 
-*Defined in [AbstractController.ts:3](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/AbstractController.ts#L3)*
+*Defined in [AbstractController.ts:3](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/AbstractController.ts#L3)*
 
 ___
 
@@ -85,7 +85,7 @@ ___
 
 ▸ **compute**(`event`: any): *`Promise<undefined | R>`*
 
-*Defined in [AbstractController.ts:17](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/AbstractController.ts#L17)*
+*Defined in [AbstractController.ts:17](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/AbstractController.ts#L17)*
 
 **Parameters:**
 
@@ -101,7 +101,7 @@ ___
 
 ▸ **executeInputEvent**(`input`: `T`): *`R`*
 
-*Defined in [AbstractController.ts:13](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/AbstractController.ts#L13)*
+*Defined in [AbstractController.ts:13](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/AbstractController.ts#L13)*
 
 **Parameters:**
 
@@ -117,7 +117,7 @@ ___
 
 ▸ **executeScheduledEvent**(): *void*
 
-*Defined in [AbstractController.ts:12](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/AbstractController.ts#L12)*
+*Defined in [AbstractController.ts:12](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/AbstractController.ts#L12)*
 
 **Returns:** *void*
 
@@ -127,7 +127,7 @@ ___
 
 ▸ **onError**(`e`: `Error`): *`Promise<void>`*
 
-*Defined in [AbstractController.ts:15](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/AbstractController.ts#L15)*
+*Defined in [AbstractController.ts:15](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/AbstractController.ts#L15)*
 
 **Parameters:**
 
@@ -143,7 +143,7 @@ ___
 
 ▸ **runLambda**(`input`: `T`, `context`: any): *`Promise<object>`*
 
-*Defined in [AbstractController.ts:27](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/AbstractController.ts#L27)*
+*Defined in [AbstractController.ts:27](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/AbstractController.ts#L27)*
 
 **Parameters:**
 

@@ -14,10 +14,6 @@
 
 * [constructor](_definition_.definition.md#constructor)
 
-#### Properties
-
-* [obj](_definition_.definition.md#private-obj)
-
 #### Methods
 
 * [get](_definition_.definition.md#get)
@@ -30,7 +26,7 @@
 
 \+ **new Definition**(`obj`: any): *[Definition](_definition_.definition.md)*
 
-*Defined in [Definition.ts:2](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Definition.ts#L2)*
+*Defined in [Definition.ts:2](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Definition.ts#L2)*
 
 **Parameters:**
 
@@ -42,23 +38,13 @@ Name | Type | Default |
 
 ___
 
-## Properties
-
-### `Private` obj
-
-● **obj**: *any*
-
-*Defined in [Definition.ts:2](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Definition.ts#L2)*
-
-___
-
 ## Methods
 
 ###  get
 
 ▸ **get**(): *any*
 
-*Defined in [Definition.ts:17](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Definition.ts#L17)*
+*Defined in [Definition.ts:17](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Definition.ts#L17)*
 
 **Returns:** *any*
 
@@ -68,7 +54,7 @@ ___
 
 ▸ **mutate**(`f`: function): *void*
 
-*Defined in [Definition.ts:8](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Definition.ts#L8)*
+*Defined in [Definition.ts:8](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Definition.ts#L8)*
 
 **Parameters:**
 
@@ -90,7 +76,7 @@ ___
 
 ▸ **overwrite**(`o`: any): *void*
 
-*Defined in [Definition.ts:12](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/Definition.ts#L12)*
+*Defined in [Definition.ts:12](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Definition.ts#L12)*
 
 **Parameters:**
 

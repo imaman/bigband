@@ -21,7 +21,7 @@
 
 ● **cloudFormationProperties**? : *any*
 
-*Defined in [DynamoDbInstrument.ts:23](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/DynamoDbInstrument.ts#L23)*
+*Defined in [DynamoDbInstrument.ts:23](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/DynamoDbInstrument.ts#L23)*
 
 ___
 
@@ -29,6 +29,6 @@ ___
 
 ● **provisioned**? : *undefined | object*
 
-*Defined in [DynamoDbInstrument.ts:19](https://github.com/imaman/bigband/blob/2497e7d/packages/core/src/DynamoDbInstrument.ts#L19)*
+*Defined in [DynamoDbInstrument.ts:19](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/DynamoDbInstrument.ts#L19)*
 
 ___
