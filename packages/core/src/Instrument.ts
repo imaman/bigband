@@ -12,12 +12,28 @@ class Dependency {
     constructor(readonly consumer: Instrument, readonly supplier: Instrument, readonly name: string) {}
 }
 
+
+/** 
+ * Bigband's basic building block. Usually corresponds to an AWS resources such as: a Lambda function, a DynamoDB
+ * table, a Kinesis stream, etc.
+ */
 export abstract class Instrument {
 
     protected readonly definition = new Definition();
     public readonly dependencies: Dependency[] = [];
     private readonly packageName: string[];
 
+
+    /**
+     *Creates an instance of Instrument.
+     * @param {(string|string[])} packageName the package name of the instrument. The package names allows logical
+     *      grouping of related instruments: can be thought of as the "last name" of the instrument whereas the name
+     *      (see _name) can be thought of as "first name". Package names are hierarchical: ["p1", "p2", "p3"] is
+     *      nested inside ["p1", "p2"] which, in turn, is nested inside ["p1"]. If a string it is treated as a single
+     *      element array, that is: "p1" is equivalent to ["p1"].
+     * @param {string} _name the "first name" of the instrument
+     * @memberof Instrument
+     */
     constructor(packageName: string|string[], private readonly _name: string) {
         this.packageName = (Array.isArray(packageName) ? packageName : [packageName]);
         if (!this.packageName.join('').trim().length) {
@@ -46,6 +62,15 @@ export abstract class Instrument {
         this.dependencies.push(new Dependency(this, supplier, name));
     }
 
+    
+    /**
+     * Add an IAM permission to this instrument
+     *
+     * @param {string} action the action to be allowed 
+     * @param {string} arn specifies the resource that this instrument is being granted permission to access   
+     * @returns this
+     * @memberof Instrument
+     */
     canDo(action: string, arn: string) {
         this.definition.mutate(o => o.Properties.Policies.push({
             Version: '2012-10-17',
@@ -71,6 +96,15 @@ export abstract class Instrument {
         return this._name;
     }
 
+
+    /**
+     * Computes the full name of this instrument. The full name is a composition of the "last name" (as specified by the
+     * package name) with the "first name" (this instrument's name)
+     *
+     * @param {NameStyle} [style=NameStyle.DASH] determines how to concatenate the different pieces of the name
+     * @returns the full qualified name
+     * @memberof Instrument
+     */
     fullyQualifiedName(style: NameStyle = NameStyle.DASH) {
         if (style == NameStyle.DASH) {
             return this.packageName.concat(this.name()).join('-');
