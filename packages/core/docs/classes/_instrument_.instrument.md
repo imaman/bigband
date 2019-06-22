@@ -4,6 +4,9 @@
 
 # Class: Instrument
 
+Bigband's basic building block. Usually corresponds to an AWS resources such as: a Lambda function, a DynamoDB
+table, a Kinesis stream, etc.
+
 ## Hierarchy
 
 * **Instrument**
@@ -48,14 +51,18 @@
 
 \+ **new Instrument**(`packageName`: string | string[], `_name`: string): *[Instrument](_instrument_.instrument.md)*
 
-*Defined in [Instrument.ts:19](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L19)*
+*Defined in [Instrument.ts:24](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L24)*
+
+Creates an instance of Instrument.
+
+**`memberof`** Instrument
 
 **Parameters:**
 
-Name | Type |
------- | ------ |
-`packageName` | string \| string[] |
-`_name` | string |
+Name | Type | Description |
+------ | ------ | ------ |
+`packageName` | string \| string[] | the package name of the instrument. The package names allows logical      grouping of related instruments: can be thought of as the "last name" of the instrument whereas the name      (see _name) can be thought of as "first name". Package names are hierarchical: ["p1", "p2", "p3"] is      nested inside ["p1", "p2"] which, in turn, is nested inside ["p1"]. If a string it is treated as a single      element array, that is: "p1" is equivalent to ["p1"]. |
+`_name` | string | the "first name" of the instrument |
 
 **Returns:** *[Instrument](_instrument_.instrument.md)*
 
@@ -67,7 +74,7 @@ ___
 
 ● **definition**: *[Definition](_definition_.definition.md)* =  new Definition()
 
-*Defined in [Instrument.ts:17](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L17)*
+*Defined in [Instrument.ts:22](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L22)*
 
 ___
 
@@ -75,7 +82,7 @@ ___
 
 ● **dependencies**: *[Dependency](_instrument_.dependency.md)[]* =  []
 
-*Defined in [Instrument.ts:18](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L18)*
+*Defined in [Instrument.ts:23](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L23)*
 
 ___
 
@@ -85,7 +92,7 @@ ___
 
 ▸ **arn**(`section`: [Section](_section_.section.md)): *string*
 
-*Defined in [Instrument.ts:86](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L86)*
+*Defined in [Instrument.ts:120](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L120)*
 
 **Parameters:**
 
@@ -101,7 +108,7 @@ ___
 
 ▸ **arnService**(): *string*
 
-*Defined in [Instrument.ts:65](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L65)*
+*Defined in [Instrument.ts:90](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L90)*
 
 **Returns:** *string*
 
@@ -111,7 +118,7 @@ ___
 
 ▸ **arnType**(): *string*
 
-*Defined in [Instrument.ts:66](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L66)*
+*Defined in [Instrument.ts:91](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L91)*
 
 **Returns:** *string*
 
@@ -121,16 +128,22 @@ ___
 
 ▸ **canDo**(`action`: string, `arn`: string): *`this`*
 
-*Defined in [Instrument.ts:49](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L49)*
+*Defined in [Instrument.ts:74](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L74)*
+
+Add an IAM permission to this instrument
+
+**`memberof`** Instrument
 
 **Parameters:**
 
-Name | Type |
------- | ------ |
-`action` | string |
-`arn` | string |
+Name | Type | Description |
+------ | ------ | ------ |
+`action` | string | the action to be allowed |
+`arn` | string | specifies the resource that this instrument is being granted permission to access |
 
 **Returns:** *`this`*
+
+this
 
 ___
 
@@ -138,7 +151,7 @@ ___
 
 ▸ **contributeToConsumerDefinition**(`section`: [Section](_section_.section.md), `consumerDef`: [Definition](_definition_.definition.md)): *void*
 
-*Defined in [Instrument.ts:64](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L64)*
+*Defined in [Instrument.ts:89](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L89)*
 
 **Parameters:**
 
@@ -155,7 +168,7 @@ ___
 
 ▸ **createFragment**(`pathPrefix`: string): *[DeployableFragment](_deployablefragment_.deployablefragment.md)*
 
-*Defined in [Instrument.ts:63](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L63)*
+*Defined in [Instrument.ts:88](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L88)*
 
 **Parameters:**
 
@@ -171,7 +184,12 @@ ___
 
 ▸ **fullyQualifiedName**(`style`: [NameStyle](../enums/_instrument_.namestyle.md)): *string*
 
-*Defined in [Instrument.ts:74](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L74)*
+*Defined in [Instrument.ts:108](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L108)*
+
+Computes the full name of this instrument. The full name is a composition of the "last name" (as specified by the
+package name) with the "first name" (this instrument's name)
+
+**`memberof`** Instrument
 
 **Parameters:**
 
@@ -181,13 +199,15 @@ Name | Type | Default |
 
 **Returns:** *string*
 
+the full qualified name
+
 ___
 
 ###  getDefinition
 
 ▸ **getDefinition**(): *[Definition](_definition_.definition.md)*
 
-*Defined in [Instrument.ts:90](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L90)*
+*Defined in [Instrument.ts:124](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L124)*
 
 **Returns:** *[Definition](_definition_.definition.md)*
 
@@ -197,7 +217,7 @@ ___
 
 ▸ **getEntryPointFile**(): *string*
 
-*Defined in [Instrument.ts:68](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L68)*
+*Defined in [Instrument.ts:93](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L93)*
 
 **Returns:** *string*
 
@@ -207,7 +227,7 @@ ___
 
 ▸ **getPhysicalDefinition**(`section`: [Section](_section_.section.md)): *[Definition](_definition_.definition.md)*
 
-*Defined in [Instrument.ts:94](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L94)*
+*Defined in [Instrument.ts:128](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L128)*
 
 **Parameters:**
 
@@ -223,7 +243,7 @@ ___
 
 ▸ **name**(): *string*
 
-*Defined in [Instrument.ts:70](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L70)*
+*Defined in [Instrument.ts:95](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L95)*
 
 **Returns:** *string*
 
@@ -233,7 +253,7 @@ ___
 
 ▸ **nameProperty**(): *string*
 
-*Defined in [Instrument.ts:67](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L67)*
+*Defined in [Instrument.ts:92](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L92)*
 
 **Returns:** *string*
 
@@ -243,7 +263,7 @@ ___
 
 ▸ **physicalName**(`section`: [Section](_section_.section.md)): *string*
 
-*Defined in [Instrument.ts:82](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L82)*
+*Defined in [Instrument.ts:116](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L116)*
 
 **Parameters:**
 
@@ -259,7 +279,7 @@ ___
 
 ▸ **uses**(`supplier`: [Instrument](_instrument_.instrument.md), `name`: string): *void*
 
-*Defined in [Instrument.ts:41](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Instrument.ts#L41)*
+*Defined in [Instrument.ts:57](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Instrument.ts#L57)*
 
 **Parameters:**
 

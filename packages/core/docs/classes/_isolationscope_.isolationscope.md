@@ -33,7 +33,7 @@
 
 \+ **new IsolationScope**(`awsAccount`: string, `name`: string, `s3Bucket`: string, `s3Prefix`: string, `profile`: string): *[IsolationScope](_isolationscope_.isolationscope.md)*
 
-*Defined in [IsolationScope.ts:4](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L4)*
+*Defined in [IsolationScope.ts:4](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L4)*
 
 **Parameters:**
 
@@ -55,7 +55,7 @@ ___
 
 ● **awsAccount**: *string*
 
-*Defined in [IsolationScope.ts:5](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L5)*
+*Defined in [IsolationScope.ts:5](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L5)*
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 ● **name**: *string*
 
-*Defined in [IsolationScope.ts:5](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L5)*
+*Defined in [IsolationScope.ts:5](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L5)*
 
 ___
 
@@ -71,7 +71,7 @@ ___
 
 ● **profile**: *string*
 
-*Defined in [IsolationScope.ts:7](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L7)*
+*Defined in [IsolationScope.ts:7](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L7)*
 
 ___
 
@@ -79,7 +79,7 @@ ___
 
 ● **profileName**: *string*
 
-*Defined in [IsolationScope.ts:4](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L4)*
+*Defined in [IsolationScope.ts:4](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L4)*
 
 ___
 
@@ -87,7 +87,7 @@ ___
 
 ● **s3Bucket**: *string*
 
-*Defined in [IsolationScope.ts:6](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L6)*
+*Defined in [IsolationScope.ts:6](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L6)*
 
 ___
 
@@ -95,7 +95,7 @@ ___
 
 ● **s3Prefix**: *string*
 
-*Defined in [IsolationScope.ts:6](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L6)*
+*Defined in [IsolationScope.ts:6](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L6)*
 
 ___
 
@@ -105,7 +105,7 @@ ___
 
 ▸ **create**(`init`: [IsolationScopeInit](../interfaces/_isolationscope_.isolationscopeinit.md)): *[IsolationScope](_isolationscope_.isolationscope.md)*
 
-*Defined in [IsolationScope.ts:11](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/IsolationScope.ts#L11)*
+*Defined in [IsolationScope.ts:11](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/IsolationScope.ts#L11)*
 
 **Parameters:**
 

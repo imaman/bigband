@@ -24,7 +24,7 @@
 
 ● **bigbandCorePackageDir**: *string*
 
-*Defined in [SourceExporter.ts:21](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/SourceExporter.ts#L21)*
+*Defined in [SourceExporter.ts:21](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/SourceExporter.ts#L21)*
 
 ___
 
@@ -34,7 +34,7 @@ ___
 
 ▸ **findPackageDir**(): *string*
 
-*Defined in [SourceExporter.ts:4](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/SourceExporter.ts#L4)*
+*Defined in [SourceExporter.ts:4](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/SourceExporter.ts#L4)*
 
 **Returns:** *string*
 

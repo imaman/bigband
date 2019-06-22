@@ -29,7 +29,7 @@
 
 \+ **new DeployableAtom**(`path`: string, `content`: string): *[DeployableAtom](_deployablefragment_.deployableatom.md)*
 
-*Defined in [DeployableFragment.ts:4](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/DeployableFragment.ts#L4)*
+*Defined in [DeployableFragment.ts:4](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DeployableFragment.ts#L4)*
 
 **Parameters:**
 
@@ -48,7 +48,7 @@ ___
 
 ● **content**: *string*
 
-*Defined in [DeployableFragment.ts:5](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/DeployableFragment.ts#L5)*
+*Defined in [DeployableFragment.ts:5](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DeployableFragment.ts#L5)*
 
 ___
 
@@ -56,7 +56,7 @@ ___
 
 ● **path**: *string*
 
-*Defined in [DeployableFragment.ts:5](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/DeployableFragment.ts#L5)*
+*Defined in [DeployableFragment.ts:5](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DeployableFragment.ts#L5)*
 
 ___
 
@@ -66,7 +66,7 @@ ___
 
 ▸ **toString**(): *string*
 
-*Defined in [DeployableFragment.ts:7](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/DeployableFragment.ts#L7)*
+*Defined in [DeployableFragment.ts:7](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DeployableFragment.ts#L7)*
 
 **Returns:** *string*
 

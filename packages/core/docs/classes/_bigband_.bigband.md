@@ -28,7 +28,7 @@
 
 \+ **new Bigband**(`init`: [BigbandInit](../interfaces/_bigband_.bigbandinit.md)): *[Bigband](_bigband_.bigband.md)*
 
-*Defined in [Bigband.ts:6](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Bigband.ts#L6)*
+*Defined in [Bigband.ts:6](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Bigband.ts#L6)*
 
 **Parameters:**
 
@@ -46,7 +46,7 @@ ___
 
 ● **awsAccount**: *string*
 
-*Defined in [Bigband.ts:3](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Bigband.ts#L3)*
+*Defined in [Bigband.ts:3](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Bigband.ts#L3)*
 
 ___
 
@@ -54,7 +54,7 @@ ___
 
 ● **name**: *string*
 
-*Defined in [Bigband.ts:2](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Bigband.ts#L2)*
+*Defined in [Bigband.ts:2](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Bigband.ts#L2)*
 
 ___
 
@@ -62,7 +62,7 @@ ___
 
 ● **profileName**: *string*
 
-*Defined in [Bigband.ts:4](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Bigband.ts#L4)*
+*Defined in [Bigband.ts:4](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Bigband.ts#L4)*
 
 ___
 
@@ -70,7 +70,7 @@ ___
 
 ● **s3Bucket**: *string*
 
-*Defined in [Bigband.ts:5](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Bigband.ts#L5)*
+*Defined in [Bigband.ts:5](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Bigband.ts#L5)*
 
 ___
 
@@ -78,6 +78,6 @@ ___
 
 ● **s3Prefix**: *string*
 
-*Defined in [Bigband.ts:6](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/Bigband.ts#L6)*
+*Defined in [Bigband.ts:6](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/Bigband.ts#L6)*
 
 ___

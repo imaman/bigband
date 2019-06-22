@@ -18,7 +18,7 @@
 
 ● **BINARY**: = "B"
 
-*Defined in [DynamoDbInstrument.ts:9](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/DynamoDbInstrument.ts#L9)*
+*Defined in [DynamoDbInstrument.ts:9](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DynamoDbInstrument.ts#L9)*
 
 ___
 
@@ -26,7 +26,7 @@ ___
 
 ● **NUMBER**: = "N"
 
-*Defined in [DynamoDbInstrument.ts:8](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/DynamoDbInstrument.ts#L8)*
+*Defined in [DynamoDbInstrument.ts:8](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DynamoDbInstrument.ts#L8)*
 
 ___
 
@@ -34,6 +34,6 @@ ___
 
 ● **STRING**: = "S"
 
-*Defined in [DynamoDbInstrument.ts:7](https://github.com/imaman/bigband/blob/6553ebb/packages/core/src/DynamoDbInstrument.ts#L7)*
+*Defined in [DynamoDbInstrument.ts:7](https://github.com/imaman/bigband/blob/1dee7b5/packages/core/src/DynamoDbInstrument.ts#L7)*
 
 ___
