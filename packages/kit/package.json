@@ -1,6 +1,6 @@
 {
   "name": "bigband-kit",
-  "version": "0.1.56",
+  "version": "0.1.57",
   "description": "Bigband's standard library of reusable instruments",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
