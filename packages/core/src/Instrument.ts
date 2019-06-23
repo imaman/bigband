@@ -16,6 +16,13 @@ class Dependency {
 /** 
  * Bigband's basic building block. Usually corresponds to an AWS resources such as: a Lambda function, a DynamoDB
  * table, a Kinesis stream, etc.
+ * 
+ * Naming. Inside every [[Section]], Instruments are arranged in a tree-like hierarchy (similar to the way files are
+ * arranged in directories). This enables logical grouping of related instruments. The packageName (denoting a "path
+ * in the tree") is specified as an array of string: ["p1", "p2", "p3"] denotes a package nested inside the
+ * ["p1", "p2"] package. For brevity, a packageName can also be specified as a plain string: "p1" is equivalent to
+ * ["p1"]. The instrument's plain name is must be unique within its package. In other words: two instruments can have
+ * the same simple name if they belond to two different packages.
  */
 export abstract class Instrument {
 
@@ -25,13 +32,10 @@ export abstract class Instrument {
 
 
     /**
-     *Creates an instance of Instrument.
-     * @param {(string|string[])} packageName the package name of the instrument. The package names allows logical
-     *      grouping of related instruments: can be thought of as the "last name" of the instrument whereas the name
-     *      (see _name) can be thought of as "first name". Package names are hierarchical: ["p1", "p2", "p3"] is
-     *      nested inside ["p1", "p2"] which, in turn, is nested inside ["p1"]. If a string it is treated as a single
-     *      element array, that is: "p1" is equivalent to ["p1"].
-     * @param {string} _name the "first name" of the instrument
+     * Initializes an Instrument.
+     * 
+     * @param {(string|string[])} packageName the package name of the instrument. See "Naming" above.
+     * @param {string} plainName the instrument's simple name (must be unique within its package). See "Naming" above.
      * @memberof Instrument
      */
     constructor(packageName: string|string[], private readonly _name: string) {
@@ -54,6 +58,13 @@ export abstract class Instrument {
         }
     }
 
+    /**
+     * Declares an inter-instrument dependency. It indicates that this instrument ("the consumer") will use the
+     * supplier instrument
+     *  
+     * @param supplier the supplier instrument.
+     * @param name the name of the dependency. 
+     */
     uses(supplier: Instrument, name: string) {
         const existingDep = this.dependencies.find(d => d.name === name);
         if (existingDep) {
@@ -61,10 +72,9 @@ export abstract class Instrument {
         }
         this.dependencies.push(new Dependency(this, supplier, name));
     }
-
     
     /**
-     * Add an IAM permission to this instrument
+     * Adds an IAM permission to this instrument
      *
      * @param {string} action the action to be allowed 
      * @param {string} arn specifies the resource that this instrument is being granted permission to access   
@@ -85,13 +95,53 @@ export abstract class Instrument {
         return this;
     }
 
+    /**
+     * Returns a [[DeployableFragment]] to be added to the bundle of shipped code
+     * @param pathPrefix path to the directory where the compiled sources file will reside
+     */
     abstract createFragment(pathPrefix: string): DeployableFragment
+
+
+    /**
+     * Called on supplier instruments (as per the [[uses]] method). This allows supplier instruments to affect the
+     * cloudformation template of their consumer insturments. A supplier would typically add an IAM permission to its
+     * consumer. 
+     * @param section 
+     * @param consumerDef 
+     */
     abstract contributeToConsumerDefinition(section: Section, consumerDef: Definition): void
+
+    /**
+     * Returns the AWS service namespace to be used when constructing the ARN of this instrument. For instance, in a
+     * an ARN of a lambda function, "arn:aws:lambda:eu-west-2:111111111111:function:my-function", this is the "lamda"
+     * token.
+     */
     abstract arnService(): string
+    /**
+     * Returns the AWS resource name to be used when constructing the ARN of this instrument. For instance, in a
+     * an ARN of a lambda function, "arn:aws:lambda:eu-west-2:111111111111:function:my-function", this is the
+     * "function" token.
+     */
     abstract arnType(): string
+    /**
+     * Returns the name of the cloudformation property whose value specifies the exact name of the resource. You need
+     * to check Cloudformation's "Resource and Property Types Reference" 
+     * (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html) to find
+     * the exact value. For instance, for a lambda function this would be "FunctionName", wheras for a DynamoDB table
+     * this would be "TableName"
+     */
     abstract nameProperty(): string
+    
+    /**
+     * Returns the path to a file that needs to be compiled with this instrument. This is needed for instruments
+     * that need user-supplied code to be shipped, such as Lambda instruments. An empty string denotes that no node
+     * needs to be shipped.
+     */
     abstract getEntryPointFile(): string
 
+    /**
+     * Returns the plain name of this instrument.
+     */
     name(): string {
         return this._name;
     }
@@ -113,10 +163,19 @@ export abstract class Instrument {
         return ret;
     }
 
+    /**
+     * Computes the physical name of the instrument at the given section. The physical name contains the names of the
+     * enclosing bigband and section as well as the [[fullyQualifiedName]].
+     * @param section
+     */
     physicalName(section: Section) {
         return `${section.isolationScope.name}-${section.name}-${this.fullyQualifiedName()}`;
     }
     
+    /**
+     * Computes the ARN of this instrument at the given section
+     * @param section 
+     */
     arn(section: Section): string {
         return `arn:aws:${this.arnService()}:${section.region}:${section.isolationScope.awsAccount}:${this.arnType()}${this.physicalName(section)}`;
     }
@@ -130,10 +189,6 @@ export abstract class Instrument {
         copy.Properties[this.nameProperty()] = this.physicalName(section);
         return new Definition(copy);
     }
-
-    // contributeToConsumerCode(deployable: Deployable) {
-    //     throw new Error('Not implemented yet.');
-    // }
 }
 
 function camelCase(...args) {
