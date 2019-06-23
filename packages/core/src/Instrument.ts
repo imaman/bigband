@@ -17,7 +17,7 @@ class Dependency {
  * Bigband's basic building block. Usually corresponds to an AWS resources such as: a Lambda function, a DynamoDB
  * table, a Kinesis stream, etc.
  * 
- * Naming. Inside every Section, Instruments are arranged in a tree-like hierarchy (similar to the way filews are
+ * Naming. Inside every [[Section]], Instruments are arranged in a tree-like hierarchy (similar to the way files are
  * arranged in directories). This enables logical grouping of related instruments. The packageName (denoting a "path
  * in the tree") is specified as an array of string: ["p1", "p2", "p3"] denotes a package nested inside the
  * ["p1", "p2"] package. For brevity, a packageName can also be specified as a plain string: "p1" is equivalent to
@@ -58,6 +58,12 @@ export abstract class Instrument {
         }
     }
 
+    /**
+     * Declares an inter-instrument dependency.
+     *  
+     * @param supplier the instrument that will be wired with this instrument.
+     * @param name the name of the dependency. 
+     */
     uses(supplier: Instrument, name: string) {
         const existingDep = this.dependencies.find(d => d.name === name);
         if (existingDep) {
@@ -65,10 +71,9 @@ export abstract class Instrument {
         }
         this.dependencies.push(new Dependency(this, supplier, name));
     }
-
     
     /**
-     * Add an IAM permission to this instrument
+     * Adds an IAM permission to this instrument
      *
      * @param {string} action the action to be allowed 
      * @param {string} arn specifies the resource that this instrument is being granted permission to access   
@@ -96,6 +101,9 @@ export abstract class Instrument {
     abstract nameProperty(): string
     abstract getEntryPointFile(): string
 
+    /**
+     * Returns the plain name of this instrument.
+     */
     name(): string {
         return this._name;
     }
@@ -117,6 +125,10 @@ export abstract class Instrument {
         return ret;
     }
 
+    /**
+     * Computes the physical name of the instrument. The physical name contains the names of the enclosing bigband and section as well as the [[fullyQualifiedName]].
+     * @param section 
+     */
     physicalName(section: Section) {
         return `${section.isolationScope.name}-${section.name}-${this.fullyQualifiedName()}`;
     }
