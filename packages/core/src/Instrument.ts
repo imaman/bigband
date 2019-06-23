@@ -32,7 +32,7 @@ export abstract class Instrument {
 
 
     /**
-     * Creates an instance of Instrument.
+     * Initializes an Instrument.
      * 
      * @param {(string|string[])} packageName the package name of the instrument. See "Naming" above.
      * @param {string} plainName the instrument's simple name (must be unique within its package). See "Naming" above.
