@@ -94,11 +94,48 @@ export abstract class Instrument {
         return this;
     }
 
+    /**
+     * Returns a [[DeployableFragment]] to be added to the bundle of shipped code
+     * @param pathPrefix path to the directory where the compiled sources file will reside
+     */
     abstract createFragment(pathPrefix: string): DeployableFragment
+
+
+    /**
+     * Called on supplier instruments (as per the [[uses]] method). This allows supplier instruments to affect the
+     * cloudformation template of their consumer insturments. A supplier would typically add an IAM permission to its
+     * consumer. 
+     * @param section 
+     * @param consumerDef 
+     */
     abstract contributeToConsumerDefinition(section: Section, consumerDef: Definition): void
+
+    /**
+     * Returns the AWS service namespace to be used when constructing the ARN of this instrument. For instance, in a
+     * an ARN of a lambda function, "arn:aws:lambda:eu-west-2:111111111111:function:my-function", this is the "lamda"
+     * token.
+     */
     abstract arnService(): string
+    /**
+     * Returns the AWS resource name to be used when constructing the ARN of this instrument. For instance, in a
+     * an ARN of a lambda function, "arn:aws:lambda:eu-west-2:111111111111:function:my-function", this is the
+     * "function" token.
+     */
     abstract arnType(): string
+    /**
+     * Returns the name of the cloudformation property whose value specifies the exact name of the resource. You need
+     * to check Cloudformation's "Resource and Property Types Reference" 
+     * (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html) to find
+     * the exact value. For instance, for a lambda function this would be "FunctionName", wheras for a DynamoDB table
+     * this would be "TableName"
+     */
     abstract nameProperty(): string
+    
+    /**
+     * Returns the path to a file that needs to be compiled with this instrument. This is needed for instruments
+     * that need user-supplied code to be shipped, such as Lambda instruments. An empty string denotes that no node
+     * needs to be shipped.
+     */
     abstract getEntryPointFile(): string
 
     /**
@@ -126,13 +163,18 @@ export abstract class Instrument {
     }
 
     /**
-     * Computes the physical name of the instrument. The physical name contains the names of the enclosing bigband and section as well as the [[fullyQualifiedName]].
-     * @param section 
+     * Computes the physical name of the instrument at the given section. The physical name contains the names of the
+     * enclosing bigband and section as well as the [[fullyQualifiedName]].
+     * @param section
      */
     physicalName(section: Section) {
         return `${section.isolationScope.name}-${section.name}-${this.fullyQualifiedName()}`;
     }
     
+    /**
+     * Computes the ARN of this instrument at the given section
+     * @param section 
+     */
     arn(section: Section): string {
         return `arn:aws:${this.arnService()}:${section.region}:${section.isolationScope.awsAccount}:${this.arnType()}${this.physicalName(section)}`;
     }
