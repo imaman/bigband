@@ -10,7 +10,8 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm run unit",
     "preversion": "",
-    "version": ""
+    "version": "",
+    "doc": "typedoc --excludePrivate  --excludeNotExported --hideSources --readme none --out ../../../imaman.github.io/bigband/core"
   },
   "repository": {
     "type": "git",
