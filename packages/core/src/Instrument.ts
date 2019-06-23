@@ -59,9 +59,10 @@ export abstract class Instrument {
     }
 
     /**
-     * Declares an inter-instrument dependency.
+     * Declares an inter-instrument dependency. It indicates that this instrument ("the consumer") will use the
+     * supplier instrument
      *  
-     * @param supplier the instrument that will be wired with this instrument.
+     * @param supplier the supplier instrument.
      * @param name the name of the dependency. 
      */
     uses(supplier: Instrument, name: string) {
@@ -188,10 +189,6 @@ export abstract class Instrument {
         copy.Properties[this.nameProperty()] = this.physicalName(section);
         return new Definition(copy);
     }
-
-    // contributeToConsumerCode(deployable: Deployable) {
-    //     throw new Error('Not implemented yet.');
-    // }
 }
 
 function camelCase(...args) {
