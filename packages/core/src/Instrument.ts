@@ -16,6 +16,13 @@ class Dependency {
 /** 
  * Bigband's basic building block. Usually corresponds to an AWS resources such as: a Lambda function, a DynamoDB
  * table, a Kinesis stream, etc.
+ * 
+ * Naming. Inside every Section, Instruments are arranged in a tree-like hierarchy (similar to the way filews are
+ * arranged in directories). This enables logical grouping of related instruments. The packageName (denoting a "path
+ * in the tree") is specified as an array of string: ["p1", "p2", "p3"] denotes a package nested inside the
+ * ["p1", "p2"] package. For brevity, a packageName can also be specified as a plain string: "p1" is equivalent to
+ * ["p1"]. The instrument's plain name is must be unique within its package. In other words: two instruments can have
+ * the same simple name if they belond to two different packages.
  */
 export abstract class Instrument {
 
@@ -25,13 +32,10 @@ export abstract class Instrument {
 
 
     /**
-     *Creates an instance of Instrument.
-     * @param {(string|string[])} packageName the package name of the instrument. The package names allows logical
-     *      grouping of related instruments: can be thought of as the "last name" of the instrument whereas the name
-     *      (see _name) can be thought of as "first name". Package names are hierarchical: ["p1", "p2", "p3"] is
-     *      nested inside ["p1", "p2"] which, in turn, is nested inside ["p1"]. If a string it is treated as a single
-     *      element array, that is: "p1" is equivalent to ["p1"].
-     * @param {string} _name the "first name" of the instrument
+     * Creates an instance of Instrument.
+     * 
+     * @param {(string|string[])} packageName the package name of the instrument. See "Naming" above.
+     * @param {string} plainName the instrument's simple name (must be unique within its package). See "Naming" above.
      * @memberof Instrument
      */
     constructor(packageName: string|string[], private readonly _name: string) {
