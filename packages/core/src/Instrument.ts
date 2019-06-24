@@ -37,7 +37,7 @@ export abstract class Instrument {
      * @param {string} plainName the instrument's simple name (must be unique within its package). See "Naming" above.
      * @memberof Instrument
      */
-    constructor(packageName: string|string[], private readonly _name: string) {
+    constructor(packageName: string|string[], private readonly name: string) {
         this.packageName = (Array.isArray(packageName) ? packageName : [packageName]);
         if (!this.packageName.join('').trim().length) {
             throw new Error('pacakge name cannot be empty');
@@ -52,7 +52,7 @@ export abstract class Instrument {
         if (withUpperCase) {
             throw new Error(`Upper-case symbols are not allowed in package names. Found: "${withUpperCase}"`);
         }
-        if (!this._name.trim().length) {
+        if (!this.name.trim().length) {
             throw new Error('name cannot be empty');
         }
     }
@@ -139,14 +139,6 @@ export abstract class Instrument {
     abstract getEntryPointFile(): string
 
     /**
-     * Returns the plain name of this instrument.
-     */
-    private name(): string {
-        return this._name;
-    }
-
-
-    /**
      * Computes the full name of this instrument. The full name is a composition of the "last name" (as specified by the
      * package name) with the "first name" (this instrument's name)
      *
@@ -156,9 +148,9 @@ export abstract class Instrument {
      */
     fullyQualifiedName(style: NameStyle = NameStyle.DASH) {
         if (style == NameStyle.DASH) {
-            return this.packageName.concat(this.name()).join('-');
+            return this.packageName.concat(this.name).join('-');
         }
-        const ret = camelCase(this.packageName.concat(this.name()));
+        const ret = camelCase(this.packageName.concat(this.name));
         return ret;
     }
 
