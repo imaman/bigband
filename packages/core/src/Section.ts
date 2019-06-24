@@ -1,4 +1,3 @@
-import {IsolationScope} from './IsolationScope'
 import {Bigband} from './Bigband'
 
 /**
@@ -15,12 +14,12 @@ import {Bigband} from './Bigband'
  * In particualr, a sections may contain instruments of different types (for instance: several Lambda instruments and
  * a DynamoDB instrument). 
  * 
- * The deployment of a section is not atomic: while deployment takes place both the "new" and "old" version will
+ * The deployment of a section is not atomic: while a deployment takes place both the "new" and "old" version will
  * be alive (which is the typical situation in any non-monolithic distributed system). Thus, you need to write your code in
  * forward/backward compatible manner. Alternatively, you can use your source control system to break your change
  * into smaller chunks, such that each chunk changes just a single instrument, and then deploy chunk-by-chunk.
  *
- * If you have an insturment that persists data and you move this instrument it acorss sections
+ * If you have an insturment that persists data and you move this instrument acorss sections
  * its physical name (its name as AWS sees it) will change which means that the persisted data will be lost. This is an
  * inherent limitation of AWS (there is no API for renanming a DynamoDB table).
  * 
