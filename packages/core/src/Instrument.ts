@@ -30,7 +30,6 @@ export abstract class Instrument {
     public readonly dependencies: Dependency[] = [];
     private readonly packageName: string[];
 
-
     /**
      * Initializes an Instrument.
      * 
@@ -142,7 +141,7 @@ export abstract class Instrument {
     /**
      * Returns the plain name of this instrument.
      */
-    name(): string {
+    private name(): string {
         return this._name;
     }
 

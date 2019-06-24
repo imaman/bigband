@@ -218,10 +218,10 @@ function checkDuplicates(names: string[]): string[] {
 function checkSpec(spec: BigbandSpec) {
     let dupes = checkDuplicates(spec.sections.map(r => r.name));
     if (dupes.length) {
-        throw new Error(`Found two (or more) rigs with the same name: ${JSON.stringify(dupes)}`);
+        throw new Error(`Found two (or more) sections with the same name: ${JSON.stringify(dupes)}`);
     }
 
-    dupes = checkDuplicates(spec.instruments.map(r => r.name()));
+    dupes = checkDuplicates(spec.instruments.map(r => r.fullyQualifiedName()));
     if (dupes.length) {
         throw new Error(`Found two (or more) instruments with the same name: ${JSON.stringify(dupes)}`);
     }
