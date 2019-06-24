@@ -11,7 +11,7 @@ export class AwsFactory {
         };
     }
 
-    static fromRig(section: Section) {
+    static fromSection(section: Section) {
         return new AwsFactory(section.region, section.bigband.profileName);
     }
 

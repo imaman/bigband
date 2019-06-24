@@ -25,7 +25,7 @@ export class CloudFormationPusher {
     private resolver;
 
     constructor(section: Section) {
-        this.cloudFormation = AwsFactory.fromRig(section).newCloudFormation();
+        this.cloudFormation = AwsFactory.fromSection(section).newCloudFormation();
         this.stackName = section.physicalName();
 
         this.existingFingerprint = new Promise<string>(resolver => {

@@ -56,7 +56,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, section: Section, telepo
     cfp.peekAtExistingStack();
 
     const poolPrefix = `${ttlPrefix(section)}/fragments`;
-    const blobPool = new S3BlobPool(AwsFactory.fromRig(section), section.bigband.s3Bucket, poolPrefix);
+    const blobPool = new S3BlobPool(AwsFactory.fromSection(section), section.bigband.s3Bucket, poolPrefix);
 
     const teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
         Description: 'Rematerializes a deployable at the deployment site',
@@ -99,7 +99,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, section: Section, telepo
     });
 
     await cfp.deploy(stack)
-    const lambda = AwsFactory.fromRig(section).newLambda();
+    const lambda = AwsFactory.fromSection(section).newLambda();
 
     await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
         const req: UpdateFunctionCodeRequest = {
@@ -310,7 +310,7 @@ async function configureBucket(section: Section) {
     // You can check the content of the TTL folder via:
     // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
 
-    const s3 = AwsFactory.fromRig(section).newS3();
+    const s3 = AwsFactory.fromSection(section).newS3();
     const prefix = `${ttlPrefix(section)}/`;
     const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
         Bucket: section.bigband.s3Bucket,

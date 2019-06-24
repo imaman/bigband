@@ -124,7 +124,7 @@ export class Packager {
     if (!this.section) {
       throw new Error('section was not set.');
     }
-    const factory = AwsFactory.fromRig(this.section);
+    const factory = AwsFactory.fromSection(this.section);
 
     const p = factory.newLambda().getFunction({
       FunctionName: instrument.physicalName(this.section)
