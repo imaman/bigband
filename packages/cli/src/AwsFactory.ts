@@ -11,8 +11,8 @@ export class AwsFactory {
         };
     }
 
-    static fromRig(r: Section) {
-        return new AwsFactory(r.region, r.isolationScope.profileName);
+    static fromRig(section: Section) {
+        return new AwsFactory(section.region, section.isolationScope.profileName);
     }
 
     newCloudFormation() {
