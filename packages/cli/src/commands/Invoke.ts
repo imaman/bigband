@@ -6,7 +6,7 @@ import { Section, Instrument } from 'bigband-core';
 
 
 interface LookupResult {
-    rig: Section
+    section: Section
     instrument: Instrument
     name: string
 }
@@ -19,7 +19,7 @@ export function lookupFunction(lambdaName: string, spec: BigbandSpec): LookupRes
             const name = curr.physicalName(r);
             names.push(name);
             if (name.indexOf(lambdaName) >= 0) {
-                matches.push({rig: r, instrument: curr, name});
+                matches.push({section: r, instrument: curr, name});
             }
         });
     });
@@ -39,9 +39,9 @@ async function invokeFunction(bigbandFile: string, lambdaName: string, input: st
 
     const data = lookupFunction(lambdaName, spec);
 
-    var lambda: AWS.Lambda = new AwsFactory(data.rig.region, data.rig.isolationScope.profileName).newLambda();
+    var lambda: AWS.Lambda = new AwsFactory(data.section.region, data.section.isolationScope.profileName).newLambda();
     const params: InvocationRequest = {
-        FunctionName: data.instrument.physicalName(data.rig),
+        FunctionName: data.instrument.physicalName(data.section),
         InvocationType: 'RequestResponse', 
         LogType: 'Tail',
         Payload: JSON.stringify(JSON.parse(input))

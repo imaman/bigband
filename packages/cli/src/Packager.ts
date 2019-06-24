@@ -33,7 +33,7 @@ export class Packager {
   private readonly npmPackageDir;
 
   constructor(private readonly rootDir: string, npmPackageDir: string, private readonly s3Bucket: string,
-      private readonly s3Prefix: string, private readonly rig?: Section, private readonly blobPool?: S3BlobPool) {
+      private readonly s3Prefix: string, private readonly section?: Section, private readonly blobPool?: S3BlobPool) {
     if (s3Prefix.endsWith('/')) {
       throw new Error(`s3Prefix ${s3Prefix} cannot have a trailing slash`)
     }
@@ -121,13 +121,13 @@ export class Packager {
   }
 
   public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder, teleportLambdaName: string, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
-    if (!this.rig) {
-      throw new Error('rig was not set.');
+    if (!this.section) {
+      throw new Error('section was not set.');
     }
-    const factory = AwsFactory.fromRig(this.rig);
+    const factory = AwsFactory.fromRig(this.section);
 
     const p = factory.newLambda().getFunction({
-      FunctionName: instrument.physicalName(this.rig)
+      FunctionName: instrument.physicalName(this.section)
     }).promise().catch(e => null);
     const buf = await zipBuilder.toBuffer();
     const fingeprint = ZipBuilder.bufferTo256Fingerprint(buf);
@@ -177,13 +177,13 @@ export class Packager {
         }
   
         logger.silly('scotty returned an error:\n' + JSON.stringify(invocationResponse));
-        throw new Error(`Teleporting of ${instrument.physicalName(this.rig)} failed: ${invocationResponse.FunctionError}`);
+        throw new Error(`Teleporting of ${instrument.physicalName(this.section)} failed: ${invocationResponse.FunctionError}`);
       } catch (e) {
         logger.silly('Teleporting error', e);
       }  
     }
 
-    const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, instrument.physicalName(this.rig));
+    const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, instrument.physicalName(this.section));
     logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${instrument.fullyQualifiedName()}`);
     
     return ret;

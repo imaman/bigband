@@ -28,7 +28,7 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
     const bigbandSpec = await loadSpec(bigbandFile);
     const section = bigbandSpec.sections.length === 1 && !sectionName ? bigbandSpec.sections[0] : bigbandSpec.sections.find(curr => curr.name === sectionName);
     if (!section) {
-        throw new Error(`Failed to find a rig named ${sectionName} in ${bigbandSpec.sections.map(curr => curr.name).join(', ')}`);
+        throw new Error(`Failed to find a section named ${sectionName} in ${bigbandSpec.sections.map(curr => curr.name).join(', ')}`);
     }
 
     await Promise.all([runSpec(bigbandSpec, section, teleportingEnabled, deployMode), configureBucket(section)]);
@@ -42,7 +42,7 @@ export interface BigbandSpec {
     dir: string
 }
 
-export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportingEnabled: boolean, deployMode: DeployMode) {
+export async function runSpec(bigbandSpec: BigbandSpec, section: Section, teleportingEnabled: boolean, deployMode: DeployMode) {
     // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is
     // reserved for bigband's own use).
     // Naturally, this check must take place before we introduce bigband's own instruments.
@@ -52,11 +52,11 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportin
             + `an\n instrument is not allowed to start with "bigband"`);
     }
 
-    const cfp = new CloudFormationPusher(rig);
+    const cfp = new CloudFormationPusher(section);
     cfp.peekAtExistingStack();
 
-    const poolPrefix = `${ttlPrefix(rig)}/fragments`;
-    const blobPool = new S3BlobPool(AwsFactory.fromRig(rig), rig.isolationScope.s3Bucket, poolPrefix);
+    const poolPrefix = `${ttlPrefix(section)}/fragments`;
+    const blobPool = new S3BlobPool(AwsFactory.fromRig(section), section.isolationScope.s3Bucket, poolPrefix);
 
     const teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
         Description: 'Rematerializes a deployable at the deployment site',
@@ -64,17 +64,17 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportin
         Timeout: 30
         })
         .fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME)
-        .canDo('s3:GetObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${poolPrefix}/*`)
-        .canDo('s3:PutObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
+        .canDo('s3:GetObject', `arn:aws:s3:::${section.isolationScope.s3Bucket}/${poolPrefix}/*`)
+        .canDo('s3:PutObject', `arn:aws:s3:::${section.isolationScope.s3Bucket}/${section.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
 
 
-    logger.info(`Shipping section "${rig.name}" to ${rig.region}`);
+    logger.info(`Shipping section "${section.name}" to ${section.region}`);
 
     const ps = bigbandSpec.instruments.map(instrument => 
-        pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
+        pushCode(bigbandSpec.dir, bigbandSpec.dir, section, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
 
     // scotty needs slightly different parameters so we pushCode() it separately. 
-    ps.push(pushCode(Misc.bigbandPackageDir(), bigbandSpec.dir, rig, teleportInstrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
+    ps.push(pushCode(Misc.bigbandPackageDir(), bigbandSpec.dir, section, teleportInstrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
     
     const pushedInstruments = await Promise.all(ps);
 
@@ -86,9 +86,9 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportin
     };
 
     pushedInstruments.forEach(curr => {
-        const def = curr.instrument.getPhysicalDefinition(rig);
+        const def = curr.instrument.getPhysicalDefinition(section);
         curr.instrument.dependencies.forEach(d => {
-            d.supplier.contributeToConsumerDefinition(rig, def);
+            d.supplier.contributeToConsumerDefinition(section, def);
         });
 
         if (curr.s3Ref.isOk()) {
@@ -99,7 +99,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportin
     });
 
     await cfp.deploy(stack)
-    const lambda = AwsFactory.fromRig(rig).newLambda();
+    const lambda = AwsFactory.fromRig(section).newLambda();
 
     await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
         const req: UpdateFunctionCodeRequest = {
@@ -229,14 +229,14 @@ function checkSpec(spec: BigbandSpec) {
     // TODO(imaman): validate names!
 }
 
-async function pushCode(dir: string, npmPackageDir: string, rig: Section, instrument: Instrument, 
+async function pushCode(dir: string, npmPackageDir: string, section: Section, instrument: Instrument, 
     teleportInstrument: Instrument,  blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode) {
     if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
         throw new Error(`Bad value. ${dir} is not a directory.`);
     }
     
-    const physicalName = instrument.physicalName(rig);
-    const def = instrument.getPhysicalDefinition(rig);
+    const physicalName = instrument.physicalName(section);
+    const def = instrument.getPhysicalDefinition(section);
     if (!instrument.getEntryPointFile()) {
         return {
             s3Ref: S3Ref.EMPTY,
@@ -246,9 +246,9 @@ async function pushCode(dir: string, npmPackageDir: string, rig: Section, instru
         }
     }
 
-    const {zb, packager} = await compileInstrument(dir, npmPackageDir, rig, instrument, blobPool);
+    const {zb, packager} = await compileInstrument(dir, npmPackageDir, section, instrument, blobPool);
     const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
-        zb, teleportInstrument.physicalName(rig), teleportingEnabled, deployMode);
+        zb, teleportInstrument.physicalName(section), teleportingEnabled, deployMode);
     const resource = def.get();
     resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
 
@@ -260,16 +260,16 @@ async function pushCode(dir: string, npmPackageDir: string, rig: Section, instru
     }
 }
 
-async function compileInstrument(d: string, npmPackageDir: string, rig: Section, instrument: Instrument, blobPool: S3BlobPool) {
+async function compileInstrument(d: string, npmPackageDir: string, section: Section, instrument: Instrument, blobPool: S3BlobPool) {
     try {
-        const packager = new Packager(d, npmPackageDir, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig, blobPool);
+        const packager = new Packager(d, npmPackageDir, section.isolationScope.s3Bucket, section.isolationScope.s3Prefix, section, blobPool);
         const pathPrefix = 'build';
         logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
         const frag = instrument.createFragment(pathPrefix);
 
         const mapping = {};
         instrument.dependencies.forEach(d => {
-            mapping[d.name] = {name: d.supplier.physicalName(rig), region: rig.region};
+            mapping[d.name] = {name: d.supplier.physicalName(section), region: section.region};
         });
         frag.add(new DeployableAtom('bigband/deps.js', 
             `module.exports = ${JSON.stringify(mapping)}`));
@@ -302,18 +302,18 @@ async function compileInstrument(d: string, npmPackageDir: string, rig: Section,
 }
 
 
-function ttlPrefix(rig: Section) {
-    return `${rig.isolationScope.s3Prefix}/TTL/7d`;
+function ttlPrefix(section: Section) {
+    return `${section.isolationScope.s3Prefix}/TTL/7d`;
 }
 
-async function configureBucket(rig: Section) {
+async function configureBucket(section: Section) {
     // You can check the content of the TTL folder via:
     // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
 
-    const s3 = AwsFactory.fromRig(rig).newS3();
-    const prefix = `${ttlPrefix(rig)}/`;
+    const s3 = AwsFactory.fromRig(section).newS3();
+    const prefix = `${ttlPrefix(section)}/`;
     const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
-        Bucket: rig.isolationScope.s3Bucket,
+        Bucket: section.isolationScope.s3Bucket,
         LifecycleConfiguration: {
             Rules: [
                 {

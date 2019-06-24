@@ -32,7 +32,7 @@ export class KinesisStreamInstrument extends Instrument {
         return new DeployableFragment();
     }
 
-    contributeToConsumerDefinition(rig: Section, consumerDef: Definition): void {
+    contributeToConsumerDefinition(section: Section, consumerDef: Definition): void {
         consumerDef.mutate(o => o.Properties.Policies.push({
             Version: '2012-10-17',
             Statement: [{ 
@@ -40,7 +40,7 @@ export class KinesisStreamInstrument extends Instrument {
                 Action: [
                   'kinesis:*'
                 ],
-                Resource: this.arn(rig)
+                Resource: this.arn(section)
             }]
         }));
     }
