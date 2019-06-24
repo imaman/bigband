@@ -160,7 +160,7 @@ export abstract class Instrument {
      * @param section
      */
     physicalName(section: Section) {
-        return `${section.isolationScope.name}-${section.name}-${this.fullyQualifiedName()}`;
+        return `${section.bigband.name}-${section.name}-${this.fullyQualifiedName()}`;
     }
     
     /**
@@ -168,7 +168,7 @@ export abstract class Instrument {
      * @param section 
      */
     arn(section: Section): string {
-        return `arn:aws:${this.arnService()}:${section.region}:${section.isolationScope.awsAccount}:${this.arnType()}${this.physicalName(section)}`;
+        return `arn:aws:${this.arnService()}:${section.region}:${section.bigband.awsAccount}:${this.arnType()}${this.physicalName(section)}`;
     }
 
     getDefinition() : Definition {

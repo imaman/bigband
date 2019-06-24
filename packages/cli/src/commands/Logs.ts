@@ -9,7 +9,7 @@ async function main(bigbandFile: string, lambdaName: string, limit: number) {
     const spec = await loadSpec(bigbandFile);
     const {section: section, instrument} = lookupFunction(lambdaName, spec);
 
-    const cloudWatchLogs = new AwsFactory(section.region, section.isolationScope.profileName).newCloudWatchLogs();
+    const cloudWatchLogs = new AwsFactory(section.region, section.bigband.profileName).newCloudWatchLogs();
     const logGroupName = `/aws/lambda/${instrument.physicalName(section)}`;
 
     const describeLogStreamsReq: DescribeLogStreamsRequest = {

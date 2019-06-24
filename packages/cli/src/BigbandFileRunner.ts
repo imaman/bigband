@@ -56,7 +56,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, section: Section, telepo
     cfp.peekAtExistingStack();
 
     const poolPrefix = `${ttlPrefix(section)}/fragments`;
-    const blobPool = new S3BlobPool(AwsFactory.fromRig(section), section.isolationScope.s3Bucket, poolPrefix);
+    const blobPool = new S3BlobPool(AwsFactory.fromRig(section), section.bigband.s3Bucket, poolPrefix);
 
     const teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
         Description: 'Rematerializes a deployable at the deployment site',
@@ -64,8 +64,8 @@ export async function runSpec(bigbandSpec: BigbandSpec, section: Section, telepo
         Timeout: 30
         })
         .fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME)
-        .canDo('s3:GetObject', `arn:aws:s3:::${section.isolationScope.s3Bucket}/${poolPrefix}/*`)
-        .canDo('s3:PutObject', `arn:aws:s3:::${section.isolationScope.s3Bucket}/${section.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
+        .canDo('s3:GetObject', `arn:aws:s3:::${section.bigband.s3Bucket}/${poolPrefix}/*`)
+        .canDo('s3:PutObject', `arn:aws:s3:::${section.bigband.s3Bucket}/${section.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
 
 
     logger.info(`Shipping section "${section.name}" to ${section.region}`);
@@ -262,7 +262,7 @@ async function pushCode(dir: string, npmPackageDir: string, section: Section, in
 
 async function compileInstrument(d: string, npmPackageDir: string, section: Section, instrument: Instrument, blobPool: S3BlobPool) {
     try {
-        const packager = new Packager(d, npmPackageDir, section.isolationScope.s3Bucket, section.isolationScope.s3Prefix, section, blobPool);
+        const packager = new Packager(d, npmPackageDir, section.bigband.s3Bucket, section.bigband.s3Prefix, section, blobPool);
         const pathPrefix = 'build';
         logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
         const frag = instrument.createFragment(pathPrefix);
@@ -303,7 +303,7 @@ async function compileInstrument(d: string, npmPackageDir: string, section: Sect
 
 
 function ttlPrefix(section: Section) {
-    return `${section.isolationScope.s3Prefix}/TTL/7d`;
+    return `${section.bigband.s3Prefix}/TTL/7d`;
 }
 
 async function configureBucket(section: Section) {
@@ -313,7 +313,7 @@ async function configureBucket(section: Section) {
     const s3 = AwsFactory.fromRig(section).newS3();
     const prefix = `${ttlPrefix(section)}/`;
     const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
-        Bucket: section.isolationScope.s3Bucket,
+        Bucket: section.bigband.s3Bucket,
         LifecycleConfiguration: {
             Rules: [
                 {

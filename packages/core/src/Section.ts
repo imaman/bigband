@@ -28,7 +28,7 @@ import {Bigband} from './Bigband'
  */
 export class Section {
 
-    public readonly isolationScope: Bigband
+    public readonly bigband: Bigband
 
     /**
      *Creates an instance of Section.
@@ -40,11 +40,11 @@ export class Section {
      */
     constructor(bigband: Bigband, 
         public readonly region: string, public readonly name: string) {
-        this.isolationScope = bigband
+        this.bigband = bigband
     }    
 
     physicalName() {
-        return `${this.isolationScope.name}-${this.name}`;
+        return `${this.bigband.name}-${this.name}`;
     }        
 }
 
