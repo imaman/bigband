@@ -20,6 +20,19 @@ const DEPLOYABLES_FOLDER = 'deployables';
 
 export {DeployMode} from './Packager'
 
+export function grantPermission(instrument: Instrument, action: string, arn: string) {
+    instrument.getDefinition().mutate(o => o.Properties.Policies.push({
+        Version: '2012-10-17',
+        Statement: [{ 
+            Effect: "Allow",
+            Action: [
+              action,
+            ],
+            Resource: arn
+        }]
+    }));
+}
+
 export async function runBigbandFile(bigbandFile: string, sectionName: string, teleportingEnabled: boolean, deployMode: DeployMode) {
     const t0 = Date.now();
     if (Number(process.versions.node.split('.')[0]) < 8) {
