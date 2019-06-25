@@ -1,7 +1,6 @@
 export * from './Bigband'
 export * from './Section'
 export * from './Definition'
-export * from './IsolationScope'
 export * from './Instrument'
 export * from './LambdaInstrument'
 export * from './DynamoDbInstrument'

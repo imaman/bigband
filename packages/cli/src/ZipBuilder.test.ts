@@ -175,7 +175,7 @@ describe('ZipBuilder', () => {
         //     DhfmFU/JVuW/E5mTHRV9Ko7YI4Cz/9xaMOLKtTAlTdA=
         //     MgRwaKqyz7Cmz0GW+fDxMjPp7vg2WiKALu7yycgaWzs=
 
-        xit('can scan a node_modules directory and merge it', async () => {
+        it('can scan a node_modules directory and merge it', async () => {
             const zb = new ZipBuilder();
             const fragA = zb.newFragment();
             fragA.scan('node_modules/moment', path.resolve(__dirname, '../../example/node_modules/moment'));
@@ -189,7 +189,7 @@ describe('ZipBuilder', () => {
             const mergedPojo = await ZipBuilder.toPojo(mergedBuffer);
             comparePojos(originalPojo, mergedPojo);
         });
-        xit('roundtrips without losing a bit', async () => {
+        it('roundtrips without losing a bit', async () => {
             const zb = new ZipBuilder();
             const fragA = zb.newFragment();
             fragA.scan('node_modules/moment', path.resolve(__dirname, '../../example/node_modules/moment'));
