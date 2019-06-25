@@ -15,22 +15,7 @@ function newLambda(packageName: string[], name: string, controllerPath: string, 
 
 
 describe('Instruments', () => {
-    describe('cando', () => {
-        it ('adds an IAM policy', () => {
-            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-
-            instrument.canDo('uvw:xyz', 'arn:aws:something:foo:bar')
-            expect(instrument.getDefinition().get()).to.containSubset({Properties: {
-                Policies: [{
-                    Statement: [{
-                        Action: ['uvw:xyz'],
-                        Effect: 'Allow',
-                        Resource: 'arn:aws:something:foo:bar'
-                    }]
-                }]
-            }});
-        });
-
+    describe('naming', () => {
         it ('rejects package name that contain dashses', () => {
             expect(() => newLambda(['x-y'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "x-y"');
             expect(() => newLambda(['xy-'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "xy-"');

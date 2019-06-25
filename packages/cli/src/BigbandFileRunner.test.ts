@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 import {grantPermission} from './BigbandFileRunner'
-import { Instrument, LambdaInstrument } from 'bigband-core';
+import { LambdaInstrument } from 'bigband-core';
 
 
 describe('BigbandFileRunner', () => {
@@ -30,18 +30,24 @@ describe('BigbandFileRunner', () => {
             grantPermission(ins, "MY_ACTION_1", "MY_ARN_1")
             grantPermission(ins, "MY_ACTION_2", "MY_ARN_2")
             const obj = ins.getDefinition().get()
-            expect(obj.Properties.Policies).to.eql([{
-                Statement: [{
-                    Action: ["MY_ACTION_1"],
-                    Effect: "Allow",
-                    Resource: "MY_ARN_1"
-                }, {
-                    Action: ["MY_ACTION_2"],
-                    Effect: "Allow",
-                    Resource: "MY_ARN_2"
-                }],
-                Version: "2012-10-17"
-            }])
+            expect(obj.Properties.Policies).to.eql([
+                {
+                    Statement: [{
+                        Action: ["MY_ACTION_1"],
+                        Effect: "Allow",
+                        Resource: "MY_ARN_1"
+                    }],
+                    Version: "2012-10-17"
+                }, 
+                {
+                    Statement: [{
+                        Action: ["MY_ACTION_2"],
+                        Effect: "Allow",
+                        Resource: "MY_ARN_2"
+                    }],
+                    Version: "2012-10-17"
+                }
+            ])
         });
     });
 });

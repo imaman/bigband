@@ -75,10 +75,14 @@ export async function runSpec(bigbandSpec: BigbandSpec, section: Section, telepo
         Description: 'Rematerializes a deployable at the deployment site',
         MemorySize: 2560,
         Timeout: 30
-        })
-        .fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME)
-        .canDo('s3:GetObject', `arn:aws:s3:::${section.bigband.s3Bucket}/${poolPrefix}/*`)
-        .canDo('s3:PutObject', `arn:aws:s3:::${section.bigband.s3Bucket}/${section.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
+        }).fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME);
+
+    
+    grantPermission(teleportInstrument, 's3:GetObject', 
+        `arn:aws:s3:::${section.bigband.s3Bucket}/${poolPrefix}/*`);
+
+    grantPermission(teleportInstrument, 's3:PutObject',
+        `arn:aws:s3:::${section.bigband.s3Bucket}/${section.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
 
 
     logger.info(`Shipping section "${section.name}" to ${section.region}`);

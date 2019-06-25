@@ -73,28 +73,6 @@ export abstract class Instrument {
     }
     
     /**
-     * Adds an IAM permission to this instrument
-     *
-     * @param {string} action the action to be allowed 
-     * @param {string} arn specifies the resource that this instrument is being granted permission to access   
-     * @returns this
-     * @memberof Instrument
-     */
-    canDo(action: string, arn: string) {
-        this.definition.mutate(o => o.Properties.Policies.push({
-            Version: '2012-10-17',
-            Statement: [{ 
-                Effect: "Allow",
-                Action: [
-                  action,
-                ],
-                Resource: arn
-            }]
-        }));      
-        return this;
-    }
-
-    /**
      * Returns a [[DeployableFragment]] to be added to the bundle of shipped code
      * @param pathPrefix path to the directory where the compiled sources file will reside
      */
