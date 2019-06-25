@@ -21,7 +21,7 @@ class Dependency {
  * arranged in directories). This enables logical grouping of related instruments. The packageName (denoting a "path
  * in the tree") is specified as an array of string: ["p1", "p2", "p3"] denotes a package nested inside the
  * ["p1", "p2"] package. For brevity, a packageName can also be specified as a plain string: "p1" is equivalent to
- * ["p1"]. The instrument's plain name is must be unique within its package. In other words: two instruments can have
+ * ["p1"]. The instrument's plain name must be unique within its package. In other words: two instruments can have
  * the same simple name if they belond to two different packages.
  */
 export abstract class Instrument {
