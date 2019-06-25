@@ -4,14 +4,14 @@ import {loadSpec,BigbandSpec} from '../BigbandFileRunner';
 
 async function main(bigbandFile: string) {
     const spec: BigbandSpec = await loadSpec(bigbandFile);
-    const scopes = spec.sections.map(r => r.bigband);
+    const scopes = spec.sections.map(s => s.section.bigband);
     const ret = {};
     scopes.forEach(s => ret[s.name] = {});
-    spec.sections.forEach(r => {
-        const e = ret[r.bigband.name];
+    spec.sections.forEach(s => {
+        const e = ret[s.section.bigband.name];
         const d = {};
-        e[r.name] = d;
-        spec.instruments.forEach(curr => d[curr.physicalName(r)] = curr.arnService());
+        e[s.section.name] = d;
+        s.instruments.forEach(curr => d[curr.physicalName(s.section)] = curr.arnService());
     });
 
     return ret;

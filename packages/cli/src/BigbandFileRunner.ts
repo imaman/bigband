@@ -39,32 +39,43 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
         throw new Error('You must use node version >= 8 to run this program');
     }
     const bigbandSpec = await loadSpec(bigbandFile);
-    const section = bigbandSpec.sections.length === 1 && !sectionName ? bigbandSpec.sections[0] : bigbandSpec.sections.find(curr => curr.name === sectionName);
-    if (!section) {
-        throw new Error(`Failed to find a section named ${sectionName} in ${bigbandSpec.sections.map(curr => curr.name).join(', ')}`);
+    const sectionSpec = bigbandSpec.sections.length === 1 && !sectionName ? bigbandSpec.sections[0] : bigbandSpec.sections.find(curr => curr.section.name === sectionName);
+    if (!sectionSpec) {
+        throw new Error(`Failed to find a section named ${sectionName} in ${bigbandSpec.sections.map(curr => curr.section.name).join(', ')}`);
     }
 
-    await Promise.all([runSpec(bigbandSpec, section, teleportingEnabled, deployMode), configureBucket(section)]);
+    await Promise.all([runSpec(bigbandSpec, sectionSpec, teleportingEnabled, deployMode), configureBucket(sectionSpec.section)]);
     const dt = (Date.now() - t0) / 1000;
-    return `Section "${section.name}" shipped in ${dt.toFixed(1)}s`;        
+    return `Section "${sectionSpec.section.name}" shipped in ${dt.toFixed(1)}s`;        
 }
 
-export interface BigbandSpec {
-    sections: Section[]
+export interface SectionSpec {
+    section: Section
     instruments: Instrument[]
+    wiring: WireSpec[]
+}
+
+export interface WireSpec {
+    consumer: Instrument 
+    supplier: Instrument
+    name: string
+}
+export interface BigbandSpec {
+    sections: SectionSpec[]
     dir: string
 }
 
-export async function runSpec(bigbandSpec: BigbandSpec, section: Section, teleportingEnabled: boolean, deployMode: DeployMode) {
+export async function runSpec(bigbandSpec: BigbandSpec, sectionSpec: SectionSpec, teleportingEnabled: boolean, deployMode: DeployMode) {
     // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is
     // reserved for bigband's own use).
     // Naturally, this check must take place before we introduce bigband's own instruments.
-    const violation = bigbandSpec.instruments.find(curr => curr.fullyQualifiedName().toLowerCase().startsWith('bigband'))
+    const violation = Misc.flatten(bigbandSpec.sections.map(s => s.instruments)).find(curr => curr.fullyQualifiedName().toLowerCase().startsWith('bigband'))
     if (violation) {
         throw new Error(`Instrument "${violation.fullyQualifiedName()}" has a bad name: the fully qualified name of\n`
             + `an\n instrument is not allowed to start with "bigband"`);
     }
 
+    const section = sectionSpec.section
     const cfp = new CloudFormationPusher(section);
     cfp.peekAtExistingStack();
 
@@ -87,7 +98,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, section: Section, telepo
 
     logger.info(`Shipping section "${section.name}" to ${section.region}`);
 
-    const ps = bigbandSpec.instruments.map(instrument => 
+    const ps = sectionSpec.instruments.map(instrument => 
         pushCode(bigbandSpec.dir, bigbandSpec.dir, section, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
 
     // scotty needs slightly different parameters so we pushCode() it separately. 
@@ -233,12 +244,13 @@ function checkDuplicates(names: string[]): string[] {
 }
 
 function checkSpec(spec: BigbandSpec) {
-    let dupes = checkDuplicates(spec.sections.map(r => r.name));
+    // TODO(imaman): validate there is only one bigband
+    let dupes = checkDuplicates(spec.sections.map(r => r.section.name));
     if (dupes.length) {
         throw new Error(`Found two (or more) sections with the same name: ${JSON.stringify(dupes)}`);
     }
 
-    dupes = checkDuplicates(spec.instruments.map(r => r.fullyQualifiedName()));
+    dupes = checkDuplicates(Misc.flatten(spec.sections.map(s => s.instruments)).map(r => r.fullyQualifiedName()));
     if (dupes.length) {
         throw new Error(`Found two (or more) instruments with the same name: ${JSON.stringify(dupes)}`);
     }

@@ -1,4 +1,4 @@
-import { KinesisStreamConsumer, KinesisStreamInstrument, LambdaInstrument, DynamoDbAttributeType, Bigband, DynamoDbInstrument, Section } from 'bigband-core/lib/index';
+import { KinesisStreamConsumer, KinesisStreamInstrument, LambdaInstrument, DynamoDbAttributeType, Bigband, DynamoDbInstrument, Section, wire } from 'bigband-core/lib/index';
 
 
 const namespace = new Bigband({name: 'bb-example', awsAccount: '196625562809', profileName: 'imaman', s3Bucket: 'bigband-example', s3Prefix: 'root'});
@@ -35,12 +35,17 @@ const queryStream = new KinesisStreamInstrument('geography', 'QueryStream', 1);
 const queryStreamAnalyzer = new KinesisStreamConsumer('geography', 'analyzer', 'src/geography/analyzer', queryStream, 1);
 
 
-placeFinder.uses(distanceTable, "distanceTable");
-placeFinder.uses(queryStream, 'queryStream');
-
 export function run() {
     return {
-        sections: [prodMajor],
-        instruments: [importantDates, placeFinder, queryStream, distanceTable, queryStreamAnalyzer, healthChecker]
+        sections: [
+            {
+                section: prodMajor,
+                instruments: [importantDates, placeFinder, queryStream, distanceTable, queryStreamAnalyzer, healthChecker],
+                wiring: [
+                    wire(placeFinder, distanceTable, "distanceTable"),    
+                    wire(placeFinder, queryStream, "queryStream"),    
+                ]
+            }
+        ]
     }
 }

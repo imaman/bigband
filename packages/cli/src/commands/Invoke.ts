@@ -3,6 +3,7 @@ import {AwsFactory} from '../AwsFactory'
 import {loadSpec, BigbandSpec} from '../BigbandFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
 import { Section, Instrument } from 'bigband-core';
+import { Misc } from '../Misc';
 
 
 interface LookupResult {
@@ -12,14 +13,14 @@ interface LookupResult {
 }
 
 export function lookupFunction(lambdaName: string, spec: BigbandSpec): LookupResult {
-    let matches: any[] = [];
+    let matches: LookupResult[] = [];
     const names: string[] = [];
-    spec.sections.forEach(r => {
-        spec.instruments.forEach(curr => {
-            const name = curr.physicalName(r);
+    spec.sections.forEach(sectionSpec => {
+        sectionSpec.instruments.forEach(curr => {
+            const name = curr.physicalName(sectionSpec.section);
             names.push(name);
             if (name.indexOf(lambdaName) >= 0) {
-                matches.push({section: r, instrument: curr, name});
+                matches.push({section: sectionSpec.section, instrument: curr, name});
             }
         });
     });
@@ -37,7 +38,7 @@ export function lookupFunction(lambdaName: string, spec: BigbandSpec): LookupRes
 async function invokeFunction(bigbandFile: string, lambdaName: string, input: string) {
     const spec = await loadSpec(bigbandFile);
 
-    const data = lookupFunction(lambdaName, spec);
+    const data: LookupResult = lookupFunction(lambdaName, spec);
 
     var lambda: AWS.Lambda = new AwsFactory(data.section.region, data.section.bigband.profileName).newLambda();
     const params: InvocationRequest = {

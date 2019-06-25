@@ -25,4 +25,12 @@ export class Misc {
         bigbandPackageDir = bigbandPackageDir || findPackageDir();
         return bigbandPackageDir;
     }
+
+    static flatten<T>(arr: T[][]): T[] {
+        const ret: T[] = []
+        arr.forEach(curr => {
+            curr.forEach(t => ret.push(t))
+        })
+        return ret
+    }
 }
