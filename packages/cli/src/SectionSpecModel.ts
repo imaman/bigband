@@ -1,5 +1,4 @@
-import { BigbandSpec, Instrument, Section, WireSpec, SectionSpec } from "bigband-core";
-
+import { Instrument, WireSpec, SectionSpec } from "bigband-core";
 
 export class SectionSpecModel {
     constructor(private readonly spec: SectionSpec) {}
