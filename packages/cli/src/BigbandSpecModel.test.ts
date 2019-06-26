@@ -58,6 +58,29 @@ describe('BigbandSpecModel', () => {
             expect(model.instruments).to.eql([f1, f2, f3, f4])
         });
     });
+    describe('sections', () => {
+        it('returns all sections', () => {
+            const s1 = new Section(b, "r1", "s1")
+            const s2 = new Section(b, "r1", "s2")
+            const spec: BigbandSpec = {
+                sections: [
+                    {
+                        section: s1, 
+                        instruments: [],
+                        wiring: []
+                    },
+                    {
+                        section: s2, 
+                        instruments: [],
+                        wiring: []
+                    }
+                ]
+            }
+
+            const model = new BigbandSpecModel(spec)
+            expect(model.sections).to.eql([s1, s2])
+        })
+    })
     describe('assignedInstruments', () => {
         it('returns instrument-section pairs', async () => { 
             const s1 = new Section(b, "r1", "s1")
