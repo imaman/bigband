@@ -69,7 +69,7 @@ export abstract class Instrument {
         if (existingDep) {
             throw new Error(`Name conflict. This instrument (${this.fullyQualifiedName()}) already has a dependency named ${name} (on ${existingDep.supplier.fullyQualifiedName()})`);
         }
-        // this.dependencies.push(new Dependency(this, supplier, name));
+        this.dependencies.push(new Dependency(this, supplier, name));
     }
     
     /**

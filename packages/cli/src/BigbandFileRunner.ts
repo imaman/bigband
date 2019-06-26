@@ -4,7 +4,7 @@ import * as hash from 'hash.js'
 const Module = require('module');
 
 import { AwsFactory } from './AwsFactory';
-import { BigbandSpec, SectionSpec, NameStyle, Section, Instrument, LambdaInstrument, WireSpec } from 'bigband-core';
+import { BigbandSpec, SectionSpec, NameStyle, Section, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult, DeployMode } from './Packager'
 import { DeployableAtom } from 'bigband-core'
 import { ZipBuilder } from './ZipBuilder'
@@ -89,8 +89,6 @@ export async function runSpec(bigbandSpec: BigbandSpec, sectionSpec: SectionSpec
     if (!dir) {
         throw new Error('Found a fasly dir') 
     }
-
-    // TODO(imaman): iterate on assignedInstruments instead of instruments 
     const ps = sectionSpec.instruments.map(instrument => 
         pushCode(dir, dir, section, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
 
@@ -108,8 +106,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, sectionSpec: SectionSpec
 
     pushedInstruments.forEach(curr => {
         const def = curr.instrument.getPhysicalDefinition(section);
-        const wirings: WireSpec[] = model.getWiringsOf(curr.instrument, section)
-        wirings.forEach(d => {
+        curr.instrument.dependencies.forEach(d => {
             d.supplier.contributeToConsumerDefinition(section, def);
         });
 
