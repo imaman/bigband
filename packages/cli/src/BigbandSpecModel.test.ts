@@ -35,6 +35,11 @@ describe('BigbandSpecModel', () => {
             const model = new BigbandSpecModel(spec)
             expect(() => model.validate()).to.throw('Name collision(s) in wiring of "b-s1-p1-f1": ["a"]')
         })
+
+        // TODO(imaman): increare coverage:
+        //    same name but in two different instruments
+        //    same name but in two different sections. 
+        //    multiple non-colliding names in same assigned-instrument.
     })
 
     describe('instruments', () => {
