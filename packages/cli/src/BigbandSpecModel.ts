@@ -1,5 +1,6 @@
 import { BigbandSpec, Instrument, Section, WireSpec, SectionSpec } from "bigband-core";
 import { Misc } from "./Misc";
+import { SectionSpecModel } from "./SectionSpecModel";
 
 
 export interface AssignedInstrument {
@@ -22,12 +23,17 @@ export class BigbandSpecModel {
         return this.spec.sections.map(s => s.section)
     }
 
-    getWiringsOf(instrument: Instrument, section: Section): WireSpec[] {
-        const sectionSpec: SectionSpec|undefined = this.spec.sections.find(s => s.section === section)
+    getSetionModel(section: Section): SectionSpecModel {
+        const sectionSpec = this.spec.sections.find(s => s.section === section)
         if (!sectionSpec) {
-            return []
+            throw new Error(`The given section (${section.name}) was not found`)
         }
 
-        return sectionSpec.wiring.filter(w => w.consumer === instrument)
+        return new SectionSpecModel(sectionSpec)
+    }
+
+    getWiringsOf(instrument: Instrument, section: Section): WireSpec[] {
+        const m = this.getSetionModel(section)
+        return m.getWiringsOf(instrument)
     }
 }

@@ -294,6 +294,7 @@ async function compileInstrument(d: string, npmPackageDir: string, section: Sect
         const frag = instrument.createFragment(pathPrefix);
 
         const mapping = {};
+        // TODO(imaman): coverage
         instrument.dependencies.forEach(d => {
             mapping[d.name] = {name: d.supplier.physicalName(section), region: section.region};
         });
