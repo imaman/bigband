@@ -1,4 +1,4 @@
-import { BigbandSpec, Instrument, Section } from "bigband-core";
+import { BigbandSpec, Instrument, Section, WireSpec, SectionSpec } from "bigband-core";
 import { Misc } from "./Misc";
 
 
@@ -20,5 +20,14 @@ export class BigbandSpecModel {
 
     get sections(): Section[] {
         return this.spec.sections.map(s => s.section)
+    }
+
+    getWiringsOf(instrument: Instrument, section: Section): WireSpec[] {
+        const sectionSpec: SectionSpec|undefined = this.spec.sections.find(s => s.section === section)
+        if (!sectionSpec) {
+            return []
+        }
+
+        return sectionSpec.wiring.filter(w => w.consumer === instrument)
     }
 }
