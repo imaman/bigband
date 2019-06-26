@@ -12,13 +12,13 @@ export class BigbandSpecModel {
     constructor(private readonly spec: BigbandSpec) {}
 
     findSectionModel(sectionName: string): SectionSpecModel {
-        const sectionSpec = this.spec.sections.length === 1 && !sectionName ? this.spec.sections[0] : this.spec.sections.find(curr => curr.section.name === sectionName);
-        if (!sectionSpec) {
-            throw new Error(`Failed to find a section named ${sectionName} in ${this.spec.sections.map(curr => curr.section.name).join(', ')}`);
+        const models = this.sectionModels
+        const ret = models.length === 1 && !sectionName ? models[0] : models.find(curr => curr.section.name === sectionName);
+        if (!ret) {
+            throw new Error(`Failed to find a section named ${sectionName} in ${models.map(curr => curr.section.name).join(', ')}`);
         }    
 
-
-        return new SectionSpecModel(sectionSpec)
+        return ret
     }
     
     get instruments(): Instrument[] {
@@ -31,5 +31,13 @@ export class BigbandSpecModel {
 
     get sections(): Section[] {
         return this.spec.sections.map(s => s.section)
+    }
+
+    get sectionModels(): SectionSpecModel[] {
+        return this.spec.sections.map(s => new SectionSpecModel(s))
+    }
+
+    validate() {
+        this.sectionModels.forEach(curr => curr.validate())
     }
 }

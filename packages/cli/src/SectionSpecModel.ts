@@ -14,10 +14,6 @@ export class SectionSpecModel {
 
 
     validate() {
-        // TODO(imaman): check ofr duplicate wiring
-    //     if (existingDep) {
-    //         throw new Error(`Name conflict. This instrument (${this.fullyQualifiedName()}) already has a dependency named ${name} (on ${existingDep.supplier.fullyQualifiedName()})`);
-    //     }
-
+        this.instruments.forEach(curr => curr.validate())
     }
 }

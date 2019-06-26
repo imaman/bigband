@@ -221,33 +221,16 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
 }
 
 
-function checkDuplicates(names: string[]): string[] {
-    const uniqueNames = new Set<string>(names);
-    if (uniqueNames.size === names.length) {
-        return [];
-    }
-
-    const ret: string[] = [];
-    names.forEach(n => {
-        if (uniqueNames.has(n)) {
-            uniqueNames.delete(n);
-        } else {
-            ret.push(n);
-        }
-    });
-
-    return ret;
-}
 
 function checkSpec(model: BigbandSpecModel) {
     // TODO(imaman): all instruments mentioned in wiring are also defined in the "instruments" field of the section mentioned in the wiring
     // TODO(imaman): validate there is only one bigband
-    let dupes = checkDuplicates(model.sections.map(s => s.name));
+    let dupes = Misc.checkDuplicates(model.sections.map(s => s.name));
     if (dupes.length) {
         throw new Error(`Found two (or more) sections with the same name: ${JSON.stringify(dupes)}`);
     }
 
-    dupes = checkDuplicates(model.assignedInstruments.map(curr => curr.instrument.physicalName(curr.section)))
+    dupes = Misc.checkDuplicates(model.assignedInstruments.map(curr => curr.instrument.physicalName(curr.section)))
     if (dupes.length) {
         throw new Error(`Found two (or more) instruments with the same name: ${JSON.stringify(dupes)}`);
     }

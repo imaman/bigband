@@ -19,6 +19,24 @@ describe('BigbandSpecModel', () => {
         s3Prefix: "my_prefix"
     })
 
+    describe("vailidation", () => {
+        it("checks for wiring name-collision", () => {
+            const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+            const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+            const f3 = new LambdaInstrument("p1", "f3", "src/file_3")
+            const spec: BigbandSpec = {
+                sections: [{
+                    section: new Section(b, "r1", "s1"), 
+                    instruments: [f1, f2],
+                    wiring: [wire(f1, f2, "a"), wire(f1, f3, "a")]
+                }]
+            }
+
+            const model = new BigbandSpecModel(spec)
+            expect(() => model.validate()).to.throw('Name collision(s) in wiring of "b-s1-p1-f1": ["a"]')
+        })
+    })
+
     describe('instruments', () => {
         it('returns all instruments', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")

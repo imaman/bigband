@@ -33,4 +33,22 @@ export class Misc {
         })
         return ret
     }
+
+    static checkDuplicates(names: string[]): string[] {
+        const uniqueNames = new Set<string>(names);
+        if (uniqueNames.size === names.length) {
+            return [];
+        }
+    
+        const ret: string[] = [];
+        names.forEach(n => {
+            if (uniqueNames.has(n)) {
+                uniqueNames.delete(n);
+            } else {
+                ret.push(n);
+            }
+        });
+    
+        return ret;
+    }    
 }
