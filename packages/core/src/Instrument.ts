@@ -57,26 +57,10 @@ export abstract class Instrument {
     }
 
     /**
-     * Declares an inter-instrument dependency. It indicates that this instrument ("the consumer") will use the
-     * supplier instrument
-     *  
-     * @param supplier the supplier instrument.
-     * @param name the name of the dependency. 
-     */
-    uses(supplier: Instrument, name: string) {
-        const existingDep = this.dependencies.find(d => d.name === name);
-        if (existingDep) {
-            throw new Error(`Name conflict. This instrument (${this.fullyQualifiedName()}) already has a dependency named ${name} (on ${existingDep.supplier.fullyQualifiedName()})`);
-        }
-        // this.dependencies.push(new Dependency(this, supplier, name));
-    }
-    
-    /**
      * Returns a [[DeployableFragment]] to be added to the bundle of shipped code
      * @param pathPrefix path to the directory where the compiled sources file will reside
      */
     abstract createFragment(pathPrefix: string): DeployableFragment
-
 
     /**
      * Called on supplier instruments (as per the [[uses]] method). This allows supplier instruments to affect the

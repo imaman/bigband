@@ -21,16 +21,16 @@ describe('SectionSpecModel', () => {
 
     describe('instruments', () => {
         it('returns all instruments', () => {
-            // const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
-            // const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
-            // const spec: SectionSpec = {
-            //     section: new Section(b, "r1", "s1"), 
-            //     instruments: [f1, f2],
-            //     wiring: []
-            // }
+            const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+            const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+            const spec: SectionSpec = {
+                section: new Section(b, "r1", "s1"), 
+                instruments: [f1, f2],
+                wiring: []
+            }
 
-            // const model = new SectionSpecModel(spec)
-            // expect(model.instruments).to.eql([f1, f2])
+            const model = new SectionSpecModel(spec)
+            expect(model.instruments.map(i => i.instrument)).to.eql([f1, f2])
         });
     })
 });
