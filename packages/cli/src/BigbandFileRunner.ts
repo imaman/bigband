@@ -4,7 +4,7 @@ import * as hash from 'hash.js'
 const Module = require('module');
 
 import { AwsFactory } from './AwsFactory';
-import { NameStyle, Section, Instrument, LambdaInstrument } from 'bigband-core';
+import { BigbandSpec, SectionSpec, NameStyle, Section, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult, DeployMode } from './Packager'
 import { DeployableAtom } from 'bigband-core'
 import { ZipBuilder } from './ZipBuilder'
@@ -18,7 +18,7 @@ import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME } from './scotty';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
-export {DeployMode} from './Packager'
+export { DeployMode } from './Packager'
 
 export function grantPermission(instrument: Instrument, action: string, arn: string) {
     instrument.getDefinition().mutate(o => o.Properties.Policies.push({
@@ -49,21 +49,6 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
     return `Section "${sectionSpec.section.name}" shipped in ${dt.toFixed(1)}s`;        
 }
 
-export interface SectionSpec {
-    section: Section
-    instruments: Instrument[]
-    wiring: WireSpec[]
-}
-
-export interface WireSpec {
-    consumer: Instrument 
-    supplier: Instrument
-    name: string
-}
-export interface BigbandSpec {
-    sections: SectionSpec[]
-    dir: string
-}
 
 export async function runSpec(bigbandSpec: BigbandSpec, sectionSpec: SectionSpec, teleportingEnabled: boolean, deployMode: DeployMode) {
     // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is

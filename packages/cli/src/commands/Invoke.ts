@@ -1,9 +1,9 @@
 import * as AWS from 'aws-sdk'
-import {AwsFactory} from '../AwsFactory'
-import {loadSpec, BigbandSpec} from '../BigbandFileRunner';
+import { AwsFactory } from '../AwsFactory'
+import { loadSpec } from '../BigbandFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
 import { Section, Instrument } from 'bigband-core';
-import { Misc } from '../Misc';
+import { BigbandSpec } from 'bigband-core'
 
 
 interface LookupResult {

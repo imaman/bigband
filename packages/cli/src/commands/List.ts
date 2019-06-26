@@ -1,4 +1,5 @@
-import {loadSpec,BigbandSpec} from '../BigbandFileRunner';
+import {loadSpec} from '../BigbandFileRunner';
+import {BigbandSpec} from 'bigband-core'
 
 
 
