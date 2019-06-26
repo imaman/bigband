@@ -83,11 +83,15 @@ export async function runSpec(bigbandSpec: BigbandSpec, sectionSpec: SectionSpec
 
     logger.info(`Shipping section "${section.name}" to ${section.region}`);
 
+    const dir = bigbandSpec.dir
+    if (!dir) {
+        throw new Error('Found a fasly dir') 
+    }
     const ps = sectionSpec.instruments.map(instrument => 
-        pushCode(bigbandSpec.dir, bigbandSpec.dir, section, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
+        pushCode(dir, dir, section, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
 
     // scotty needs slightly different parameters so we pushCode() it separately. 
-    ps.push(pushCode(Misc.bigbandPackageDir(), bigbandSpec.dir, section, teleportInstrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
+    ps.push(pushCode(Misc.bigbandPackageDir(), dir, section, teleportInstrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
     
     const pushedInstruments = await Promise.all(ps);
 
@@ -229,6 +233,7 @@ function checkDuplicates(names: string[]): string[] {
 }
 
 function checkSpec(spec: BigbandSpec) {
+    // TODO(imaman): all instruments mentioned in wiring are also defined in the "instruments" field of the section mentioned in the wiring
     // TODO(imaman): validate there is only one bigband
     let dupes = checkDuplicates(spec.sections.map(r => r.section.name));
     if (dupes.length) {

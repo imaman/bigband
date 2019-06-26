@@ -14,6 +14,6 @@ export interface WireSpec {
 }
 export interface BigbandSpec {
     sections: SectionSpec[]
-    dir: string
+    dir?: string
 }
 
