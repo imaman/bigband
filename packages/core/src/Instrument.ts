@@ -27,7 +27,6 @@ class Dependency {
 export abstract class Instrument {
 
     protected readonly definition = new Definition();
-    public readonly dependencies: Dependency[] = [];
     private readonly packageName: string[];
 
     /**
