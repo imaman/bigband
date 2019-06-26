@@ -11,6 +11,20 @@ export interface AssignedInstrument {
 export class BigbandSpecModel {
     constructor(private readonly spec: BigbandSpec) {}
 
+    get sectionModels(): SectionSpecModel[] {
+        return this.spec.sections.map(curr => new SectionSpecModel(curr))
+    }
+
+    findSectionModel(sectionName: string): SectionSpecModel {
+        const sectionSpec = this.spec.sections.length === 1 && !sectionName ? this.spec.sections[0] : this.spec.sections.find(curr => curr.section.name === sectionName);
+        if (!sectionSpec) {
+            throw new Error(`Failed to find a section named ${sectionName} in ${this.spec.sections.map(curr => curr.section.name).join(', ')}`);
+        }    
+
+
+        return new SectionSpecModel(sectionSpec)
+    }
+    
     get instruments(): Instrument[] {
         return Misc.flatten(this.spec.sections.map(s => s.instruments))
     }

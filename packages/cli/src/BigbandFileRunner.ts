@@ -16,6 +16,7 @@ import { S3BlobPool } from './Teleporter';
 import { Misc } from './Misc';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME } from './scotty';
 import { BigbandSpecModel } from './BigbandSpecModel';
+import { SectionSpecModel } from './SectionSpecModel';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
@@ -40,18 +41,16 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
         throw new Error('You must use node version >= 8 to run this program');
     }
     const bigbandSpec = await loadSpec(bigbandFile);
-    const sectionSpec = bigbandSpec.sections.length === 1 && !sectionName ? bigbandSpec.sections[0] : bigbandSpec.sections.find(curr => curr.section.name === sectionName);
-    if (!sectionSpec) {
-        throw new Error(`Failed to find a section named ${sectionName} in ${bigbandSpec.sections.map(curr => curr.section.name).join(', ')}`);
-    }
+    const bigandSpecModel = new BigbandSpecModel(bigbandSpec)
+    const sectionModel = bigandSpecModel.findSectionModel(sectionName)
 
-    await Promise.all([runSpec(bigbandSpec, sectionSpec, teleportingEnabled, deployMode), configureBucket(sectionSpec.section)]);
+    await Promise.all([runSpec(bigbandSpec, sectionModel, teleportingEnabled, deployMode), configureBucket(sectionModel.section)]);
     const dt = (Date.now() - t0) / 1000;
-    return `Section "${sectionSpec.section.name}" shipped in ${dt.toFixed(1)}s`;        
+    return `Section "${sectionModel.section.name}" shipped in ${dt.toFixed(1)}s`;        
 }
 
 
-export async function runSpec(bigbandSpec: BigbandSpec, sectionSpec: SectionSpec, teleportingEnabled: boolean, deployMode: DeployMode) {
+export async function runSpec(bigbandSpec: BigbandSpec, sectionModel: SectionSpecModel, teleportingEnabled: boolean, deployMode: DeployMode) {
     const model = new BigbandSpecModel(bigbandSpec)
     // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is
     // reserved for bigband's own use).
@@ -62,7 +61,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, sectionSpec: SectionSpec
             + `an\n instrument is not allowed to start with "bigband"`);
     }
 
-    const section = sectionSpec.section
+    const section = sectionModel.section
     const cfp = new CloudFormationPusher(section);
     cfp.peekAtExistingStack();
 
@@ -91,11 +90,11 @@ export async function runSpec(bigbandSpec: BigbandSpec, sectionSpec: SectionSpec
     }
 
     // TODO(imaman): iterate on assignedInstruments instead of instruments 
-    const ps = sectionSpec.instruments.map(instrument => 
-        pushCode(dir, dir, section, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
+    const ps = sectionModel.instruments.map(instrument => 
+        pushCode(dir, dir, sectionModel, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
 
     // scotty needs slightly different parameters so we pushCode() it separately. 
-    ps.push(pushCode(Misc.bigbandPackageDir(), dir, section, teleportInstrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
+    ps.push(pushCode(Misc.bigbandPackageDir(), dir, sectionModel, teleportInstrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
     
     const pushedInstruments = await Promise.all(ps);
 
@@ -255,12 +254,13 @@ function checkSpec(model: BigbandSpecModel) {
     // TODO(imaman): validate names!
 }
 
-async function pushCode(dir: string, npmPackageDir: string, section: Section, instrument: Instrument, 
+async function pushCode(dir: string, npmPackageDir: string, model: SectionSpecModel, instrument: Instrument, 
     teleportInstrument: Instrument,  blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode) {
     if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
         throw new Error(`Bad value. ${dir} is not a directory.`);
     }
     
+    const section = model.section
     const physicalName = instrument.physicalName(section);
     const def = instrument.getPhysicalDefinition(section);
     if (!instrument.getEntryPointFile()) {
@@ -272,7 +272,7 @@ async function pushCode(dir: string, npmPackageDir: string, section: Section, in
         }
     }
 
-    const {zb, packager} = await compileInstrument(dir, npmPackageDir, section, instrument, blobPool);
+    const {zb, packager} = await compileInstrument(dir, npmPackageDir, model, instrument, blobPool);
     const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
         zb, teleportInstrument.physicalName(section), teleportingEnabled, deployMode);
     const resource = def.get();
@@ -286,7 +286,8 @@ async function pushCode(dir: string, npmPackageDir: string, section: Section, in
     }
 }
 
-async function compileInstrument(d: string, npmPackageDir: string, section: Section, instrument: Instrument, blobPool: S3BlobPool) {
+async function compileInstrument(d: string, npmPackageDir: string, model: SectionSpecModel, instrument: Instrument, blobPool: S3BlobPool) {
+    const section = model.section
     try {
         const packager = new Packager(d, npmPackageDir, section.bigband.s3Bucket, section.bigband.s3Prefix, section, blobPool);
         const pathPrefix = 'build';

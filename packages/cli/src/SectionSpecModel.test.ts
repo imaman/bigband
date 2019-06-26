@@ -19,6 +19,21 @@ describe('SectionSpecModel', () => {
         s3Prefix: "my_prefix"
     })
 
+    describe('instruments', () => {
+        it('returns all instruments', () => {
+            const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+            const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+            const spec: SectionSpec = {
+                section: new Section(b, "r1", "s1"), 
+                instruments: [f1, f2],
+                wiring: []
+            }
+
+            const model = new SectionSpecModel(spec)
+            expect(model.instruments).to.eql([f1, f2])
+        });
+    })
+
     describe('getWiringsOf', () => {
         it('returns an empty array if no wirings were defined', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
