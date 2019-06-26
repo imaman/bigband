@@ -223,6 +223,7 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
 
 
 function checkSpec(model: BigbandSpecModel) {
+    // TODO(imaman): move into the model classes + coverag
     // TODO(imaman): all instruments mentioned in wiring are also defined in the "instruments" field of the section mentioned in the wiring
     // TODO(imaman): validate there is only one bigband
     let dupes = Misc.checkDuplicates(model.sections.map(s => s.name));
