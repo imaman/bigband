@@ -91,7 +91,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, sectionModel: SectionSpe
     }
 
     // TODO(imaman): iterate on assignedInstruments instead of instruments 
-    const ps = sectionModel.instrumentModels.map(im => 
+    const ps = sectionModel.instruments.map(im => 
         pushCode(dir, dir, sectionModel, im, teleportInstrument, blobPool, teleportingEnabled, deployMode));
 
     const teleportModel = new InstrumentModel(sectionModel.section, teleportInstrument, [])

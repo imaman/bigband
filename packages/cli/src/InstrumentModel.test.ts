@@ -29,7 +29,7 @@ describe('InstrumentModel', () => {
             }
 
             const sectionModel = new SectionSpecModel(spec)
-            expect(sectionModel.instrumentModels[0].wirings).to.eql([])
+            expect(sectionModel.instruments[0].wirings).to.eql([])
         });
         it('returns an empty array if no wirings were defined for the given consumer', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
@@ -42,7 +42,7 @@ describe('InstrumentModel', () => {
             }
 
             const sectionModel = new SectionSpecModel(spec)
-            expect(sectionModel.instrumentModels[1].wirings).to.eql([])
+            expect(sectionModel.instruments[1].wirings).to.eql([])
         });
         it('returns all wirings for the given consumer', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
@@ -57,7 +57,7 @@ describe('InstrumentModel', () => {
             }
 
             const sectionModel = new SectionSpecModel(spec)
-            expect(sectionModel.instrumentModels[0].wirings).to.eql([w12, w13])
+            expect(sectionModel.instruments[0].wirings).to.eql([w12, w13])
         });
         it('returns wirings only for the given consumer', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
@@ -72,7 +72,7 @@ describe('InstrumentModel', () => {
             }
 
             const sectionModel = new SectionSpecModel(spec)
-            expect(sectionModel.instrumentModels[0].wirings).to.eql([w12])
+            expect(sectionModel.instruments[0].wirings).to.eql([w12])
         });
     });
 });
