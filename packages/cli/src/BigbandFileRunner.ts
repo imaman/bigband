@@ -17,6 +17,7 @@ import { Misc } from './Misc';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME } from './scotty';
 import { BigbandSpecModel } from './BigbandSpecModel';
 import { SectionSpecModel } from './SectionSpecModel';
+import { InstrumentModel } from './InstrumentModel';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
@@ -90,11 +91,12 @@ export async function runSpec(bigbandSpec: BigbandSpec, sectionModel: SectionSpe
     }
 
     // TODO(imaman): iterate on assignedInstruments instead of instruments 
-    const ps = sectionModel.instruments.map(instrument => 
-        pushCode(dir, dir, sectionModel, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
+    const ps = sectionModel.instrumentModels.map(im => 
+        pushCode(dir, dir, sectionModel, im, teleportInstrument, blobPool, teleportingEnabled, deployMode));
 
+    const teleportModel = new InstrumentModel(sectionModel.section, teleportInstrument, [])
     // scotty needs slightly different parameters so we pushCode() it separately. 
-    ps.push(pushCode(Misc.bigbandPackageDir(), dir, sectionModel, teleportInstrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
+    ps.push(pushCode(Misc.bigbandPackageDir(), dir, sectionModel, teleportModel, teleportInstrument, blobPool, teleportingEnabled, deployMode));
     
     const pushedInstruments = await Promise.all(ps);
 
@@ -106,9 +108,8 @@ export async function runSpec(bigbandSpec: BigbandSpec, sectionModel: SectionSpe
     };
 
     pushedInstruments.forEach(curr => {
-        const def = curr.instrument.getPhysicalDefinition(section);
-        const wirings: WireSpec[] = sectionModel.getWiringsOf(curr.instrument)
-        wirings.forEach(d => {
+        const def = curr.model.instrument.getPhysicalDefinition(section);
+        curr.model.wirings.forEach(d => {
             d.supplier.contributeToConsumerDefinition(section, def);
         });
 
@@ -116,7 +117,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, sectionModel: SectionSpe
             def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri());
         }
 
-        stack.Resources[curr.instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)] = def.get();
+        stack.Resources[curr.model.instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)] = def.get();
     });
 
     await cfp.deploy(stack)
@@ -254,13 +255,21 @@ function checkSpec(model: BigbandSpecModel) {
     // TODO(imaman): validate names!
 }
 
-async function pushCode(dir: string, npmPackageDir: string, model: SectionSpecModel, instrument: Instrument, 
-    teleportInstrument: Instrument,  blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode) {
+interface PushedInstrument {
+    s3Ref: S3Ref
+    wasPushed: boolean
+    physicalName: string
+    model: InstrumentModel
+}
+
+async function pushCode(dir: string, npmPackageDir: string, model: SectionSpecModel, instrumentModel: InstrumentModel, 
+    teleportInstrument: Instrument,  blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushedInstrument> {
     if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
         throw new Error(`Bad value. ${dir} is not a directory.`);
     }
     
     const section = model.section
+    const instrument = instrumentModel.instrument
     const physicalName = instrument.physicalName(section);
     const def = instrument.getPhysicalDefinition(section);
     if (!instrument.getEntryPointFile()) {
@@ -268,11 +277,11 @@ async function pushCode(dir: string, npmPackageDir: string, model: SectionSpecMo
             s3Ref: S3Ref.EMPTY,
             wasPushed: false,
             physicalName,
-            instrument
+            model: instrumentModel
         }
     }
 
-    const {zb, packager} = await compileInstrument(dir, npmPackageDir, model, instrument, blobPool);
+    const {zb, packager} = await compileInstrument(dir, npmPackageDir, model, instrumentModel, blobPool);
     const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
         zb, teleportInstrument.physicalName(section), teleportingEnabled, deployMode);
     const resource = def.get();
@@ -282,12 +291,13 @@ async function pushCode(dir: string, npmPackageDir: string, model: SectionSpecMo
         s3Ref: pushResult.deployableLocation,
         wasPushed: pushResult.wasPushed,
         physicalName,
-        instrument
+        model: instrumentModel
     }
 }
 
-async function compileInstrument(d: string, npmPackageDir: string, model: SectionSpecModel, instrument: Instrument, blobPool: S3BlobPool) {
+async function compileInstrument(d: string, npmPackageDir: string, model: SectionSpecModel, instrumentModel: InstrumentModel, blobPool: S3BlobPool) {
     const section = model.section
+    const instrument = instrumentModel.instrument
     try {
         const packager = new Packager(d, npmPackageDir, section.bigband.s3Bucket, section.bigband.s3Prefix, section, blobPool);
         const pathPrefix = 'build';
@@ -296,8 +306,8 @@ async function compileInstrument(d: string, npmPackageDir: string, model: Sectio
 
         const mapping = {};
         // TODO(imaman): coverage
-        instrument.dependencies.forEach(d => {
-            mapping[d.name] = {name: d.supplier.physicalName(section), region: section.region};
+        instrumentModel.wirings.forEach(w => {
+            mapping[w.name] = {name: w.supplier.physicalName(section), region: section.region};
         });
         frag.add(new DeployableAtom('bigband/deps.js', 
             `module.exports = ${JSON.stringify(mapping)}`));
