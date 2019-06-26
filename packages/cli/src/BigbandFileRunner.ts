@@ -15,6 +15,7 @@ import { logger } from './logger';
 import { S3BlobPool } from './Teleporter';
 import { Misc } from './Misc';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME } from './scotty';
+import { BigbandSpecModel } from './BigbandSpecModel';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
@@ -51,10 +52,11 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
 
 
 export async function runSpec(bigbandSpec: BigbandSpec, sectionSpec: SectionSpec, teleportingEnabled: boolean, deployMode: DeployMode) {
+    const model = new BigbandSpecModel(bigbandSpec)
     // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is
     // reserved for bigband's own use).
     // Naturally, this check must take place before we introduce bigband's own instruments.
-    const violation = Misc.flatten(bigbandSpec.sections.map(s => s.instruments)).find(curr => curr.fullyQualifiedName().toLowerCase().startsWith('bigband'))
+    const violation = model.instruments.find(curr => curr.fullyQualifiedName().toLowerCase().startsWith('bigband'))
     if (violation) {
         throw new Error(`Instrument "${violation.fullyQualifiedName()}" has a bad name: the fully qualified name of\n`
             + `an\n instrument is not allowed to start with "bigband"`);
@@ -209,7 +211,9 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
         ret.dir = d;
     }
 
-    checkSpec(ret);
+    checkSpec(new BigbandSpecModel(ret));
+
+    // TODO(imaman): change the return type to BigbandSpecModel
     return ret;
 }
 
@@ -232,15 +236,15 @@ function checkDuplicates(names: string[]): string[] {
     return ret;
 }
 
-function checkSpec(spec: BigbandSpec) {
+function checkSpec(model: BigbandSpecModel) {
     // TODO(imaman): all instruments mentioned in wiring are also defined in the "instruments" field of the section mentioned in the wiring
     // TODO(imaman): validate there is only one bigband
-    let dupes = checkDuplicates(spec.sections.map(r => r.section.name));
+    let dupes = checkDuplicates(model.sections.map(s => s.name));
     if (dupes.length) {
         throw new Error(`Found two (or more) sections with the same name: ${JSON.stringify(dupes)}`);
     }
 
-    dupes = checkDuplicates(Misc.flatten(spec.sections.map(s => s.instruments)).map(r => r.fullyQualifiedName()));
+    dupes = checkDuplicates(model.assignedInstruments.map(curr => curr.instrument.physicalName(curr.section)))
     if (dupes.length) {
         throw new Error(`Found two (or more) instruments with the same name: ${JSON.stringify(dupes)}`);
     }
