@@ -90,5 +90,20 @@ describe('SectionSpecModel', () => {
             const model = new SectionSpecModel(spec)
             expect(model.getWiringsOf(f1)).to.eql([w12])
         });
+        it('throws if the given instrument is not in the section', async () => { 
+            const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+            const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+            const f3 = new LambdaInstrument("p1", "f3", "src/file_3")
+            const w12 = wire(f1, f2, "w12")
+            const w23 = wire(f2, f3, "w23")
+            const spec: SectionSpec = {
+                section: new Section(b, "r1", "s1"), 
+                instruments: [f1, f2],
+                wiring: []
+            }
+
+            const model = new SectionSpecModel(spec)
+            expect(() => model.getWiringsOf(f3)).to.throw('The given instrument ("p1-f3") is not a member of the "s1" section')
+        });
     });
 });

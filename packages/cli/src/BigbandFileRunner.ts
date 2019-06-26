@@ -107,7 +107,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, sectionModel: SectionSpe
 
     pushedInstruments.forEach(curr => {
         const def = curr.instrument.getPhysicalDefinition(section);
-        const wirings: WireSpec[] = model.getWiringsOf(curr.instrument, section)
+        const wirings: WireSpec[] = sectionModel.getWiringsOf(curr.instrument)
         wirings.forEach(d => {
             d.supplier.contributeToConsumerDefinition(section, def);
         });
