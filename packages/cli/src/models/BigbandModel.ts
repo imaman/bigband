@@ -101,7 +101,6 @@ export class BigbandModel {
             throw new Error("multiple bigband instances")
         }
 
-        // TODO(imaman): validate there is only one bigband
         let dupes = Misc.checkDuplicates(this.sections.map(s => s.section.name));
         if (dupes.length) {
             throw new Error(`Section name collision. The following names were used by two (or more) sections: ${JSON.stringify(dupes)}`);
