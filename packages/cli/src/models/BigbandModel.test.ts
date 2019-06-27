@@ -193,38 +193,6 @@ describe('BigbandModel', () => {
             expect(model.sections).to.eql([s1, s2])
         })
     })
-    describe('assignedInstruments', () => {
-        it('returns instrument-section pairs', async () => { 
-            const s1 = new Section(b, "r1", "s1")
-            const s2 = new Section(b, "r1", "s2")
-            const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
-            const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
-            const f3 = new LambdaInstrument("p1", "f3", "src/file_3")
-            const f4 = new LambdaInstrument("p1", "f4", "src/file_4")
-            const spec: BigbandSpec = {
-                sections: [
-                    {
-                        section: s1, 
-                        instruments: [f1, f2],
-                        wiring: []
-                    },
-                    {
-                        section: s2, 
-                        instruments: [f3, f4],
-                        wiring: []
-                    }
-                ]
-            }
-
-            const model = new BigbandModel(spec, "somedir")
-            expect(model.assignedInstruments).to.eql([
-                {section: s1, instrument: f1},
-                {section: s1, instrument: f2},
-                {section: s2, instrument: f3},
-                {section: s2, instrument: f4},
-            ])
-        });
-    });
     describe("searchInstrument", () => {
         it("finds an instrument if there is an exact physical name match", () => {
             const s1 = new Section(b, "r1", "s1")

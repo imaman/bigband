@@ -1,6 +1,7 @@
 import { BigbandSpec, Instrument, Section, WireSpec, SectionSpec } from "bigband-core";
 import { Misc } from "../Misc";
 import { SectionModel } from "./SectionModel";
+import { InstrumentModel } from "./InstrumentModel";
 
 
 export interface AssignedInstrument {
@@ -77,10 +78,6 @@ export class BigbandModel {
         return Misc.flatten(this.spec.sections.map(s => s.instruments))
     }
 
-    get assignedInstruments(): AssignedInstrument[] {
-        return Misc.flatten(this.spec.sections.map(s => s.instruments.map(i => ({instrument: i, section: s.section}))))
-    }
-
     get sections(): Section[] {
         return this.spec.sections.map(s => s.section)
     }
@@ -97,8 +94,9 @@ export class BigbandModel {
         if (dupes.length) {
             throw new Error(`Section name collision. The following names were used by two (or more) sections: ${JSON.stringify(dupes)}`);
         }
-    
-        dupes = Misc.checkDuplicates(this.assignedInstruments.map(curr => curr.instrument.physicalName(curr.section)))
+
+        const instruments: InstrumentModel[] = Misc.flatten(this.sectionModels.map(s => s.instruments))
+        dupes = Misc.checkDuplicates(instruments.map(curr => curr.physicalName))
         if (dupes.length) {
             throw new Error('Instrument name collision. The following names were used by two (or more) instruments: ' +
                     JSON.stringify(dupes));

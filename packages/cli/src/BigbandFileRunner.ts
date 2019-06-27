@@ -88,7 +88,6 @@ export async function runSpec(model: BigbandModel, sectionModel: SectionModel, t
         throw new Error('Found a fasly dir') 
     }
 
-    // TODO(imaman): iterate on assignedInstruments instead of instruments 
     const ps = sectionModel.instruments.map(im => 
         pushCode(dir, dir, sectionModel, im, teleportInstrument, blobPool, teleportingEnabled, deployMode));
 
