@@ -34,7 +34,7 @@ export class BigbandModel {
         const exactMatches: LookupResult[] = []
     
 
-       this.sectionModels.forEach(sectionSpec => {
+       this.sections.forEach(sectionSpec => {
             sectionSpec.instruments.forEach(curr => {
                 const name = curr.instrument.physicalName(sectionSpec.section);
                 const lookupResult = {section: sectionSpec.section, instrument: curr.instrument, name};
@@ -65,7 +65,7 @@ export class BigbandModel {
     }
 
     findSectionModel(sectionName: string): SectionModel {
-        const models = this.sectionModels
+        const models = this.sections
         const ret = models.length === 1 && !sectionName ? models[0] : models.find(curr => curr.section.name === sectionName);
         if (!ret) {
             throw new Error(`Failed to find a section named ${sectionName} in ${models.map(curr => curr.section.name).join(', ')}`);
@@ -74,20 +74,20 @@ export class BigbandModel {
         return ret
     }
 
-    get sectionModels(): SectionModel[] {
+    get sections(): SectionModel[] {
         return this.spec.sections.map(s => new SectionModel(s))
     }
 
     validate() {
-        this.sectionModels.forEach(curr => curr.validate())
+        this.sections.forEach(curr => curr.validate())
 
         // TODO(imaman): validate there is only one bigband
-        let dupes = Misc.checkDuplicates(this.sectionModels.map(s => s.section.name));
+        let dupes = Misc.checkDuplicates(this.sections.map(s => s.section.name));
         if (dupes.length) {
             throw new Error(`Section name collision. The following names were used by two (or more) sections: ${JSON.stringify(dupes)}`);
         }
 
-        const instruments: InstrumentModel[] = Misc.flatten(this.sectionModels.map(s => s.instruments))
+        const instruments: InstrumentModel[] = Misc.flatten(this.sections.map(s => s.instruments))
         dupes = Misc.checkDuplicates(instruments.map(curr => curr.physicalName))
         if (dupes.length) {
             throw new Error('Instrument name collision. The following names were used by two (or more) instruments: ' +

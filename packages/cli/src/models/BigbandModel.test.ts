@@ -151,7 +151,7 @@ describe('BigbandModel', () => {
             }
 
             const model = new BigbandModel(spec, "somedir")
-            expect(model.sectionModels.map(s => s.section)).to.eql([s1, s2])
+            expect(model.sections.map(s => s.section)).to.eql([s1, s2])
         })
     })
     describe("searchInstrument", () => {
