@@ -36,6 +36,7 @@ export function grantPermission(instrument: Instrument, action: string, arn: str
     }));
 }
 
+// TODO(imaman): rename to ship()
 export async function runBigbandFile(bigbandFile: string, sectionName: string, teleportingEnabled: boolean, deployMode: DeployMode) {
     const t0 = Date.now();
     if (Number(process.versions.node.split('.')[0]) < 8) {
