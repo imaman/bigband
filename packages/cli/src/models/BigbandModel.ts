@@ -93,9 +93,10 @@ export class BigbandModel {
     
         dupes = Misc.checkDuplicates(this.assignedInstruments.map(curr => curr.instrument.physicalName(curr.section)))
         if (dupes.length) {
-            throw new Error(`Found two (or more) instruments with the same name: ${JSON.stringify(dupes)}`);
+            throw new Error('Instrument name collision. The following names were used by two (or more) instruments: ' +
+                    JSON.stringify(dupes));
         }
         
-        // TODO(imaman): validate names!
+        // TODO(imaman): validate name length + characters
     }
 }

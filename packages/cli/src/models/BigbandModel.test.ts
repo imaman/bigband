@@ -43,6 +43,21 @@ describe('BigbandModel', () => {
 
         describe("section names", () => {
             it("checks for section name collision", () => {
+                const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+                const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+                const f3 = new LambdaInstrument("p1", "f2", "src/file_2")
+                const spec: BigbandSpec = {
+                    sections: [
+                        { section: new Section(b, "r1", "s1"),  instruments: [f1, f2, f3], wiring: []}
+                    ]
+                }
+                expect(() => new BigbandModel(spec, "somedir")).to.throw(
+                    'Instrument name collision. The following names were used by two (or more) instruments: ["b-s1-p1-f2"]')
+            });
+        })
+
+        describe("instrument names", () => {
+            it("checks for instrument name collision", () => {
                 const spec: BigbandSpec = {
                     sections: [
                         { section: new Section(b, "r1", "s1"),  instruments: [], wiring: []},
@@ -56,7 +71,6 @@ describe('BigbandModel', () => {
                     'Section name collision. The following names were used by two (or more) sections: ["s1","s2"]')
             });
         })
-
     })
 
     describe('instruments', () => {
