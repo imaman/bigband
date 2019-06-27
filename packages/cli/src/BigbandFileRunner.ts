@@ -210,7 +210,6 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandModel> {
 
     const ret = new BigbandModel(bigbandSpec, d)
     checkSpec(ret);
-
     return ret;
 }
 

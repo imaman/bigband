@@ -24,6 +24,7 @@ export class BigbandModel {
         }
 
         this.dir = spec.dir || defaultDir
+        this.validate()
     }
 
     // TODO(imaman): coverage

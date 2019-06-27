@@ -32,8 +32,7 @@ describe('BigbandModel', () => {
                 }]
             }
 
-            const model = new BigbandModel(spec, "somedir")
-            expect(() => model.validate()).to.throw('Name collision(s) in wiring of "b-s1-p1-f1": ["a"]')
+            expect(() => new BigbandModel(spec, "somedir")).to.throw('Name collision(s) in wiring of "b-s1-p1-f1": ["a"]')
         })
 
         // TODO(imaman): increare coverage:
