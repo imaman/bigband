@@ -41,10 +41,10 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
     if (Number(process.versions.node.split('.')[0]) < 8) {
         throw new Error('You must use node version >= 8 to run this program');
     }
-    const bigbandSpecModel = await loadSpec(bigbandFile);
-    const sectionModel = bigbandSpecModel.findSectionModel(sectionName)
+    const bigbandModel = await loadSpec(bigbandFile);
+    const sectionModel = bigbandModel.findSectionModel(sectionName)
 
-    await Promise.all([runSpec(bigbandSpecModel, sectionModel, teleportingEnabled, deployMode), configureBucket(sectionModel.section)]);
+    await Promise.all([runSpec(bigbandModel, sectionModel, teleportingEnabled, deployMode), configureBucket(sectionModel.section)]);
     const dt = (Date.now() - t0) / 1000;
     return `Section "${sectionModel.section.name}" shipped in ${dt.toFixed(1)}s`;        
 }

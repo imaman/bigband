@@ -1,7 +1,6 @@
 import { SectionSpec } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
 
-// TODO(imaman): rename to SectionModel. ditto BigbandSpecModel
 export class SectionModel {
     constructor(private readonly spec: SectionSpec) {}
 

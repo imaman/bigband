@@ -10,7 +10,7 @@ import { LambdaInstrument, Section, wire, Bigband, SectionSpec } from 'bigband-c
 import { SectionModel } from './SectionModel'
 
 
-describe('SectionSpecModel', () => {
+describe('SectionModel', () => {
     const b = new Bigband({
         awsAccount: "a",
         name: "b",
