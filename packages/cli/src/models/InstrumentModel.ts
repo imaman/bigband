@@ -4,7 +4,6 @@ import { Misc } from "../Misc";
 export class InstrumentModel {
     constructor(public readonly section: Section, public readonly instrument: Instrument, public readonly wirings: WireSpec[]) {}
 
-
     validate() {
         const dups = Misc.checkDuplicates(this.wirings.map(w => w.name))
         if (dups.length) {

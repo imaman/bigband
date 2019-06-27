@@ -1,4 +1,4 @@
-import { SectionSpec } from "bigband-core";
+import { SectionSpec, Instrument } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
 
 export class SectionModel {
@@ -9,11 +9,19 @@ export class SectionModel {
     }
 
     get instruments(): InstrumentModel[] {
-        return this.spec.instruments.map(i => new InstrumentModel(this.spec.section, i, this.spec.wiring.filter(w => w.consumer === i)))
+        return this.spec.instruments.map(i => new InstrumentModel(this.spec.section, i, 
+            this.spec.wiring.filter(w => w.consumer === i)))
     }
-
 
     validate() {
         this.instruments.forEach(curr => curr.validate())
+
+        const set = new Set<Instrument>(this.spec.instruments)
+        const wiringsWithbadSuppliers = this.spec.wiring.filter(w => !set.has(w.supplier))
+        if (wiringsWithbadSuppliers.length) {
+            const w = wiringsWithbadSuppliers[0]
+            throw new Error(`Instrument "${w.supplier.fullyQualifiedName()}" cannot be used as a supplier because ` + 
+                `it is not part of the "${this.section.name}" section`)
+        }
     }
 }
