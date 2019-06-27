@@ -74,10 +74,6 @@ export class BigbandModel {
         return ret
     }
 
-    get instruments(): Instrument[] {
-        return Misc.flatten(this.spec.sections.map(s => s.instruments))
-    }
-
     get sections(): Section[] {
         return this.spec.sections.map(s => s.section)
     }

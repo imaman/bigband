@@ -131,45 +131,6 @@ describe('BigbandModel', () => {
         })
     })
 
-    describe('instruments', () => {
-        it('returns all instruments', async () => { 
-            const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
-            const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
-            const spec: BigbandSpec = {
-                sections: [{
-                    section: new Section(b, "r1", "s1"), 
-                    instruments: [f1, f2],
-                    wiring: []
-                }]
-            }
-
-            const model = new BigbandModel(spec, "somedir")
-            expect(model.instruments).to.eql([f1, f2])
-        });
-        it('returns all instruments from multiple sections', async () => { 
-            const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
-            const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
-            const f3 = new LambdaInstrument("p1", "f3", "src/file_3")
-            const f4 = new LambdaInstrument("p1", "f4", "src/file_4")
-            const spec: BigbandSpec = {
-                sections: [
-                    {
-                        section: new Section(b, "r1", "s1"), 
-                        instruments: [f1, f2],
-                        wiring: []
-                    },
-                    {
-                        section: new Section(b, "r1", "s2"), 
-                        instruments: [f3, f4],
-                        wiring: []
-                    }
-                ]
-            }
-
-            const model = new BigbandModel(spec, "somedir")
-            expect(model.instruments).to.eql([f1, f2, f3, f4])
-        });
-    });
     describe('sections', () => {
         it('returns all sections', () => {
             const s1 = new Section(b, "r1", "s1")
