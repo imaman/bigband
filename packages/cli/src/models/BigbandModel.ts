@@ -96,7 +96,6 @@ export class BigbandModel {
         this.sections.forEach(curr => curr.validate())
 
         const numBigbanbds = new Set(this.sections.map(s => s.section.bigband)).size
-
         if (numBigbanbds != 1) {
             throw new Error("multiple bigband instances")
         }
