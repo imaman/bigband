@@ -131,29 +131,6 @@ describe('BigbandModel', () => {
         })
     })
 
-    describe('sections', () => {
-        it('returns all sections', () => {
-            const s1 = new Section(b, "r1", "s1")
-            const s2 = new Section(b, "r1", "s2")
-            const spec: BigbandSpec = {
-                sections: [
-                    {
-                        section: s1, 
-                        instruments: [],
-                        wiring: []
-                    },
-                    {
-                        section: s2, 
-                        instruments: [],
-                        wiring: []
-                    }
-                ]
-            }
-
-            const model = new BigbandModel(spec, "somedir")
-            expect(model.sections.map(s => s.section)).to.eql([s1, s2])
-        })
-    })
     describe("searchInstrument", () => {
         it("finds an instrument if there is an exact physical name match", () => {
             const s1 = new Section(b, "r1", "s1")
