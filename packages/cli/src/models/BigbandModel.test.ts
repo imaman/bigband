@@ -43,16 +43,31 @@ describe('BigbandModel', () => {
                     sections: [{
                         section: new Section(b, "r1", "s1"), 
                         instruments: [f1, f2],
-                        wiring: [wire(f1, f2, "a"), wire(f1, f3, "a")]
+                        wiring: [wire(f1, f2, "a"), wire(f2, f3, "a")]
                     }]
                 }
 
-                expect(() => new BigbandModel(spec, "somedir")).not.to.throw
+                expect(() => new BigbandModel(spec, "somedir")).not.to.throw()
             })
-            // TODO(imaman): increare coverage:
-            //    same name but in two different instruments
-            //    same name but in two different sections. 
-            //    multiple non-colliding names in same assigned-instrument.
+            it("allows the same wiring name to be used in the same instuments in two different section", () => {
+                const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+                const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+                const spec: BigbandSpec = {
+                    sections: [
+                        {
+                            section: new Section(b, "r1", "s1"), 
+                            instruments: [f1, f2],
+                            wiring: [wire(f1, f2, "a")]
+                        },
+                        {
+                            section: new Section(b, "r1", "s2"), 
+                            instruments: [f1, f2],
+                            wiring: [wire(f1, f2, "a")]
+                        }]
+                }
+
+                expect(() => new BigbandModel(spec, "somedir")).not.to.throw()
+            })
         })
 
         describe("section names", () => {
