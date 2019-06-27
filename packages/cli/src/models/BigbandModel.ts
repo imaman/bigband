@@ -65,30 +65,28 @@ export class BigbandModel {
     }
 
     findSectionModel(sectionName: string): SectionModel {
-        const models = this.sections
-        const ret = models.length === 1 && !sectionName ? models[0] : models.find(curr => curr.section.name === sectionName);
+        const sections = this.sections
+        const ret = sections.length === 1 && !sectionName ? sections[0] : sections.find(curr => curr.section.name === sectionName);
         if (!ret) {
-            throw new Error(`Failed to find a section named ${sectionName} in ${models.map(curr => curr.section.name).join(', ')}`);
+            throw new Error(`Failed to find a section named ${sectionName} in ${sections.map(curr => curr.section.name).join(', ')}`);
         }    
 
         return ret
     }
 
-    get sections(): SectionModel[] {
+    private get sections(): SectionModel[] {
         return this.spec.sections.map(s => new SectionModel(s))
     }
 
-
     computeList() {
-        const model = this
-        const bigbands = model.sections.map(curr => curr.section.bigband);
+        const bigbands = this.sections.map(curr => curr.section.bigband);
         const ret = {};
         bigbands.forEach(s => ret[s.name] = {});
-        model.sections.forEach(sectionModel => {
-            const e = ret[sectionModel.section.bigband.name];
-            const d = {};
-            e[sectionModel.section.name] = d;
-            sectionModel.instruments.forEach(curr => d[curr.instrument.physicalName(sectionModel.section)] = curr.instrument.arnService());
+        this.sections.forEach(sectionModel => {
+            const bigbandObject = ret[sectionModel.section.bigband.name];
+            const secObject = {};
+            bigbandObject[sectionModel.section.name] = secObject;
+            sectionModel.instruments.forEach(curr => secObject[curr.instrument.physicalName(sectionModel.section)] = curr.instrument.arnService());
         });
     
         return ret;    
