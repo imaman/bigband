@@ -28,7 +28,7 @@ export class BigbandModel {
     }
 
     // TODO(imaman): coverage
-    searchInstrument(lambdaName: string) {
+    searchInstrument(instrumentName: string): LookupResult {
         let matches: LookupResult[] = [];
         const names: string[] = [];    
     
@@ -36,18 +36,18 @@ export class BigbandModel {
             sectionSpec.instruments.forEach(curr => {
                 const name = curr.instrument.physicalName(sectionSpec.section);
                 names.push(name);
-                if (name.indexOf(lambdaName) >= 0) {
+                if (name.indexOf(instrumentName) >= 0) {
                     matches.push({section: sectionSpec.section, instrument: curr.instrument, name});
                 }
             });
         });
     
         if (!matches.length) {
-            throw new Error(`Function ${lambdaName} not found in ${JSON.stringify(names)}`);
+            throw new Error(`Instrument "${instrumentName}" not found in ${JSON.stringify(names)}`);
         }
     
         if (matches.length > 1) {
-            throw new Error(`Multiple matches on ${lambdaName}: ${JSON.stringify(matches.map(x => x.name))}`);
+            throw new Error(`Multiple matches on "${instrumentName}": ${JSON.stringify(matches.map(x => x.name))}`);
         }
     
         return matches[0];    
@@ -80,7 +80,6 @@ export class BigbandModel {
     }
 
     validate() {
-        // TODO(imaman): check that a single bigband is used
         this.sectionModels.forEach(curr => curr.validate())
 
         // TODO(imaman): coverag

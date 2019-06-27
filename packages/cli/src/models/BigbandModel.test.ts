@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 import { BigbandSpec, LambdaInstrument, Section, wire, Bigband } from 'bigband-core';
-import { BigbandModel } from './BigbandModel'
+import { BigbandModel, LookupResult } from './BigbandModel'
 
 
 describe('BigbandModel', () => {
@@ -196,4 +196,110 @@ describe('BigbandModel', () => {
             ])
         });
     });
+    describe("searchInstrument", () => {
+        it("finds an instrument if there is an exact physical name match", () => {
+            const s1 = new Section(b, "r1", "s1")
+            const s2 = new Section(b, "r1", "s2")
+            const f1 = new LambdaInstrument("p1", "f1", "")
+            const f2 = new LambdaInstrument("p1", "f2", "")
+            const f3 = new LambdaInstrument("p1", "f3", "")
+            const f4 = new LambdaInstrument("p1", "f4", "")
+            const spec: BigbandSpec = {
+                sections: [
+                    {
+                        section: s1, 
+                        instruments: [f1, f2],
+                        wiring: []
+                    },
+                    {
+                        section: s2, 
+                        instruments: [f3, f4],
+                        wiring: []
+                    }
+                ]
+            }
+
+            const model = new BigbandModel(spec, "somedir")
+            expect(model.searchInstrument("b-s1-p1-f1")).to.eql({
+                name: 'b-s1-p1-f1',
+                instrument: f1,
+                section: s1
+            })
+        })
+        it("finds an instrument if there is a unique substring match", () => {
+            const s1 = new Section(b, "r1", "s1")
+            const s2 = new Section(b, "r1", "s2")
+            const f1 = new LambdaInstrument("p1", "f11aa", "")
+            const f2 = new LambdaInstrument("p1", "f22bb", "")
+            const spec: BigbandSpec = {
+                sections: [
+                    {
+                        section: s1, 
+                        instruments: [f1, f2],
+                        wiring: []
+                    },
+                    {
+                        section: s2, 
+                        instruments: [f1, f2],
+                        wiring: []
+                    }
+                ]
+            }
+
+            const model = new BigbandModel(spec, "somedir")
+            expect(model.searchInstrument("2-p1-f22")).to.eql({
+                name: 'b-s2-p1-f22bb',
+                instrument: f2,
+                section: s2
+            })
+        })
+        it("throws if the there is are multiple substring matches", () => {
+            const s1 = new Section(b, "r1", "s1")
+            const s2 = new Section(b, "r1", "s2")
+            const f1 = new LambdaInstrument("p1", "f11aa", "")
+            const f2 = new LambdaInstrument("p1", "f22bb", "")
+            const spec: BigbandSpec = {
+                sections: [
+                    {
+                        section: s1, 
+                        instruments: [f1, f2],
+                        wiring: []
+                    },
+                    {
+                        section: s2, 
+                        instruments: [f1, f2],
+                        wiring: []
+                    }
+                ]
+            }
+
+            const model = new BigbandModel(spec, "somedir")
+            expect(() => model.searchInstrument("1-f")).to.throw(
+                'Multiple matches on "1-f": ["b-s1-p1-f11aa","b-s1-p1-f22bb","b-s2-p1-f11aa","b-s2-p1-f22bb"]')
+        })
+        it("throws if the there are zero substring matches", () => {
+            const s1 = new Section(b, "r1", "s1")
+            const s2 = new Section(b, "r1", "s2")
+            const f1 = new LambdaInstrument("p1", "f11aa", "")
+            const f2 = new LambdaInstrument("p1", "f22bb", "")
+            const spec: BigbandSpec = {
+                sections: [
+                    {
+                        section: s1, 
+                        instruments: [f1, f2],
+                        wiring: []
+                    },
+                    {
+                        section: s2, 
+                        instruments: [f1, f2],
+                        wiring: []
+                    }
+                ]
+            }
+
+            const model = new BigbandModel(spec, "somedir")
+            expect(() => model.searchInstrument("f33")).to.throw(
+                'Instrument "f33" not found in ["b-s1-p1-f11aa","b-s1-p1-f22bb","b-s2-p1-f11aa","b-s2-p1-f22bb"]')
+        })
+    })
 });
