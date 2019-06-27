@@ -5,7 +5,7 @@ async function main(bigbandFile: string) {
 
     // TODO(imaman): determine which parts of this can be moved in the model class.
     const model: BigbandModel = await loadSpec(bigbandFile);
-    const bigbands = model.sections.map(s => s.bigband);
+    const bigbands = model.sectionModels.map(curr => curr.section.bigband);
     const ret = {};
     bigbands.forEach(s => ret[s.name] = {});
     model.sectionModels.forEach(sectionModel => {

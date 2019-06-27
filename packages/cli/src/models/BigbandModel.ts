@@ -74,10 +74,6 @@ export class BigbandModel {
         return ret
     }
 
-    get sections(): Section[] {
-        return this.spec.sections.map(s => s.section)
-    }
-
     get sectionModels(): SectionModel[] {
         return this.spec.sections.map(s => new SectionModel(s))
     }
@@ -86,7 +82,7 @@ export class BigbandModel {
         this.sectionModels.forEach(curr => curr.validate())
 
         // TODO(imaman): validate there is only one bigband
-        let dupes = Misc.checkDuplicates(this.sections.map(s => s.name));
+        let dupes = Misc.checkDuplicates(this.sectionModels.map(s => s.section.name));
         if (dupes.length) {
             throw new Error(`Section name collision. The following names were used by two (or more) sections: ${JSON.stringify(dupes)}`);
         }
