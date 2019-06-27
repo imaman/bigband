@@ -49,6 +49,7 @@ export class Misc {
             }
         });
     
+        ret.sort()
         return ret;
     }    
 }

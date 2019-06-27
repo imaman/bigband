@@ -20,25 +20,43 @@ describe('BigbandModel', () => {
     })
 
     describe("vailidation", () => {
-        it("checks for wiring name-collision", () => {
-            const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
-            const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
-            const f3 = new LambdaInstrument("p1", "f3", "src/file_3")
-            const spec: BigbandSpec = {
-                sections: [{
-                    section: new Section(b, "r1", "s1"), 
-                    instruments: [f1, f2],
-                    wiring: [wire(f1, f2, "a"), wire(f1, f3, "a")]
-                }]
-            }
+        describe("wiring", () => {
+            it("checks for wiring name collision", () => {
+                const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+                const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+                const f3 = new LambdaInstrument("p1", "f3", "src/file_3")
+                const spec: BigbandSpec = {
+                    sections: [{
+                        section: new Section(b, "r1", "s1"), 
+                        instruments: [f1, f2],
+                        wiring: [wire(f1, f2, "a"), wire(f1, f3, "a")]
+                    }]
+                }
 
-            expect(() => new BigbandModel(spec, "somedir")).to.throw('Name collision(s) in wiring of "b-s1-p1-f1": ["a"]')
+                expect(() => new BigbandModel(spec, "somedir")).to.throw('Name collision(s) in wiring of "b-s1-p1-f1": ["a"]')
+            })
+            // TODO(imaman): increare coverage:
+            //    same name but in two different instruments
+            //    same name but in two different sections. 
+            //    multiple non-colliding names in same assigned-instrument.
         })
 
-        // TODO(imaman): increare coverage:
-        //    same name but in two different instruments
-        //    same name but in two different sections. 
-        //    multiple non-colliding names in same assigned-instrument.
+        describe("section names", () => {
+            it("checks for section name collision", () => {
+                const spec: BigbandSpec = {
+                    sections: [
+                        { section: new Section(b, "r1", "s1"),  instruments: [], wiring: []},
+                        { section: new Section(b, "r1", "s2"),  instruments: [], wiring: []},
+                        { section: new Section(b, "r1", "s3"),  instruments: [], wiring: []},
+                        { section: new Section(b, "r1", "s2"),  instruments: [], wiring: []},
+                        { section: new Section(b, "r1", "s1"),  instruments: [], wiring: []},
+                    ]
+                }
+                expect(() => new BigbandModel(spec, "somedir")).to.throw(
+                    'Section name collision. The following names were used by two (or more) sections: ["s1","s2"]')
+            });
+        })
+
     })
 
     describe('instruments', () => {
