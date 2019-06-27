@@ -1,18 +1,18 @@
 import {loadSpec} from '../BigbandFileRunner';
-import {BigbandSpec} from 'bigband-core'
-
-
+import { BigbandSpecModel } from '../BigbandSpecModel';
 
 async function main(bigbandFile: string) {
-    const spec: BigbandSpec = await loadSpec(bigbandFile);
-    const scopes = spec.sections.map(s => s.section.bigband);
+
+    // TODO(imaman): determine which parts of this can be moved in the model class.
+    const model: BigbandSpecModel = await loadSpec(bigbandFile);
+    const bigbands = model.sections.map(s => s.bigband);
     const ret = {};
-    scopes.forEach(s => ret[s.name] = {});
-    spec.sections.forEach(s => {
-        const e = ret[s.section.bigband.name];
+    bigbands.forEach(s => ret[s.name] = {});
+    model.sectionModels.forEach(sectionModel => {
+        const e = ret[sectionModel.section.bigband.name];
         const d = {};
-        e[s.section.name] = d;
-        s.instruments.forEach(curr => d[curr.physicalName(s.section)] = curr.arnService());
+        e[sectionModel.section.name] = d;
+        sectionModel.instruments.forEach(curr => d[curr.instrument.physicalName(sectionModel.section)] = curr.instrument.arnService());
     });
 
     return ret;

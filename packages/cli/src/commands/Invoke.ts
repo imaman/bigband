@@ -2,43 +2,15 @@ import * as AWS from 'aws-sdk'
 import { AwsFactory } from '../AwsFactory'
 import { loadSpec } from '../BigbandFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
-import { Section, Instrument } from 'bigband-core';
-import { BigbandSpec } from 'bigband-core'
+import { BigbandSpecModel } from '../BigbandSpecModel';
 
-
-interface LookupResult {
-    section: Section
-    instrument: Instrument
-    name: string
-}
-
-export function lookupFunction(lambdaName: string, spec: BigbandSpec): LookupResult {
-    let matches: LookupResult[] = [];
-    const names: string[] = [];
-    spec.sections.forEach(sectionSpec => {
-        sectionSpec.instruments.forEach(curr => {
-            const name = curr.physicalName(sectionSpec.section);
-            names.push(name);
-            if (name.indexOf(lambdaName) >= 0) {
-                matches.push({section: sectionSpec.section, instrument: curr, name});
-            }
-        });
-    });
-
-    if (!matches.length) {
-        throw new Error(`Function ${lambdaName} not found in ${JSON.stringify(names)}`);
-    }
-
-    if (matches.length > 1) {
-        throw new Error(`Multiple matches on ${lambdaName}: ${JSON.stringify(matches.map(x => x.name))}`);
-    }
-
-    return matches[0];
+export function lookupFunction(instrumentName: string, model: BigbandSpecModel) {
+    return model.searchInstrument(instrumentName)
 }
 async function invokeFunction(bigbandFile: string, lambdaName: string, input: string) {
     const spec = await loadSpec(bigbandFile);
 
-    const data: LookupResult = lookupFunction(lambdaName, spec);
+    const data = lookupFunction(lambdaName, spec);
 
     var lambda: AWS.Lambda = new AwsFactory(data.section.region, data.section.bigband.profileName).newLambda();
     const params: InvocationRequest = {

@@ -41,18 +41,16 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
     if (Number(process.versions.node.split('.')[0]) < 8) {
         throw new Error('You must use node version >= 8 to run this program');
     }
-    const bigbandSpec = await loadSpec(bigbandFile);
-    const bigandSpecModel = new BigbandSpecModel(bigbandSpec)
-    const sectionModel = bigandSpecModel.findSectionModel(sectionName)
+    const bigbandSpecModel = await loadSpec(bigbandFile);
+    const sectionModel = bigbandSpecModel.findSectionModel(sectionName)
 
-    await Promise.all([runSpec(bigbandSpec, sectionModel, teleportingEnabled, deployMode), configureBucket(sectionModel.section)]);
+    await Promise.all([runSpec(bigbandSpecModel, sectionModel, teleportingEnabled, deployMode), configureBucket(sectionModel.section)]);
     const dt = (Date.now() - t0) / 1000;
     return `Section "${sectionModel.section.name}" shipped in ${dt.toFixed(1)}s`;        
 }
 
 
-export async function runSpec(bigbandSpec: BigbandSpec, sectionModel: SectionSpecModel, teleportingEnabled: boolean, deployMode: DeployMode) {
-    const model = new BigbandSpecModel(bigbandSpec)
+export async function runSpec(model: BigbandSpecModel, sectionModel: SectionSpecModel, teleportingEnabled: boolean, deployMode: DeployMode) {
     // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is
     // reserved for bigband's own use).
     // Naturally, this check must take place before we introduce bigband's own instruments.
@@ -85,7 +83,7 @@ export async function runSpec(bigbandSpec: BigbandSpec, sectionModel: SectionSpe
 
     logger.info(`Shipping section "${section.name}" to ${section.region}`);
 
-    const dir = bigbandSpec.dir
+    const dir = model.dir
     if (!dir) {
         throw new Error('Found a fasly dir') 
     }
@@ -188,7 +186,7 @@ function readVersionFromRcFile(dir: string) {
     }
 }
 
-export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
+export async function loadSpec(bigbandFile: string): Promise<BigbandSpecModel> {
     if (!bigbandFile) {
         throw new Error('bigbandFile cannot be falsy');
     }
@@ -202,21 +200,17 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
     const pathToRequire = path.resolve(specDeployedDir, 'build', `${file}.js`);
 
     const uninstall = installCustomRequire();
-    let ret: BigbandSpec
+    let bigbandSpec: BigbandSpec
     try {
         logger.silly(`Loading compiled bigbandfile from ${pathToRequire} using protocolversion ${protcolVersion}`);
-        ret = require(pathToRequire).run();
+        bigbandSpec = require(pathToRequire).run();
     } finally {
         uninstall();
     }
 
-    if (!ret.dir) {
-        ret.dir = d;
-    }
+    const ret = new BigbandSpecModel(bigbandSpec, d)
+    checkSpec(ret);
 
-    checkSpec(new BigbandSpecModel(ret));
-
-    // TODO(imaman): change the return type to BigbandSpecModel
     return ret;
 }
 
