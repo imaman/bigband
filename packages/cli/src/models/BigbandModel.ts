@@ -92,7 +92,6 @@ export class BigbandModel {
     validate() {
         this.sectionModels.forEach(curr => curr.validate())
 
-        // TODO(imaman): all instruments mentioned in wiring are also defined in the "instruments" field of the section mentioned in the wiring
         // TODO(imaman): validate there is only one bigband
         let dupes = Misc.checkDuplicates(this.sections.map(s => s.name));
         if (dupes.length) {
