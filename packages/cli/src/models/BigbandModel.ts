@@ -95,6 +95,12 @@ export class BigbandModel {
     validate() {
         this.sections.forEach(curr => curr.validate())
 
+        const numBigbanbds = new Set(this.sections.map(s => s.section.bigband)).size
+
+        if (numBigbanbds != 1) {
+            throw new Error("multiple bigband instances")
+        }
+
         // TODO(imaman): validate there is only one bigband
         let dupes = Misc.checkDuplicates(this.sections.map(s => s.section.name));
         if (dupes.length) {

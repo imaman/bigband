@@ -11,15 +11,39 @@ import { BigbandModel, LookupResult } from './BigbandModel'
 
 
 describe('BigbandModel', () => {
-    const b = new Bigband({
+    const bigbandInit = {
         awsAccount: "a",
         name: "b",
         profileName: "p",
         s3Bucket: "my_bucket",
         s3Prefix: "my_prefix"
-    })
+    }
+    const b = new Bigband(bigbandInit)
 
     describe("vailidation", () => {
+        describe("bigband", () => {
+            it("fails if is more than one instance of bigband", () => {
+                const b2 = new Bigband(bigbandInit)
+
+                const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+                const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+                const spec: BigbandSpec = {
+                    sections: [
+                        {
+                            section: new Section(b, "r1", "s1"), 
+                            instruments: [f1],
+                            wiring: []
+                        },
+                        {
+                            section: new Section(b2, "r1", "s2"), 
+                            instruments: [f2],
+                            wiring: []
+                        }
+                ]}
+
+                expect(() => new BigbandModel(spec, "somedir")).to.throw('multiple bigband instances')
+            })
+        })
         describe("wiring", () => {
             it("checks for wiring name collision", () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
