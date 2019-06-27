@@ -208,28 +208,7 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandModel> {
         uninstall();
     }
 
-    const ret = new BigbandModel(bigbandSpec, d)
-    checkSpec(ret);
-    return ret;
-}
-
-
-
-function checkSpec(model: BigbandModel) {
-    // TODO(imaman): move into the model classes + coverag
-    // TODO(imaman): all instruments mentioned in wiring are also defined in the "instruments" field of the section mentioned in the wiring
-    // TODO(imaman): validate there is only one bigband
-    let dupes = Misc.checkDuplicates(model.sections.map(s => s.name));
-    if (dupes.length) {
-        throw new Error(`Found two (or more) sections with the same name: ${JSON.stringify(dupes)}`);
-    }
-
-    dupes = Misc.checkDuplicates(model.assignedInstruments.map(curr => curr.instrument.physicalName(curr.section)))
-    if (dupes.length) {
-        throw new Error(`Found two (or more) instruments with the same name: ${JSON.stringify(dupes)}`);
-    }
-
-    // TODO(imaman): validate names!
+    return new BigbandModel(bigbandSpec, d)
 }
 
 interface PushedInstrument {

@@ -82,5 +82,20 @@ export class BigbandModel {
     validate() {
         // TODO(imaman): check that a single bigband is used
         this.sectionModels.forEach(curr => curr.validate())
+
+        // TODO(imaman): coverag
+        // TODO(imaman): all instruments mentioned in wiring are also defined in the "instruments" field of the section mentioned in the wiring
+        // TODO(imaman): validate there is only one bigband
+        let dupes = Misc.checkDuplicates(this.sections.map(s => s.name));
+        if (dupes.length) {
+            throw new Error(`Found two (or more) sections with the same name: ${JSON.stringify(dupes)}`);
+        }
+    
+        dupes = Misc.checkDuplicates(this.assignedInstruments.map(curr => curr.instrument.physicalName(curr.section)))
+        if (dupes.length) {
+            throw new Error(`Found two (or more) instruments with the same name: ${JSON.stringify(dupes)}`);
+        }
+        
+        // TODO(imaman): validate names!
     }
 }
