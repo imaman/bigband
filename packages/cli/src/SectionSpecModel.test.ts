@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 import { LambdaInstrument, Section, wire, Bigband, SectionSpec } from 'bigband-core';
-import { SectionSpecModel } from './SectionSpecModel'
+import { SectionModel } from './SectionSpecModel'
 
 
 describe('SectionSpecModel', () => {
@@ -29,7 +29,7 @@ describe('SectionSpecModel', () => {
                 wiring: []
             }
 
-            const model = new SectionSpecModel(spec)
+            const model = new SectionModel(spec)
             expect(model.instruments.map(i => i.instrument)).to.eql([f1, f2])
         });
     })

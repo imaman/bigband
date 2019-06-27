@@ -1,6 +1,6 @@
 import { BigbandSpec, Instrument, Section, WireSpec, SectionSpec } from "bigband-core";
 import { Misc } from "./Misc";
-import { SectionSpecModel } from "./SectionSpecModel";
+import { SectionModel } from "./SectionSpecModel";
 
 
 export interface AssignedInstrument {
@@ -52,7 +52,7 @@ export class BigbandModel {
         return matches[0];    
     }
 
-    findSectionModel(sectionName: string): SectionSpecModel {
+    findSectionModel(sectionName: string): SectionModel {
         const models = this.sectionModels
         const ret = models.length === 1 && !sectionName ? models[0] : models.find(curr => curr.section.name === sectionName);
         if (!ret) {
@@ -74,8 +74,8 @@ export class BigbandModel {
         return this.spec.sections.map(s => s.section)
     }
 
-    get sectionModels(): SectionSpecModel[] {
-        return this.spec.sections.map(s => new SectionSpecModel(s))
+    get sectionModels(): SectionModel[] {
+        return this.spec.sections.map(s => new SectionModel(s))
     }
 
     validate() {

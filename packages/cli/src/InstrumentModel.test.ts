@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 import { BigbandSpec, LambdaInstrument, Section, wire, Bigband, SectionSpec } from 'bigband-core';
-import { SectionSpecModel } from './SectionSpecModel'
+import { SectionModel } from './SectionSpecModel'
 
 
 describe('InstrumentModel', () => {
@@ -28,7 +28,7 @@ describe('InstrumentModel', () => {
                 wiring: []
             }
 
-            const sectionModel = new SectionSpecModel(spec)
+            const sectionModel = new SectionModel(spec)
             expect(sectionModel.instruments[0].wirings).to.eql([])
         });
         it('returns an empty array if no wirings were defined for the given consumer', async () => { 
@@ -41,7 +41,7 @@ describe('InstrumentModel', () => {
                 wiring: [w12]
             }
 
-            const sectionModel = new SectionSpecModel(spec)
+            const sectionModel = new SectionModel(spec)
             expect(sectionModel.instruments[1].wirings).to.eql([])
         });
         it('returns all wirings for the given consumer', async () => { 
@@ -56,7 +56,7 @@ describe('InstrumentModel', () => {
                 wiring: [w12, w13]
             }
 
-            const sectionModel = new SectionSpecModel(spec)
+            const sectionModel = new SectionModel(spec)
             expect(sectionModel.instruments[0].wirings).to.eql([w12, w13])
         });
         it('returns wirings only for the given consumer', async () => { 
@@ -71,7 +71,7 @@ describe('InstrumentModel', () => {
                 wiring: [w12, w23]
             }
 
-            const sectionModel = new SectionSpecModel(spec)
+            const sectionModel = new SectionModel(spec)
             expect(sectionModel.instruments[0].wirings).to.eql([w12])
         });
     });

@@ -16,7 +16,7 @@ import { S3BlobPool } from './Teleporter';
 import { Misc } from './Misc';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME } from './scotty';
 import { BigbandModel } from './BigbandModel';
-import { SectionSpecModel } from './SectionSpecModel';
+import { SectionModel } from './SectionSpecModel';
 import { InstrumentModel } from './InstrumentModel';
 
 const DEPLOYABLES_FOLDER = 'deployables';
@@ -50,7 +50,7 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
 }
 
 
-export async function runSpec(model: BigbandModel, sectionModel: SectionSpecModel, teleportingEnabled: boolean, deployMode: DeployMode) {
+export async function runSpec(model: BigbandModel, sectionModel: SectionModel, teleportingEnabled: boolean, deployMode: DeployMode) {
     // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is
     // reserved for bigband's own use).
     // Naturally, this check must take place before we introduce bigband's own instruments.
@@ -240,7 +240,7 @@ interface PushedInstrument {
     model: InstrumentModel
 }
 
-async function pushCode(dir: string, npmPackageDir: string, model: SectionSpecModel, instrumentModel: InstrumentModel, 
+async function pushCode(dir: string, npmPackageDir: string, model: SectionModel, instrumentModel: InstrumentModel, 
     teleportInstrument: Instrument,  blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushedInstrument> {
     if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
         throw new Error(`Bad value. ${dir} is not a directory.`);
@@ -273,7 +273,7 @@ async function pushCode(dir: string, npmPackageDir: string, model: SectionSpecMo
     }
 }
 
-async function compileInstrument(d: string, npmPackageDir: string, model: SectionSpecModel, instrumentModel: InstrumentModel, blobPool: S3BlobPool) {
+async function compileInstrument(d: string, npmPackageDir: string, model: SectionModel, instrumentModel: InstrumentModel, blobPool: S3BlobPool) {
     const section = model.section
     const instrument = instrumentModel.instrument
     try {
