@@ -15,7 +15,7 @@ export interface LookupResult {
     name: string
 }
 
-export class BigbandSpecModel {
+export class BigbandModel {
 
     public readonly dir: string
     constructor(private readonly spec: BigbandSpec, defaultDir: string) {

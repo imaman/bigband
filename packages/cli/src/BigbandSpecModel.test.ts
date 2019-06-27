@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 import { BigbandSpec, LambdaInstrument, Section, wire, Bigband } from 'bigband-core';
-import { BigbandSpecModel } from './BigbandSpecModel'
+import { BigbandModel } from './BigbandModel'
 
 
 describe('BigbandSpecModel', () => {
@@ -32,7 +32,7 @@ describe('BigbandSpecModel', () => {
                 }]
             }
 
-            const model = new BigbandSpecModel(spec, "somedir")
+            const model = new BigbandModel(spec, "somedir")
             expect(() => model.validate()).to.throw('Name collision(s) in wiring of "b-s1-p1-f1": ["a"]')
         })
 
@@ -54,7 +54,7 @@ describe('BigbandSpecModel', () => {
                 }]
             }
 
-            const model = new BigbandSpecModel(spec, "somedir")
+            const model = new BigbandModel(spec, "somedir")
             expect(model.instruments).to.eql([f1, f2])
         });
         it('returns all instruments from multiple sections', async () => { 
@@ -77,7 +77,7 @@ describe('BigbandSpecModel', () => {
                 ]
             }
 
-            const model = new BigbandSpecModel(spec, "somedir")
+            const model = new BigbandModel(spec, "somedir")
             expect(model.instruments).to.eql([f1, f2, f3, f4])
         });
     });
@@ -100,7 +100,7 @@ describe('BigbandSpecModel', () => {
                 ]
             }
 
-            const model = new BigbandSpecModel(spec, "somedir")
+            const model = new BigbandModel(spec, "somedir")
             expect(model.sections).to.eql([s1, s2])
         })
     })
@@ -127,7 +127,7 @@ describe('BigbandSpecModel', () => {
                 ]
             }
 
-            const model = new BigbandSpecModel(spec, "somedir")
+            const model = new BigbandModel(spec, "somedir")
             expect(model.assignedInstruments).to.eql([
                 {section: s1, instrument: f1},
                 {section: s1, instrument: f2},

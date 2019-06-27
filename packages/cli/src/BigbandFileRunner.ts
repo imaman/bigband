@@ -15,7 +15,7 @@ import { logger } from './logger';
 import { S3BlobPool } from './Teleporter';
 import { Misc } from './Misc';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME } from './scotty';
-import { BigbandSpecModel } from './BigbandSpecModel';
+import { BigbandModel } from './BigbandModel';
 import { SectionSpecModel } from './SectionSpecModel';
 import { InstrumentModel } from './InstrumentModel';
 
@@ -50,7 +50,7 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
 }
 
 
-export async function runSpec(model: BigbandSpecModel, sectionModel: SectionSpecModel, teleportingEnabled: boolean, deployMode: DeployMode) {
+export async function runSpec(model: BigbandModel, sectionModel: SectionSpecModel, teleportingEnabled: boolean, deployMode: DeployMode) {
     // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is
     // reserved for bigband's own use).
     // Naturally, this check must take place before we introduce bigband's own instruments.
@@ -186,7 +186,7 @@ function readVersionFromRcFile(dir: string) {
     }
 }
 
-export async function loadSpec(bigbandFile: string): Promise<BigbandSpecModel> {
+export async function loadSpec(bigbandFile: string): Promise<BigbandModel> {
     if (!bigbandFile) {
         throw new Error('bigbandFile cannot be falsy');
     }
@@ -208,7 +208,7 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandSpecModel> {
         uninstall();
     }
 
-    const ret = new BigbandSpecModel(bigbandSpec, d)
+    const ret = new BigbandModel(bigbandSpec, d)
     checkSpec(ret);
 
     return ret;
@@ -216,7 +216,7 @@ export async function loadSpec(bigbandFile: string): Promise<BigbandSpecModel> {
 
 
 
-function checkSpec(model: BigbandSpecModel) {
+function checkSpec(model: BigbandModel) {
     // TODO(imaman): move into the model classes + coverag
     // TODO(imaman): all instruments mentioned in wiring are also defined in the "instruments" field of the section mentioned in the wiring
     // TODO(imaman): validate there is only one bigband

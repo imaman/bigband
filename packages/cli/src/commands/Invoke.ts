@@ -2,9 +2,9 @@ import * as AWS from 'aws-sdk'
 import { AwsFactory } from '../AwsFactory'
 import { loadSpec } from '../BigbandFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
-import { BigbandSpecModel } from '../BigbandSpecModel';
+import { BigbandModel } from '../BigbandModel';
 
-export function lookupFunction(instrumentName: string, model: BigbandSpecModel) {
+export function lookupFunction(instrumentName: string, model: BigbandModel) {
     return model.searchInstrument(instrumentName)
 }
 async function invokeFunction(bigbandFile: string, lambdaName: string, input: string) {
