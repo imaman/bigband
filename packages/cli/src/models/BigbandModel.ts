@@ -27,7 +27,6 @@ export class BigbandModel {
         this.validate()
     }
 
-    // TODO(imaman): coverage
     searchInstrument(instrumentName: string): LookupResult {
         const matches: LookupResult[] = [];
         const names: string[] = [];    
@@ -93,7 +92,6 @@ export class BigbandModel {
     validate() {
         this.sectionModels.forEach(curr => curr.validate())
 
-        // TODO(imaman): coverag
         // TODO(imaman): all instruments mentioned in wiring are also defined in the "instruments" field of the section mentioned in the wiring
         // TODO(imaman): validate there is only one bigband
         let dupes = Misc.checkDuplicates(this.sections.map(s => s.name));
