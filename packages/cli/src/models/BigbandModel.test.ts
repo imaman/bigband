@@ -301,5 +301,24 @@ describe('BigbandModel', () => {
             expect(() => model.searchInstrument("f33")).to.throw(
                 'Instrument "f33" not found in ["b-s1-p1-f11aa","b-s1-p1-f22bb","b-s2-p1-f11aa","b-s2-p1-f22bb"]')
         })
+        it("an exact simple name match, trumps substring matches with other instruments", () => {
+            const s1 = new Section(b, "r1", "s1")
+            const f1 = new LambdaInstrument("p1", "abc", "")
+            const f2 = new LambdaInstrument("abc", "xyz", "")
+            const spec: BigbandSpec = {
+                sections: [{
+                    section: s1, 
+                    instruments: [f1, f2],
+                    wiring: []
+                }]
+            }
+
+            const model = new BigbandModel(spec, "somedir")
+            expect(model.searchInstrument("abc")).to.eql({
+                name: 'b-s1-p1-abc',
+                instrument: f1,
+                section: s1
+            })
+        })
     })
 });

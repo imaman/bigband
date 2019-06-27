@@ -36,7 +36,7 @@ export abstract class Instrument {
      * @param {string} plainName the instrument's simple name (must be unique within its package). See "Naming" above.
      * @memberof Instrument
      */
-    constructor(packageName: string|string[], private readonly name: string) {
+    constructor(packageName: string|string[], public readonly name: string) {
         this.packageName = (Array.isArray(packageName) ? packageName : [packageName]);
         if (!this.packageName.join('').trim().length) {
             throw new Error('pacakge name cannot be empty');

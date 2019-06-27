@@ -29,18 +29,29 @@ export class BigbandModel {
 
     // TODO(imaman): coverage
     searchInstrument(instrumentName: string): LookupResult {
-        let matches: LookupResult[] = [];
+        const matches: LookupResult[] = [];
         const names: string[] = [];    
+        const exactMatches: LookupResult[] = []
     
+
        this.sectionModels.forEach(sectionSpec => {
             sectionSpec.instruments.forEach(curr => {
                 const name = curr.instrument.physicalName(sectionSpec.section);
+                const lookupResult = {section: sectionSpec.section, instrument: curr.instrument, name};
+
+                if (curr.instrument.name == instrumentName) {
+                    exactMatches.push(lookupResult)
+                } 
                 names.push(name);
                 if (name.indexOf(instrumentName) >= 0) {
-                    matches.push({section: sectionSpec.section, instrument: curr.instrument, name});
+                    matches.push(lookupResult);
                 }
             });
         });
+
+        if (exactMatches.length === 1) {
+            return exactMatches[0]
+        }
     
         if (!matches.length) {
             throw new Error(`Instrument "${instrumentName}" not found in ${JSON.stringify(names)}`);
