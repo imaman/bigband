@@ -69,7 +69,7 @@ describe('BigbandModel', () => {
                 expect(() => new BigbandModel(spec, "somedir")).not.to.throw()
             })
 
-            it('fails if the wiring references a consumer not listed under instruments', () => {
+            it('fails if a wiring references a consumer not listed under instruments', () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
                 const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
                 const spec: BigbandSpec = {
@@ -81,7 +81,21 @@ describe('BigbandModel', () => {
                 }
 
                 expect(() => new BigbandModel(spec, "somedir")).to.throw(
-                    'Instrument "p1-f2" cannot be used as a supplier because it is not part of the "s1" section')
+                    'Instrument "p1-f2" cannot be used as a supplier because it is not a member of the "s1" section')
+            })
+            it('fails if a wiring references a supplier not listed under instruments', () => {
+                const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+                const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+                const spec: BigbandSpec = {
+                    sections: [{
+                        section: new Section(b, "r1", "s1"), 
+                        instruments: [f2],
+                        wiring: [wire(f1, f2, "a")]
+                    }]
+                }
+
+                expect(() => new BigbandModel(spec, "somedir")).to.throw(
+                    'Instrument "p1-f2" cannot be used as a consumer because it is not a member of the "s1" section')
             })
         })
 

@@ -21,7 +21,14 @@ export class SectionModel {
         if (wiringsWithbadSuppliers.length) {
             const w = wiringsWithbadSuppliers[0]
             throw new Error(`Instrument "${w.supplier.fullyQualifiedName()}" cannot be used as a supplier because ` + 
-                `it is not part of the "${this.section.name}" section`)
+                `it is not a member of the "${this.section.name}" section`)
+        }
+
+        const wiringsWithbadConsumer = this.spec.wiring.filter(w => !set.has(w.consumer))
+        if (wiringsWithbadConsumer.length) {
+            const w = wiringsWithbadConsumer[0]
+            throw new Error(`Instrument "${w.supplier.fullyQualifiedName()}" cannot be used as a consumer because ` + 
+                `it is not a member of the "${this.section.name}" section`)
         }
     }
 }
