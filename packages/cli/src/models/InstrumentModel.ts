@@ -12,10 +12,11 @@ export class InstrumentModel {
     validate() {
         // Reserve the "bigband" top-level package for system instruments.
         if (!this.isSystemInstrument) {
+            const topLevel = this.instrument.topLevelPackageName
             const fqn = this.instrument.fullyQualifiedName()
-            if (fqn.toLowerCase().startsWith('bigband')) {
-                throw new Error(`Instrument "$fqn" has a bad name: the fully qualified name of\n`
-                    + `an\n instrument is not allowed to start with "bigband"`);
+            if (topLevel.toLowerCase() == 'bigband') {
+                throw new Error(`Instrument "${fqn}" has a bad name: the fully qualified name of ` +
+                    'an instrument is not allowed to start with "bigband"');
             }    
         }
 

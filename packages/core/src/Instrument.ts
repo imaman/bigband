@@ -115,6 +115,10 @@ export abstract class Instrument {
         return ret;
     }
 
+    get topLevelPackageName(): string {
+        return this.packageName.length === 0 ? "" : this.packageName[0]
+    }
+
     /**
      * Computes the physical name of the instrument at the given section. The physical name contains the names of the
      * enclosing bigband and section as well as the [[fullyQualifiedName]].
