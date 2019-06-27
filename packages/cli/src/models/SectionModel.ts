@@ -10,7 +10,7 @@ export class SectionModel {
 
     get instruments(): InstrumentModel[] {
         return this.spec.instruments.map(i => new InstrumentModel(this.spec.section, i, 
-            this.spec.wiring.filter(w => w.consumer === i)))
+            this.spec.wiring.filter(w => w.consumer === i), false))
     }
 
     validate() {

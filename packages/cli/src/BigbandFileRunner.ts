@@ -51,15 +51,6 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
 
 
 export async function runSpec(model: BigbandModel, sectionModel: SectionModel, teleportingEnabled: boolean, deployMode: DeployMode) {
-    // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is
-    // reserved for bigband's own use).
-    // Naturally, this check must take place before we introduce bigband's own instruments.
-    const violation = model.instruments.find(curr => curr.fullyQualifiedName().toLowerCase().startsWith('bigband'))
-    if (violation) {
-        throw new Error(`Instrument "${violation.fullyQualifiedName()}" has a bad name: the fully qualified name of\n`
-            + `an\n instrument is not allowed to start with "bigband"`);
-    }
-
     const section = sectionModel.section
     const cfp = new CloudFormationPusher(section);
     cfp.peekAtExistingStack();
@@ -91,7 +82,7 @@ export async function runSpec(model: BigbandModel, sectionModel: SectionModel, t
     const ps = sectionModel.instruments.map(im => 
         pushCode(dir, dir, sectionModel, im, teleportInstrument, blobPool, teleportingEnabled, deployMode));
 
-    const teleportModel = new InstrumentModel(sectionModel.section, teleportInstrument, [])
+    const teleportModel = new InstrumentModel(sectionModel.section, teleportInstrument, [], true)
     // scotty needs slightly different parameters so we pushCode() it separately. 
     ps.push(pushCode(Misc.bigbandPackageDir(), dir, sectionModel, teleportModel, teleportInstrument, blobPool, teleportingEnabled, deployMode));
     
