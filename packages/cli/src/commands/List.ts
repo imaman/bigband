@@ -1,5 +1,5 @@
 import {loadSpec} from '../BigbandFileRunner';
-import { BigbandModel } from '../BigbandModel';
+import { BigbandModel } from '../models/BigbandModel';
 
 async function main(bigbandFile: string) {
 

@@ -1,5 +1,5 @@
 import { Instrument, WireSpec, Section } from "bigband-core";
-import { Misc } from "./Misc";
+import { Misc } from "../Misc";
 
 export class InstrumentModel {
     constructor(public readonly section: Section, public readonly instrument: Instrument, public readonly wirings: WireSpec[]) {}

@@ -15,9 +15,9 @@ import { logger } from './logger';
 import { S3BlobPool } from './Teleporter';
 import { Misc } from './Misc';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME } from './scotty';
-import { BigbandModel } from './BigbandModel';
-import { SectionModel } from './SectionModel';
-import { InstrumentModel } from './InstrumentModel';
+import { BigbandModel } from './models/BigbandModel';
+import { SectionModel } from './models/SectionModel';
+import { InstrumentModel } from './models/InstrumentModel';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
