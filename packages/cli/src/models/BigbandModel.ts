@@ -78,6 +78,22 @@ export class BigbandModel {
         return this.spec.sections.map(s => new SectionModel(s))
     }
 
+
+    computeList() {
+        const model = this
+        const bigbands = model.sections.map(curr => curr.section.bigband);
+        const ret = {};
+        bigbands.forEach(s => ret[s.name] = {});
+        model.sections.forEach(sectionModel => {
+            const e = ret[sectionModel.section.bigband.name];
+            const d = {};
+            e[sectionModel.section.name] = d;
+            sectionModel.instruments.forEach(curr => d[curr.instrument.physicalName(sectionModel.section)] = curr.instrument.arnService());
+        });
+    
+        return ret;    
+    }
+
     validate() {
         this.sections.forEach(curr => curr.validate())
 
