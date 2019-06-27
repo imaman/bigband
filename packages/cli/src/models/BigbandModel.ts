@@ -1,4 +1,4 @@
-import { BigbandSpec, Instrument, Section, WireSpec, SectionSpec } from "bigband-core";
+import { BigbandSpec, Instrument, Section, WireSpec, SectionSpec, Bigband } from "bigband-core";
 import { Misc } from "../Misc";
 import { SectionModel } from "./SectionModel";
 import { InstrumentModel } from "./InstrumentModel";
@@ -26,6 +26,10 @@ export class BigbandModel {
 
         this.dir = spec.dir || defaultDir
         this.validate()
+    }
+
+    private get bigband(): Bigband {
+        return this.sections[0].section.bigband
     }
 
     searchInstrument(instrumentName: string): LookupResult {
@@ -79,11 +83,10 @@ export class BigbandModel {
     }
 
     computeList() {
-        const bigbands = this.sections.map(curr => curr.section.bigband);
         const ret = {};
-        bigbands.forEach(s => ret[s.name] = {});
+        const bigbandObject = {}
+        ret[this.bigband.name] = bigbandObject;
         this.sections.forEach(sectionModel => {
-            const bigbandObject = ret[sectionModel.section.bigband.name];
             const secObject = {};
             bigbandObject[sectionModel.section.name] = secObject;
             sectionModel.instruments.forEach(curr => secObject[curr.instrument.physicalName(sectionModel.section)] = curr.instrument.arnService());
