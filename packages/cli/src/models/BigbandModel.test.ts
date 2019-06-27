@@ -35,6 +35,20 @@ describe('BigbandModel', () => {
 
                 expect(() => new BigbandModel(spec, "somedir")).to.throw('Name collision(s) in wiring of "b-s1-p1-f1": ["a"]')
             })
+            it("allows the same wiring name to be used in two different instruments", () => {
+                const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+                const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+                const f3 = new LambdaInstrument("p1", "f3", "src/file_3")
+                const spec: BigbandSpec = {
+                    sections: [{
+                        section: new Section(b, "r1", "s1"), 
+                        instruments: [f1, f2],
+                        wiring: [wire(f1, f2, "a"), wire(f1, f3, "a")]
+                    }]
+                }
+
+                expect(() => new BigbandModel(spec, "somedir")).not.to.throw
+            })
             // TODO(imaman): increare coverage:
             //    same name but in two different instruments
             //    same name but in two different sections. 
