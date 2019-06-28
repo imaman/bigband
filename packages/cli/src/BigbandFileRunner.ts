@@ -222,7 +222,7 @@ class RunnerFlow {
     }
     
     
-    ttlPrefix() {
+    private ttlPrefix() {
         return `${this.bigbandModel.bigband.s3Prefix}/TTL/7d`;
     }     
     
