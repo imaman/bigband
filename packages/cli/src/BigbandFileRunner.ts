@@ -73,7 +73,7 @@ class RunnerFlow {
         const cfp = new CloudFormationPusher(section);
         cfp.peekAtExistingStack();
     
-        const poolPrefix = `${this.ttlPrefix(section)}/fragments`;
+        const poolPrefix = `${this.ttlPrefix()}/fragments`;
         const blobPool = new S3BlobPool(AwsFactory.fromSection(section), section.bigband.s3Bucket, poolPrefix);
     
         const teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
@@ -163,7 +163,7 @@ class RunnerFlow {
             }
         }
     
-        const {zb, packager} = await this.compileInstrument(dir, npmPackageDir, model, instrumentModel, blobPool);
+        const {zb, packager} = await this.compileInstrument(dir, npmPackageDir, instrumentModel, blobPool);
         const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
             zb, teleportInstrument.physicalName(section), teleportingEnabled, deployMode);
         const resource = def.get();
@@ -177,7 +177,8 @@ class RunnerFlow {
         }
     }
     
-    async compileInstrument(d: string, npmPackageDir: string, model: SectionModel, instrumentModel: InstrumentModel, blobPool: S3BlobPool) {
+    async compileInstrument(d: string, npmPackageDir: string, instrumentModel: InstrumentModel, blobPool: S3BlobPool) {
+        const model: SectionModel = this.sectionModel
         const section = model.section
         const instrument = instrumentModel.instrument
         try {
@@ -232,7 +233,7 @@ class RunnerFlow {
         // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
     
         const s3 = AwsFactory.fromSection(section).newS3();
-        const prefix = `${this.ttlPrefix(section)}/`;
+        const prefix = `${this.ttlPrefix()}/`;
         const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
             Bucket: section.bigband.s3Bucket,
             LifecycleConfiguration: {
