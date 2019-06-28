@@ -62,10 +62,16 @@ interface PushedInstrument {
 }
 
 class RunnerFlow {
+    private readonly poolPrefix: string
+    private readonly blobPool: S3BlobPool
+
     constructor(private readonly bigbandModel: BigbandModel, 
         private readonly sectionModel: SectionModel, 
         private readonly teleportingEnabled: boolean, 
-        private readonly deployMode: DeployMode) {}
+        private readonly deployMode: DeployMode) {
+            this.poolPrefix = `${this.ttlPrefix()}/fragments`;
+            this.blobPool = new S3BlobPool(AwsFactory.fromSection(this.sectionModel.section), this.bigbandModel.bigband.s3Bucket, this.poolPrefix);
+        }
 
 
     async runSpec() {
@@ -73,8 +79,6 @@ class RunnerFlow {
         const cfp = new CloudFormationPusher(section);
         cfp.peekAtExistingStack();
     
-        const poolPrefix = `${this.ttlPrefix()}/fragments`;
-        const blobPool = new S3BlobPool(AwsFactory.fromSection(section), section.bigband.s3Bucket, poolPrefix);
     
         const teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
             Description: 'Rematerializes a deployable at the deployment site',
@@ -84,7 +88,7 @@ class RunnerFlow {
     
         
         grantPermission(teleportInstrument, 's3:GetObject', 
-            `arn:aws:s3:::${section.bigband.s3Bucket}/${poolPrefix}/*`);
+            `arn:aws:s3:::${section.bigband.s3Bucket}/${this.poolPrefix}/*`);
     
         grantPermission(teleportInstrument, 's3:PutObject',
             `arn:aws:s3:::${section.bigband.s3Bucket}/${section.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
@@ -98,11 +102,11 @@ class RunnerFlow {
         }
     
         const ps = this.sectionModel.instruments.map(im => 
-            this.pushCode(dir, dir, im, teleportInstrument, blobPool));
+            this.pushCode(dir, dir, im, teleportInstrument));
     
         const teleportModel = new InstrumentModel(this.sectionModel.section, teleportInstrument, [], true)
         // scotty needs slightly different parameters so we pushCode() it separately. 
-        ps.push(this.pushCode(Misc.bigbandPackageDir(), dir, teleportModel, teleportInstrument, blobPool));
+        ps.push(this.pushCode(Misc.bigbandPackageDir(), dir, teleportModel, teleportInstrument));
         
         const pushedInstruments = await Promise.all(ps);
     
@@ -145,7 +149,7 @@ class RunnerFlow {
     }        
 
     async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel, 
-        teleportInstrument: Instrument,  blobPool: S3BlobPool): Promise<PushedInstrument> {
+        teleportInstrument: Instrument): Promise<PushedInstrument> {
         const model: SectionModel = this.sectionModel             
         if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
             throw new Error(`Bad value. ${dir} is not a directory.`);
@@ -164,7 +168,7 @@ class RunnerFlow {
             }
         }
     
-        const {zb, packager} = await this.compileInstrument(dir, npmPackageDir, instrumentModel, blobPool);
+        const {zb, packager} = await this.compileInstrument(dir, npmPackageDir, instrumentModel);
         const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
             zb, teleportInstrument.physicalName(section), this.teleportingEnabled, this.deployMode);
         const resource = def.get();
@@ -178,12 +182,12 @@ class RunnerFlow {
         }
     }
     
-    async compileInstrument(d: string, npmPackageDir: string, instrumentModel: InstrumentModel, blobPool: S3BlobPool) {
+    async compileInstrument(d: string, npmPackageDir: string, instrumentModel: InstrumentModel) {
         const model: SectionModel = this.sectionModel
         const section = model.section
         const instrument = instrumentModel.instrument
         try {
-            const packager = new Packager(d, npmPackageDir, section.bigband.s3Bucket, section.bigband.s3Prefix, section, blobPool);
+            const packager = new Packager(d, npmPackageDir, section.bigband.s3Bucket, section.bigband.s3Prefix, section, this.blobPool);
             const pathPrefix = 'build';
             logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
             const frag = instrument.createFragment(pathPrefix);
