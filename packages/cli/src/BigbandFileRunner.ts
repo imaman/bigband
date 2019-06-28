@@ -4,7 +4,7 @@ import * as hash from 'hash.js'
 const Module = require('module');
 
 import { AwsFactory } from './AwsFactory';
-import { BigbandSpec, SectionSpec, NameStyle, Section, Instrument, LambdaInstrument, WireSpec } from 'bigband-core';
+import { BigbandSpec, SectionSpec, NameStyle, Section, Instrument, LambdaInstrument, WireSpec, Bigband } from 'bigband-core';
 import { Packager, PushResult, DeployMode } from './Packager'
 import { DeployableAtom } from 'bigband-core'
 import { ZipBuilder } from './ZipBuilder'
@@ -45,87 +45,134 @@ export async function runBigbandFile(bigbandFile: string, sectionName: string, t
     const bigbandModel = await loadSpec(bigbandFile);
     const sectionModel = bigbandModel.findSectionModel(sectionName)
 
-    await Promise.all([runSpec(bigbandModel, sectionModel, teleportingEnabled, deployMode), configureBucket(sectionModel.section)]);
+
+
+    const flow = new RunnerFlow(bigbandModel, sectionModel, teleportingEnabled, deployMode)
+
+    await Promise.all([flow.runSpec(), flow.configureBucket()]);
     const dt = (Date.now() - t0) / 1000;
     return `Section "${sectionModel.section.name}" shipped in ${dt.toFixed(1)}s`;        
 }
 
+class RunnerFlow {
+    constructor(private readonly bigbandModel: BigbandModel, 
+        private readonly sectionModel: SectionModel, 
+        private readonly teleportingEnabled: boolean, 
+        private readonly deployMode: DeployMode) {}
 
-export async function runSpec(model: BigbandModel, sectionModel: SectionModel, teleportingEnabled: boolean, deployMode: DeployMode) {
-    const section = sectionModel.section
-    const cfp = new CloudFormationPusher(section);
-    cfp.peekAtExistingStack();
 
-    const poolPrefix = `${ttlPrefix(section)}/fragments`;
-    const blobPool = new S3BlobPool(AwsFactory.fromSection(section), section.bigband.s3Bucket, poolPrefix);
-
-    const teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
-        Description: 'Rematerializes a deployable at the deployment site',
-        MemorySize: 2560,
-        Timeout: 30
-        }).fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME);
-
+    async runSpec() {
+        const section = this.sectionModel.section
+        const cfp = new CloudFormationPusher(section);
+        cfp.peekAtExistingStack();
     
-    grantPermission(teleportInstrument, 's3:GetObject', 
-        `arn:aws:s3:::${section.bigband.s3Bucket}/${poolPrefix}/*`);
-
-    grantPermission(teleportInstrument, 's3:PutObject',
-        `arn:aws:s3:::${section.bigband.s3Bucket}/${section.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
-
-
-    logger.info(`Shipping section "${section.name}" to ${section.region}`);
-
-    const dir = model.dir
-    if (!dir) {
-        throw new Error('Found a fasly dir') 
-    }
-
-    const ps = sectionModel.instruments.map(im => 
-        pushCode(dir, dir, sectionModel, im, teleportInstrument, blobPool, teleportingEnabled, deployMode));
-
-    const teleportModel = new InstrumentModel(sectionModel.section, teleportInstrument, [], true)
-    // scotty needs slightly different parameters so we pushCode() it separately. 
-    ps.push(pushCode(Misc.bigbandPackageDir(), dir, sectionModel, teleportModel, teleportInstrument, blobPool, teleportingEnabled, deployMode));
+        const poolPrefix = `${ttlPrefix(section)}/fragments`;
+        const blobPool = new S3BlobPool(AwsFactory.fromSection(section), section.bigband.s3Bucket, poolPrefix);
     
-    const pushedInstruments = await Promise.all(ps);
-
-    const stack = {
-        AWSTemplateFormatVersion: '2010-09-09',
-        Transform: 'AWS::Serverless-2016-10-31',
-        Description: "description goes here",
-        Resources: {}
-    };
-
-    pushedInstruments.forEach(curr => {
-        const def = curr.model.instrument.getPhysicalDefinition(section);
-        curr.model.wirings.forEach(d => {
-            d.supplier.contributeToConsumerDefinition(section, def);
+        const teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
+            Description: 'Rematerializes a deployable at the deployment site',
+            MemorySize: 2560,
+            Timeout: 30
+            }).fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME);
+    
+        
+        grantPermission(teleportInstrument, 's3:GetObject', 
+            `arn:aws:s3:::${section.bigband.s3Bucket}/${poolPrefix}/*`);
+    
+        grantPermission(teleportInstrument, 's3:PutObject',
+            `arn:aws:s3:::${section.bigband.s3Bucket}/${section.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
+    
+    
+        logger.info(`Shipping section "${section.name}" to ${section.region}`);
+    
+        const dir = this.bigbandModel.dir
+        if (!dir) {
+            throw new Error('Found a fasly dir') 
+        }
+    
+        const ps = this.sectionModel.instruments.map(im => 
+            pushCode(dir, dir, this.sectionModel, im, teleportInstrument, blobPool, this.teleportingEnabled, this.deployMode));
+    
+        const teleportModel = new InstrumentModel(this.sectionModel.section, teleportInstrument, [], true)
+        // scotty needs slightly different parameters so we pushCode() it separately. 
+        ps.push(pushCode(Misc.bigbandPackageDir(), dir, this.sectionModel, teleportModel, teleportInstrument, blobPool, this.teleportingEnabled, this.deployMode));
+        
+        const pushedInstruments = await Promise.all(ps);
+    
+        const stack = {
+            AWSTemplateFormatVersion: '2010-09-09',
+            Transform: 'AWS::Serverless-2016-10-31',
+            Description: "description goes here",
+            Resources: {}
+        };
+    
+        pushedInstruments.forEach(curr => {
+            const def = curr.model.instrument.getPhysicalDefinition(section);
+            curr.model.wirings.forEach(d => {
+                d.supplier.contributeToConsumerDefinition(section, def);
+            });
+    
+            if (curr.s3Ref.isOk()) {
+                def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri());
+            }
+    
+            stack.Resources[curr.model.instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)] = def.get();
         });
+    
+        await cfp.deploy(stack)
+        const lambda = AwsFactory.fromSection(section).newLambda();
+    
+        await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
+            const req: UpdateFunctionCodeRequest = {
+                FunctionName: curr.physicalName,
+                S3Bucket: curr.s3Ref.s3Bucket,
+                S3Key: curr.s3Ref.s3Key
+            };    
+            try {
+                return await lambda.updateFunctionCode(req).promise();
+            } catch (e) {
+                logger.error(`lambda.updateFunctionCode failure (${JSON.stringify(req)})`, e);
+                throw new Error(`Failed to update code of ${curr.physicalName}`);
+            }
+        }));
+    }        
 
-        if (curr.s3Ref.isOk()) {
-            def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri());
-        }
 
-        stack.Resources[curr.model.instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)] = def.get();
-    });
-
-    await cfp.deploy(stack)
-    const lambda = AwsFactory.fromSection(section).newLambda();
-
-    await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
-        const req: UpdateFunctionCodeRequest = {
-            FunctionName: curr.physicalName,
-            S3Bucket: curr.s3Ref.s3Bucket,
-            S3Key: curr.s3Ref.s3Key
-        };    
+    async configureBucket() {
+        const section = this.sectionModel.section
+        // You can check the content of the TTL folder via:
+        // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
+    
+        const s3 = AwsFactory.fromSection(section).newS3();
+        const prefix = `${ttlPrefix(section)}/`;
+        const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
+            Bucket: section.bigband.s3Bucket,
+            LifecycleConfiguration: {
+                Rules: [
+                    {
+                        Expiration: {
+                            Days: 7
+                        },
+                        Filter: {
+                            Prefix: prefix
+                        },
+                        ID: "BigbandStandardTTL7D",
+                        Status: "Enabled"
+                    }
+                ]
+            }
+        };
+    
         try {
-            return await lambda.updateFunctionCode(req).promise();
+            await s3.putBucketLifecycleConfiguration(req).promise();
+            logger.silly(`expiration policy set via ${JSON.stringify(req)}`);
         } catch (e) {
-            logger.error(`lambda.updateFunctionCode failure (${JSON.stringify(req)})`, e);
-            throw new Error(`Failed to update code of ${curr.physicalName}`);
+            console.error(`s3.putBucketLifecycleConfiguration failure (request: ${JSON.stringify(req)})`, e);
+            throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
         }
-    }));
+    }    
 }
+
 
 let numChangesToModuleRequire = 0;
 function installCustomRequire() {
@@ -291,38 +338,6 @@ function ttlPrefix(section: Section) {
     return `${section.bigband.s3Prefix}/TTL/7d`;
 }
 
-async function configureBucket(section: Section) {
-    // You can check the content of the TTL folder via:
-    // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
-
-    const s3 = AwsFactory.fromSection(section).newS3();
-    const prefix = `${ttlPrefix(section)}/`;
-    const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
-        Bucket: section.bigband.s3Bucket,
-        LifecycleConfiguration: {
-            Rules: [
-                {
-                    Expiration: {
-                        Days: 7
-                    },
-                    Filter: {
-                        Prefix: prefix
-                    },
-                    ID: "BigbandStandardTTL7D",
-                    Status: "Enabled"
-                }
-            ]
-        }
-    };
-
-    try {
-        await s3.putBucketLifecycleConfiguration(req).promise();
-        logger.silly(`expiration policy set via ${JSON.stringify(req)}`);
-    } catch (e) {
-        console.error(`s3.putBucketLifecycleConfiguration failure (request: ${JSON.stringify(req)})`, e);
-        throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
-    }
-}
 
 
 // TODO list:
