@@ -222,8 +222,8 @@ class RunnerFlow {
     }
     
     
-    ttlPrefix(section: Section) {
-        return `${section.bigband.s3Prefix}/TTL/7d`;
+    ttlPrefix() {
+        return `${this.bigbandModel.bigband.s3Prefix}/TTL/7d`;
     }     
     
     async configureBucket() {

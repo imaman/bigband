@@ -28,7 +28,7 @@ export class BigbandModel {
         this.validate()
     }
 
-    private get bigband(): Bigband {
+    get bigband(): Bigband {
         return this.sections[0].section.bigband
     }
 
