@@ -64,6 +64,7 @@ interface PushedInstrument {
 class RunnerFlow {
     private readonly poolPrefix: string
     private readonly blobPool: S3BlobPool
+    private readonly teleportInstrument: Instrument
 
     constructor(private readonly bigbandModel: BigbandModel, 
         private readonly sectionModel: SectionModel, 
@@ -71,6 +72,13 @@ class RunnerFlow {
         private readonly deployMode: DeployMode) {
             this.poolPrefix = `${this.ttlPrefix()}/fragments`;
             this.blobPool = new S3BlobPool(AwsFactory.fromSection(this.sectionModel.section), this.bigbandModel.bigband.s3Bucket, this.poolPrefix);
+            this.teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
+                Description: 'Rematerializes a deployable at the deployment site',
+                MemorySize: 2560,
+                Timeout: 30
+            }).fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME);
+        
+    
         }
 
 
@@ -78,19 +86,11 @@ class RunnerFlow {
         const section = this.sectionModel.section
         const cfp = new CloudFormationPusher(section);
         cfp.peekAtExistingStack();
-    
-    
-        const teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
-            Description: 'Rematerializes a deployable at the deployment site',
-            MemorySize: 2560,
-            Timeout: 30
-            }).fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME);
-    
-        
-        grantPermission(teleportInstrument, 's3:GetObject', 
+            
+        grantPermission(this.teleportInstrument, 's3:GetObject', 
             `arn:aws:s3:::${section.bigband.s3Bucket}/${this.poolPrefix}/*`);
     
-        grantPermission(teleportInstrument, 's3:PutObject',
+        grantPermission(this.teleportInstrument, 's3:PutObject',
             `arn:aws:s3:::${section.bigband.s3Bucket}/${section.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
     
     
@@ -102,11 +102,11 @@ class RunnerFlow {
         }
     
         const ps = this.sectionModel.instruments.map(im => 
-            this.pushCode(dir, dir, im, teleportInstrument));
+            this.pushCode(dir, dir, im));
     
-        const teleportModel = new InstrumentModel(this.sectionModel.section, teleportInstrument, [], true)
-        // scotty needs slightly different parameters so we pushCode() it separately. 
-        ps.push(this.pushCode(Misc.bigbandPackageDir(), dir, teleportModel, teleportInstrument));
+        const teleportModel = new InstrumentModel(this.sectionModel.section, this.teleportInstrument, [], true)
+        // teleporter needs slightly different parameters so we pushCode() it separately. 
+        ps.push(this.pushCode(Misc.bigbandPackageDir(), dir, teleportModel));
         
         const pushedInstruments = await Promise.all(ps);
     
@@ -148,8 +148,7 @@ class RunnerFlow {
         }));
     }        
 
-    async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel, 
-        teleportInstrument: Instrument): Promise<PushedInstrument> {
+    async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel): Promise<PushedInstrument> {
         const model: SectionModel = this.sectionModel             
         if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
             throw new Error(`Bad value. ${dir} is not a directory.`);
@@ -170,7 +169,7 @@ class RunnerFlow {
     
         const {zb, packager} = await this.compileInstrument(dir, npmPackageDir, instrumentModel);
         const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
-            zb, teleportInstrument.physicalName(section), this.teleportingEnabled, this.deployMode);
+            zb, this.teleportInstrument.physicalName(section), this.teleportingEnabled, this.deployMode);
         const resource = def.get();
         resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
     
