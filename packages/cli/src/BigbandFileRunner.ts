@@ -98,11 +98,11 @@ class RunnerFlow {
         }
     
         const ps = this.sectionModel.instruments.map(im => 
-            this.pushCode(dir, dir, this.sectionModel, im, teleportInstrument, blobPool, this.teleportingEnabled, this.deployMode));
+            this.pushCode(dir, dir, im, teleportInstrument, blobPool));
     
         const teleportModel = new InstrumentModel(this.sectionModel.section, teleportInstrument, [], true)
         // scotty needs slightly different parameters so we pushCode() it separately. 
-        ps.push(this.pushCode(Misc.bigbandPackageDir(), dir, this.sectionModel, teleportModel, teleportInstrument, blobPool, this.teleportingEnabled, this.deployMode));
+        ps.push(this.pushCode(Misc.bigbandPackageDir(), dir, teleportModel, teleportInstrument, blobPool));
         
         const pushedInstruments = await Promise.all(ps);
     
@@ -144,8 +144,9 @@ class RunnerFlow {
         }));
     }        
 
-    async pushCode(dir: string, npmPackageDir: string, model: SectionModel, instrumentModel: InstrumentModel, 
-        teleportInstrument: Instrument,  blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushedInstrument> {
+    async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel, 
+        teleportInstrument: Instrument,  blobPool: S3BlobPool): Promise<PushedInstrument> {
+        const model: SectionModel = this.sectionModel             
         if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
             throw new Error(`Bad value. ${dir} is not a directory.`);
         }
@@ -165,7 +166,7 @@ class RunnerFlow {
     
         const {zb, packager} = await this.compileInstrument(dir, npmPackageDir, instrumentModel, blobPool);
         const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
-            zb, teleportInstrument.physicalName(section), teleportingEnabled, deployMode);
+            zb, teleportInstrument.physicalName(section), this.teleportingEnabled, this.deployMode);
         const resource = def.get();
         resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
     
