@@ -144,41 +144,6 @@ class RunnerFlow {
         }));
     }        
 
-
-    async configureBucket() {
-        const section = this.sectionModel.section
-        // You can check the content of the TTL folder via:
-        // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
-    
-        const s3 = AwsFactory.fromSection(section).newS3();
-        const prefix = `${this.ttlPrefix(section)}/`;
-        const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
-            Bucket: section.bigband.s3Bucket,
-            LifecycleConfiguration: {
-                Rules: [
-                    {
-                        Expiration: {
-                            Days: 7
-                        },
-                        Filter: {
-                            Prefix: prefix
-                        },
-                        ID: "BigbandStandardTTL7D",
-                        Status: "Enabled"
-                    }
-                ]
-            }
-        };
-    
-        try {
-            await s3.putBucketLifecycleConfiguration(req).promise();
-            logger.silly(`expiration policy set via ${JSON.stringify(req)}`);
-        } catch (e) {
-            console.error(`s3.putBucketLifecycleConfiguration failure (request: ${JSON.stringify(req)})`, e);
-            throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
-        }
-    }  
-    
     async pushCode(dir: string, npmPackageDir: string, model: SectionModel, instrumentModel: InstrumentModel, 
         teleportInstrument: Instrument,  blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushedInstrument> {
         if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
@@ -259,7 +224,41 @@ class RunnerFlow {
     
     ttlPrefix(section: Section) {
         return `${section.bigband.s3Prefix}/TTL/7d`;
-    }        
+    }     
+    
+    async configureBucket() {
+        const section = this.sectionModel.section
+        // You can check the content of the TTL folder via:
+        // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
+    
+        const s3 = AwsFactory.fromSection(section).newS3();
+        const prefix = `${this.ttlPrefix(section)}/`;
+        const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
+            Bucket: section.bigband.s3Bucket,
+            LifecycleConfiguration: {
+                Rules: [
+                    {
+                        Expiration: {
+                            Days: 7
+                        },
+                        Filter: {
+                            Prefix: prefix
+                        },
+                        ID: "BigbandStandardTTL7D",
+                        Status: "Enabled"
+                    }
+                ]
+            }
+        };
+    
+        try {
+            await s3.putBucketLifecycleConfiguration(req).promise();
+            logger.silly(`expiration policy set via ${JSON.stringify(req)}`);
+        } catch (e) {
+            console.error(`s3.putBucketLifecycleConfiguration failure (request: ${JSON.stringify(req)})`, e);
+            throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
+        }
+    }    
 }
 
 
