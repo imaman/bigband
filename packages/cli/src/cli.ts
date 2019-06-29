@@ -3,7 +3,7 @@
 import * as sourceMapSupport from 'source-map-support';
 sourceMapSupport.install();
 
-import {runBigbandFile, DeployMode} from './BigbandFileRunner';
+import {BigbandFileRunner, DeployMode} from './BigbandFileRunner';
 import {LogsCommand} from './commands/Logs'
 import {ListCommand} from './commands/List'
 import {Invoke} from './commands/Invoke'
@@ -72,7 +72,7 @@ yargs
 
 async function ship(argv) {
     const deployMode: DeployMode = (argv.deployMode === 'ALWAYS') ? DeployMode.ALWAYS : DeployMode.IF_CHANGED;
-    return await runBigbandFile(argv.bigbandFile, argv.section, argv.teleporting, deployMode);
+    return await BigbandFileRunner.runBigbandFile(argv.bigbandFile, argv.section, argv.teleporting, deployMode);
 }
 
 function run(handler, argv) {

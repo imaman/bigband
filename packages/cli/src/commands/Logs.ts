@@ -1,12 +1,12 @@
 import {AwsFactory} from '../AwsFactory'
 import { DescribeLogStreamsRequest, GetLogEventsRequest, GetLogEventsResponse, DescribeLogStreamsResponse } from 'aws-sdk/clients/cloudwatchlogs';
-import {loadSpec} from '../BigbandFileRunner';
+import {BigbandFileRunner} from '../BigbandFileRunner';
 import {lookupFunction} from './Invoke';
 
 
 
 async function main(bigbandFile: string, lambdaName: string, limit: number) {
-    const spec = await loadSpec(bigbandFile);
+    const spec = await BigbandFileRunner.loadSpec(bigbandFile);
     const {section: section, instrument} = lookupFunction(lambdaName, spec);
 
     const cloudWatchLogs = new AwsFactory(section.region, section.bigband.profileName).newCloudWatchLogs();

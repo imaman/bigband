@@ -23,7 +23,7 @@ const DEPLOYABLES_FOLDER = 'deployables';
 
 export { DeployMode } from './Packager'
 
-export function grantPermission(instrument: Instrument, action: string, arn: string) {
+function grantPermission(instrument: Instrument, action: string, arn: string) {
     instrument.getDefinition().mutate(o => o.Properties.Policies.push({
         Version: '2012-10-17',
         Statement: [{ 
@@ -36,23 +36,6 @@ export function grantPermission(instrument: Instrument, action: string, arn: str
     }));
 }
 
-// TODO(imaman): rename to ship()
-export async function runBigbandFile(bigbandFile: string, sectionName: string, teleportingEnabled: boolean, deployMode: DeployMode) {
-    const t0 = Date.now();
-    if (Number(process.versions.node.split('.')[0]) < 8) {
-        throw new Error('You must use node version >= 8 to run this program');
-    }
-    const bigbandModel = await loadSpec(bigbandFile);
-    const sectionModel = bigbandModel.findSectionModel(sectionName)
-
-
-
-    const flow = new RunnerFlow(bigbandModel, sectionModel, teleportingEnabled, deployMode)
-
-    await Promise.all([flow.runSpec(), flow.configureBucket()]);
-    const dt = (Date.now() - t0) / 1000;
-    return `Section "${sectionModel.section.name}" shipped in ${dt.toFixed(1)}s`;        
-}
 
 interface PushedInstrument {
     s3Ref: S3Ref
@@ -61,7 +44,7 @@ interface PushedInstrument {
     model: InstrumentModel
 }
 
-class RunnerFlow {
+export class BigbandFileRunner {
     private readonly poolPrefix: string
     private readonly blobPool: S3BlobPool
     private readonly teleportInstrument: Instrument
@@ -81,8 +64,23 @@ class RunnerFlow {
     
         }
 
+    // TODO(imaman): rename to ship()
+    static async runBigbandFile(bigbandFile: string, sectionName: string, teleportingEnabled: boolean, deployMode: DeployMode) {
+        const t0 = Date.now();
+        if (Number(process.versions.node.split('.')[0]) < 8) {
+            throw new Error('You must use node version >= 8 to run this program');
+        }
+        const bigbandModel = await BigbandFileRunner.loadSpec(bigbandFile);
+        const sectionModel = bigbandModel.findSectionModel(sectionName)
+        
+        const flow = new BigbandFileRunner(bigbandModel, sectionModel, teleportingEnabled, deployMode)
 
-    async runSpec() {
+        await Promise.all([flow.runSpec(), flow.configureBucket()]);
+        const dt = (Date.now() - t0) / 1000;
+        return `Section "${sectionModel.section.name}" shipped in ${dt.toFixed(1)}s`;        
+    }
+
+    private async runSpec() {
         const section = this.sectionModel.section
         const cfp = new CloudFormationPusher(section);
         cfp.peekAtExistingStack();
@@ -264,6 +262,32 @@ class RunnerFlow {
             throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
         }
     }    
+
+
+    static async loadSpec(bigbandFile: string): Promise<BigbandModel> {
+        if (!bigbandFile) {
+            throw new Error('bigbandFile cannot be falsy');
+        }
+    
+        const d = path.dirname(path.resolve(bigbandFile));
+        const protcolVersion = readVersionFromRcFile(d);
+        const packager = new Packager(d, d, '', '');
+        const file = path.parse(bigbandFile).name;
+        const zb = await packager.run(`${file}.ts`, 'spec_compiled', '');
+        const specDeployedDir = packager.unzip(zb, 'spec_deployed');
+        const pathToRequire = path.resolve(specDeployedDir, 'build', `${file}.js`);
+    
+        const uninstall = installCustomRequire();
+        let bigbandSpec: BigbandSpec
+        try {
+            logger.silly(`Loading compiled bigbandfile from ${pathToRequire} using protocolversion ${protcolVersion}`);
+            bigbandSpec = require(pathToRequire).run();
+        } finally {
+            uninstall();
+        }
+    
+        return new BigbandModel(bigbandSpec, d)
+    }    
 }
 
 
@@ -317,30 +341,6 @@ function readVersionFromRcFile(dir: string) {
     }
 }
 
-export async function loadSpec(bigbandFile: string): Promise<BigbandModel> {
-    if (!bigbandFile) {
-        throw new Error('bigbandFile cannot be falsy');
-    }
-
-    const d = path.dirname(path.resolve(bigbandFile));
-    const protcolVersion = readVersionFromRcFile(d);
-    const packager = new Packager(d, d, '', '');
-    const file = path.parse(bigbandFile).name;
-    const zb = await packager.run(`${file}.ts`, 'spec_compiled', '');
-    const specDeployedDir = packager.unzip(zb, 'spec_deployed');
-    const pathToRequire = path.resolve(specDeployedDir, 'build', `${file}.js`);
-
-    const uninstall = installCustomRequire();
-    let bigbandSpec: BigbandSpec
-    try {
-        logger.silly(`Loading compiled bigbandfile from ${pathToRequire} using protocolversion ${protcolVersion}`);
-        bigbandSpec = require(pathToRequire).run();
-    } finally {
-        uninstall();
-    }
-
-    return new BigbandModel(bigbandSpec, d)
-}
 
 
 
