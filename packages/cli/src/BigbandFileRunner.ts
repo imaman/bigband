@@ -18,6 +18,7 @@ import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME } from './scotty';
 import { BigbandModel } from './models/BigbandModel';
 import { SectionModel } from './models/SectionModel';
 import { InstrumentModel } from './models/InstrumentModel';
+import { Namer } from './Namer';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
@@ -50,6 +51,7 @@ export class BigbandFileRunner {
     private readonly poolPrefix: string
     private readonly blobPool: S3BlobPool
     private readonly teleportInstrument: Instrument
+    private readonly namer: Namer
 
     constructor(private readonly bigbandModel: BigbandModel, 
         private readonly sectionModel: SectionModel, 
@@ -63,6 +65,7 @@ export class BigbandFileRunner {
                 Timeout: 30
             }).fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME);
         
+            this.namer = new Namer(bigbandModel, sectionModel)
     
         }
 
