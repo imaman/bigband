@@ -146,7 +146,7 @@ export class BigbandFileRunner {
         }));
     }        
 
-    async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel): Promise<PushedInstrument> {
+    private async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel): Promise<PushedInstrument> {
         const model: SectionModel = this.sectionModel             
         if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
             throw new Error(`Bad value. ${dir} is not a directory.`);
@@ -179,7 +179,7 @@ export class BigbandFileRunner {
         }
     }
     
-    async compileInstrument(d: string, npmPackageDir: string, instrumentModel: InstrumentModel) {
+    private async compileInstrument(d: string, npmPackageDir: string, instrumentModel: InstrumentModel) {
         const model: SectionModel = this.sectionModel
         const section = model.section
         const instrument = instrumentModel.instrument
@@ -229,7 +229,7 @@ export class BigbandFileRunner {
         return `${this.bigbandModel.bigband.s3Prefix}/TTL/7d`;
     }     
     
-    async configureBucket() {
+    private async configureBucket() {
         const section = this.sectionModel.section
         // You can check the content of the TTL folder via:
         // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
