@@ -44,6 +44,8 @@ interface PushedInstrument {
     model: InstrumentModel
 }
 
+
+// TODO(imaman): coverage. can be hard.
 export class BigbandFileRunner {
     private readonly poolPrefix: string
     private readonly blobPool: S3BlobPool
