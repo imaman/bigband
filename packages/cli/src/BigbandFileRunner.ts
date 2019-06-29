@@ -159,7 +159,7 @@ export class BigbandFileRunner {
         
         const section = model.section
         const instrument = instrumentModel.instrument
-        const physicalName = instrument.physicalName(section);
+        const physicalName = this.namer.physicalName(instrument);
         const def = instrument.getPhysicalDefinition(section);
         if (!instrument.getEntryPointFile()) {
             return {
@@ -172,7 +172,7 @@ export class BigbandFileRunner {
     
         const {zb, packager} = await this.compileInstrument(dir, npmPackageDir, instrumentModel);
         const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
-            zb, this.teleportInstrument.physicalName(section), this.teleportingEnabled, this.deployMode);
+            zb, this.namer.physicalName(this.teleportInstrument), this.teleportingEnabled, this.deployMode);
         const resource = def.get();
         resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
     
@@ -197,7 +197,7 @@ export class BigbandFileRunner {
             const mapping = {};
             // TODO(imaman): coverage
             instrumentModel.wirings.forEach(w => {
-                mapping[w.name] = {name: w.supplier.physicalName(section), region: section.region};
+                mapping[w.name] = {name: this.namer.physicalName(w.supplier), region: section.region};
             });
             frag.add(new DeployableAtom('bigband/deps.js', 
                 `module.exports = ${JSON.stringify(mapping)}`));
