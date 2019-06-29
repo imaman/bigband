@@ -2,6 +2,7 @@ import { BigbandModel } from "./models/BigbandModel";
 import { SectionModel } from "./models/SectionModel";
 import { Instrument } from "bigband-core";
 
+// TODO(imaman): coverage
 export class Namer {
     constructor(private readonly bigband: BigbandModel, private readonly section: SectionModel) {}
 
