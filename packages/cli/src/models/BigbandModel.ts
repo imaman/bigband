@@ -13,10 +13,9 @@ export interface AssignedInstrument {
 
 export interface LookupResult {
     section: Section
-    instrument: Instrument
     sectionModel: SectionModel
-    // TODO(imaman): rename to physical name
-    name: string
+    instrument: Instrument
+    physicalName: string
 }
 
 export class BigbandModel {
@@ -65,7 +64,7 @@ export class BigbandModel {
         }
     
         if (matches.length > 1) {
-            throw new Error(`Multiple matches on "${instrumentName}": ${JSON.stringify(matches.map(x => x.name))}`);
+            throw new Error(`Multiple matches on "${instrumentName}": ${JSON.stringify(matches.map(x => x.physicalName))}`);
         }
     
         return matches[0];    
