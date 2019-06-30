@@ -33,4 +33,78 @@ describe('SectionModel', () => {
             expect(model.instruments.map(i => i.instrument)).to.eql([f1, f2])
         });
     })
+    describe("validation", () => {
+        describe("name", () => {
+            it("can be made of a combination of lowercase letters and the dash sign", () => {
+                const spec: SectionSpec = {
+                    section: new Section("r1", "abc-def-xyz"), 
+                    instruments: [],
+                    wiring: []
+                }
+    
+                const model = new SectionModel(b, spec)
+                expect(() => model.validate()).not.to.throw()
+            });
+            it("can contain just lowercase letters", () => {
+                const spec: SectionSpec = {
+                    section: new Section("r1", "abc"), 
+                    instruments: [],
+                    wiring: []
+                }
+    
+                const model = new SectionModel(b, spec)
+                expect(() => model.validate()).not.to.throw()
+            });
+            it("upper case letters are not allowed", () => {
+                const spec: SectionSpec = {
+                    section: new Section("r1", "Abc"), 
+                    instruments: [],
+                    wiring: []
+                }
+    
+                const model = new SectionModel(b, spec)
+                expect(() => model.validate()).to.throw('Bad section name: "Abc"')
+            });
+            it("upper case letters are not allowed also after dashses", () => {
+                const spec: SectionSpec = {
+                    section: new Section("r1", "abc-Def"), 
+                    instruments: [],
+                    wiring: []
+                }
+    
+                const model = new SectionModel(b, spec)
+                expect(() => model.validate()).to.throw('Bad section name: "abc-Def"')
+            });
+            it("multiple consecutive dash-signs are not allowed", () => {
+                const spec: SectionSpec = {
+                    section: new Section("r1", "abc--def"), 
+                    instruments: [],
+                    wiring: []
+                }
+    
+                const model = new SectionModel(b, spec)
+                expect(() => model.validate()).to.throw('Bad section name: "abc--def"')
+            });
+            it("dash-sign is not allowed at the very beginning", () => {
+                const spec: SectionSpec = {
+                    section: new Section("r1", "-abc"), 
+                    instruments: [],
+                    wiring: []
+                }
+    
+                const model = new SectionModel(b, spec)
+                expect(() => model.validate()).to.throw('Bad section name: "-abc"')
+            });
+            it("dash-sign is not allowed at the very end", () => {
+                const spec: SectionSpec = {
+                    section: new Section("r1", "abc-"), 
+                    instruments: [],
+                    wiring: []
+                }
+    
+                const model = new SectionModel(b, spec)
+                expect(() => model.validate()).to.throw('Bad section name: "abc-"')
+            });
+        })
+    })
 });

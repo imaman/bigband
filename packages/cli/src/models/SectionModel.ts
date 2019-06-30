@@ -18,6 +18,11 @@ export class SectionModel {
     }
 
     validate() {
+        const name = this.section.name
+
+        if(!name.match(/^([a-z][a-z0-9]*)(-[a-z][a-z0-9]*)*$/)) {
+            throw new Error(`Bad section name: "${name}"`)
+        }
         this.instruments.forEach(curr => curr.validate())
 
         const set = new Set<Instrument>(this.spec.instruments)
