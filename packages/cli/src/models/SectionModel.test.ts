@@ -29,7 +29,7 @@ describe('SectionModel', () => {
                 wiring: []
             }
 
-            const model = new SectionModel(spec)
+            const model = new SectionModel(b, spec)
             expect(model.instruments.map(i => i.instrument)).to.eql([f1, f2])
         });
     })

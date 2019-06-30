@@ -25,7 +25,7 @@ describe('InstrumentModel', () => {
             it("is locked for a non system instrument", () => {
                 const s = new Section(b, "r1", "s1")
                 const instrument = new LambdaInstrument("bigband", "f1", "")
-                const model = new InstrumentModel(s, instrument, [], false)
+                const model = new InstrumentModel(b, s, instrument, [], false)
     
                 expect(() => model.validate()).to.throw(
                     'Instrument "bigband-f1" has a bad name: the fully qualified name of an instrument is not allowed to start with "bigband"')
@@ -33,7 +33,7 @@ describe('InstrumentModel', () => {
             it("is locked for a non system instrument also when using the array notation", () => {
                 const s = new Section(b, "r1", "s1")
                 const instrument = new LambdaInstrument(["bigband"], "f1", "")
-                const model = new InstrumentModel(s, instrument, [], false)
+                const model = new InstrumentModel(b, s, instrument, [], false)
     
                 expect(() => model.validate()).to.throw(
                     'Instrument "bigband-f1" has a bad name: the fully qualified name of an instrument is not allowed to start with "bigband"')
@@ -41,21 +41,21 @@ describe('InstrumentModel', () => {
             it("is not locked for system instruments", () => {
                 const s = new Section(b, "r1", "s1")
                 const instrument = new LambdaInstrument(["bigband"], "f1", "")
-                const model = new InstrumentModel(s, instrument, [], true)
+                const model = new InstrumentModel(b, s, instrument, [], true)
     
                 expect(() => model.validate()).not.to.throw()
             })    
             it("top level package name which starts with 'bigband' is not locked", () => {
                 const s = new Section(b, "r1", "s1")
                 const instrument = new LambdaInstrument(["bigband1111"], "f1", "")
-                const model = new InstrumentModel(s, instrument, [], false)
+                const model = new InstrumentModel(b, s, instrument, [], false)
     
                 expect(() => model.validate()).not.to.throw()
             })    
             it("'bigband' is not locked as a non top-level package name", () => {
                 const s = new Section(b, "r1", "s1")
                 const instrument = new LambdaInstrument(["abc", "bigband"], "f1", "")
-                const model = new InstrumentModel(s, instrument, [], false)
+                const model = new InstrumentModel(b, s, instrument, [], false)
     
                 expect(() => model.validate()).not.to.throw()
             })    
@@ -71,7 +71,7 @@ describe('InstrumentModel', () => {
                 wiring: []
             }
 
-            const sectionModel = new SectionModel(spec)
+            const sectionModel = new SectionModel(b, spec)
             expect(sectionModel.instruments[0].wirings).to.eql([])
         });
         it('returns an empty array if no wirings were defined for the given consumer', async () => { 
@@ -84,7 +84,7 @@ describe('InstrumentModel', () => {
                 wiring: [w12]
             }
 
-            const sectionModel = new SectionModel(spec)
+            const sectionModel = new SectionModel(b, spec)
             expect(sectionModel.instruments[1].wirings).to.eql([])
         });
         it('returns all wirings for the given consumer', async () => { 
@@ -99,7 +99,7 @@ describe('InstrumentModel', () => {
                 wiring: [w12, w13]
             }
 
-            const sectionModel = new SectionModel(spec)
+            const sectionModel = new SectionModel(b, spec)
             expect(sectionModel.instruments[0].wirings).to.eql([w12, w13])
         });
         it('returns wirings only for the given consumer', async () => { 
@@ -114,7 +114,7 @@ describe('InstrumentModel', () => {
                 wiring: [w12, w23]
             }
 
-            const sectionModel = new SectionModel(spec)
+            const sectionModel = new SectionModel(b, spec)
             expect(sectionModel.instruments[0].wirings).to.eql([w12])
         });
     });

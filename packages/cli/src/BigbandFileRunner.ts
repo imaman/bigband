@@ -107,7 +107,8 @@ export class BigbandFileRunner {
         const ps = this.sectionModel.instruments.map(im => 
             this.pushCode(dir, dir, im));
     
-        const teleportModel = new InstrumentModel(this.sectionModel.section, this.teleportInstrument, [], true)
+        const teleportModel = new InstrumentModel(this.bigbandModel.bigband, this.sectionModel.section,
+            this.teleportInstrument, [], true)
         // teleporter needs slightly different parameters so we pushCode() it separately. 
         ps.push(this.pushCode(Misc.bigbandPackageDir(), dir, teleportModel));
         

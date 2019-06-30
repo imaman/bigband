@@ -81,7 +81,7 @@ export class BigbandModel {
     }
 
     private get sections(): SectionModel[] {
-        return this.spec.sections.map(s => new SectionModel(s))
+        return this.spec.sections.map(s => new SectionModel(this.bigband, s))
     }
 
     computeList() {

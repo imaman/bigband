@@ -1,15 +1,15 @@
-import { SectionSpec, Instrument } from "bigband-core";
+import { SectionSpec, Instrument, Bigband } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
 
 export class SectionModel {
-    constructor(private readonly spec: SectionSpec) {}
+    constructor(private readonly bigband: Bigband, private readonly spec: SectionSpec) {}
 
     get section() {
         return this.spec.section
     }
 
     get instruments(): InstrumentModel[] {
-        return this.spec.instruments.map(i => new InstrumentModel(this.spec.section, i, 
+        return this.spec.instruments.map(i => new InstrumentModel(this.bigband, this.spec.section, i, 
             this.spec.wiring.filter(w => w.consumer === i), false))
     }
 

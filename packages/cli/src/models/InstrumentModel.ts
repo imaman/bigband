@@ -1,13 +1,13 @@
-import { Instrument, WireSpec, Section } from "bigband-core";
+import { Instrument, WireSpec, Section, Bigband } from "bigband-core";
 import { Misc } from "../Misc";
 import { Namer } from "../Namer";
 
 export class InstrumentModel {
-    constructor(public readonly section: Section, public readonly instrument: Instrument, public readonly wirings: WireSpec[], 
-        private readonly isSystemInstrument) {}
+    constructor(private readonly bigband: Bigband, public readonly section: Section, public readonly instrument: Instrument,
+        public readonly wirings: WireSpec[], private readonly isSystemInstrument) {}
 
     get physicalName(): string {
-        return new Namer(this.section.bigband, this.section).physicalName(this.instrument)
+        return new Namer(this.bigband, this.section).physicalName(this.instrument)
     }
 
     validate() {
