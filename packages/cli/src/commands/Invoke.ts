@@ -12,7 +12,7 @@ async function invokeFunction(bigbandFile: string, lambdaName: string, input: st
 
     const data = lookupFunction(lambdaName, spec);
 
-    var lambda: AWS.Lambda = new AwsFactory(data.section.region, data.section.bigband.profileName).newLambda();
+    var lambda: AWS.Lambda = new AwsFactory(data.section.region, spec.bigband.profileName).newLambda();
     const params: InvocationRequest = {
         FunctionName: data.name,
         InvocationType: 'RequestResponse', 
