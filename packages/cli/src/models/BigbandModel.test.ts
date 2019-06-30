@@ -21,30 +21,6 @@ describe('BigbandModel', () => {
     const b = new Bigband(bigbandInit)
 
     describe("vailidation", () => {
-        describe("bigband", () => {
-            it("fails if is more than one instance of bigband", () => {
-                const b2 = new Bigband(bigbandInit)
-
-                const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
-                const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
-                const spec: BigbandSpec = {
-                    bigband: b,
-                    sections: [
-                        {
-                            section: new Section(b, "r1", "s1"), 
-                            instruments: [f1],
-                            wiring: []
-                        },
-                        {
-                            section: new Section(b2, "r1", "s2"), 
-                            instruments: [f2],
-                            wiring: []
-                        }
-                ]}
-
-                expect(() => new BigbandModel(spec, "somedir")).to.throw('multiple bigband instances')
-            })
-        })
         describe("wiring", () => {
             it("checks for wiring name collision", () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
@@ -188,7 +164,7 @@ describe('BigbandModel', () => {
             }
 
             const model = new BigbandModel(spec, "somedir")
-            expect(model.searchInstrument("b-s1-p1-f1")).to.eql({
+            expect(model.searchInstrument("b-s1-p1-f1")).to.containSubset({
                 name: 'b-s1-p1-f1',
                 instrument: f1,
                 section: s1
@@ -216,7 +192,7 @@ describe('BigbandModel', () => {
             }
 
             const model = new BigbandModel(spec, "somedir")
-            expect(model.searchInstrument("2-p1-f22")).to.eql({
+            expect(model.searchInstrument("2-p1-f22")).to.containSubset({
                 name: 'b-s2-p1-f22bb',
                 instrument: f2,
                 section: s2
@@ -286,7 +262,7 @@ describe('BigbandModel', () => {
             }
 
             const model = new BigbandModel(spec, "somedir")
-            expect(model.searchInstrument("abc")).to.eql({
+            expect(model.searchInstrument("abc")).to.containSubset({
                 name: 'b-s1-p1-abc',
                 instrument: f1,
                 section: s1
