@@ -2,15 +2,12 @@ import * as AWS from 'aws-sdk'
 import { AwsFactory } from '../AwsFactory'
 import { BigbandFileRunner } from '../BigbandFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
-import { BigbandModel } from '../models/BigbandModel';
 
-export function lookupFunction(instrumentName: string, model: BigbandModel) {
-    return model.searchInstrument(instrumentName)
-}
 async function invokeFunction(bigbandFile: string, lambdaName: string, input: string) {
+    // TODO(imaman): Rename all variables assigned with loadSpec to model
     const spec = await BigbandFileRunner.loadSpec(bigbandFile);
 
-    const data = lookupFunction(lambdaName, spec);
+    const data = spec.searchInstrument(lambdaName);
 
     var lambda: AWS.Lambda = AwsFactory.fromSection(data.sectionModel).newLambda();
     const params: InvocationRequest = {

@@ -274,6 +274,7 @@ export class BigbandFileRunner {
     }    
 
 
+    // TODO(imaman): rename to loadModel()
     static async loadSpec(bigbandFile: string): Promise<BigbandModel> {
         if (!bigbandFile) {
             throw new Error('bigbandFile cannot be falsy');
