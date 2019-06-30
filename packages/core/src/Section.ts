@@ -28,7 +28,7 @@ import {Bigband} from './Bigband'
  */
 export class Section {
 
-    private readonly bigband: Bigband
+    public readonly bigband: Bigband
 
     /**
      *Creates an instance of Section.
