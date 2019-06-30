@@ -5,7 +5,6 @@ import { InvocationRequest } from 'aws-sdk/clients/lambda';
 import { LookupResult } from '../models/BigbandModel';
 
 async function invokeFunction(bigbandFile: string, lambdaName: string, input: string) {
-    // TODO(imaman): Rename all variables assigned with loadSpec to model
     const model = await BigbandFileRunner.loadSpec(bigbandFile);
 
     const lookupResult: LookupResult = model.searchInstrument(lambdaName);
