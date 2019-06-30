@@ -13,6 +13,10 @@ export class SectionModel {
             this.spec.wiring.filter(w => w.consumer === i), false))
     }
 
+    get physicalName(): string {
+        return `${this.bigband.name}-${this.section.name}`;
+    }
+
     validate() {
         this.instruments.forEach(curr => curr.validate())
 

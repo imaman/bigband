@@ -38,13 +38,8 @@ export class Section {
      * @param {string} name the name of the section. Should be unique within its Bigband
      * @memberof Section
      */
-    constructor(bigband: Bigband, 
-        public readonly region: string, public readonly name: string) {
+    constructor(bigband: Bigband, public readonly region: string, public readonly name: string) {
         this.bigband = bigband
-    }    
-
-    physicalName() {
-        return `${this.bigband.name}-${this.name}`;
-    }        
+    }
 }
 

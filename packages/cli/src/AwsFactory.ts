@@ -14,7 +14,7 @@ export class AwsFactory {
     }
 
     static fromSection(sectionModel: SectionModel) {
-        return new AwsFactory(sectionModel.section.physicalName(), sectionModel.section.region,
+        return new AwsFactory(sectionModel.physicalName, sectionModel.section.region,
             sectionModel.bigband.profileName);
     }
 
