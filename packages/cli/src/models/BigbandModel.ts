@@ -31,7 +31,7 @@ export class BigbandModel {
     }
 
     get bigband(): Bigband {
-        return this.sections[0].section.bigband
+        return this.spec.bigband
     }
 
     searchInstrument(instrumentName: string): LookupResult {
@@ -101,11 +101,6 @@ export class BigbandModel {
 
     validate() {
         this.sections.forEach(curr => curr.validate())
-
-        const numBigbanbds = new Set(this.sections.map(s => s.section.bigband)).size
-        if (numBigbanbds != 1) {
-            throw new Error("multiple bigband instances")
-        }
 
         let dupes = Misc.checkDuplicates(this.sections.map(s => s.section.name));
         if (dupes.length) {
