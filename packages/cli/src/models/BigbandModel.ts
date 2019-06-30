@@ -1,4 +1,4 @@
-import { BigbandSpec, Instrument, Section, WireSpec, SectionSpec, Bigband } from "bigband-core";
+import { BigbandSpec, Instrument, Section, Bigband } from "bigband-core";
 import { Misc } from "../Misc";
 import { SectionModel } from "./SectionModel";
 import { InstrumentModel } from "./InstrumentModel";
