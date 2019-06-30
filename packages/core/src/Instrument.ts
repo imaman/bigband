@@ -69,7 +69,7 @@ export abstract class Instrument {
      * @param section 
      * @param consumerDef 
      */
-    abstract contributeToConsumerDefinition(section: Section, consumerDef: Definition): void
+    abstract contributeToConsumerDefinition(section: Section, consumerDef: Definition, myArn: string): void
 
     /**
      * Returns the AWS service namespace to be used when constructing the ARN of this instrument. For instance, in a
@@ -128,14 +128,6 @@ export abstract class Instrument {
         return `${section.bigband.name}-${section.name}-${this.fullyQualifiedName()}`;
     }
     
-    /**
-     * Computes the ARN of this instrument at the given section
-     * @param section 
-     */
-    arn(section: Section): string {
-        return `arn:aws:${this.arnService()}:${section.region}:${section.bigband.awsAccount}:${this.arnType()}${this.physicalName(section)}`;
-    }
-
     getDefinition() : Definition {
         return this.definition;
     }

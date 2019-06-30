@@ -128,7 +128,7 @@ export class LambdaInstrument extends Instrument {
         return fragment;
     }
 
-    contributeToConsumerDefinition(section: Section, consumerDef: Definition) {
+    contributeToConsumerDefinition(section: Section, consumerDef: Definition, myArn: string) {
         consumerDef.mutate(o => o.Properties.Policies.push({
             Version: '2012-10-17',
             Statement: [{ 
@@ -136,7 +136,7 @@ export class LambdaInstrument extends Instrument {
                 Action: [
                   'lambda:InvokeFunction'
                 ],
-                Resource: this.arn(section)
+                Resource: myArn
             }]
         }));
     }

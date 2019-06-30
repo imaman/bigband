@@ -122,8 +122,10 @@ export class BigbandFileRunner {
     
         pushedInstruments.forEach(curr => {
             const def = curr.model.instrument.getPhysicalDefinition(section);
+
             curr.model.wirings.forEach(d => {
-                d.supplier.contributeToConsumerDefinition(section, def);
+                const arn = this.namer.resolve(d.supplier).arn
+                d.supplier.contributeToConsumerDefinition(section, def, arn);
             });
     
             if (curr.s3Ref.isOk()) {
