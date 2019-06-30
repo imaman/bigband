@@ -42,14 +42,19 @@ export class BigbandModel {
 
        this.sections.forEach(sectionModel => {
             sectionModel.instruments.forEach(curr => {
-                const name = new Namer(this.bigband, sectionModel.section).physicalName(curr.instrument)
-                const lookupResult = {section: sectionModel.section, instrument: curr.instrument, name, sectionModel};
+                const physicalName = new Namer(this.bigband, sectionModel.section).physicalName(curr.instrument)
+                const lookupResult = {
+                    section: sectionModel.section, 
+                    instrument: curr.instrument, 
+                    physicalName, 
+                    sectionModel
+                };
 
                 if (curr.instrument.name == instrumentName) {
                     exactMatches.push(lookupResult)
                 } 
                 names.push(name);
-                if (name.indexOf(instrumentName) >= 0) {
+                if (physicalName.indexOf(instrumentName) >= 0) {
                     matches.push(lookupResult);
                 }
             });
