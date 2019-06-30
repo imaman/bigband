@@ -135,7 +135,7 @@ export class Packager {
     const factory = AwsFactory.fromSection(this.section);
 
     const p = factory.newLambda().getFunction({
-      FunctionName: name.physicalName()
+      FunctionName: name.physicalName
     }).promise().catch(e => null);
     const buf = await zipBuilder.toBuffer();
     const fingeprint = ZipBuilder.bufferTo256Fingerprint(buf);
@@ -150,10 +150,10 @@ export class Packager {
     };
 
     const deployableLocation = ret.deployableLocation;
-    logger.silly(`Comparing fingerprints for ${name.fullyQualifiedName()}:\n  ${c}\n  ${fingeprint}`);
+    logger.silly(`Comparing fingerprints for ${name.fullyQualifiedName}:\n  ${c}\n  ${fingeprint}`);
     if (deployMode === DeployMode.IF_CHANGED) {
       if (c && c == fingeprint) {
-        logger.info(`No code changes in ${name.fullyQualifiedName()}`);
+        logger.info(`No code changes in ${name.fullyQualifiedName}`);
         ret.wasPushed = false;
         return ret;
       }
@@ -180,19 +180,19 @@ export class Packager {
       try {
         const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
         if (!invocationResponse.FunctionError) {
-          logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${name.fullyQualifiedName()}`);
+          logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${name.fullyQualifiedName}`);
           return ret;
         }
   
         logger.silly('teleporter returned an error:\n' + JSON.stringify(invocationResponse));
-        throw new Error(`Teleporting of ${name.physicalName()} failed: ${invocationResponse.FunctionError}`);
+        throw new Error(`Teleporting of ${name.physicalName} failed: ${invocationResponse.FunctionError}`);
       } catch (e) {
         logger.silly('Teleporting error', e);
       }  
     }
 
-    const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, name.physicalName());
-    logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${name.fullyQualifiedName()}`);
+    const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, name.physicalName)
+    logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${name.fullyQualifiedName}`);
     
     return ret;
   }

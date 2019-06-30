@@ -171,7 +171,8 @@ export class BigbandFileRunner {
         }
     
         const {zb, packager} = await this.compileInstrument(dir, npmPackageDir, instrumentModel);
-        const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
+        const pushResult: PushResult = await packager.pushToS3(this.namer.resolve(instrument),
+            `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
             zb, this.namer.physicalName(this.teleportInstrument), this.teleportingEnabled, this.deployMode);
         const resource = def.get();
         resource.Properties.CodeUri = pushResult.deployableLocation.toUri();

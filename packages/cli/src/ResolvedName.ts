@@ -1,8 +1,6 @@
 
 export class ResolvedName {
 
-  constructor(readonly fullyQualifiedName_: string, readonly physicalName_: string) {}
+  constructor(readonly fullyQualifiedName: string, readonly physicalName: string, readonly arn: string) {}
 
-  physicalName() { return this.physicalName_ }
-  fullyQualifiedName() { return this.fullyQualifiedName_ }
 }

@@ -3,15 +3,18 @@ import { SectionModel } from "./models/SectionModel";
 import { Instrument } from "bigband-core";
 import { ResolvedName } from "./ResolvedName";
 
-// TODO(imaman): coverage
 export class Namer {
     constructor(private readonly bigband: BigbandModel, private readonly section: SectionModel) {}
 
-    physicalName(instrument: Instrument): string{
+    physicalName(instrument: Instrument): string {
         return `${this.bigband.bigband.name}-${this.section.section.name}-${instrument.fullyQualifiedName()}`;
     }
 
     resolve(instrument: Instrument) {
-        return new ResolvedName(instrument.fullyQualifiedName(), this.physicalName(instrument))
+        const physicalName = this.physicalName(instrument)
+        const arn = `arn:aws:${instrument.arnService()}:${this.section.section.region}:` + 
+                `${this.bigband.bigband.awsAccount}:${instrument.arnType()}${physicalName}`;
+
+        return new ResolvedName(instrument.fullyQualifiedName(), physicalName, arn)
     }
 }
