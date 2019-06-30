@@ -36,10 +36,6 @@ describe('Instruments', () => {
         })
     })
 
-    function newBigband(awsAccount, name, s3Bucket, s3Prefix, profileName) {
-        return new Bigband({awsAccount, name, s3Bucket, s3Prefix, profileName})
-    }
-
     describe('Lambda', () => {
         it('produces cloudformation', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
