@@ -1,9 +1,9 @@
 import { KinesisStreamConsumer, KinesisStreamInstrument, LambdaInstrument, DynamoDbAttributeType, Bigband, DynamoDbInstrument, Section, wire } from 'bigband-core/lib/index';
-import { BigbandSpec } from 'bigband-core/src';
 
 
 const bigband = new Bigband({name: 'bb-example', awsAccount: '196625562809', profileName: 'imaman', s3Bucket: 'bigband-example', s3Prefix: 'root'});
 const prodMajor = new Section('eu-west-2', 'prod-major');
+const staging = new Section('eu-west-2', 'staging');
 const importantDates = new LambdaInstrument('chronology', 'importantDates', 'src/chronology/compute', {
     Description: "returns important dates for a year",
     MemorySize: 1024,
@@ -44,6 +44,14 @@ export function run() {
             {
                 section: prodMajor,
                 instruments: [importantDates, placeFinder, queryStream, distanceTable, queryStreamAnalyzer, healthChecker],
+                wiring: [
+                    wire(placeFinder, distanceTable, "distanceTable"),    
+                    wire(placeFinder, queryStream, "queryStream"),    
+                ]
+            },
+            {
+                section: staging,
+                instruments: [placeFinder, distanceTable, queryStream],
                 wiring: [
                     wire(placeFinder, distanceTable, "distanceTable"),    
                     wire(placeFinder, queryStream, "queryStream"),    
