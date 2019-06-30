@@ -9,13 +9,14 @@ import { logger } from './logger';
 import { AwsFactory } from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver } from './NpmPackageResolver'
-import { Instrument, Section, SourceExporter } from 'bigband-core';
+import { Section, SourceExporter } from 'bigband-core';
 import { GetFunctionResponse, InvocationRequest, InvocationResponse } from 'aws-sdk/clients/lambda';
 import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
 import { ZipBuilder } from './ZipBuilder';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME, CONTRIVED_OUT_FILE_NAME } from './scotty'
 import { Misc } from './Misc';
+import { ResolvedName } from './ResolvedName';
 
 export enum DeployMode {
   ALWAYS = 1,
@@ -26,6 +27,8 @@ export interface PushResult {
   deployableLocation: S3Ref
   wasPushed: boolean
 }
+
+
 
 export class Packager {
   private readonly workingDir: string;
@@ -67,7 +70,8 @@ export class Packager {
     const absoluteTsFile = this.toAbs(relativeTsFile);
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
-    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, SourceExporter.bigbandCorePackageDir(), Misc.bigbandPackageDir()], shouldBeIncluded);
+    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, SourceExporter.bigbandCorePackageDir(),
+        Misc.bigbandPackageDir()], shouldBeIncluded);
     await npmPackageResolver.prepopulate();
 
     const isScotty = relativeTsFile === CONTRIVED_IN_FILE_NAME;
@@ -106,9 +110,12 @@ export class Packager {
     // Special treatment for scotty.
     if (relativeTsFile === CONTRIVED_IN_FILE_NAME) {
       const frag = zipBuilder.newFragment();
-      frag.addText('node_modules/bigband-core/index.js', SourceExporter.exportBigbandCoreSourceCode('DeployableFragment.js'));
-      frag.addText(`node_modules/${CONTRIVED_NPM_PACAKGE_NAME}/${CONTRIVED_OUT_FILE_NAME}`, fs.readFileSync(path.resolve(__dirname, 'scotty.js'), 'utf-8'));
-      frag.addText(`node_modules/${CONTRIVED_NPM_PACAKGE_NAME}/ZipBuilder.js`, fs.readFileSync(path.resolve(__dirname, 'ZipBuilder.js'), 'utf-8'));
+      frag.addText('node_modules/bigband-core/index.js',
+          SourceExporter.exportBigbandCoreSourceCode('DeployableFragment.js'));
+      frag.addText(`node_modules/${CONTRIVED_NPM_PACAKGE_NAME}/${CONTRIVED_OUT_FILE_NAME}`,
+          fs.readFileSync(path.resolve(__dirname, 'scotty.js'), 'utf-8'));
+      frag.addText(`node_modules/${CONTRIVED_NPM_PACAKGE_NAME}/ZipBuilder.js`,
+          fs.readFileSync(path.resolve(__dirname, 'ZipBuilder.js'), 'utf-8'));
     }
     
     return zipBuilder;
@@ -120,14 +127,15 @@ export class Packager {
     return outDir;
   }
 
-  public async pushToS3(instrument: Instrument, s3Object: string, zipBuilder: ZipBuilder, teleportLambdaName: string, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
+  public async pushToS3(name: ResolvedName, s3Object: string, zipBuilder: ZipBuilder, teleportLambdaName: string,
+      teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
     if (!this.section) {
       throw new Error('section was not set.');
     }
     const factory = AwsFactory.fromSection(this.section);
 
     const p = factory.newLambda().getFunction({
-      FunctionName: instrument.physicalName(this.section)
+      FunctionName: name.physicalName(this.section)
     }).promise().catch(e => null);
     const buf = await zipBuilder.toBuffer();
     const fingeprint = ZipBuilder.bufferTo256Fingerprint(buf);
@@ -142,10 +150,10 @@ export class Packager {
     };
 
     const deployableLocation = ret.deployableLocation;
-    logger.silly(`Comparing fingerprints for ${instrument.fullyQualifiedName()}:\n  ${c}\n  ${fingeprint}`);
+    logger.silly(`Comparing fingerprints for ${name.fullyQualifiedName()}:\n  ${c}\n  ${fingeprint}`);
     if (deployMode === DeployMode.IF_CHANGED) {
       if (c && c == fingeprint) {
-        logger.info(`No code changes in ${instrument.fullyQualifiedName()}`);
+        logger.info(`No code changes in ${name.fullyQualifiedName()}`);
         ret.wasPushed = false;
         return ret;
       }
@@ -172,19 +180,19 @@ export class Packager {
       try {
         const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
         if (!invocationResponse.FunctionError) {
-          logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${instrument.fullyQualifiedName()}`);
+          logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${name.fullyQualifiedName()}`);
           return ret;
         }
   
-        logger.silly('scotty returned an error:\n' + JSON.stringify(invocationResponse));
-        throw new Error(`Teleporting of ${instrument.physicalName(this.section)} failed: ${invocationResponse.FunctionError}`);
+        logger.silly('teleporter returned an error:\n' + JSON.stringify(invocationResponse));
+        throw new Error(`Teleporting of ${name.physicalName(this.section)} failed: ${invocationResponse.FunctionError}`);
       } catch (e) {
         logger.silly('Teleporting error', e);
       }  
     }
 
-    const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, instrument.physicalName(this.section));
-    logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${instrument.fullyQualifiedName()}`);
+    const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, name.physicalName(this.section));
+    logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${name.fullyQualifiedName()}`);
     
     return ret;
   }
