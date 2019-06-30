@@ -8,11 +8,6 @@ export enum NameStyle {
 }
 
 
-class Dependency {
-    constructor(readonly consumer: Instrument, readonly supplier: Instrument, readonly name: string) {}
-}
-
-
 /** 
  * Bigband's basic building block. Usually corresponds to an AWS resources such as: a Lambda function, a DynamoDB
  * table, a Kinesis stream, etc.

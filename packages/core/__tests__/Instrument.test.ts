@@ -86,7 +86,6 @@ describe('Instruments', () => {
     });
     describe('Dynamo', () => {
         it('produces yml', () => {
-            debugger;
             const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', {name: 'id', type: DynamoDbAttributeType.STRING});
             expect(instrument.getDefinition().get()).to.deep.equal({
                 Type: "AWS::DynamoDB::Table",
