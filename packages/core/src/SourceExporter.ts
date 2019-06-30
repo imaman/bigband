@@ -21,7 +21,7 @@ function findPackageDir() {
 let bigbandCorePackageDir: string;
 
 // TODO(imaman): Rename to About
-export class SourceExporter {
+export class BigbandInstallation {
     static exportBigbandCoreSourceCode(fileName: string) {
         const location = path.resolve(__dirname, fileName);
         return fs.readFileSync(location, 'utf-8');

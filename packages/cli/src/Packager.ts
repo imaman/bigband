@@ -9,7 +9,7 @@ import { logger } from './logger';
 import { AwsFactory } from './AwsFactory';
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver } from './NpmPackageResolver'
-import { Section, SourceExporter } from 'bigband-core';
+import { BigbandInstallation } from 'bigband-core';
 import { GetFunctionResponse, InvocationRequest, InvocationResponse } from 'aws-sdk/clients/lambda';
 import { Teleporter, S3BlobPool } from './Teleporter';
 import { S3Ref } from './S3Ref';
@@ -70,7 +70,7 @@ export class Packager {
     const absoluteTsFile = this.toAbs(relativeTsFile);
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
-    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, SourceExporter.bigbandCorePackageDir(),
+    const npmPackageResolver = new NpmPackageResolver([this.npmPackageDir, BigbandInstallation.bigbandCorePackageDir(),
         Misc.bigbandPackageDir()], shouldBeIncluded);
     await npmPackageResolver.prepopulate();
 
@@ -111,7 +111,7 @@ export class Packager {
     if (relativeTsFile === CONTRIVED_IN_FILE_NAME) {
       const frag = zipBuilder.newFragment();
       frag.addText('node_modules/bigband-core/index.js',
-          SourceExporter.exportBigbandCoreSourceCode('DeployableFragment.js'));
+          BigbandInstallation.exportBigbandCoreSourceCode('DeployableFragment.js'));
       frag.addText(`node_modules/${CONTRIVED_NPM_PACAKGE_NAME}/${CONTRIVED_OUT_FILE_NAME}`,
           fs.readFileSync(path.resolve(__dirname, 'scotty.js'), 'utf-8'));
       frag.addText(`node_modules/${CONTRIVED_NPM_PACAKGE_NAME}/ZipBuilder.js`,
