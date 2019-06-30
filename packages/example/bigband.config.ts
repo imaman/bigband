@@ -36,6 +36,7 @@ const queryStream = new KinesisStreamInstrument('geography', 'QueryStream', 1);
 const queryStreamAnalyzer = new KinesisStreamConsumer('geography', 'analyzer', 'src/geography/analyzer', queryStream, 1);
 
 
+// TODO(imaman): check why adding :BigbandSpec breaks compilation
 export function run() {
     return {
         bigband,
