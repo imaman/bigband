@@ -126,6 +126,7 @@ export class BigbandFileRunner {
         pushedInstruments.forEach(curr => {
             const def = this.namer.getPhysicalDefinition(curr.model.instrument)
 
+            // TODO(imaman): support cross-section wiring
             curr.model.wirings.forEach(d => {
                 const arn = this.namer.resolve(d.supplier).arn
                 d.supplier.contributeToConsumerDefinition(section, def, arn);
