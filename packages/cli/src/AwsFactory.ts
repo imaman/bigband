@@ -1,18 +1,21 @@
 import {Section} from 'bigband-core'
 import * as AWS from 'aws-sdk';
+import { SectionModel } from './models/SectionModel';
 
 export class AwsFactory {
     private readonly options: any;
-    constructor(readonly region: string, readonly profileName: string) {
-        const credentials = new AWS.SharedIniFileCredentials({profile: profileName});
+
+    constructor(readonly stackName: string, readonly region: string, readonly profileName: string) {
+        const credentials = new AWS.SharedIniFileCredentials({profile: this.profileName});
         this.options = {
             region,
             credentials
         };
     }
 
-    static fromSection(section: Section) {
-        return new AwsFactory(section.region, section.bigband.profileName);
+    static fromSection(sectionModel: SectionModel) {
+        return new AwsFactory(sectionModel.section.physicalName(), sectionModel.section.region,
+            sectionModel.bigband.profileName);
     }
 
     newCloudFormation() {

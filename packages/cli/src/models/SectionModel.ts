@@ -2,7 +2,7 @@ import { SectionSpec, Instrument, Bigband } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
 
 export class SectionModel {
-    constructor(private readonly bigband: Bigband, private readonly spec: SectionSpec) {}
+    constructor(readonly bigband: Bigband, private readonly spec: SectionSpec) {}
 
     get section() {
         return this.spec.section

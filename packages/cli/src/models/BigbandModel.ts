@@ -14,6 +14,7 @@ export interface AssignedInstrument {
 export interface LookupResult {
     section: Section
     instrument: Instrument
+    sectionModel: SectionModel
     // TODO(imaman): rename to physical name
     name: string
 }
@@ -40,10 +41,10 @@ export class BigbandModel {
         const exactMatches: LookupResult[] = []
     
 
-       this.sections.forEach(sectionSpec => {
-            sectionSpec.instruments.forEach(curr => {
-                const name = new Namer(this.bigband, sectionSpec.section).physicalName(curr.instrument)
-                const lookupResult = {section: sectionSpec.section, instrument: curr.instrument, name};
+       this.sections.forEach(sectionModel => {
+            sectionModel.instruments.forEach(curr => {
+                const name = new Namer(this.bigband, sectionModel.section).physicalName(curr.instrument)
+                const lookupResult = {section: sectionModel.section, instrument: curr.instrument, name, sectionModel};
 
                 if (curr.instrument.name == instrumentName) {
                     exactMatches.push(lookupResult)

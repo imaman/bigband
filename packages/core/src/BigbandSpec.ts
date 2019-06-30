@@ -1,5 +1,6 @@
 import {Instrument} from './Instrument'
 import {Section} from './Section'
+import { Bigband } from './Bigband';
 
 export interface SectionSpec {
     section: Section
@@ -13,6 +14,7 @@ export interface WireSpec {
     name: string
 }
 export interface BigbandSpec {
+    bigband: Bigband
     sections: SectionSpec[]
     dir?: string
 }

@@ -28,6 +28,7 @@ describe('BigbandModel', () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
                 const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
                 const spec: BigbandSpec = {
+                    bigband: b,
                     sections: [
                         {
                             section: new Section(b, "r1", "s1"), 
@@ -50,6 +51,7 @@ describe('BigbandModel', () => {
                 const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
                 const f3 = new LambdaInstrument("p1", "f3", "src/file_3")
                 const spec: BigbandSpec = {
+                    bigband: b,
                     sections: [{
                         section: new Section(b, "r1", "s1"), 
                         instruments: [f1, f2],
@@ -64,6 +66,7 @@ describe('BigbandModel', () => {
                 const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
                 const f3 = new LambdaInstrument("p1", "f3", "src/file_3")
                 const spec: BigbandSpec = {
+                    bigband: b,
                     sections: [{
                         section: new Section(b, "r1", "s1"), 
                         instruments: [f1, f2, f3],
@@ -77,6 +80,7 @@ describe('BigbandModel', () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
                 const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
                 const spec: BigbandSpec = {
+                    bigband: b,
                     sections: [
                         {
                             section: new Section(b, "r1", "s1"), 
@@ -97,6 +101,7 @@ describe('BigbandModel', () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
                 const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
                 const spec: BigbandSpec = {
+                    bigband: b,
                     sections: [{
                         section: new Section(b, "r1", "s1"), 
                         instruments: [f1],
@@ -111,6 +116,7 @@ describe('BigbandModel', () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
                 const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
                 const spec: BigbandSpec = {
+                    bigband: b,
                     sections: [{
                         section: new Section(b, "r1", "s1"), 
                         instruments: [f2],
@@ -129,6 +135,7 @@ describe('BigbandModel', () => {
                 const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
                 const f3 = new LambdaInstrument("p1", "f2", "src/file_2")
                 const spec: BigbandSpec = {
+                    bigband: b,
                     sections: [
                         { section: new Section(b, "r1", "s1"),  instruments: [f1, f2, f3], wiring: []}
                     ]
@@ -141,6 +148,7 @@ describe('BigbandModel', () => {
         describe("instrument names", () => {
             it("checks for instrument name collision", () => {
                 const spec: BigbandSpec = {
+                    bigband: b,
                     sections: [
                         { section: new Section(b, "r1", "s1"),  instruments: [], wiring: []},
                         { section: new Section(b, "r1", "s2"),  instruments: [], wiring: []},
@@ -164,6 +172,7 @@ describe('BigbandModel', () => {
             const f3 = new LambdaInstrument("p1", "f3", "")
             const f4 = new LambdaInstrument("p1", "f4", "")
             const spec: BigbandSpec = {
+                bigband: b,
                 sections: [
                     {
                         section: s1, 
@@ -191,6 +200,7 @@ describe('BigbandModel', () => {
             const f1 = new LambdaInstrument("p1", "f11aa", "")
             const f2 = new LambdaInstrument("p1", "f22bb", "")
             const spec: BigbandSpec = {
+                bigband: b,
                 sections: [
                     {
                         section: s1, 
@@ -218,6 +228,7 @@ describe('BigbandModel', () => {
             const f1 = new LambdaInstrument("p1", "f11aa", "")
             const f2 = new LambdaInstrument("p1", "f22bb", "")
             const spec: BigbandSpec = {
+                bigband: b,
                 sections: [
                     {
                         section: s1, 
@@ -242,6 +253,7 @@ describe('BigbandModel', () => {
             const f1 = new LambdaInstrument("p1", "f11aa", "")
             const f2 = new LambdaInstrument("p1", "f22bb", "")
             const spec: BigbandSpec = {
+                bigband: b,
                 sections: [
                     {
                         section: s1, 
@@ -265,6 +277,7 @@ describe('BigbandModel', () => {
             const f1 = new LambdaInstrument("p1", "abc", "")
             const f2 = new LambdaInstrument("abc", "xyz", "")
             const spec: BigbandSpec = {
+                bigband: b,
                 sections: [{
                     section: s1, 
                     instruments: [f1, f2],
@@ -289,6 +302,7 @@ describe('BigbandModel', () => {
             const f3 = new LambdaInstrument("p1", "f3", "")
             const f4 = new LambdaInstrument("p1", "f4", "")
             const spec: BigbandSpec = {
+                bigband: b,
                 sections: [
                     {section: s1, instruments: [f1, f2], wiring: []},
                     {section: s2, instruments: [f3, f4], wiring: []}

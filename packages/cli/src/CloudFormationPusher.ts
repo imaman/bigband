@@ -24,9 +24,9 @@ export class CloudFormationPusher {
     private readonly existingFingerprint;
     private resolver;
 
-    constructor(section: Section) {
-        this.cloudFormation = AwsFactory.fromSection(section).newCloudFormation();
-        this.stackName = section.physicalName();
+    constructor(awsFactory: AwsFactory) {
+        this.cloudFormation = awsFactory.newCloudFormation();
+        this.stackName = awsFactory.stackName
 
         this.existingFingerprint = new Promise<string>(resolver => {
             this.resolver = resolver;

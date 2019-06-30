@@ -24,6 +24,7 @@ describe('Namer', () => {
         it('computes a ResolvedName for a given instrument', () => {
             const f1 = new LambdaInstrument(["p1", "p2"], "f1", "src/file_1")
             const spec: BigbandSpec = {
+                bigband: b,
                 sections: [
                     {section: new Section(b, "r1", "s1"),  instruments: [f1], wiring: []}
                 ]
@@ -45,6 +46,7 @@ describe('Namer', () => {
         it("computes it", () => {
             const f1 = new LambdaInstrument(["p1", "p2"], "f1", "src/file_1")
             const spec: BigbandSpec = {
+                bigband: b,
                 sections: [
                     {section: new Section(b, "r1", "s1"),  instruments: [f1], wiring: []}
                 ]
