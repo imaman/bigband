@@ -27,19 +27,13 @@ import {Bigband} from './Bigband'
  * @class Section
  */
 export class Section {
-
-    private readonly bigband: Bigband
-
     /**
-     *Creates an instance of Section.
-
-     * @param {Bigband} bigband the Bigband instance that this section is part of
+     * Creates an instance of Section.
+     *
      * @param {string} region the AWS region this section will be deployed at
      * @param {string} name the name of the section. Should be unique within its Bigband
      * @memberof Section
      */
-    constructor(bigband: Bigband, public readonly region: string, public readonly name: string) {
-        this.bigband = bigband
-    }
+    constructor(public readonly region: string, public readonly name: string) {}
 }
 

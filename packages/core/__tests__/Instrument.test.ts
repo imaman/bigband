@@ -70,8 +70,7 @@ describe('Instruments', () => {
             const consumer = newLambda(['p1', 'p2', 'p3'], 'c1', '');
             const supplier = newLambda(['p4', 'p5', 'p6'], 'c2', '');
 
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_2");
-            const section = new Section(scope, "eu-central-1", "prod-main");
+            const section = new Section("eu-central-1", "prod-main");
             supplier.contributeToConsumerDefinition(section, consumer.getDefinition(), "ARN_OF_SUPPLIER");
             expect(consumer.getDefinition().get()).to.containSubset({Properties: {
                 Policies: [{

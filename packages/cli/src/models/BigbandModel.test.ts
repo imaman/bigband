@@ -29,7 +29,7 @@ describe('BigbandModel', () => {
                 const spec: BigbandSpec = {
                     bigband: b,
                     sections: [{
-                        section: new Section(b, "r1", "s1"), 
+                        section: new Section("r1", "s1"), 
                         instruments: [f1, f2],
                         wiring: [wire(f1, f2, "a"), wire(f1, f3, "a")]
                     }]
@@ -44,7 +44,7 @@ describe('BigbandModel', () => {
                 const spec: BigbandSpec = {
                     bigband: b,
                     sections: [{
-                        section: new Section(b, "r1", "s1"), 
+                        section: new Section("r1", "s1"), 
                         instruments: [f1, f2, f3],
                         wiring: [wire(f1, f2, "a"), wire(f2, f3, "a")]
                     }]
@@ -59,12 +59,12 @@ describe('BigbandModel', () => {
                     bigband: b,
                     sections: [
                         {
-                            section: new Section(b, "r1", "s1"), 
+                            section: new Section("r1", "s1"), 
                             instruments: [f1, f2],
                             wiring: [wire(f1, f2, "a")]
                         },
                         {
-                            section: new Section(b, "r1", "s2"), 
+                            section: new Section("r1", "s2"), 
                             instruments: [f1, f2],
                             wiring: [wire(f1, f2, "a")]
                         }]
@@ -79,7 +79,7 @@ describe('BigbandModel', () => {
                 const spec: BigbandSpec = {
                     bigband: b,
                     sections: [{
-                        section: new Section(b, "r1", "s1"), 
+                        section: new Section("r1", "s1"), 
                         instruments: [f1],
                         wiring: [wire(f1, f2, "a")]
                     }]
@@ -94,7 +94,7 @@ describe('BigbandModel', () => {
                 const spec: BigbandSpec = {
                     bigband: b,
                     sections: [{
-                        section: new Section(b, "r1", "s1"), 
+                        section: new Section("r1", "s1"), 
                         instruments: [f2],
                         wiring: [wire(f1, f2, "a")]
                     }]
@@ -113,7 +113,7 @@ describe('BigbandModel', () => {
                 const spec: BigbandSpec = {
                     bigband: b,
                     sections: [
-                        { section: new Section(b, "r1", "s1"),  instruments: [f1, f2, f3], wiring: []}
+                        { section: new Section("r1", "s1"),  instruments: [f1, f2, f3], wiring: []}
                     ]
                 }
                 expect(() => new BigbandModel(spec, "somedir")).to.throw(
@@ -126,11 +126,11 @@ describe('BigbandModel', () => {
                 const spec: BigbandSpec = {
                     bigband: b,
                     sections: [
-                        { section: new Section(b, "r1", "s1"),  instruments: [], wiring: []},
-                        { section: new Section(b, "r1", "s2"),  instruments: [], wiring: []},
-                        { section: new Section(b, "r1", "s3"),  instruments: [], wiring: []},
-                        { section: new Section(b, "r1", "s2"),  instruments: [], wiring: []},
-                        { section: new Section(b, "r1", "s1"),  instruments: [], wiring: []},
+                        { section: new Section("r1", "s1"),  instruments: [], wiring: []},
+                        { section: new Section("r1", "s2"),  instruments: [], wiring: []},
+                        { section: new Section("r1", "s3"),  instruments: [], wiring: []},
+                        { section: new Section("r1", "s2"),  instruments: [], wiring: []},
+                        { section: new Section("r1", "s1"),  instruments: [], wiring: []},
                     ]
                 }
                 expect(() => new BigbandModel(spec, "somedir")).to.throw(
@@ -141,8 +141,8 @@ describe('BigbandModel', () => {
 
     describe("searchInstrument", () => {
         it("finds an instrument if there is an exact physical name match", () => {
-            const s1 = new Section(b, "r1", "s1")
-            const s2 = new Section(b, "r1", "s2")
+            const s1 = new Section("r1", "s1")
+            const s2 = new Section("r1", "s2")
             const f1 = new LambdaInstrument("p1", "f1", "")
             const f2 = new LambdaInstrument("p1", "f2", "")
             const f3 = new LambdaInstrument("p1", "f3", "")
@@ -171,8 +171,8 @@ describe('BigbandModel', () => {
             })
         })
         it("finds an instrument if there is a unique substring match", () => {
-            const s1 = new Section(b, "r1", "s1")
-            const s2 = new Section(b, "r1", "s2")
+            const s1 = new Section("r1", "s1")
+            const s2 = new Section("r1", "s2")
             const f1 = new LambdaInstrument("p1", "f11aa", "")
             const f2 = new LambdaInstrument("p1", "f22bb", "")
             const spec: BigbandSpec = {
@@ -199,8 +199,8 @@ describe('BigbandModel', () => {
             })
         })
         it("throws if the there is are multiple substring matches", () => {
-            const s1 = new Section(b, "r1", "s1")
-            const s2 = new Section(b, "r1", "s2")
+            const s1 = new Section("r1", "s1")
+            const s2 = new Section("r1", "s2")
             const f1 = new LambdaInstrument("p1", "f11aa", "")
             const f2 = new LambdaInstrument("p1", "f22bb", "")
             const spec: BigbandSpec = {
@@ -224,8 +224,8 @@ describe('BigbandModel', () => {
                 'Multiple matches on "1-f": ["b-s1-p1-f11aa","b-s1-p1-f22bb","b-s2-p1-f11aa","b-s2-p1-f22bb"]')
         })
         it("throws if the there are zero substring matches", () => {
-            const s1 = new Section(b, "r1", "s1")
-            const s2 = new Section(b, "r1", "s2")
+            const s1 = new Section("r1", "s1")
+            const s2 = new Section("r1", "s2")
             const f1 = new LambdaInstrument("p1", "f11aa", "")
             const f2 = new LambdaInstrument("p1", "f22bb", "")
             const spec: BigbandSpec = {
@@ -249,7 +249,7 @@ describe('BigbandModel', () => {
                 'Instrument "f33" not found in ["b-s1-p1-f11aa","b-s1-p1-f22bb","b-s2-p1-f11aa","b-s2-p1-f22bb"]')
         })
         it("an exact simple name match, trumps substring matches with other instruments", () => {
-            const s1 = new Section(b, "r1", "s1")
+            const s1 = new Section("r1", "s1")
             const f1 = new LambdaInstrument("p1", "abc", "")
             const f2 = new LambdaInstrument("abc", "xyz", "")
             const spec: BigbandSpec = {
@@ -271,8 +271,8 @@ describe('BigbandModel', () => {
     })
     describe("searchInstrument", () => {
         it("finds an instrument if there is an exact physical name match", () => {
-            const s1 = new Section(b, "r1", "s1")
-            const s2 = new Section(b, "r1", "s2")
+            const s1 = new Section("r1", "s1")
+            const s2 = new Section("r1", "s2")
             const f1 = new LambdaInstrument("p1", "f1", "")
             const f2 = new LambdaInstrument("p1", "f2", "")
             const f3 = new LambdaInstrument("p1", "f3", "")
