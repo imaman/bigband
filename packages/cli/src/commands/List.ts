@@ -1,7 +1,7 @@
 import {BigbandFileRunner} from '../BigbandFileRunner';
 
 async function main(bigbandFile: string) {
-    const model = await BigbandFileRunner.loadSpec(bigbandFile);
+    const model = await BigbandFileRunner.loadModel(bigbandFile);
     return model.computeList()
 }
 

@@ -6,7 +6,7 @@ import { LookupResult } from '../models/BigbandModel';
 
 
 async function main(bigbandFile: string, lambdaName: string, limit: number) {
-    const model = await BigbandFileRunner.loadSpec(bigbandFile);
+    const model = await BigbandFileRunner.loadModel(bigbandFile);
     // TODO(imaman): use lookupFunction return type
     const lookupResult: LookupResult = model.searchInstrument(lambdaName);
 

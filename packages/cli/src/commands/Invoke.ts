@@ -5,7 +5,7 @@ import { InvocationRequest } from 'aws-sdk/clients/lambda';
 import { LookupResult } from '../models/BigbandModel';
 
 async function invokeFunction(bigbandFile: string, lambdaName: string, input: string) {
-    const model = await BigbandFileRunner.loadSpec(bigbandFile);
+    const model = await BigbandFileRunner.loadModel(bigbandFile);
 
     const lookupResult: LookupResult = model.searchInstrument(lambdaName);
 

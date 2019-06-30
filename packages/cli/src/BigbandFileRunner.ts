@@ -77,7 +77,7 @@ export class BigbandFileRunner {
         if (Number(process.versions.node.split('.')[0]) < 8) {
             throw new Error('You must use node version >= 8 to run this program');
         }
-        const bigbandModel = await BigbandFileRunner.loadSpec(bigbandFile);
+        const bigbandModel = await BigbandFileRunner.loadModel(bigbandFile);
         const sectionModel = bigbandModel.findSectionModel(sectionName)
         
         const flow = new BigbandFileRunner(bigbandModel, sectionModel, teleportingEnabled, deployMode)
@@ -273,9 +273,7 @@ export class BigbandFileRunner {
         }
     }    
 
-
-    // TODO(imaman): rename to loadModel()
-    static async loadSpec(bigbandFile: string): Promise<BigbandModel> {
+    static async loadModel(bigbandFile: string): Promise<BigbandModel> {
         if (!bigbandFile) {
             throw new Error('bigbandFile cannot be falsy');
         }
