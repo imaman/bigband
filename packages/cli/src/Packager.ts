@@ -135,7 +135,7 @@ export class Packager {
     const factory = AwsFactory.fromSection(this.section);
 
     const p = factory.newLambda().getFunction({
-      FunctionName: name.physicalName(this.section)
+      FunctionName: name.physicalName()
     }).promise().catch(e => null);
     const buf = await zipBuilder.toBuffer();
     const fingeprint = ZipBuilder.bufferTo256Fingerprint(buf);
@@ -185,13 +185,13 @@ export class Packager {
         }
   
         logger.silly('teleporter returned an error:\n' + JSON.stringify(invocationResponse));
-        throw new Error(`Teleporting of ${name.physicalName(this.section)} failed: ${invocationResponse.FunctionError}`);
+        throw new Error(`Teleporting of ${name.physicalName()} failed: ${invocationResponse.FunctionError}`);
       } catch (e) {
         logger.silly('Teleporting error', e);
       }  
     }
 
-    const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, name.physicalName(this.section));
+    const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, name.physicalName());
     logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${name.fullyQualifiedName()}`);
     
     return ret;
