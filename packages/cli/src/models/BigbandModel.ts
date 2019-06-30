@@ -53,7 +53,7 @@ export class BigbandModel {
                 if (curr.instrument.name == instrumentName) {
                     exactMatches.push(lookupResult)
                 } 
-                names.push(name);
+                names.push(physicalName);
                 if (physicalName.indexOf(instrumentName) >= 0) {
                     matches.push(lookupResult);
                 }

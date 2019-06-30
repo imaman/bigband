@@ -165,7 +165,7 @@ describe('BigbandModel', () => {
 
             const model = new BigbandModel(spec, "somedir")
             expect(model.searchInstrument("b-s1-p1-f1")).to.containSubset({
-                name: 'b-s1-p1-f1',
+                physicalName: 'b-s1-p1-f1',
                 instrument: f1,
                 section: s1
             })
@@ -193,7 +193,7 @@ describe('BigbandModel', () => {
 
             const model = new BigbandModel(spec, "somedir")
             expect(model.searchInstrument("2-p1-f22")).to.containSubset({
-                name: 'b-s2-p1-f22bb',
+                physicalName: 'b-s2-p1-f22bb',
                 instrument: f2,
                 section: s2
             })
@@ -263,7 +263,7 @@ describe('BigbandModel', () => {
 
             const model = new BigbandModel(spec, "somedir")
             expect(model.searchInstrument("abc")).to.containSubset({
-                name: 'b-s1-p1-abc',
+                physicalName: 'b-s1-p1-abc',
                 instrument: f1,
                 section: s1
             })
