@@ -123,12 +123,12 @@ export abstract class Instrument {
         return this.definition;
     }
 
-    getPhysicalDefinition(section: Section) : Definition {
-        throw new Error('dont use me')
-        // const copy = JSON.parse(JSON.stringify(this.definition.get()));
-        // // copy.Properties[this.nameProperty()] = this.physicalName(section);
-        // return new Definition(copy);
-    }
+    // getPhysicalDefinition(section: Section) : Definition {
+    //     throw new Error('dont use me')
+    //     // const copy = JSON.parse(JSON.stringify(this.definition.get()));
+    //     // // copy.Properties[this.nameProperty()] = this.physicalName(section);
+    //     // return new Definition(copy);
+    // }
 }
 
 function camelCase(...args) {

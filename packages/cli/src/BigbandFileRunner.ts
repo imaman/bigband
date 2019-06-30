@@ -121,7 +121,7 @@ export class BigbandFileRunner {
         };
     
         pushedInstruments.forEach(curr => {
-            const def = curr.model.instrument.getPhysicalDefinition(section);
+            const def = this.namer.getPhysicalDefinition(curr.model.instrument)
 
             curr.model.wirings.forEach(d => {
                 const arn = this.namer.resolve(d.supplier).arn
@@ -154,15 +154,13 @@ export class BigbandFileRunner {
     }        
 
     private async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel): Promise<PushedInstrument> {
-        const model: SectionModel = this.sectionModel             
         if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
             throw new Error(`Bad value. ${dir} is not a directory.`);
         }
         
-        const section = model.section
         const instrument = instrumentModel.instrument
         const physicalName = this.namer.physicalName(instrument);
-        const def = instrument.getPhysicalDefinition(section);
+        const def = this.namer.getPhysicalDefinition(instrument)
         if (!instrument.getEntryPointFile()) {
             return {
                 s3Ref: S3Ref.EMPTY,
