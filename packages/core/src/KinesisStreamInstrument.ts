@@ -40,6 +40,7 @@ export class KinesisStreamInstrument extends Instrument {
                 Action: [
                   'kinesis:*'
                 ],
+                // TODO(imaman): can be (probably) replaced with a Cloudformation reference to the logical name
                 Resource: myArn
             }]
         }));

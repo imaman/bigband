@@ -1,12 +1,13 @@
 import { Instrument, WireSpec, Section } from "bigband-core";
 import { Misc } from "../Misc";
+import { Namer } from "../Namer";
 
 export class InstrumentModel {
     constructor(public readonly section: Section, public readonly instrument: Instrument, public readonly wirings: WireSpec[], 
         private readonly isSystemInstrument) {}
 
     get physicalName(): string {
-        return this.instrument.physicalName(this.section)
+        return new Namer(this.section.bigband, this.section).physicalName(this.instrument)
     }
 
     validate() {
@@ -22,7 +23,7 @@ export class InstrumentModel {
 
         const dups = Misc.checkDuplicates(this.wirings.map(w => w.name))
         if (dups.length) {
-            throw new Error(`Name collision(s) in wiring of "${this.instrument.physicalName(this.section)}": ${JSON.stringify(dups)}`)
+            throw new Error(`Name collision(s) in wiring of "${this.physicalName}": ${JSON.stringify(dups)}`)
         }
     }
 }

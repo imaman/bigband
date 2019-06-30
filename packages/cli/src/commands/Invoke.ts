@@ -14,7 +14,7 @@ async function invokeFunction(bigbandFile: string, lambdaName: string, input: st
 
     var lambda: AWS.Lambda = new AwsFactory(data.section.region, data.section.bigband.profileName).newLambda();
     const params: InvocationRequest = {
-        FunctionName: data.instrument.physicalName(data.section),
+        FunctionName: data.name,
         InvocationType: 'RequestResponse', 
         LogType: 'Tail',
         Payload: JSON.stringify(JSON.parse(input))

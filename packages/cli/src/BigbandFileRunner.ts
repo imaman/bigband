@@ -4,7 +4,7 @@ import * as hash from 'hash.js'
 const Module = require('module');
 
 import { AwsFactory } from './AwsFactory';
-import { BigbandSpec, SectionSpec, NameStyle, Section, Instrument, LambdaInstrument, WireSpec, Bigband } from 'bigband-core';
+import { BigbandSpec, SectionSpec, NameStyle, Section, Instrument, LambdaInstrument, WireSpec, Bigband, Definition } from 'bigband-core';
 import { Packager, PushResult, DeployMode } from './Packager'
 import { DeployableAtom } from 'bigband-core'
 import { ZipBuilder } from './ZipBuilder'
@@ -65,7 +65,7 @@ export class BigbandFileRunner {
                 Timeout: 30
             }).fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME);
         
-            this.namer = new Namer(bigbandModel, sectionModel)
+            this.namer = new Namer(bigbandModel.bigband, sectionModel.section)
     
         }
 

@@ -31,15 +31,8 @@ describe('Instruments', () => {
     describe('bigband', () => {
         it('can be initialized from an object', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-            const bigband = new Bigband({
-                name: "bigband_1",
-                awsAccount: "acc_300",
-                profileName: "p_1",
-                s3Bucket: "b_1",
-                s3Prefix: "s_1"
-            });
-            const section = new Section(bigband, "eu-central-1", "prod-main");
-            expect(instrument.arn(section)).to.equal('arn:aws:lambda:eu-central-1:acc_300:function:bigband_1-prod-main-p1-p2-p3-abc');
+            expect(instrument.name).to.equal("abc")
+            expect(instrument.fullyQualifiedName()).to.equal("p1-p2-p3-abc")
         })
     })
 
@@ -50,12 +43,9 @@ describe('Instruments', () => {
     describe('Lambda', () => {
         it('produces cloudformation', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const section = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.getPhysicalDefinition(section).get()).to.deep.equal({
+            expect(instrument.getDefinition().get()).to.deep.equal({
                 Type: "AWS::Serverless::Function",
                 Properties: {
-                    FunctionName: "scope_1-prod-main-p1-p2-p3-abc",
                     Handler: "p1-p2-p3-abc_Handler.handle",
                     Runtime: "nodejs8.10",
                     Policies: [],
@@ -73,9 +63,8 @@ describe('Instruments', () => {
         });
         it('has ARN', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const section = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.arn(section)).to.equal('arn:aws:lambda:eu-central-1:acc_100:function:scope_1-prod-main-p1-p2-p3-abc');
+            expect(instrument.arnService()).to.equal('lambda')
+            expect(instrument.arnType()).to.equal('function:')
         });
         it('contributes to consumers', () => {
             const consumer = newLambda(['p1', 'p2', 'p3'], 'c1', '');
@@ -83,13 +72,13 @@ describe('Instruments', () => {
 
             const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_2");
             const section = new Section(scope, "eu-central-1", "prod-main");
-            supplier.contributeToConsumerDefinition(section, consumer.getDefinition());
+            supplier.contributeToConsumerDefinition(section, consumer.getDefinition(), "ARN_OF_SUPPLIER");
             expect(consumer.getDefinition().get()).to.containSubset({Properties: {
                 Policies: [{
                     Statement: [{
                         Action: ['lambda:InvokeFunction'],
                         Effect: 'Allow',
-                        Resource: 'arn:aws:lambda:eu-central-1:acc_100:function:scope_1-prod-main-p4-p5-p6-c2'
+                        Resource: 'ARN_OF_SUPPLIER'
                     }]
                 }]
             }});
@@ -99,12 +88,9 @@ describe('Instruments', () => {
         it('produces yml', () => {
             debugger;
             const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', {name: 'id', type: DynamoDbAttributeType.STRING});
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const section = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.getPhysicalDefinition(section).get()).to.deep.equal({
+            expect(instrument.getDefinition().get()).to.deep.equal({
                 Type: "AWS::DynamoDB::Table",
                 Properties: {
-                    TableName: "scope_1-prod-main-p1-p2-p3-table_1",
                     AttributeDefinitions: [{
                         AttributeName: "id",
                         AttributeType: "S"
@@ -121,9 +107,7 @@ describe('Instruments', () => {
             const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING},
                 {name: 'n', type: DynamoDbAttributeType.NUMBER});
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const section = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.getPhysicalDefinition(section).get()).to.containSubset({
+            expect(instrument.getDefinition().get()).to.containSubset({
                 Properties: {
                     AttributeDefinitions: [
                         { AttributeName: "id", AttributeType: "S" }, 
@@ -139,9 +123,7 @@ describe('Instruments', () => {
         it('uses pay-per-request, by default', () => {
             const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING});
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const section = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.getPhysicalDefinition(section).get()).to.containSubset({
+            expect(instrument.getDefinition().get()).to.containSubset({
                 Properties: {
                     BillingMode: 'PAY_PER_REQUEST'
                 }
@@ -157,9 +139,7 @@ describe('Instruments', () => {
                       writeCapacityUnits: 576
                   }
                 });
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const section = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.getPhysicalDefinition(section).get()).to.containSubset({
+            expect(instrument.getDefinition().get()).to.containSubset({
                 Properties: {
                     BillingMode: 'PROVISIONED',
                     ProvisionedThroughput: {

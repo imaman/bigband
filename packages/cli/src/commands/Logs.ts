@@ -7,10 +7,11 @@ import {lookupFunction} from './Invoke';
 
 async function main(bigbandFile: string, lambdaName: string, limit: number) {
     const spec = await BigbandFileRunner.loadSpec(bigbandFile);
-    const {section: section, instrument} = lookupFunction(lambdaName, spec);
+    // TODO(imaman): use lookupFunction return type
+    const {section: section, name} = lookupFunction(lambdaName, spec);
 
     const cloudWatchLogs = new AwsFactory(section.region, section.bigband.profileName).newCloudWatchLogs();
-    const logGroupName = `/aws/lambda/${instrument.physicalName(section)}`;
+    const logGroupName = `/aws/lambda/${name}`;
 
     const describeLogStreamsReq: DescribeLogStreamsRequest = {
         logGroupName,

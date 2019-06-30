@@ -119,23 +119,15 @@ export abstract class Instrument {
         return this.packageName.length === 0 ? "" : this.packageName[0]
     }
 
-    /**
-     * Computes the physical name of the instrument at the given section. The physical name contains the names of the
-     * enclosing bigband and section as well as the [[fullyQualifiedName]].
-     * @param section
-     */
-    physicalName(section: Section) {
-        return `${section.bigband.name}-${section.name}-${this.fullyQualifiedName()}`;
-    }
-    
     getDefinition() : Definition {
         return this.definition;
     }
 
     getPhysicalDefinition(section: Section) : Definition {
-        const copy = JSON.parse(JSON.stringify(this.definition.get()));
-        copy.Properties[this.nameProperty()] = this.physicalName(section);
-        return new Definition(copy);
+        throw new Error('dont use me')
+        // const copy = JSON.parse(JSON.stringify(this.definition.get()));
+        // // copy.Properties[this.nameProperty()] = this.physicalName(section);
+        // return new Definition(copy);
     }
 }
 
