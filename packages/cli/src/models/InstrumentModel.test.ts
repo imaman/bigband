@@ -23,7 +23,7 @@ describe('InstrumentModel', () => {
     describe("validation", () => {
         describe("the 'bigband' top level package", () => {
             it("is locked for a non system instrument", () => {
-                const s = new Section(b, "r1", "s1")
+                const s = new Section("r1", "s1")
                 const instrument = new LambdaInstrument("bigband", "f1", "")
                 const model = new InstrumentModel(b, s, instrument, [], false)
     
@@ -31,7 +31,7 @@ describe('InstrumentModel', () => {
                     'Instrument "bigband-f1" has a bad name: the fully qualified name of an instrument is not allowed to start with "bigband"')
             })
             it("is locked for a non system instrument also when using the array notation", () => {
-                const s = new Section(b, "r1", "s1")
+                const s = new Section("r1", "s1")
                 const instrument = new LambdaInstrument(["bigband"], "f1", "")
                 const model = new InstrumentModel(b, s, instrument, [], false)
     
@@ -39,21 +39,21 @@ describe('InstrumentModel', () => {
                     'Instrument "bigband-f1" has a bad name: the fully qualified name of an instrument is not allowed to start with "bigband"')
             })    
             it("is not locked for system instruments", () => {
-                const s = new Section(b, "r1", "s1")
+                const s = new Section("r1", "s1")
                 const instrument = new LambdaInstrument(["bigband"], "f1", "")
                 const model = new InstrumentModel(b, s, instrument, [], true)
     
                 expect(() => model.validate()).not.to.throw()
             })    
             it("top level package name which starts with 'bigband' is not locked", () => {
-                const s = new Section(b, "r1", "s1")
+                const s = new Section("r1", "s1")
                 const instrument = new LambdaInstrument(["bigband1111"], "f1", "")
                 const model = new InstrumentModel(b, s, instrument, [], false)
     
                 expect(() => model.validate()).not.to.throw()
             })    
             it("'bigband' is not locked as a non top-level package name", () => {
-                const s = new Section(b, "r1", "s1")
+                const s = new Section("r1", "s1")
                 const instrument = new LambdaInstrument(["abc", "bigband"], "f1", "")
                 const model = new InstrumentModel(b, s, instrument, [], false)
     
@@ -66,7 +66,7 @@ describe('InstrumentModel', () => {
         it('returns an empty array if no wirings were defined', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
             const spec: SectionSpec = {
-                section: new Section(b, "r1", "s1"), 
+                section: new Section("r1", "s1"), 
                 instruments: [f1],
                 wiring: []
             }
@@ -79,7 +79,7 @@ describe('InstrumentModel', () => {
             const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
             const w12 = wire(f1, f2, "w12")
             const spec: SectionSpec = {
-                section: new Section(b, "r1", "s1"), 
+                section: new Section("r1", "s1"), 
                 instruments: [f1, f2],
                 wiring: [w12]
             }
@@ -94,7 +94,7 @@ describe('InstrumentModel', () => {
             const w12 = wire(f1, f2, "w12")
             const w13 = wire(f1, f3, "w13")
             const spec: SectionSpec = {
-                section: new Section(b, "r1", "s1"), 
+                section: new Section("r1", "s1"), 
                 instruments: [f1, f2, f3],
                 wiring: [w12, w13]
             }
@@ -109,7 +109,7 @@ describe('InstrumentModel', () => {
             const w12 = wire(f1, f2, "w12")
             const w23 = wire(f2, f3, "w23")
             const spec: SectionSpec = {
-                section: new Section(b, "r1", "s1"), 
+                section: new Section("r1", "s1"), 
                 instruments: [f1, f2, f3],
                 wiring: [w12, w23]
             }

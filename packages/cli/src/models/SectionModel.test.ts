@@ -24,7 +24,7 @@ describe('SectionModel', () => {
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
             const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
             const spec: SectionSpec = {
-                section: new Section(b, "r1", "s1"), 
+                section: new Section("r1", "s1"), 
                 instruments: [f1, f2],
                 wiring: []
             }
