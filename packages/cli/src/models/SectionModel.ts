@@ -1,5 +1,6 @@
 import { SectionSpec, Instrument, Bigband } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
+import { NameValidator } from "../NameValidator";
 
 export class SectionModel {
     constructor(readonly bigband: Bigband, private readonly spec: SectionSpec) {}
@@ -20,7 +21,7 @@ export class SectionModel {
     validate() {
         const name = this.section.name
 
-        if(!name.match(/^([a-z][a-z0-9]*)(-[a-z][a-z0-9]*)*$/)) {
+        if(!NameValidator.isOk(name)) {
             throw new Error(`Bad section name: "${name}"`)
         }
         this.instruments.forEach(curr => curr.validate())

@@ -3,6 +3,7 @@ import { Misc } from "../Misc";
 import { SectionModel } from "./SectionModel";
 import { InstrumentModel } from "./InstrumentModel";
 import { Namer } from "../Namer";
+import { NameValidator } from "../NameValidator";
 
 
 export interface AssignedInstrument {
@@ -105,6 +106,9 @@ export class BigbandModel {
     }
 
     validate() {
+        if (!NameValidator.isOk(this.bigband.name)) { 
+            throw new Error(`Bad bigband name: "${this.bigband.name}"`)
+        }
         this.sections.forEach(curr => curr.validate())
 
         let dupes = Misc.checkDuplicates(this.sections.map(s => s.section.name));

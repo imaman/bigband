@@ -21,6 +21,27 @@ describe('BigbandModel', () => {
     const b = new Bigband(bigbandInit)
 
     describe("vailidation", () => {
+        describe("name", () => {
+            function newBigbandModel(name: string) {
+                const init = {
+                    awsAccount: "a",
+                    name,
+                    profileName: "p",
+                    s3Bucket: "my_bucket",
+                    s3Prefix: "my_prefix"
+                }
+                return new BigbandModel({bigband: new Bigband(init), sections: []}, "_")
+            }
+
+            it("allows dash-separated sequences of lower-case letters and digits", () => {
+                expect(() => newBigbandModel("pqr-st")).not.to.throw()
+            });
+
+            it("rejects upper-case letters", () => {
+                expect(() => newBigbandModel("pqr-sT")).to.throw('Bad bigband name: "pqr-sT"')
+            });
+        })
+
         describe("wiring", () => {
             it("checks for wiring name collision", () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")

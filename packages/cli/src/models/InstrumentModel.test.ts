@@ -60,6 +60,22 @@ describe('InstrumentModel', () => {
                 expect(() => model.validate()).not.to.throw()
             })    
         })
+        describe("name", () => {
+            const s = new Section("r1", "s1")
+            function newInstrumentModel(packageName: string[], name: string) {
+                return new InstrumentModel(b, s, new LambdaInstrument(packageName, name, ""), [], false)
+            }
+
+            it("allows dash-separated sequences of lower-case letters and digits", () => {
+                const model = newInstrumentModel(["p1"], "pqr-st")
+                expect(() => model.validate()).not.to.throw()
+            });
+
+            it("rejects upper-case letters", () => {
+                const model = newInstrumentModel(["p1"], "pQr")
+                expect(() => model.validate()).to.throw('Bad instrument name: "p1-pQr')
+            });
+        })
     })
 
     describe('wirings', () => {

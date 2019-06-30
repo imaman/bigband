@@ -1,6 +1,7 @@
 import { Instrument, WireSpec, Section, Bigband } from "bigband-core";
 import { Misc } from "../Misc";
 import { Namer } from "../Namer";
+import { NameValidator } from "../NameValidator";
 
 export class InstrumentModel {
     constructor(private readonly bigband: Bigband, public readonly section: Section, public readonly instrument: Instrument,
@@ -11,6 +12,10 @@ export class InstrumentModel {
     }
 
     validate() {
+
+        if (!NameValidator.isOk(this.instrument.name)) {
+            throw new Error(`Bad instrument name: "${this.instrument.fullyQualifiedName()}"`)
+        }
         // Reserve the "bigband" top-level package for system instruments.
         if (!this.isSystemInstrument) {
             const topLevel = this.instrument.topLevelPackageName
