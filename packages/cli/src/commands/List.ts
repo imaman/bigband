@@ -1,14 +1,18 @@
 import {BigbandFileRunner} from '../BigbandFileRunner';
 
-async function main(bigbandFile: string) {
+async function main(bigbandFile: string, path: string, usePath: boolean) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
-    return model.computeList()
+    if (usePath) {
+        const data = model.navigate(path)
+        return data.list.map(curr => curr.subPath).join('\n')
+    } else {
+        return JSON.stringify(model.computeList(), null, 2)
+    }
 }
 
 
 export class ListCommand {
     static async run(argv) {
-        const temp = await main(argv.bigbandFile);
-        return JSON.stringify(temp, null, 2);
+        return await main(argv.bigbandFile, argv.path, argv.path !== undefined);
     }
 }

@@ -11,8 +11,11 @@ export class InstrumentModel {
         return new Namer(this.bigband, this.section).physicalName(this.instrument)
     }
 
-    validate() {
+    get path(): string {
+        return new Namer(this.bigband, this.section).path(this.instrument)
+    }
 
+    validate() {
         if (!NameValidator.isOk(this.instrument.name)) {
             throw new Error(`Bad instrument name: "${this.instrument.fullyQualifiedName()}"`)
         }

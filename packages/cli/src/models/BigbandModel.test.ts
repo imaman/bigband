@@ -290,8 +290,8 @@ describe('BigbandModel', () => {
             })
         })
     })
-    describe("searchInstrument", () => {
-        it("finds an instrument if there is an exact physical name match", () => {
+    describe("computeList", () => {
+        it("returns a JSON of all instruments", () => {
             const s1 = new Section("r1", "s1")
             const s2 = new Section("r1", "s2")
             const f1 = new LambdaInstrument("p1", "f1", "")
@@ -317,6 +317,27 @@ describe('BigbandModel', () => {
                         "b-s2-p1-f4": "lambda"                        
                     }
                 }
+            })
+        })
+    })
+    describe("navigate", () => {
+        it("it returns all instruments at the given path", () => {
+            const s1 = new Section("r1", "s1")
+            const f1 = new LambdaInstrument(["p1", "p2"], "f1", "")
+            const f2 = new LambdaInstrument(["p1", "p2"], "f2", "")
+            const f3 = new LambdaInstrument(["p1"], "f3", "")
+            const f4 = new LambdaInstrument(["p1", "p2", "p3"], "f4", "")
+            const spec: BigbandSpec = {
+                bigband: b,
+                sections: [{section: s1, instruments: [f1, f2, f3, f4], wiring: []}
+            ]}
+
+            const model = new BigbandModel(spec, "somedir")
+            expect(model.navigate("r1/s1/p1")).to.eql({
+                list: [
+                    {subPath: 'f3'},
+                    {subPath: 'p2'}
+                ]
             })
         })
     })

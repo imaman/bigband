@@ -5,7 +5,8 @@ import {Definition} from './Definition';
 export enum NameStyle {
     DASH,
     CAMEL_CASE,
-    PASCAL_CASE
+    PASCAL_CASE,
+    SLASH
 }
 
 
@@ -106,6 +107,10 @@ export abstract class Instrument {
         
         if (style == NameStyle.PASCAL_CASE) {
             return toPascalCase(tokens)        
+        }
+
+        if (style == NameStyle.SLASH) {
+            return tokens.join("/")
         }
 
         return tokens.join('-');

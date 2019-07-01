@@ -112,6 +112,29 @@ export class BigbandModel {
         return ret;    
     }
 
+    navigate(path_: string) {
+        const instruments: InstrumentModel[]  = Misc.flatten(this.sections.map(s => s.instruments))
+        const path = path_ + '/'
+        const matchingPaths = instruments.filter(i => i.path.startsWith(path))
+            .map(i => i.path.substr(path.length))
+            .map(p => trimAt(p, "/"))
+
+        const set = new Set<String>()
+
+        const chosen = matchingPaths.filter(p => {
+            if (set.has(p)) {
+                return false
+            } 
+
+            set.add(p)
+            return true
+        })
+
+        chosen.sort()
+
+        return {list: chosen.map(curr => ({subPath: curr}))}
+    }
+
     validate() {
         if (!NameValidator.isOk(this.bigband.name)) { 
             throw new Error(`Bad bigband name: "${this.bigband.name}"`)
@@ -132,4 +155,12 @@ export class BigbandModel {
         
         // TODO(imaman): validate name length + characters
     }
+}
+function trimAt(p: string, stopAt: string) {
+    const index = p.indexOf(stopAt)
+    if (index < 0) {
+        return p
+    }
+
+    return p.substr(0, index)
 }

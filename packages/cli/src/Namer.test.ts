@@ -20,6 +20,23 @@ describe('Namer', () => {
         s3Prefix: "my_prefix"
     })
 
+    describe("path", () => {
+        it('computes a slash-separated string', () => {
+            const f1 = new LambdaInstrument(["p1", "p2"], "f1", "src/file_1")
+            const spec: BigbandSpec = {
+                bigband: b,
+                sections: [
+                    {section: new Section("r1", "s1"),  instruments: [f1], wiring: []}
+                ]
+            }
+            
+            const bm = new BigbandModel(spec, "_")
+            const namer = new Namer(b, bm.findSectionModel("s1").section)
+            
+            expect(namer.path(f1)).to.equal("r1/s1/p1/p2/f1")
+        });
+    })
+
     describe("resolve", () => {
         it('computes a ResolvedName for a given instrument', () => {
             const f1 = new LambdaInstrument(["p1", "p2"], "f1", "src/file_1")
