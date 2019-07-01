@@ -10,7 +10,7 @@ export class KinesisStreamConsumer extends LambdaInstrument {
                 Stream: {
                     Type: "Kinesis",
                     Properties: {
-                        Stream: { "Fn::GetAtt" : [ stream.fullyQualifiedName(NameStyle.CAMEL_CASE), "Arn" ] },
+                        Stream: { "Fn::GetAtt" : [ stream.fullyQualifiedName(NameStyle.PASCAL_CASE), "Arn" ] },
                         BatchSize: batchSize,
                         StartingPosition: "LATEST"
                     }
