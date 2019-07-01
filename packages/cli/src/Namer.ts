@@ -27,18 +27,4 @@ export class Namer {
         copy.Properties[instrument.nameProperty()] = this.physicalName(instrument)
         return new Definition(copy);
     }
-
-    static toPascalCase(tokens: string[]) {
-        if (tokens.find(curr => curr.toLowerCase() != curr)) {
-            throw new Error('One of the tokens contains a capital letter')
-        }
-
-        if (tokens.find(curr => curr.indexOf("--") >= 0)) {
-            throw new Error(`One of the tokens ("buffered--input") contains multiple consecutive dash signs`)
-        }
-        
-        return Misc.flatten(tokens.map(curr => curr.split("-"))
-            .filter(s => Boolean(s)))
-            .map(curr => curr.substr(0, 1).toUpperCase() + curr.substr(1)).join('')
-    }
 }

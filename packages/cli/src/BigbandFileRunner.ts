@@ -155,9 +155,7 @@ export class BigbandFileRunner {
                 def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri());
             }
 
-
-            const path = curr.model.instrument.path
-            const nameInStack = Namer.toPascalCase(path)
+            const nameInStack = curr.model.instrument.fullyQualifiedName(NameStyle.PASCAL_CASE)
             ret.Resources[nameInStack] = def.get();
         });
 

@@ -69,22 +69,4 @@ describe('Namer', () => {
             })
         })
     })
-
-    describe("toPascalCase", () => {
-        it("concatenates tokens, capitalizing the first letter", () => {
-            expect(Namer.toPascalCase(["buffered", "input", "stream"])).to.equal("BufferedInputStream")
-        })
-        it("rejects inputs with capital letters", () => {
-            expect(() => Namer.toPascalCase(["buffered", "inPut", "stream"]))
-                    .to.throw("One of the tokens contains a capital letter")
-        })
-        it("rejects inputs with multiple consecutive dash signs", () => {
-            expect(() => Namer.toPascalCase(["buffered--input", "stream-"]))
-                    .to.throw('One of the tokens ("buffered--input") contains multiple consecutive dash signs')
-        })
-        it("it treats dash-separated tokens as individual tokens", () => {
-            expect(Namer.toPascalCase(["buffered-input-stream"])).to.equal("BufferedInputStream")
-        })
-    })
-
 });

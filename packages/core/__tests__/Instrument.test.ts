@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 
-import {Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType, NameStyle, Bigband} from '../src'
+import {Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType, NameStyle} from '../src'
 
 function newLambda(packageName: string[], name: string, controllerPath: string, cloudFormationProperties?) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
@@ -16,11 +16,6 @@ function newLambda(packageName: string[], name: string, controllerPath: string, 
 
 describe('Instruments', () => {
     describe('naming', () => {
-        it ('rejects package name that contain dashses', () => {
-            expect(() => newLambda(['x-y'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "x-y"');
-            expect(() => newLambda(['xy-'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "xy-"');
-            expect(() => newLambda(['x', '-', 'y'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "-"');
-        });
         it ('rejects package name that contain uppercase letters', () => {
             expect(() => newLambda(['foo', 'Bar'], 'abc', '')).to.throw('Upper-case symbols are not allowed in package names. Found: "Bar"');
             expect(() => newLambda(['Foo', 'bar'], 'abc', '')).to.throw('Upper-case symbols are not allowed in package names. Found: "Foo"');
@@ -57,6 +52,22 @@ describe('Instruments', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
             expect(instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)).to.equal('p1P2P3Abc');
         });
+        describe("fullyQualifiedName() - PascalCased", () => {
+            function toPascalCase(path: string[], name: string) {
+                return newLambda(path, name, '').fullyQualifiedName(NameStyle.PASCAL_CASE)
+            }
+
+            it("concatenates tokens, capitalizing the first letter", () => {
+                expect(toPascalCase(["buffered", "input"], "stream")).to.equal("BufferedInputStream")
+            })
+            it("rejects inputs with multiple consecutive dash signs", () => {
+                expect(() => toPascalCase(["buffered--input"], "stream-"))
+                        .to.throw('One of the tokens ("buffered--input") contains multiple consecutive dash signs')
+            })
+            it("it treats dash-separated tokens as individual tokens", () => {
+                expect(toPascalCase(["progress-monitor-input"], "stream")).to.equal("ProgressMonitorInputStream")
+            })
+        })
         it('has ARN', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
             expect(instrument.arnService()).to.equal('lambda')

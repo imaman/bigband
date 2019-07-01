@@ -4,7 +4,8 @@ import {Definition} from './Definition';
 
 export enum NameStyle {
     DASH,
-    CAMEL_CASE
+    CAMEL_CASE,
+    PASCAL_CASE
 }
 
 
@@ -35,11 +36,6 @@ export abstract class Instrument {
         this.packageName = (Array.isArray(packageName) ? packageName : [packageName]);
         if (!this.packageName.join('').trim().length) {
             throw new Error('pacakge name cannot be empty');
-        }
-
-        const withHyphen = this.packageName.find(curr => curr.includes('-'));
-        if (withHyphen) {
-            throw new Error(`The hyphen symbol is not allowed in package names. Found: "${withHyphen}"`);
         }
 
         const withUpperCase = this.packageName.find(curr => curr.search(/[A-Z]/) >= 0)
@@ -103,11 +99,16 @@ export abstract class Instrument {
      * @memberof Instrument
      */
     fullyQualifiedName(style: NameStyle = NameStyle.DASH) {
-        if (style == NameStyle.DASH) {
-            return this.packageName.concat(this.name).join('-');
+        const tokens = this.packageName.concat(this.name)
+        if (style == NameStyle.CAMEL_CASE) {
+            return toCamelCase(tokens)
+        } 
+        
+        if (style == NameStyle.PASCAL_CASE) {
+            return toPascalCase(tokens)        
         }
-        const ret = camelCase(this.packageName.concat(this.name));
-        return ret;
+
+        return tokens.join('-');
     }
 
     get topLevelPackageName(): string {
@@ -125,7 +126,7 @@ export abstract class Instrument {
     }
 }
 
-function camelCase(...args) {
+function toCamelCase(...args) {
     function capitalize(s: string) {
         if (!s) {
             throw new Error('Cannot capitalize an empty string');
@@ -134,4 +135,26 @@ function camelCase(...args) {
     }
 
     return [].concat(...args).map((curr, i) => i === 0 ? curr : capitalize(curr)).join('');
+}
+
+function toPascalCase(tokens: string[]) {
+    const violation = tokens.find(curr => curr.indexOf("--") >= 0)
+    if (violation) {
+        throw new Error(`One of the tokens ("${violation}") contains multiple consecutive dash signs`)
+    }
+    
+    return flatten(tokens.map(curr => curr.split("-")))
+        .filter(s => Boolean(s))
+        .map(curr => curr.substr(0, 1).toUpperCase() + curr.substr(1)).join('')
+}
+
+function flatten(input: string[][]): string[] {
+    const ret: string[] = [];
+    for (const a  of input) {
+        for (const b of a) {
+            ret.push(b);
+        }
+    }
+
+    return ret
 }
