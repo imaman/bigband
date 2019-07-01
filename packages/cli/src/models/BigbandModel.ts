@@ -15,6 +15,7 @@ export interface AssignedInstrument {
 export interface LookupResult {
     section: Section
     sectionModel: SectionModel
+    instrumentModel: InstrumentModel
     instrument: Instrument
     physicalName: string
 }
@@ -44,9 +45,10 @@ export class BigbandModel {
        this.sections.forEach(sectionModel => {
             sectionModel.instruments.forEach(curr => {
                 const physicalName = new Namer(this.bigband, sectionModel.section).physicalName(curr.instrument)
-                const lookupResult = {
+                const lookupResult: LookupResult = {
                     section: sectionModel.section, 
                     instrument: curr.instrument, 
+                    instrumentModel: curr,
                     physicalName, 
                     sectionModel
                 };
