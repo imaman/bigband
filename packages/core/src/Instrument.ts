@@ -117,6 +117,12 @@ export abstract class Instrument {
     getDefinition() : Definition {
         return this.definition;
     }
+
+    get path(): string[] {
+        const ret = [...this.packageName]
+        ret.push(this.name)
+        return ret
+    }
 }
 
 function camelCase(...args) {
