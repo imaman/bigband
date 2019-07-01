@@ -38,7 +38,7 @@ function grantPermission(instrument: Instrument, action: string, arn: string) {
 }
 
 
-interface PushedInstrument {
+export interface PushedInstrument {
     s3Ref: S3Ref
     wasPushed: boolean
     physicalName: string
@@ -88,7 +88,6 @@ export class BigbandFileRunner {
     }
 
     private async runSpec() {
-        const section = this.sectionModel.section
         const cfp = new CloudFormationPusher(this.awsFactory);
         cfp.peekAtExistingStack();
             
@@ -96,9 +95,10 @@ export class BigbandFileRunner {
             `arn:aws:s3:::${this.bigbandModel.bigband.s3Bucket}/${this.poolPrefix}/*`);
     
         grantPermission(this.teleportInstrument, 's3:PutObject',
-            `arn:aws:s3:::${this.bigbandModel.bigband.s3Bucket}/${this.bigbandModel.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
-    
-    
+            `arn:aws:s3:::${this.bigbandModel.bigband.s3Bucket}/${this.bigbandModel.bigband.s3Prefix}/` + 
+                `${DEPLOYABLES_FOLDER}/*`);
+        
+        const section = this.sectionModel.section
         logger.info(`Shipping section "${section.name}" to ${section.region}`);
     
         const dir = this.bigbandModel.dir
@@ -106,8 +106,7 @@ export class BigbandFileRunner {
             throw new Error('Found a fasly dir') 
         }
     
-        const ps = this.sectionModel.instruments.map(im => 
-            this.pushCode(dir, dir, im));
+        const ps = this.sectionModel.instruments.map(im => this.pushCode(dir, dir, im));
     
         const teleportModel = new InstrumentModel(this.bigbandModel.bigband, this.sectionModel.section,
             this.teleportInstrument, [], true)
@@ -116,30 +115,8 @@ export class BigbandFileRunner {
         
         const pushedInstruments = await Promise.all(ps);
     
-        const stack = {
-            AWSTemplateFormatVersion: '2010-09-09',
-            Transform: 'AWS::Serverless-2016-10-31',
-            Description: "description goes here",
-            Resources: {}
-        };
-    
-        pushedInstruments.forEach(curr => {
-            const def = this.namer.getPhysicalDefinition(curr.model.instrument)
-
-            // TODO(imaman): support cross-section wiring
-            curr.model.wirings.forEach(d => {
-                const arn = this.namer.resolve(d.supplier).arn
-                d.supplier.contributeToConsumerDefinition(section, def, arn);
-            });
-    
-            if (curr.s3Ref.isOk()) {
-                def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri());
-            }
-    
-            stack.Resources[curr.model.instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)] = def.get();
-        });
-    
-        await cfp.deploy(stack)
+        const templateBody = this.buildCloudFormationTemplate(pushedInstruments)
+        await cfp.deploy(templateBody)
         const lambda = this.awsFactory.newLambda();
     
         await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
@@ -156,6 +133,34 @@ export class BigbandFileRunner {
             }
         }));
     }        
+
+    buildCloudFormationTemplate(pushedInstruments: PushedInstrument[]) {
+        const ret = {
+            AWSTemplateFormatVersion: '2010-09-09',
+            Transform: 'AWS::Serverless-2016-10-31',
+            Description: "description goes here",
+            Resources: {}
+        };
+    
+        pushedInstruments.forEach(curr => {
+            const def = this.namer.getPhysicalDefinition(curr.model.instrument)
+
+            // TODO(imaman): support cross-section wiring
+            curr.model.wirings.forEach(d => {
+                const arn = this.namer.resolve(d.supplier).arn
+                d.supplier.contributeToConsumerDefinition(this.sectionModel.section, def, arn);
+            });
+    
+            if (curr.s3Ref.isOk()) {
+                def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri());
+            }
+    
+            const nameInStack = curr.model.instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)
+            ret.Resources[nameInStack] = def.get();
+        });
+
+        return ret
+    }
 
     private async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel): Promise<PushedInstrument> {
         if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
