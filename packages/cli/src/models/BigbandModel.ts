@@ -79,8 +79,13 @@ export class BigbandModel {
     findSectionModel(sectionName: string): SectionModel {
         const sections = this.sections
         const ret = sections.length === 1 && !sectionName ? sections[0] : sections.find(curr => curr.section.name === sectionName);
+
+        const names = sections.map(curr => curr.section.name).join(', ')
+        if (!ret && !sectionName) {
+            throw new Error(`You must pass a --section. Currently defined sections: ${names}`)
+        }
         if (!ret) {
-            throw new Error(`Failed to find a section named ${sectionName} in ${sections.map(curr => curr.section.name).join(', ')}`);
+            throw new Error(`Failed to find a section named "${sectionName || ''}" in ${names}`);
         }    
 
         return ret
