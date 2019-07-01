@@ -42,7 +42,7 @@ yargs
             default: 'IF_CHANGED'
         });
     }, argv => run(ship, argv))
-    .command('logs', 'Watch logs of a function', yargs => {
+    .command('logs', 'Fetches logs of a function', yargs => {
         specFileAndSectionOptions(yargs, false);
         yargs.option('function-name', {
             descirbe: 'name of a function',
@@ -53,7 +53,7 @@ yargs
         });
         yargs.demandOption(['function-name'])
     }, argv => run(LogsCommand.run, argv))
-    .command('invoke', 'Invoke a function', yargs => {
+    .command('exec', 'Invokes a function', yargs => {
         specFileAndSectionOptions(yargs, false);
         yargs.option('function-name', {
             descirbe: 'name of a function',
@@ -63,7 +63,7 @@ yargs
         });
         yargs.demandOption(['function-name', 'input'])
     }, argv => run(Invoke.run, argv))
-    .command('list', 'Show all currently defined instruments from the bigband file', yargs => {
+    .command('list', 'Shows all currently defined instruments from the bigband file', yargs => {
         specFileAndSectionOptions(yargs, false);
     }, argv => run(ListCommand.run, argv))
     .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')

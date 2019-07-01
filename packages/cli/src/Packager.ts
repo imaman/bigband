@@ -191,7 +191,7 @@ export class Packager {
       }  
     }
 
-    const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation, name.physicalName)
+    const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation)
     logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${name.fullyQualifiedName}`);
     
     return ret;
