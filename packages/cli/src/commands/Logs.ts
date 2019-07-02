@@ -3,10 +3,9 @@ import { DescribeLogStreamsRequest, GetLogEventsRequest, GetLogEventsResponse, D
 import {BigbandFileRunner} from '../BigbandFileRunner';
 import { LookupResult } from '../models/BigbandModel';
 
-
-
 async function main(bigbandFile: string, lambdaName: string, limit: number) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
+    // TODO(imaman): fail if this is not a lambda instrument
     const lookupResult: LookupResult = model.searchInstrument(lambdaName);
 
     const cloudWatchLogs = AwsFactory.fromSection(lookupResult.sectionModel).newCloudWatchLogs();
@@ -107,7 +106,7 @@ function shouldKeep(message?: string) {
 
 export class LogsCommand {
     static async run(argv) {
-        const temp = await main(argv.bigbandFile, argv.functionName, argv.limit);
+        const temp = await main(argv.bigbandFile, argv.path, argv.limit);
         return JSON.stringify(temp, null, 2);
     }
 }

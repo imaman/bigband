@@ -42,16 +42,12 @@ yargs
             default: 'IF_CHANGED'
         });
     }, argv => run(ship, argv))
-    .command('logs', 'Fetches logs of a function', yargs => {
+    .command('logs [path]', 'Fetches logs of a function', yargs => {
         specFileAndSectionOptions(yargs, false);
-        yargs.option('function-name', {
-            descirbe: 'name of a function',
-        });
         yargs.option('limit', {
             descirbe: 'Number of items to show',
             default: 30
         });
-        yargs.demandOption(['function-name'])
     }, argv => run(LogsCommand.run, argv))
     .command('exec [path]', 'Invokes a function', yargs => {
         specFileAndSectionOptions(yargs, false);
