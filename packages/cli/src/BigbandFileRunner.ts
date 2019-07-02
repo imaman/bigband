@@ -2,7 +2,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as hash from 'hash.js'
 const Module = require('module');
-require('ts-node').register({})
 
 import { AwsFactory } from './AwsFactory';
 import { BigbandSpec, NameStyle, Instrument, LambdaInstrument } from 'bigband-core';
@@ -284,20 +283,25 @@ export class BigbandFileRunner {
         if (!bigbandFile) {
             throw new Error('bigbandFile cannot be falsy');
         }
-
-        const pathToRequire = path.resolve(bigbandFile)
+    
+        const d = path.dirname(path.resolve(bigbandFile));
+        const protcolVersion = readVersionFromRcFile(d);
+        const packager = new Packager(d, d, '', '');
+        const file = path.parse(bigbandFile).name;
+        const zb = await packager.run(`${file}.ts`, 'spec_compiled', '');
+        const specDeployedDir = packager.unzip(zb, 'spec_deployed');
+        const pathToRequire = path.resolve(specDeployedDir, 'build', `${file}.js`);
     
         const uninstall = installCustomRequire();
         let bigbandSpec: BigbandSpec
         try {
-            logger.silly(`Loading bigbandfile from ${pathToRequire} using protocolversion`);
-            const f = require(path.resolve(bigbandFile))
-            bigbandSpec = f.run()
+            logger.silly(`Loading compiled bigbandfile from ${pathToRequire} using protocolversion ${protcolVersion}`);
+            bigbandSpec = require(pathToRequire).run();
         } finally {
             uninstall();
         }
     
-        return new BigbandModel(bigbandSpec, path.dirname(pathToRequire))
+        return new BigbandModel(bigbandSpec, d)
     }    
 }
 
