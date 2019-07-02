@@ -15,6 +15,7 @@ export class LambdaInstrument extends Instrument {
 
     private npmPackageName: string = '';
 
+    // TODO(imaman): replace :any with something more precise
     constructor(packageName: string|string[], name: string, private readonly controllerPath: string, cloudFormationProperties: any = {}) {
         super(packageName, name);
 

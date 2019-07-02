@@ -31,7 +31,7 @@ describe('Namer', () => {
             }
             
             const bm = new BigbandModel(spec, "_")
-            const namer = new Namer(b, bm.findSectionModel("s1").section)
+            const namer = new Namer(b, bm.findSectionModel("r1/s1").section)
             
             expect(namer.path(f1)).to.equal("r1/s1/p1/p2/f1")
         });
@@ -48,7 +48,7 @@ describe('Namer', () => {
             }
             
             const bm = new BigbandModel(spec, "_")
-            const namer = new Namer(b, bm.findSectionModel("s1").section)
+            const namer = new Namer(b, bm.findSectionModel("r1/s1").section)
             
             const resolvedName = namer.resolve(f1)
             
@@ -70,7 +70,7 @@ describe('Namer', () => {
             }
             
             const bm = new BigbandModel(spec, "_")
-            const namer = new Namer(b, bm.findSectionModel("s1").section)
+            const namer = new Namer(b, bm.findSectionModel("r1/s1").section)
             
             const def = namer.getPhysicalDefinition(f1)
             
