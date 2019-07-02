@@ -335,8 +335,8 @@ describe('BigbandModel', () => {
             const model = new BigbandModel(spec, "somedir")
             expect(model.navigate("r1/s1/p1")).to.eql({
                 list: [
-                    {subPath: 'f3', role: Role.INSTRUMENT, type: 'lambda'},
-                    {subPath: 'p2', role: Role.PATH}
+                    {path: "r1/s1/p1/f3", subPath: 'f3', role: Role.INSTRUMENT, type: 'lambda'},
+                    {path: "r1/s1/p1/p2", subPath: 'p2', role: Role.PATH}
                 ]
             })
         })
@@ -351,7 +351,7 @@ describe('BigbandModel', () => {
             const model = new BigbandModel(spec, "somedir")
             expect(model.navigate("")).to.eql({
                 list: [
-                    { subPath: 'r1', role: Role.PATH }
+                    { path: "r1", subPath: 'r1', role: Role.REGION }
                 ]
             })
         })

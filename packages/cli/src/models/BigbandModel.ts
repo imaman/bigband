@@ -113,12 +113,24 @@ export class BigbandModel {
     }
 
     navigate(path_: string) {
-        const instruments: InstrumentModel[]  = Misc.flatten(this.sections.map(s => s.instruments))
-        const path = path_.length ? path_ + '/' : path_
-        const matchingPaths = instruments
-            .filter(i => i.path.startsWith(path))
-            .map(i => generateEntry(i, path))
+        const acc: any[] = [];
 
+        this.sections.forEach(curr => {
+            acc.push({path: curr.section.region, role: Role.REGION, subPath: ''})
+        })
+        const instruments: InstrumentModel[]  = Misc.flatten(this.sections.map(s => s.instruments))
+        instruments.forEach(i => {
+            acc.push({path: i.path, role: Role.INSTRUMENT, subPath: '', type: i.instrument.arnService() })
+        })
+
+        console.log('acc=\n' + JSON.stringify(acc, null, 2))
+
+        const path = path_.length ? path_ + '/' : path_
+        const matchingPaths = acc
+            .filter(curr => curr.path.startsWith(path))
+            .map(curr => generateEntry(curr, path))
+
+        console.log('matchingPaths=\n' + JSON.stringify(matchingPaths, null, 2))
         const set = new Set<String>()
 
         const chosen = matchingPaths.filter(curr => {
@@ -131,6 +143,7 @@ export class BigbandModel {
         })
 
         chosen.sort((a, b) => a.subPath.localeCompare(b.subPath))
+        console.log('chosen=\n' + JSON.stringify(chosen, null, 2))
 
         return {list: chosen}
     }
@@ -166,17 +179,24 @@ function trimAt(p: string, stopAt: string) {
 }
 
 export enum Role {
+    REGION,
+    SECTION,
     PATH,
     INSTRUMENT
 }
 
-function generateEntry(i: InstrumentModel, path: string) {
+function generateEntry(i: any, path: string) {
     const pathSuffix = i.path.substr(path.length)
     const trimmedPath = trimAt(pathSuffix, "/")
     const isPath = trimmedPath != pathSuffix
 
+
+    i.subPath = trimmedPath
     if (isPath) {
-        return {subPath: trimmedPath, role: Role.PATH }
+        i.role = Role.PATH
+        i.path = path + trimmedPath
+        delete i.type
     }
-    return {subPath: trimmedPath, role: Role.INSTRUMENT, type: i.instrument.arnService()}
+
+    return i
 }
