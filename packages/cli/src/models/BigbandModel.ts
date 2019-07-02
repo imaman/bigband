@@ -117,22 +117,19 @@ export class BigbandModel {
 
         this.sections.forEach(curr => {
             acc.push({path: curr.section.region, role: Role.REGION, subPath: ''})
+            acc.push({path: `${curr.section.region}/${curr.section.name}`, role: Role.SECTION, subPath: ''})
         })
         const instruments: InstrumentModel[]  = Misc.flatten(this.sections.map(s => s.instruments))
         instruments.forEach(i => {
             acc.push({path: i.path, role: Role.INSTRUMENT, subPath: '', type: i.instrument.arnService() })
         })
 
-        console.log('acc=\n' + JSON.stringify(acc, null, 2))
-
         const path = path_.length ? path_ + '/' : path_
         const matchingPaths = acc
             .filter(curr => curr.path.startsWith(path))
             .map(curr => generateEntry(curr, path))
 
-        console.log('matchingPaths=\n' + JSON.stringify(matchingPaths, null, 2))
         const set = new Set<String>()
-
         const chosen = matchingPaths.filter(curr => {
             if (set.has(curr.subPath)) {
                 return false
@@ -143,7 +140,6 @@ export class BigbandModel {
         })
 
         chosen.sort((a, b) => a.subPath.localeCompare(b.subPath))
-        console.log('chosen=\n' + JSON.stringify(chosen, null, 2))
 
         return {list: chosen}
     }

@@ -355,5 +355,26 @@ describe('BigbandModel', () => {
                 ]
             })
         })
+        it("it shows sections when given the region as a path", () => {
+            const s1 = new Section("region_a", "s1")
+            const s2 = new Section("region_b", "s2")
+            const s3 = new Section("region_a", "s3")
+            const f1 = new LambdaInstrument(["p1", "p2"], "f1", "")
+            const spec: BigbandSpec = {
+                bigband: b,
+                sections: [
+                    {section: s1, instruments: [f1], wiring: []},
+                    {section: s2, instruments: [f1], wiring: []},
+                    {section: s3, instruments: [f1], wiring: []}
+            ]}
+
+            const model = new BigbandModel(spec, "somedir")
+            expect(model.navigate("region_a")).to.eql({
+                list: [
+                    { path: "region_a/s1", subPath: 's1', role: Role.SECTION },
+                    { path: "region_a/s3", subPath: 's3', role: Role.SECTION }
+                ]
+            })
+        })
     })
 });
