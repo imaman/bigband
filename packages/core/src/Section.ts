@@ -35,5 +35,10 @@ export class Section {
      * @memberof Section
      */
     constructor(public readonly region: string, public readonly name: string) {}
+
+
+    get path(): string {
+        return `${this.region}/${this.name}`
+    }
 }
 
