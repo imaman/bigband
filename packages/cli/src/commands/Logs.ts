@@ -6,10 +6,10 @@ import { LookupResult } from '../models/BigbandModel';
 async function main(bigbandFile: string, lambdaName: string, limit: number) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
     // TODO(imaman): fail if this is not a lambda instrument
-    const lookupResult: LookupResult = model.searchInstrument(lambdaName);
+    const lookupResult: LookupResult = model.searchInspect(lambdaName);
 
     const cloudWatchLogs = AwsFactory.fromSection(lookupResult.sectionModel).newCloudWatchLogs();
-    const logGroupName = `/aws/lambda/${name}`;
+    const logGroupName = `/aws/lambda/${lookupResult.physicalName}`;
 
     const describeLogStreamsReq: DescribeLogStreamsRequest = {
         logGroupName,
