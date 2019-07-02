@@ -68,9 +68,6 @@ yargs
             type: 'boolean'
         });
     }, argv => run(ListCommand.run, argv))
-    .command('list', 'Shows all currently defined instruments from the bigband file', yargs => {
-        specFileAndSectionOptions(yargs, false);
-    }, argv => run(ListCommand.run, argv))
     .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')
     .help()
     .argv;
