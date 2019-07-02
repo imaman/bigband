@@ -53,15 +53,12 @@ yargs
         });
         yargs.demandOption(['function-name'])
     }, argv => run(LogsCommand.run, argv))
-    .command('exec', 'Invokes a function', yargs => {
+    .command('exec [path]', 'Invokes a function', yargs => {
         specFileAndSectionOptions(yargs, false);
-        yargs.option('function-name', {
-            descirbe: 'name of a function',
-        });
         yargs.option('input', {
             descirbe: 'input to pass to the invoked function',
         });
-        yargs.demandOption(['function-name', 'input'])
+        yargs.demandOption(['input'])
     }, argv => run(Exec.run, argv))
     .command('ls [path]', 'Shows instruments as defined in the bigband file', yargs => {
         specFileAndSectionOptions(yargs, false);

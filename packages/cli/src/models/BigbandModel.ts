@@ -143,7 +143,6 @@ export class BigbandModel {
                 instrument: i 
             }
 
-            console.log('i.path=' + i.path + "\n" + ' path_=' + path_ + '\n\n')
             if (i.path === path_) {
                 return {list: [item]}
             }
