@@ -32,7 +32,7 @@ async function invokeFunction(bigbandFile: string, path: string, input: string) 
 }
 
 
-export class Invoke {
+export class Exec {
     static async run(argv) {
         const temp = await invokeFunction(argv.bigbandFile, argv.functionName, argv.input);
         return JSON.stringify(temp, null, 2);

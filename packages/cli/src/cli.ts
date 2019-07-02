@@ -6,9 +6,9 @@ sourceMapSupport.install();
 import {BigbandFileRunner, DeployMode} from './BigbandFileRunner';
 import {LogsCommand} from './commands/Logs'
 import {ListCommand} from './commands/List'
-import {Invoke} from './commands/Invoke'
 import {logger} from './logger'
 import * as yargs from 'yargs';
+import { Exec } from './commands/Exec';
 
 
 function specFileAndSectionOptions(yargs, sectionOptionEnabled) {
@@ -62,7 +62,7 @@ yargs
             descirbe: 'input to pass to the invoked function',
         });
         yargs.demandOption(['function-name', 'input'])
-    }, argv => run(Invoke.run, argv))
+    }, argv => run(Exec.run, argv))
     .command('ls [path]', 'Shows instruments as defined in the bigband file', yargs => {
         specFileAndSectionOptions(yargs, false);
         yargs.option('l', {
