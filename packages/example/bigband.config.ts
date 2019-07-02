@@ -10,7 +10,7 @@ const importantDates = new LambdaInstrument('chronology', 'improtant-dates', 'sr
     Timeout: 15   
 });
 
-const placeFinder = new LambdaInstrument('geography', 'place-finder', 'src/geography/compute', {
+const placeFinder = new LambdaInstrument('geography', 'place-finder', 'src/geography/placeFinder', {
     Description: 'returns names of places that best match the given query',
     MemorySize: 1024,
     Timeout: 30      
