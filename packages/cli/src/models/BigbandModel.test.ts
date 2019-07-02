@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 import { BigbandSpec, LambdaInstrument, Section, wire, Bigband } from 'bigband-core';
-import { BigbandModel, LookupResult } from './BigbandModel'
+import { BigbandModel, LookupResult, Role } from './BigbandModel'
 
 
 describe('BigbandModel', () => {
@@ -335,8 +335,8 @@ describe('BigbandModel', () => {
             const model = new BigbandModel(spec, "somedir")
             expect(model.navigate("r1/s1/p1")).to.eql({
                 list: [
-                    {subPath: 'f3', resourceType: 'lambda'},
-                    {subPath: 'p2', role: 'path'}
+                    {subPath: 'f3', role: Role.INSTRUMENT, type: 'lambda'},
+                    {subPath: 'p2', role: Role.PATH}
                 ]
             })
         })

@@ -115,24 +115,24 @@ export class BigbandModel {
     navigate(path_: string) {
         const instruments: InstrumentModel[]  = Misc.flatten(this.sections.map(s => s.instruments))
         const path = path_ + '/'
-        const matchingPaths = instruments.filter(i => i.path.startsWith(path))
-            .map(i => i.path.substr(path.length))
-            .map(p => trimAt(p, "/"))
+        const matchingPaths = instruments
+            .filter(i => i.path.startsWith(path))
+            .map(i => generateEntry(i, path))
 
         const set = new Set<String>()
 
-        const chosen = matchingPaths.filter(p => {
-            if (set.has(p)) {
+        const chosen = matchingPaths.filter(curr => {
+            if (set.has(curr.subPath)) {
                 return false
             } 
 
-            set.add(p)
+            set.add(curr.subPath)
             return true
         })
 
-        chosen.sort()
+        chosen.sort((a, b) => a.subPath.localeCompare(b.subPath))
 
-        return {list: chosen.map(curr => ({subPath: curr}))}
+        return {list: chosen}
     }
 
     validate() {
@@ -163,4 +163,20 @@ function trimAt(p: string, stopAt: string) {
     }
 
     return p.substr(0, index)
+}
+
+export enum Role {
+    PATH,
+    INSTRUMENT
+}
+
+function generateEntry(i: InstrumentModel, path: string) {
+    const pathSuffix = i.path.substr(path.length)
+    const trimmedPath = trimAt(pathSuffix, "/")
+    const isPath = trimmedPath != pathSuffix
+
+    if (isPath) {
+        return {subPath: trimmedPath, role: Role.PATH }
+    }
+    return {subPath: trimmedPath, role: Role.INSTRUMENT, type: i.instrument.arnService()}
 }
