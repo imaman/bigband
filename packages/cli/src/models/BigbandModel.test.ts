@@ -333,7 +333,11 @@ describe('BigbandModel', () => {
             ]}
 
             const model = new BigbandModel(spec, "somedir")
-            expect(model.inspect("r1/s1/p1")).to.eql({
+            const actual = model.inspect("r1/s1/p1")
+            for(const curr of actual.list) {
+                delete curr.instrument
+            }
+            expect(actual).to.eql({
                 list: [
                     {path: "r1/s1/p1/f3", subPath: 'f3', role: Role.INSTRUMENT, type: 'lambda'},
                     {path: "r1/s1/p1/p2", subPath: 'p2', role: Role.PATH}
@@ -349,7 +353,11 @@ describe('BigbandModel', () => {
             ]}
 
             const model = new BigbandModel(spec, "somedir")
-            expect(model.inspect("")).to.eql({
+            const actual = model.inspect("")
+            for(const curr of actual.list) {
+                delete curr.instrument
+            }
+            expect(actual).to.eql({
                 list: [
                     { path: "r1", subPath: 'r1', role: Role.REGION }
                 ]
@@ -369,10 +377,34 @@ describe('BigbandModel', () => {
             ]}
 
             const model = new BigbandModel(spec, "somedir")
-            expect(model.inspect("region_a")).to.eql({
+            const actual = model.inspect("region_a")
+            for(const curr of actual.list) {
+                delete curr.instrument
+            }
+            expect(actual).to.eql({
                 list: [
                     { path: "region_a/s1", subPath: 's1', role: Role.SECTION },
                     { path: "region_a/s3", subPath: 's3', role: Role.SECTION }
+                ]
+            })
+        })
+        it("it shows an instrument when given the full path to it", () => {
+            const s1 = new Section("reg-a", "sec-a")
+            const f1 = new LambdaInstrument(["p1", "p2"], "f1", "")
+            const spec: BigbandSpec = {
+                bigband: b,
+                sections: [
+                    {section: s1, instruments: [f1], wiring: []},
+            ]}
+
+            const model = new BigbandModel(spec, "somedir")
+            const actual = model.inspect("reg-a/sec-a/p1/p2/f1")
+            for(const curr of actual.list) {
+                delete curr.instrument
+            }
+            expect(actual).to.eql({
+                list: [
+                    { path: "reg-a/sec-a/p1/p2/f1", subPath: '', role: Role.INSTRUMENT, type: 'lambda' }
                 ]
             })
         })

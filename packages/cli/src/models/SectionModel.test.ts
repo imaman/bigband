@@ -34,6 +34,7 @@ describe('SectionModel', () => {
         });
     })
     describe("validation", () => {
+        // TODO(imaman): check validity of region (small-caps, digits, dash)
         describe("name", () => {
             it("allows dash-separated sequences of lower-case letters and digits", () => {
                 const spec: SectionSpec = {

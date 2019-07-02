@@ -20,6 +20,19 @@ export interface LookupResult {
     physicalName: string
 }
 
+
+export interface InsepctResult {
+    list: InspectedItem[]
+}
+
+
+interface InspectedItem {
+    path: string
+    role: Role
+    subPath: string
+    type?: string
+    instrument?: InstrumentModel
+}
 export class BigbandModel {
 
     public readonly dir: string
@@ -78,6 +91,7 @@ export class BigbandModel {
         return matches[0];    
     }
 
+    // TODO(imaman): section name is not enough for finding a section. you need the region too.
     findSectionModel(sectionName: string): SectionModel {
         const sections = this.sections
         const ret = sections.length === 1 && !sectionName ? sections[0] : sections.find(curr => curr.section.name === sectionName);
@@ -112,17 +126,29 @@ export class BigbandModel {
         return ret;    
     }
 
-    inspect(path_: string) {
-        const acc: any[] = [];
+    inspect(path_: string): InsepctResult {
+        const acc: InspectedItem[] = [];
 
         this.sections.forEach(curr => {
             acc.push({path: curr.section.region, role: Role.REGION, subPath: ''})
             acc.push({path: `${curr.section.region}/${curr.section.name}`, role: Role.SECTION, subPath: ''})
         })
         const instruments: InstrumentModel[]  = Misc.flatten(this.sections.map(s => s.instruments))
-        instruments.forEach(i => {
-            acc.push({path: i.path, role: Role.INSTRUMENT, subPath: '', type: i.instrument.arnService() })
-        })
+        for (const i of instruments) {
+            const item = {
+                path: i.path,
+                role: Role.INSTRUMENT,
+                subPath: '',
+                type: i.instrument.arnService(),
+                instrument: i 
+            }
+
+            console.log('i.path=' + i.path + "\n" + ' path_=' + path_ + '\n\n')
+            if (i.path === path_) {
+                return {list: [item]}
+            }
+            acc.push(item)
+        }
 
         const path = path_.length ? path_ + '/' : path_
         const matchingPaths = acc
@@ -142,6 +168,31 @@ export class BigbandModel {
         chosen.sort((a, b) => a.subPath.localeCompare(b.subPath))
 
         return {list: chosen}
+    }
+
+    searchInspect(path: string): LookupResult {
+        const {list}  = this.inspect(path)
+        if (list.length > 1) {
+            throw new Error(`Multiple matches on "${path}": ${JSON.stringify(list.map(x => x.path))}`);
+        }    
+
+        if (!list.length) {
+            throw new Error(`No instrument found under "${path}"`)
+        }
+
+        const first: InspectedItem = list[0]
+        const x = first
+        if (first.role !== Role.INSTRUMENT || !first.instrument) {
+            throw new Error(`The specifeid path (${path}) does not refer to an instrument`)
+        }
+
+        return  {
+            instrumentModel: first.instrument,
+            instrument: first.instrument.instrument,
+            physicalName: first.instrument.physicalName,
+            section: first.instrument.section,
+            sectionModel: this.findSectionModel(first.instrument.section.name)
+        }
     }
 
     validate() {
