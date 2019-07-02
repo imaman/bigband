@@ -4,7 +4,7 @@ import { Role } from '../models/BigbandModel';
 async function main(bigbandFile: string, path: string, usePath: boolean, longListing: boolean) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
     if (usePath) {
-        const data = model.navigate(path)
+        const data = model.inspect(path)
         if (!longListing) {
             return data.list.map(curr => curr.subPath).join('\n')
         }

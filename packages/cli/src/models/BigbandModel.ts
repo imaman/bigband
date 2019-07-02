@@ -112,7 +112,7 @@ export class BigbandModel {
         return ret;    
     }
 
-    navigate(path_: string) {
+    inspect(path_: string) {
         const acc: any[] = [];
 
         this.sections.forEach(curr => {
