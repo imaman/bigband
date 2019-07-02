@@ -1,6 +1,5 @@
 import {BigbandFileRunner} from '../BigbandFileRunner';
 import { Role } from '../models/BigbandModel';
-import { C_LINE_COMMENT_MODE } from 'highlight.js';
 
 async function main(bigbandFile: string, path: string, usePath: boolean, longListing: boolean) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
