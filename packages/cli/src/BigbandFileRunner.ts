@@ -287,69 +287,18 @@ export class BigbandFileRunner {
 
         const pathToRequire = path.resolve(bigbandFile)
     
-        const uninstall = installCustomRequire();
+        // const uninstall = installCustomRequire();
         let bigbandSpec: BigbandSpec
         try {
             logger.silly(`Loading bigbandfile from ${pathToRequire} using protocolversion`);
             const f = require(path.resolve(bigbandFile))
             bigbandSpec = f.run()
         } finally {
-            uninstall();
+            // uninstall();
         }
     
         return new BigbandModel(bigbandSpec, path.dirname(pathToRequire))
     }    
-}
-
-
-let numChangesToModuleRequire = 0;
-function installCustomRequire() {
-    if (numChangesToModuleRequire > 0) {
-        throw new Error(`numChangesToModuleRequire expected to be zero (was: ${numChangesToModuleRequire})`);
-    }
-
-    numChangesToModuleRequire += 1;
-    const originalRequire = Module.prototype.require;
-
-    function runOriginalRequire(m, arg) {
-        return originalRequire.apply(m, [arg]);
-    }
-
-    Module.prototype.require = function(arg) {
-        try {
-            return runOriginalRequire(this, arg);
-        } catch (err) {
-            if (!err.message.startsWith("Cannot find module ")) {
-                throw err;
-            }
-
-            let dir = Misc.bigbandPackageDir();
-            if (path.basename(path.dirname(dir)) === 'node_modules') {
-                dir = path.dirname(path.dirname(dir));
-            }
-
-            return runOriginalRequire(this, path.resolve(dir, 'node_modules', arg));
-        }
-    };
-
-
-    return () => { 
-        if (numChangesToModuleRequire !== 1) {
-            throw new Error('More than one change to Module.require()');
-        }
-        Module.prototype.require = originalRequire;
-        --numChangesToModuleRequire;
-    };
-}
-
-function readVersionFromRcFile(dir: string) {
-    try {
-        const p = path.resolve(path.resolve(dir, '.bigbandrc'));
-        const pojo = JSON.parse(fs.readFileSync(p, 'utf-8'));
-        return pojo.bigbandFileProtocolVersion;
-    } catch (e) {
-        return -1;
-    }
 }
 
 
