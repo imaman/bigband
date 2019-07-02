@@ -86,7 +86,7 @@ describe('ZipBuilder', () => {
             const str = await zip.file('a/b/commands/Logs.ts').async('text');
             expect(str).to.contain('let describeLogStreamsResp: DescribeLogStreamsResponse');
 
-            expect(zip.file('a/b/commands/Invoke.ts')).to.be.not.null;
+            expect(zip.file('a/b/commands/Exec.ts')).to.be.not.null;
             expect(zip.file('a/b/commands/fdkm39mfdndmf')).to.be.null;
         });
     });
