@@ -92,16 +92,13 @@ export class BigbandModel {
     }
 
     // TODO(imaman): section name is not enough for finding a section. you need the region too.
-    findSectionModel(sectionName: string): SectionModel {
-        const sections = this.sections
-        const ret = sections.length === 1 && !sectionName ? sections[0] : sections.find(curr => curr.section.name === sectionName);
+    findSectionModel(path: string): SectionModel {
+        const sections: SectionModel[] = this.sections
+        const ret = sections.find(curr => curr.section.path === path)
 
         const names = sections.map(curr => curr.section.name).join(', ')
-        if (!ret && !sectionName) {
-            throw new Error(`You must pass a --section. Currently defined sections: ${names}`)
-        }
         if (!ret) {
-            throw new Error(`Failed to find a section named "${sectionName || ''}" in ${names}`);
+            throw new Error(`Failed to find a section at "${path || ''}". Legal section paths are: ${names}`);
         }    
 
         return ret
@@ -131,7 +128,7 @@ export class BigbandModel {
 
         this.sections.forEach(curr => {
             acc.push({path: curr.section.region, role: Role.REGION, subPath: ''})
-            acc.push({path: `${curr.section.region}/${curr.section.name}`, role: Role.SECTION, subPath: ''})
+            acc.push({path: curr.section.path, role: Role.SECTION, subPath: ''})
         })
         const instruments: InstrumentModel[]  = Misc.flatten(this.sections.map(s => s.instruments))
         for (const i of instruments) {
@@ -185,12 +182,15 @@ export class BigbandModel {
             throw new Error(`The specifeid path (${path}) does not refer to an instrument`)
         }
 
+        const section = first.instrument.section
+        const sectionModel = this.findSectionModel(section.path)
+
         return  {
             instrumentModel: first.instrument,
             instrument: first.instrument.instrument,
             physicalName: first.instrument.physicalName,
-            section: first.instrument.section,
-            sectionModel: this.findSectionModel(first.instrument.section.name)
+            section,
+            sectionModel
         }
     }
 
