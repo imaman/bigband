@@ -340,5 +340,20 @@ describe('BigbandModel', () => {
                 ]
             })
         })
+        it("it returns regions when no path is given", () => {
+            const s1 = new Section("r1", "s1")
+            const f1 = new LambdaInstrument(["p1", "p2"], "f1", "")
+            const spec: BigbandSpec = {
+                bigband: b,
+                sections: [{section: s1, instruments: [f1], wiring: []}
+            ]}
+
+            const model = new BigbandModel(spec, "somedir")
+            expect(model.navigate("")).to.eql({
+                list: [
+                    { subPath: 'r1', role: Role.PATH }
+                ]
+            })
+        })
     })
 });

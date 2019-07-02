@@ -9,8 +9,8 @@ async function main(bigbandFile: string, path: string, usePath: boolean, longLis
             return data.list.map(curr => curr.subPath).join('\n')
         }
 
-
-        const table: string[][] = data.list.map(curr => [Role[curr.role].toLowerCase().substr(0, 1), curr.type || '', curr.subPath])
+        const table: string[][] = data.list.map(curr => [
+            Role[curr.role].toLowerCase().substr(0, 1), curr.type || '', curr.subPath])
         const widths = new Array<number>(table[0].length).fill(0)
         table.forEach(line => {
             line.forEach((item, i) => {

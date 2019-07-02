@@ -114,7 +114,7 @@ export class BigbandModel {
 
     navigate(path_: string) {
         const instruments: InstrumentModel[]  = Misc.flatten(this.sections.map(s => s.instruments))
-        const path = path_ + '/'
+        const path = path_.length ? path_ + '/' : path_
         const matchingPaths = instruments
             .filter(i => i.path.startsWith(path))
             .map(i => generateEntry(i, path))
