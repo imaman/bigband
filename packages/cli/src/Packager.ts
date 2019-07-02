@@ -36,7 +36,8 @@ export class Packager {
   private readonly npmPackageDir;
 
   constructor(private readonly rootDir: string, npmPackageDir: string, private readonly s3Bucket: string,
-      private readonly s3Prefix: string, private readonly awsFactory?: AwsFactory, private readonly blobPool?: S3BlobPool) {
+      private readonly s3Prefix: string, private readonly awsFactory: AwsFactory,
+      private readonly blobPool: S3BlobPool) {
     if (s3Prefix.endsWith('/')) {
       throw new Error(`s3Prefix ${s3Prefix} cannot have a trailing slash`)
     }
@@ -129,9 +130,6 @@ export class Packager {
 
   public async pushToS3(name: ResolvedName, s3Object: string, zipBuilder: ZipBuilder, teleportLambdaName: string,
       teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
-    if (!this.awsFactory) {
-      throw new Error('section was not set.');
-    }
     const factory = this.awsFactory
 
     const p = factory.newLambda().getFunction({
