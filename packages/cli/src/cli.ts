@@ -65,6 +65,11 @@ yargs
     }, argv => run(Invoke.run, argv))
     .command('ls [path]', 'Shows instruments as defined in the bigband file', yargs => {
         specFileAndSectionOptions(yargs, false);
+        yargs.option('l', {
+            describe: 'Use a long listing format',
+            default: false,
+            type: 'boolean'
+        });
     }, argv => run(ListCommand.run, argv))
     .command('list', 'Shows all currently defined instruments from the bigband file', yargs => {
         specFileAndSectionOptions(yargs, false);
