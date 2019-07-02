@@ -11,17 +11,12 @@ import * as yargs from 'yargs';
 import { Exec } from './commands/Exec';
 
 
-function specFileAndSectionOptions(yargs, sectionOptionEnabled) {
+function specFileAndSectionOptions(yargs) {
     yargs.option('bigband-file', {
         descirbe: 'path to a bigband file (.ts)',
         default: 'bigband.config.ts'
     })
 
-    if (sectionOptionEnabled) {
-        yargs.option('section', {
-            descirbe: 'Name of a section to deploy. optional if only one section is defined in the bigband file.',
-        })    
-    }
     return yargs;
 }
 
@@ -29,8 +24,8 @@ yargs
     .usage('<cmd> [args]')
     .version('1.0.0')
     .strict()
-    .command('ship', 'deploy!', yargs => {
-        specFileAndSectionOptions(yargs, true);
+    .command('ship [path]', 'deploy!', yargs => {
+        specFileAndSectionOptions(yargs);
         yargs.option('teleporting', {
             describe: 'whether to enable teleporting to significantly reduce deployment time',
             default: true,
@@ -43,21 +38,21 @@ yargs
         });
     }, argv => run(ship, argv))
     .command('logs [path]', 'Fetches logs of a function', yargs => {
-        specFileAndSectionOptions(yargs, false);
+        specFileAndSectionOptions(yargs);
         yargs.option('limit', {
             descirbe: 'Number of items to show',
             default: 30
         });
     }, argv => run(LogsCommand.run, argv))
     .command('exec [path]', 'Invokes a function', yargs => {
-        specFileAndSectionOptions(yargs, false);
+        specFileAndSectionOptions(yargs);
         yargs.option('input', {
             descirbe: 'input to pass to the invoked function',
         });
         yargs.demandOption(['input'])
     }, argv => run(Exec.run, argv))
     .command('ls [path]', 'Shows instruments as defined in the bigband file', yargs => {
-        specFileAndSectionOptions(yargs, false);
+        specFileAndSectionOptions(yargs);
         yargs.option('l', {
             describe: 'Use a long listing format',
             default: false,
@@ -70,7 +65,7 @@ yargs
 
 async function ship(argv) {
     const deployMode: DeployMode = (argv.deployMode === 'ALWAYS') ? DeployMode.ALWAYS : DeployMode.IF_CHANGED;
-    return await BigbandFileRunner.runBigbandFile(argv.bigbandFile, argv.section, argv.teleporting, deployMode);
+    return await BigbandFileRunner.runBigbandFile(argv.bigbandFile, argv.path, argv.teleporting, deployMode);
 }
 
 function run(handler, argv) {

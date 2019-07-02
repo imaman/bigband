@@ -73,13 +73,13 @@ export class BigbandFileRunner {
         }
 
     // TODO(imaman): rename to ship()
-    static async runBigbandFile(bigbandFile: string, sectionName: string, teleportingEnabled: boolean, deployMode: DeployMode) {
+    static async runBigbandFile(bigbandFile: string, pathToSection: string, teleportingEnabled: boolean, deployMode: DeployMode) {
         const t0 = Date.now();
         if (Number(process.versions.node.split('.')[0]) < 8) {
             throw new Error('You must use node version >= 8 to run this program');
         }
         const bigbandModel = await BigbandFileRunner.loadModel(bigbandFile);
-        const sectionModel = bigbandModel.findSectionModel(sectionName)
+        const sectionModel = bigbandModel.findSectionModel(pathToSection)
         
         const flow = new BigbandFileRunner(bigbandModel, sectionModel, teleportingEnabled, deployMode)
 

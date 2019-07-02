@@ -92,13 +92,14 @@ export class BigbandModel {
     }
 
     // TODO(imaman): section name is not enough for finding a section. you need the region too.
+    // TODO(imaman): rename this method
     findSectionModel(path: string): SectionModel {
         const sections: SectionModel[] = this.sections
         const ret = sections.find(curr => curr.section.path === path)
 
-        const names = sections.map(curr => curr.section.name).join(', ')
+        const names = sections.map(curr => curr.section.path).join(', ')
         if (!ret) {
-            throw new Error(`Failed to find a section at "${path || ''}". Legal section paths are: ${names}`);
+            throw new Error(`Failed to find a section at "${path || ''}". Valids section paths are: ${names}`);
         }    
 
         return ret
