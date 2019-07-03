@@ -135,15 +135,20 @@ export class BigbandModel {
         return ret
     }
 
+    private get instruments(): InstrumentModel[] {
+        const ret = [...this.instrumentByPath.values()]
+        ret.sort((a, b) => a.path.localeCompare(b.path))
+        return ret
+    }
+
     inspect(path_: string): InsepctResult {
         const acc: InspectedItem[] = [];
 
         this.sections.forEach(curr => {
             acc.push({path: curr.section.region, role: Role.REGION, subPath: ''})
-            acc.push({path: curr.section.path, role: Role.SECTION, subPath: ''})
+            acc.push({path: curr.path, role: Role.SECTION, subPath: ''})
         })
-        const instruments: InstrumentModel[]  = Misc.flatten(this.sections.map(s => s.instruments))
-        for (const i of instruments) {
+        for (const i of this.instruments) {
             const item = {
                 path: i.path,
                 role: Role.INSTRUMENT,
@@ -179,7 +184,7 @@ export class BigbandModel {
     }
 
     searchInspect(path: string): LookupResult {
-        const {list}  = this.inspect(path)
+        const list = this.inspect(path).list
         if (list.length > 1) {
             throw new Error(`Multiple matches on "${path}": ${JSON.stringify(list.map(x => x.path))}`);
         }    
@@ -189,7 +194,6 @@ export class BigbandModel {
         }
 
         const first: InspectedItem = list[0]
-        const x = first
         if (first.role !== Role.INSTRUMENT || !first.instrument) {
             throw new Error(`The specifeid path (${path}) does not refer to an instrument`)
         }
