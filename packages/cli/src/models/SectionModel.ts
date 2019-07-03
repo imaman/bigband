@@ -9,6 +9,10 @@ export class SectionModel {
         return this.spec.section
     }
 
+    get path(): string {
+        return this.section.path
+    }
+
     get instruments(): InstrumentModel[] {
         return this.spec.instruments.map(i => new InstrumentModel(this.bigband, this.spec.section, i, 
             this.spec.wiring.filter(w => w.consumer === i), false))

@@ -48,7 +48,10 @@ export class BigbandModel {
 
         for (const s of spec.sections) {
             const sm = new SectionModel(this.spec.bigband, s)
-            this.sectionByPath.set(s.section.path, sm)
+            if (this.sectionByPath.has(sm.path)) {
+                throw new Error(`Section path collision. two (or more) sections share the same path: "${sm.path}"`)
+            }
+            this.sectionByPath.set(sm.path, sm)
 
             for (const i of s.instruments) {
                 const wires = s.wiring.filter(w => w.consumer === i)
@@ -121,7 +124,9 @@ export class BigbandModel {
     }
 
     private get sections(): SectionModel[] {
-        return this.spec.sections.map(s => new SectionModel(this.bigband, s))
+        const ret = [...this.sectionByPath.values()]
+        ret.sort((a, b) => a.path.localeCompare(b.path))
+        return ret
     }
 
     computeList() {

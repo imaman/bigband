@@ -149,13 +149,12 @@ describe('BigbandModel', () => {
                     sections: [
                         { section: new Section("r1", "s1"),  instruments: [], wiring: []},
                         { section: new Section("r1", "s2"),  instruments: [], wiring: []},
-                        { section: new Section("r1", "s3"),  instruments: [], wiring: []},
-                        { section: new Section("r1", "s2"),  instruments: [], wiring: []},
                         { section: new Section("r1", "s1"),  instruments: [], wiring: []},
+                        { section: new Section("r1", "s3"),  instruments: [], wiring: []},
                     ]
                 }
                 expect(() => new BigbandModel(spec, "somedir")).to.throw(
-                    'Section name collision. The following names were used by two (or more) sections: ["s1","s2"]')
+                    'Section path collision. two (or more) sections share the same path: "r1/s1"')
             });
         })
     })
