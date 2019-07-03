@@ -172,7 +172,7 @@ describe('BigbandFileRunner', () => {
                 })
             })
         })
-        xit("allows cross-section wiring", () => {
+        it("allows cross-section wiring", () => {
             const f1 = new LambdaInstrument(["p1"], "f1", "src/file_1")
             const f2 = new LambdaInstrument(["p2"], "f2", "src/file_1")
 
@@ -185,7 +185,7 @@ describe('BigbandFileRunner', () => {
                     {
                         section: s1,
                         instruments: [f1],
-                        wiring: [wire(f1, "w1", f2)]
+                        wiring: [wire(f1, "w1", f2, s2)]
                     },
                     {
                         section: s2,
@@ -200,7 +200,7 @@ describe('BigbandFileRunner', () => {
                     DeployMode.IF_CHANGED)            
 
             const templateBody = bigbandFileRunner.buildCloudFormationTemplate(
-                computePushedInstruments(bigbandModel, ["f1", "f2"]))
+                computePushedInstruments(bigbandModel, ["f1"]))
 
 
             console.log(JSON.stringify(templateBody, null, 2))
@@ -219,7 +219,7 @@ describe('BigbandFileRunner', () => {
                                 "Statement": [{
                                     "Effect": "Allow",
                                     "Action": ["lambda:InvokeFunction" ],
-                                    "Resource": "arn:aws:lambda:r1:a:function:b-s1-p2-f2"
+                                    "Resource": "arn:aws:lambda:r2:a:function:b-s2-p2-f2"
                                 }]
                             }
                             ],
@@ -227,17 +227,6 @@ describe('BigbandFileRunner', () => {
                             "Handler": "p1-f1_Handler.handle",
                             "FunctionName": "b-s1-p1-f1",
                             "CodeUri": "s3://my_bucket/my_prefix/b-s1-p1-f1.zip"
-                        }
-                    },
-                    "P2F2": {
-                        "Type": "AWS::Serverless::Function",
-                        "Properties": {
-                            "Runtime": "nodejs8.10",
-                            "Policies": [],
-                            "Events": {},
-                            "Handler": "p2-f2_Handler.handle",
-                            "FunctionName": "b-s1-p2-f2",
-                            "CodeUri": "s3://my_bucket/my_prefix/b-s1-p2-f2.zip"
                         }
                     }
                 }

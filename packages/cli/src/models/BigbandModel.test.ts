@@ -107,7 +107,7 @@ describe('BigbandModel', () => {
                 }
 
                 expect(() => new BigbandModel(spec, "somedir")).to.throw(
-                    'Instrument "p1-f2" cannot be used as a supplier because it is not a member of the "s1" section')
+                    'Instrument "p1-f2" cannot be used as a supplier because it is not placed in any section')
             })
             it('fails if a wiring references a supplier not listed under instruments', () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")

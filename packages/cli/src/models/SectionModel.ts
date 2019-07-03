@@ -1,4 +1,4 @@
-import { SectionSpec, Instrument, Bigband } from "bigband-core";
+import { SectionSpec, Instrument, Bigband, WireSpec } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
 import { NameValidator } from "../NameValidator";
 
@@ -18,6 +18,10 @@ export class SectionModel {
         return `${this.bigband.name}-${this.section.name}`;
     }
 
+    get wires(): WireSpec[] {
+        return this.spec.wiring
+    }
+
     validate() {
         const name = this.section.name
 
@@ -27,17 +31,10 @@ export class SectionModel {
         this.instruments.forEach(curr => curr.validate())
 
         const set = new Set<Instrument>(this.spec.instruments)
-        const wiringsWithbadSuppliers = this.spec.wiring.filter(w => !set.has(w.supplier))
-        if (wiringsWithbadSuppliers.length) {
-            const w = wiringsWithbadSuppliers[0]
-            throw new Error(`Instrument "${w.supplier.fullyQualifiedName()}" cannot be used as a supplier because ` + 
-                `it is not a member of the "${this.section.name}" section`)
-        }
-
         const wiringsWithbadConsumer = this.spec.wiring.filter(w => !set.has(w.consumer))
         if (wiringsWithbadConsumer.length) {
             const w = wiringsWithbadConsumer[0]
-            throw new Error(`Instrument "${w.supplier.fullyQualifiedName()}" cannot be used as a consumer because ` + 
+            throw new Error(`Instrument "${w.consumer.fullyQualifiedName()}" cannot be used as a consumer because ` + 
                 `it is not a member of the "${this.section.name}" section`)
         }
     }

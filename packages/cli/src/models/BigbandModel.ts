@@ -212,6 +212,41 @@ export class BigbandModel {
             throw new Error('Instrument name collision. The following names were used by two (or more) instruments: ' +
                     JSON.stringify(dupes));
         }
+
+
+        const sectionByInstrument = new Map<Instrument, Set<Section>>()
+        for (const s of this.sections) {
+            for(const im of s.instruments) {
+                let set = sectionByInstrument.get(im.instrument)
+                if (!set) {
+                    set = new Set<Section>()
+                    sectionByInstrument.set(im.instrument, set)
+                }
+
+                set.add(im.section)
+            }
+        }
+       
+        for (const s of this.sections) {
+            for (const w of s.wires) {
+                const set = sectionByInstrument.get(w.supplier)
+                const supplierSection = w.supplierSection || s.section
+                if (!set) {
+                    throw new Error(`Instrument "${w.supplier.fullyQualifiedName()}" cannot be used as a supplier because it is not placed in any section`)
+                }
+                if (!set.has(supplierSection)) {
+                    throw new Error(`Instrument "${w.supplier.fullyQualifiedName()}" cannot be used as a supplier because it is not a member of the ${supplierSection.name} section`)
+                }
+            }
+        }
+
+        // const wiringsWithbadSuppliers = this.spec.wiring.filter(w => !set.has(w.supplier))
+        // if (wiringsWithbadSuppliers.length) {
+        //     const w = wiringsWithbadSuppliers[0]
+        //     throw new Error(`Instrument "${w.supplier.fullyQualifiedName()}" cannot be used as a supplier because ` + 
+        //         `it is not a member of the "${this.section.name}" section`)
+        // }
+
         
         // TODO(imaman): validate name length + characters
     }

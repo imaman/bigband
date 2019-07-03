@@ -10,8 +10,9 @@ export interface SectionSpec {
 
 export interface WireSpec {
     consumer: Instrument 
-    supplier: Instrument
     name: string
+    supplier: Instrument
+    supplierSection?: Section
 }
 export interface BigbandSpec {
     bigband: Bigband
