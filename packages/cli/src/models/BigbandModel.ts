@@ -60,8 +60,11 @@ export class BigbandModel {
             for (const i of s.instruments) {
                 const wires = s.wiring.filter(w => w.consumer === i)
                 const im = new InstrumentModel(this.spec.bigband, s.section, i, wires, false)
-                acc.push(im)
+                if (this.instrumentByPath.has(im.path)) {
+                    throw new Error(`Instrument path collision. two (or more) instruments share the same path: "${im.path}"`)
+                }
                 this.instrumentByPath.set(im.path, im)
+                acc.push(im)
             }
 
             acc.sort((a, b) => a.path.localeCompare(b.path))
@@ -220,14 +223,6 @@ export class BigbandModel {
         if (dupes.length) {
             throw new Error(`Section name collision. The following names were used by two (or more) sections: ${JSON.stringify(dupes)}`);
         }
-
-        const instruments: InstrumentModel[] = Misc.flatten(this.sections.map(s => s.instruments))
-        dupes = Misc.checkDuplicates(instruments.map(curr => curr.physicalName))
-        if (dupes.length) {
-            throw new Error('Instrument name collision. The following names were used by two (or more) instruments: ' +
-                    JSON.stringify(dupes));
-        }
-
 
         const sectionByInstrument = new Map<Instrument, Set<Section>>()
         for (const s of this.sections) {

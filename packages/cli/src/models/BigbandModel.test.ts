@@ -138,7 +138,7 @@ describe('BigbandModel', () => {
                     ]
                 }
                 expect(() => new BigbandModel(spec, "somedir")).to.throw(
-                    'Instrument name collision. The following names were used by two (or more) instruments: ["b-s1-p1-f2"]')
+                    'Instrument path collision. two (or more) instruments share the same path: "r1/s1/p1/f2"')
             });
         })
 
