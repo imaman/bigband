@@ -163,7 +163,8 @@ export class BigbandFileRunner {
         return ret
     }
 
-    private async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel): Promise<PushedInstrument> {
+    private async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel)
+            : Promise<PushedInstrument> {
         if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
             throw new Error(`Bad value. ${dir} is not a directory.`);
         }

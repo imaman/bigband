@@ -31,9 +31,8 @@ describe('BigbandFileRunner', () => {
                         physicalName: lookupResult.physicalName,
                         wasPushed: true,
                         model: lookupResult.instrumentModel,
-                        s3Ref: new S3Ref("my_bucket", "my_prefix/my_sub_folder")
+                        s3Ref: new S3Ref("my_bucket", `my_prefix/${lookupResult.physicalName}.zip`)
                     }))
-
         }
         it("places the definition inside template", () => {
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
@@ -60,7 +59,7 @@ describe('BigbandFileRunner', () => {
                 "Resources": {
                     "P1F1": {
                         "Properties": {
-                            "CodeUri": "s3://my_bucket/my_prefix/my_sub_folder",
+                            "CodeUri": "s3://my_bucket/my_prefix/b-s1-p1-f1.zip",
                             "Events": {},
                             "FunctionName": "b-s1-p1-f1",
                             "Handler": "p1-f1_Handler.handle",
@@ -97,7 +96,7 @@ describe('BigbandFileRunner', () => {
                 "Resources": {
                     "AbcDefThisIsTheName": {
                         "Properties": {
-                            "CodeUri": "s3://my_bucket/my_prefix/my_sub_folder",
+                            "CodeUri": "s3://my_bucket/my_prefix/b-s1-abc-def-this-is-the-name.zip",
                             "Events": {},
                             "FunctionName": "b-s1-abc-def-this-is-the-name",
                             "Handler": "abc-def-this-is-the-name_Handler.handle",
@@ -130,23 +129,45 @@ describe('BigbandFileRunner', () => {
             const templateBody = bigbandFileRunner.buildCloudFormationTemplate(
                 computePushedInstruments(bigbandModel, ["f1", "f2"]))
 
+
+            console.log(JSON.stringify(templateBody, null, 2))
             expect(templateBody).to.eql({
                 "AWSTemplateFormatVersion": "2010-09-09",
+                "Transform": "AWS::Serverless-2016-10-31",
                 "Description": "description goes here",
                 "Resources": {
-                    "AbcDefThisIsTheName": {
-                        "Properties": {
-                            "CodeUri": "s3://my_bucket/my_prefix/my_sub_folder",
-                            "Events": {},
-                            "FunctionName": "b-s1-abc-def-this-is-the-name",
-                            "Handler": "abc-def-this-is-the-name_Handler.handle",
-                            "Policies": [],
-                            "Runtime": "nodejs8.10",
-                        },
+                    "P1F1": {
                         "Type": "AWS::Serverless::Function",
+                        "Properties": {
+                            "Runtime": "nodejs8.10",
+                            "Policies": [
+                            {
+                                "Version": "2012-10-17",
+                                "Statement": [{
+                                    "Effect": "Allow",
+                                    "Action": ["lambda:InvokeFunction" ],
+                                    "Resource": "arn:aws:lambda:r1:a:function:b-s1-p2-f2"
+                                }]
+                            }
+                            ],
+                            "Events": {},
+                            "Handler": "p1-f1_Handler.handle",
+                            "FunctionName": "b-s1-p1-f1",
+                            "CodeUri": "s3://my_bucket/my_prefix/b-s1-p1-f1.zip"
+                        }
+                    },
+                    "P2F2": {
+                        "Type": "AWS::Serverless::Function",
+                        "Properties": {
+                            "Runtime": "nodejs8.10",
+                            "Policies": [],
+                            "Events": {},
+                            "Handler": "p2-f2_Handler.handle",
+                            "FunctionName": "b-s1-p2-f2",
+                            "CodeUri": "s3://my_bucket/my_prefix/b-s1-p2-f2.zip"
+                        }
                     }
-                },
-                "Transform": "AWS::Serverless-2016-10-31"
+                }
             })
         })
     })
