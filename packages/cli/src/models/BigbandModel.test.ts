@@ -51,12 +51,13 @@ describe('BigbandModel', () => {
                     bigband: b,
                     sections: [{
                         section: new Section("r1", "s1"), 
-                        instruments: [f1, f2],
+                        instruments: [f1, f2, f3],
                         wiring: [wire(f1, "a", f2), wire(f1, "a", f3)]
                     }]
                 }
 
-                expect(() => new BigbandModel(spec, "somedir")).to.throw('Name collision(s) in wiring of "b-s1-p1-f1": ["a"]')
+                expect(() => new BigbandModel(spec, "somedir")).to.throw(
+                    'Name collision(s) in wiring of "b-s1-p1-f1": ["a"]')
             })
             it("allows the same wiring name to be used in two different instruments", () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
@@ -94,9 +95,9 @@ describe('BigbandModel', () => {
                 expect(() => new BigbandModel(spec, "somedir")).not.to.throw()
             })
 
-            it('fails if a wiring references a consumer not listed under instruments', () => {
+            it('fails if a wire references a consumer not listed under instruments', () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
-                const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+                const f2 = new LambdaInstrument("p2", "f2", "src/file_2")
                 const spec: BigbandSpec = {
                     bigband: b,
                     sections: [{
@@ -107,9 +108,9 @@ describe('BigbandModel', () => {
                 }
 
                 expect(() => new BigbandModel(spec, "somedir")).to.throw(
-                    'Instrument "p1-f2" cannot be used as a supplier because it is not placed in any section')
+                    'Bad wire. Section "r1/s1" does not contain the given instrument ("p2/f2")')
             })
-            it('fails if a wiring references a supplier not listed under instruments', () => {
+            it('fails if a wire references a dangling supplier', () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
                 const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
                 const spec: BigbandSpec = {
@@ -122,7 +123,24 @@ describe('BigbandModel', () => {
                 }
 
                 expect(() => new BigbandModel(spec, "somedir")).to.throw(
-                    'Instrument "p1-f1" cannot be used as a consumer because it is not a member of the "s1" section')
+                    'Instrument "p1/f1" cannot be used as a consumer because it is not a member of the "r1/s1" section')
+            })
+            it('fails if a wire references a dangling section', () => {
+                const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+                const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
+
+                const s2 = new Section("r1", "s2")
+                const spec: BigbandSpec = {
+                    bigband: b,
+                    sections: [{
+                        section: new Section("r1", "s1"), 
+                        instruments: [f1, f2],
+                        wiring: [wire(f1, "a", f2, s2)]
+                    }]
+                }
+
+                expect(() => new BigbandModel(spec, "somedir")).to.throw(
+                    'Bad wire. Section "r1/s2" is not a member of the bigband')
             })
         })
 

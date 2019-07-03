@@ -124,10 +124,9 @@ export abstract class Instrument {
         return this.definition;
     }
 
-    get path(): string[] {
-        const ret = [...this.packageName]
-        ret.push(this.name)
-        return ret
+    // TODO(imaman): rename this. "path" now denotes the full path to an instrument not just it "directories"path()
+    get path(): string {
+        return this.fullyQualifiedName(NameStyle.SLASH)
     }
 }
 

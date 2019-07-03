@@ -79,6 +79,31 @@ export class BigbandModel {
             acc.sort(byPath)
         }
 
+        for (const s of spec.sections) {
+            const sm = this.sectionByPath.get(s.section.path)
+            if (!sm) {
+                throw new Error(`SectionModel not found (path=${s.section.path})`)
+            }
+            for (const w of s.wiring) {
+                const consumer = sm.findInstrument(w.consumer.path)
+                if (!consumer) {
+                    throw new Error(`Instrument "${w.consumer.path}" cannot be used as a consumer ` +
+                        `because it is not a member of the "${sm.path}" section`)
+                }
+                
+                const supplierSection: Section = w.supplierSection || s.section
+                const supplierSectionModel = this.sectionByPath.get(supplierSection.path)
+                if (!supplierSectionModel) {
+                    throw new Error(`Bad wire. Section "${supplierSection.path}" is not a member of the bigband`)
+                }
+                const supplier = supplierSectionModel.findInstrument(w.supplier.path)
+                if (!supplier) {
+                    throw new Error(`Bad wire. Section "${supplierSectionModel.path}" does not contain the given ` + 
+                        `instrument ("${w.supplier.path}")`)
+                }
+            }
+        }
+
         this.validate()
     }
 
@@ -190,7 +215,7 @@ export class BigbandModel {
             return true
         })
 
-        chosen.sort((a, b) => a.subPath.localeCompare(b.subPath))
+        chosen.sort(byPath)
 
         return {list: chosen}
     }
