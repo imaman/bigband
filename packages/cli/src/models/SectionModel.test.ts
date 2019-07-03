@@ -6,8 +6,9 @@ const {expect} = chai;
 
 import 'mocha';
 
-import { LambdaInstrument, Section, Bigband, SectionSpec } from 'bigband-core';
+import { LambdaInstrument, Section, Bigband, SectionSpec, BigbandSpec } from 'bigband-core';
 import { SectionModel } from './SectionModel'
+import { BigbandModel } from './BigbandModel';
 
 
 describe('SectionModel', () => {
@@ -20,6 +21,16 @@ describe('SectionModel', () => {
     })
 
     describe('instruments', () => {
+        function createSectionModel(s: SectionSpec): SectionModel {
+            const bigbandSpec: BigbandSpec = {
+                bigband: b,
+                sections: [s]
+            }
+
+            const bm = new BigbandModel(bigbandSpec, "_")
+            return bm.findSectionModel(s.section.path)
+        }
+
         it('returns all instruments', () => {
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
             const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
@@ -29,7 +40,7 @@ describe('SectionModel', () => {
                 wiring: []
             }
 
-            const model = new SectionModel(b, spec)
+            const model = createSectionModel(spec)
             expect(model.instruments.map(i => i.instrument)).to.eql([f1, f2])
         });
     })

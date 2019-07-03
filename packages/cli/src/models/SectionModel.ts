@@ -15,8 +15,7 @@ export class SectionModel {
     }
 
     get instruments(): InstrumentModel[] {
-        return this.spec.instruments.map(i => new InstrumentModel(this.bigband, this.spec.section, i, 
-            this.spec.wiring.filter(w => w.consumer === i), false))
+        return [...this.instruments_]
     }
 
     get physicalName(): string {
@@ -35,6 +34,7 @@ export class SectionModel {
         }
         this.instruments.forEach(curr => curr.validate())
 
+        // TODO(imaman): move it elsewhere
         const set = new Set<Instrument>(this.spec.instruments)
         const wiringsWithbadConsumer = this.spec.wiring.filter(w => !set.has(w.consumer))
         if (wiringsWithbadConsumer.length) {

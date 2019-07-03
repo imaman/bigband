@@ -6,9 +6,10 @@ const {expect} = chai;
 
 import 'mocha';
 
-import { LambdaInstrument, Section, wire, Bigband, SectionSpec } from 'bigband-core';
+import { LambdaInstrument, Section, wire, Bigband, SectionSpec, BigbandSpec } from 'bigband-core';
 import { SectionModel } from './SectionModel'
 import { InstrumentModel } from './InstrumentModel';
+import { BigbandModel } from './BigbandModel';
 
 
 describe('InstrumentModel', () => {
@@ -79,6 +80,17 @@ describe('InstrumentModel', () => {
     })
 
     describe('wirings', () => {
+        
+        function createSectionModel(s: SectionSpec): SectionModel {
+            const bigbandSpec: BigbandSpec = {
+                bigband: b,
+                sections: [s]
+            }
+
+            const bm = new BigbandModel(bigbandSpec, "_")
+            return bm.findSectionModel(s.section.path)
+        }
+
         it('returns an empty array if no wirings were defined', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
             const spec: SectionSpec = {
@@ -87,7 +99,7 @@ describe('InstrumentModel', () => {
                 wiring: []
             }
 
-            const sectionModel = new SectionModel(b, spec)
+            const sectionModel = createSectionModel(spec)
             expect(sectionModel.instruments[0].wirings).to.eql([])
         });
         it('returns an empty array if no wirings were defined for the given consumer', async () => { 
@@ -100,7 +112,7 @@ describe('InstrumentModel', () => {
                 wiring: [w12]
             }
 
-            const sectionModel = new SectionModel(b, spec)
+            const sectionModel = createSectionModel(spec)
             expect(sectionModel.instruments[1].wirings).to.eql([])
         });
         it('returns all wirings for the given consumer', async () => { 
@@ -115,7 +127,7 @@ describe('InstrumentModel', () => {
                 wiring: [w12, w13]
             }
 
-            const sectionModel = new SectionModel(b, spec)
+            const sectionModel = createSectionModel(spec)
             expect(sectionModel.instruments[0].wirings).to.eql([w12, w13])
         });
         it('returns wirings only for the given consumer', async () => { 
@@ -130,7 +142,7 @@ describe('InstrumentModel', () => {
                 wiring: [w12, w23]
             }
 
-            const sectionModel = new SectionModel(b, spec)
+            const sectionModel = createSectionModel(spec)
             expect(sectionModel.instruments[0].wirings).to.eql([w12])
         });
     });
