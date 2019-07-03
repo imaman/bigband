@@ -119,7 +119,7 @@ describe('BigbandFileRunner', () => {
                     sections: [{
                         section: new Section("r1", "s1"), 
                         instruments: [f1, f2],
-                        wiring: [wire(f1, f2, "w1")]
+                        wiring: [wire(f1, "w1", f2)]
                     }]
                 }
 
@@ -185,7 +185,7 @@ describe('BigbandFileRunner', () => {
                     {
                         section: s1,
                         instruments: [f1],
-                        wiring: [wire(f1, f2, "w1")]
+                        wiring: [wire(f1, "w1", f2)]
                     },
                     {
                         section: s2,

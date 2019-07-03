@@ -45,16 +45,16 @@ export function run() {
                 section: prod,
                 instruments: [importantDates, placeFinder, queryStream, distanceTable, queryStreamAnalyzer, healthChecker],
                 wiring: [
-                    wire(placeFinder, distanceTable, "distanceTable"),    
-                    wire(placeFinder, queryStream, "queryStream"),    
+                    wire(placeFinder, "distanceTable", distanceTable),    
+                    wire(placeFinder, "queryStream", queryStream),    
                 ]
             },
             {
                 section: staging,
                 instruments: [placeFinder, distanceTable, queryStream],
                 wiring: [
-                    wire(placeFinder, distanceTable, "distanceTable"),    
-                    wire(placeFinder, queryStream, "queryStream"),    
+                    wire(placeFinder, "distanceTable", distanceTable),    
+                    wire(placeFinder, "queryStream", queryStream),    
                 ]
             }
         ]

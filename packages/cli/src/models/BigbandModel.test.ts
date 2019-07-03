@@ -52,7 +52,7 @@ describe('BigbandModel', () => {
                     sections: [{
                         section: new Section("r1", "s1"), 
                         instruments: [f1, f2],
-                        wiring: [wire(f1, f2, "a"), wire(f1, f3, "a")]
+                        wiring: [wire(f1, "a", f2), wire(f1, "a", f3)]
                     }]
                 }
 
@@ -67,7 +67,7 @@ describe('BigbandModel', () => {
                     sections: [{
                         section: new Section("r1", "s1"), 
                         instruments: [f1, f2, f3],
-                        wiring: [wire(f1, f2, "a"), wire(f2, f3, "a")]
+                        wiring: [wire(f1, "a", f2), wire(f2, "a", f3)]
                     }]
                 }
 
@@ -82,12 +82,12 @@ describe('BigbandModel', () => {
                         {
                             section: new Section("r1", "s1"), 
                             instruments: [f1, f2],
-                            wiring: [wire(f1, f2, "a")]
+                            wiring: [wire(f1, "a", f2)]
                         },
                         {
                             section: new Section("r1", "s2"), 
                             instruments: [f1, f2],
-                            wiring: [wire(f1, f2, "a")]
+                            wiring: [wire(f1, "a", f2)]
                         }]
                 }
 
@@ -102,7 +102,7 @@ describe('BigbandModel', () => {
                     sections: [{
                         section: new Section("r1", "s1"), 
                         instruments: [f1],
-                        wiring: [wire(f1, f2, "a")]
+                        wiring: [wire(f1, "a", f2)]
                     }]
                 }
 
@@ -117,7 +117,7 @@ describe('BigbandModel', () => {
                     sections: [{
                         section: new Section("r1", "s1"), 
                         instruments: [f2],
-                        wiring: [wire(f1, f2, "a")]
+                        wiring: [wire(f1, "a", f2)]
                     }]
                 }
 

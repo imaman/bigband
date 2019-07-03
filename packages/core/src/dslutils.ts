@@ -6,10 +6,10 @@ import { WireSpec } from './BigbandSpec'
  * supplier instrument
  *
  * @param {Instrument} consumer the consumer instrument
- * @param {Instrument} supplier the supplier instrument
  * @param {string} name the name of the dependency. Must be unique per consumer-in-section.
+ * @param {Instrument} supplier the supplier instrument
  * @returns {WireSpec}
  */
-export function wire(consumer: Instrument, supplier: Instrument, name: string): WireSpec {
+export function wire(consumer: Instrument,  name: string, supplier: Instrument): WireSpec {
     return {consumer, supplier, name};
 }

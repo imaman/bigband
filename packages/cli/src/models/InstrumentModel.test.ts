@@ -93,7 +93,7 @@ describe('InstrumentModel', () => {
         it('returns an empty array if no wirings were defined for the given consumer', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
             const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
-            const w12 = wire(f1, f2, "w12")
+            const w12 = wire(f1, "w12", f2)
             const spec: SectionSpec = {
                 section: new Section("r1", "s1"), 
                 instruments: [f1, f2],
@@ -107,8 +107,8 @@ describe('InstrumentModel', () => {
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
             const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
             const f3 = new LambdaInstrument("p1", "f3", "src/file_3")
-            const w12 = wire(f1, f2, "w12")
-            const w13 = wire(f1, f3, "w13")
+            const w12 = wire(f1, "w12", f2)
+            const w13 = wire(f1, "w13", f3)
             const spec: SectionSpec = {
                 section: new Section("r1", "s1"), 
                 instruments: [f1, f2, f3],
@@ -122,8 +122,8 @@ describe('InstrumentModel', () => {
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
             const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
             const f3 = new LambdaInstrument("p1", "f3", "src/file_3")
-            const w12 = wire(f1, f2, "w12")
-            const w23 = wire(f2, f3, "w23")
+            const w12 = wire(f1, "w12", f2)
+            const w23 = wire(f2, "w23", f3)
             const spec: SectionSpec = {
                 section: new Section("r1", "s1"), 
                 instruments: [f1, f2, f3],
