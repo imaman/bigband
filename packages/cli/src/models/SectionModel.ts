@@ -3,7 +3,8 @@ import { InstrumentModel } from "./InstrumentModel";
 import { NameValidator } from "../NameValidator";
 
 export class SectionModel {
-    constructor(readonly bigband: Bigband, private readonly spec: SectionSpec, private readonly instruments_: InstrumentModel[] = []) {}
+    constructor(readonly bigband: Bigband, private readonly spec: SectionSpec,
+            private readonly instruments_: InstrumentModel[] = []) {}
 
     get section() {
         return this.spec.section
