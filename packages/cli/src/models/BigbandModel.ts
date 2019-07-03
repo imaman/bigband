@@ -47,6 +47,9 @@ export class BigbandModel {
         this.dir = spec.dir || defaultDir
 
         for (const s of spec.sections) {
+            // we create an array, pass it down to the sectionmodel and then populate it. Due to the absence of
+            // package-visibility in typescript, this trick allow us to create mututally-dependent object without having
+            // them exposed state-mutating methods.
             const acc: InstrumentModel[] = []
             const sm = new SectionModel(this.spec.bigband, s, acc)
             if (this.sectionByPath.has(sm.path)) {
@@ -116,10 +119,9 @@ export class BigbandModel {
     // TODO(imaman): section name is not enough for finding a section. you need the region too.
     // TODO(imaman): rename this method
     findSectionModel(path: string): SectionModel {
-        const sections: SectionModel[] = this.sections
-        const ret = sections.find(curr => curr.section.path === path)
+        const ret = this.sectionByPath.get(path)
 
-        const names = sections.map(curr => curr.section.path).join(', ')
+        const names = this.sections.map(curr => curr.path).join(', ')
         if (!ret) {
             throw new Error(`Failed to find a section at "${path || ''}". Valids section paths are: ${names}`);
         }    
