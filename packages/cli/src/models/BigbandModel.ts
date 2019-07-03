@@ -6,6 +6,15 @@ import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
 
 
+
+interface Pathable {
+    path: string
+}
+
+function byPath(a: Pathable, b: Pathable) {
+    return a.path.localeCompare(b.path)
+}
+
 export interface AssignedInstrument {
     instrument: Instrument
     section: Section
@@ -67,7 +76,7 @@ export class BigbandModel {
                 acc.push(im)
             }
 
-            acc.sort((a, b) => a.path.localeCompare(b.path))
+            acc.sort(byPath)
         }
 
         this.validate()
@@ -134,13 +143,13 @@ export class BigbandModel {
 
     private get sections(): SectionModel[] {
         const ret = [...this.sectionByPath.values()]
-        ret.sort((a, b) => a.path.localeCompare(b.path))
+        ret.sort(byPath)
         return ret
     }
 
     private get instruments(): InstrumentModel[] {
         const ret = [...this.instrumentByPath.values()]
-        ret.sort((a, b) => a.path.localeCompare(b.path))
+        ret.sort(byPath)
         return ret
     }
 
