@@ -148,8 +148,8 @@ export class BigbandFileRunner {
 
             // TODO(imaman): support cross-section wiring
             curr.model.wirings.forEach(d => {
-                const arn = this.namer.resolve(d.supplier).arn
-                d.supplier.contributeToConsumerDefinition(this.sectionModel.section, def, arn);
+                const arn = this.namer.resolve(d.supplier_).arn
+                d.supplier_.contributeToConsumerDefinition(this.sectionModel.section, def, arn);
             });
     
             if (curr.s3Ref.isOk()) {
@@ -210,7 +210,7 @@ export class BigbandFileRunner {
             const mapping = {};
             // TODO(imaman): coverage
             instrumentModel.wirings.forEach(w => {
-                mapping[w.name] = {name: this.namer.physicalName(w.supplier), region: section.region};
+                mapping[w.name] = {name: this.namer.physicalName(w.supplier_), region: section.region};
             });
             frag.add(new DeployableAtom('bigband/deps.js', 
                 `module.exports = ${JSON.stringify(mapping)}`));
