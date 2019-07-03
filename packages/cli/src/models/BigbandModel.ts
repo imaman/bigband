@@ -135,21 +135,6 @@ export class BigbandModel {
         return ret
     }
 
-    computeList() {
-        const ret = {};
-        const bigbandObject = {}
-        ret[this.bigband.name] = bigbandObject;
-        this.sections.forEach(sectionModel => {
-            const secObject = {};
-            bigbandObject[sectionModel.section.name] = secObject;
-            const namer = new Namer(this.bigband, sectionModel.section)
-            sectionModel.instruments.forEach(curr => 
-                secObject[namer.physicalName(curr.instrument)] = curr.instrument.arnService());
-        });
-    
-        return ret;    
-    }
-
     inspect(path_: string): InsepctResult {
         const acc: InspectedItem[] = [];
 

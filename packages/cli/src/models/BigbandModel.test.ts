@@ -289,36 +289,6 @@ describe('BigbandModel', () => {
             })
         })
     })
-    describe("computeList", () => {
-        it("returns a JSON of all instruments", () => {
-            const s1 = new Section("r1", "s1")
-            const s2 = new Section("r1", "s2")
-            const f1 = new LambdaInstrument("p1", "f1", "")
-            const f2 = new LambdaInstrument("p1", "f2", "")
-            const f3 = new LambdaInstrument("p1", "f3", "")
-            const f4 = new LambdaInstrument("p1", "f4", "")
-            const spec: BigbandSpec = {
-                bigband: b,
-                sections: [
-                    {section: s1, instruments: [f1, f2], wiring: []},
-                    {section: s2, instruments: [f3, f4], wiring: []}
-            ]}
-
-            const model = new BigbandModel(spec, "somedir")
-            expect(model.computeList()).to.eql({
-                b: {
-                    s1: {
-                        "b-s1-p1-f1": "lambda",
-                        "b-s1-p1-f2": "lambda"
-                    },
-                    s2: {
-                        "b-s2-p1-f3": "lambda",
-                        "b-s2-p1-f4": "lambda"                        
-                    }
-                }
-            })
-        })
-    })
     describe("navigate", () => {
         it("it returns all instruments at the given path", () => {
             const s1 = new Section("r1", "s1")
