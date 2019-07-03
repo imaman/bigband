@@ -122,7 +122,7 @@ describe('BigbandModel', () => {
                 }
 
                 expect(() => new BigbandModel(spec, "somedir")).to.throw(
-                    'Instrument "p1-f2" cannot be used as a consumer because it is not a member of the "s1" section')
+                    'Instrument "p1-f1" cannot be used as a consumer because it is not a member of the "s1" section')
             })
         })
 

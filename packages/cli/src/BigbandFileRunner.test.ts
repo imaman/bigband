@@ -172,7 +172,7 @@ describe('BigbandFileRunner', () => {
                 })
             })
         })
-        it("allows cross-section wiring", () => {
+        xit("allows cross-section wiring", () => {
             const f1 = new LambdaInstrument(["p1"], "f1", "src/file_1")
             const f2 = new LambdaInstrument(["p2"], "f2", "src/file_1")
 
