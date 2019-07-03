@@ -35,6 +35,9 @@ interface InspectedItem {
 }
 export class BigbandModel {
 
+    private readonly sectionByPath = new Map<string, SectionModel>()
+    private readonly instrumentByPath = new Map<string, InstrumentModel>()
+
     public readonly dir: string
     constructor(private readonly spec: BigbandSpec, defaultDir: string) {
         if (!defaultDir) {
@@ -42,6 +45,18 @@ export class BigbandModel {
         }
 
         this.dir = spec.dir || defaultDir
+
+        for (const s of spec.sections) {
+            const sm = new SectionModel(this.spec.bigband, s)
+            this.sectionByPath.set(s.section.path, sm)
+
+            for (const i of s.instruments) {
+                const wires = s.wiring.filter(w => w.consumer === i)
+                const im = new InstrumentModel(this.spec.bigband, s.section, i, wires, false)
+                this.instrumentByPath.set(im.path, im)
+            }
+        }
+
         this.validate()
     }
 
