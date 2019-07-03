@@ -109,17 +109,90 @@ describe('BigbandFileRunner', () => {
                 "Transform": "AWS::Serverless-2016-10-31"
             })
         })
-        it("supports wiring", () => {
+        describe("wiring", () => {
+            it("allows wiring within the same section", () => {
+                const f1 = new LambdaInstrument(["p1"], "f1", "src/file_1")
+                const f2 = new LambdaInstrument(["p2"], "f2", "src/file_1")
+
+                const spec: BigbandSpec = {
+                    bigband: b,
+                    sections: [{
+                        section: new Section("r1", "s1"), 
+                        instruments: [f1, f2],
+                        wiring: [wire(f1, f2, "w1")]
+                    }]
+                }
+
+                const bigbandModel = new BigbandModel(spec, "somedir")
+                const bigbandFileRunner = new BigbandFileRunner(bigbandModel, bigbandModel.findSectionModel("r1/s1"), true,
+                        DeployMode.IF_CHANGED)            
+
+                const templateBody = bigbandFileRunner.buildCloudFormationTemplate(
+                    computePushedInstruments(bigbandModel, ["f1", "f2"]))
+
+
+                console.log(JSON.stringify(templateBody, null, 2))
+                expect(templateBody).to.eql({
+                    "AWSTemplateFormatVersion": "2010-09-09",
+                    "Transform": "AWS::Serverless-2016-10-31",
+                    "Description": "description goes here",
+                    "Resources": {
+                        "P1F1": {
+                            "Type": "AWS::Serverless::Function",
+                            "Properties": {
+                                "Runtime": "nodejs8.10",
+                                "Policies": [
+                                {
+                                    "Version": "2012-10-17",
+                                    "Statement": [{
+                                        "Effect": "Allow",
+                                        "Action": ["lambda:InvokeFunction" ],
+                                        "Resource": "arn:aws:lambda:r1:a:function:b-s1-p2-f2"
+                                    }]
+                                }
+                                ],
+                                "Events": {},
+                                "Handler": "p1-f1_Handler.handle",
+                                "FunctionName": "b-s1-p1-f1",
+                                "CodeUri": "s3://my_bucket/my_prefix/b-s1-p1-f1.zip"
+                            }
+                        },
+                        "P2F2": {
+                            "Type": "AWS::Serverless::Function",
+                            "Properties": {
+                                "Runtime": "nodejs8.10",
+                                "Policies": [],
+                                "Events": {},
+                                "Handler": "p2-f2_Handler.handle",
+                                "FunctionName": "b-s1-p2-f2",
+                                "CodeUri": "s3://my_bucket/my_prefix/b-s1-p2-f2.zip"
+                            }
+                        }
+                    }
+                })
+            })
+        })
+        xit("allows cross-section wiring", () => {
             const f1 = new LambdaInstrument(["p1"], "f1", "src/file_1")
             const f2 = new LambdaInstrument(["p2"], "f2", "src/file_1")
 
+            const s1 = new Section("r1", "s1")
+            const s2 = new Section("r2", "s2")
+
             const spec: BigbandSpec = {
                 bigband: b,
-                sections: [{
-                    section: new Section("r1", "s1"), 
-                    instruments: [f1, f2],
-                    wiring: [wire(f1, f2, "w1")]
-                }]
+                sections: [
+                    {
+                        section: s1,
+                        instruments: [f1],
+                        wiring: [wire(f1, f2, "w1")]
+                    },
+                    {
+                        section: s2,
+                        instruments: [f2],
+                        wiring: []
+                    }
+                ]
             }
 
             const bigbandModel = new BigbandModel(spec, "somedir")
