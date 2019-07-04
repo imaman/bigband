@@ -1,18 +1,23 @@
 import * as chai from 'chai';
 import chaiSubset = require('chai-subset');
 import * as tmp from 'tmp'
+import * as path from 'path'
+import * as fs from 'fs'
+import * as child_process from 'child_process'
 
 chai.use(chaiSubset);
 const {expect} = chai;
 
 import 'mocha';
 
-import { LambdaInstrument, Section, BigbandSpec, Bigband, wire } from 'bigband-core';
+import { LambdaInstrument, Section, BigbandSpec, Bigband, wire, DeployableAtom } from 'bigband-core';
 import { BigbandFileRunner } from './BigbandFileRunner';
 import { BigbandModel } from './models/BigbandModel';
 import { DeployMode } from './Packager';
 import { S3Ref } from './S3Ref';
 import { InstrumentModel } from './models/InstrumentModel';
+import { pathExists } from 'fs-extra';
+import { inspect } from 'util';
 
 
 describe('BigbandFileRunner', () => {
@@ -25,26 +30,60 @@ describe('BigbandFileRunner', () => {
     }
     const b = new Bigband(bigbandInit)
 
-    describe("compilation", async () => {
-        const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+    describe("compilation", () => {
+        it ("compiles", async () => {
 
-        const spec: BigbandSpec = {
-            bigband: b,
-            sections: [{
-                section: new Section("r1", "s1"), 
-                instruments: [f1],
-                wiring: []
-            }]
-        }
+            const f1 = new LambdaInstrument("p1", "f1", "file_1")
+            
+            const spec: BigbandSpec = {
+                bigband: b,
+                sections: [{
+                    section: new Section("r1", "s1"), 
+                    instruments: [f1],
+                    wiring: []
+                }]
+            }
+            
+            const bigbandModel = new BigbandModel(spec, "somedir")
+            const section = bigbandModel.findSectionModel("r1/s1")
+            const instrument = bigbandModel.getInstrument('r1/s1/p1/f1')
+            
+            const bigbandFileRunner = new BigbandFileRunner(bigbandModel, section, true, DeployMode.IF_CHANGED)            
+            const dir = tmp.dirSync({keep: true}).name
 
-        const bigbandModel = new BigbandModel(spec, "somedir")
-        const section = bigbandModel.findSectionModel("r1/s1")
-        const instrument = bigbandModel.getInstrument('r1/s1/p1/f1')
-        
-        const bigbandFileRunner = new BigbandFileRunner(bigbandModel, section, true, DeployMode.IF_CHANGED)            
-        const dir = tmp.dirSync() 
-        throw new Error('dir='+ dir)       
-        await bigbandFileRunner.pushCode(dir, dir, instrument)
+            const srcFile = path.resolve(dir, 'file_1.ts')
+
+            console.log('srcFile=' + srcFile + ', dir=' + dir)
+
+            fs.writeFileSync(srcFile, 'console.log("Four score and seven years ago")')
+
+            const npmPackageDir = path.resolve(__dirname, '..')
+            const temp = await bigbandFileRunner.compileInstrument(dir, npmPackageDir, instrument)
+
+            const outDir = tmp.dirSync({keep: true}).name
+            temp.zb.unzip(outDir)
+
+
+            const cp = child_process.fork(path.resolve(outDir, 'p1-f1_Handler.js'), [], {stdio: "pipe"})
+
+
+            const stdout: string[] = []
+            await new Promise((resolve, reject) => {
+                cp.stdout.on('data', data => {
+                    stdout.push(data.toString())
+                })
+    
+                cp.stderr.on('data', data => {
+                    reject(new Error(`Output emitted to stderr. First line: "${data.toString()}"`))
+                })
+    
+                cp.on('exit',  (code, signal) => {
+                    resolve({code, signal})
+                })    
+            })
+
+            expect(stdout.join('\n').trim()).to.equal('Four score and seven years ago')
+        })
     })
 
     describe("cloudformation template generation", () => {

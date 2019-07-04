@@ -163,7 +163,7 @@ export class BigbandFileRunner {
         return ret
     }
 
-    async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel)
+    private async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel)
             : Promise<PushedInstrument> {
         if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
             throw new Error(`Bad value. ${dir} is not a directory.`);
@@ -196,7 +196,7 @@ export class BigbandFileRunner {
         }
     }
     
-    private async compileInstrument(d: string, npmPackageDir: string, instrumentModel: InstrumentModel) {
+    async compileInstrument(d: string, npmPackageDir: string, instrumentModel: InstrumentModel) {
         const model: SectionModel = this.sectionModel
         const section = model.section
         const instrument = instrumentModel.instrument
