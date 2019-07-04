@@ -46,44 +46,50 @@ describe('BigbandFileRunner', () => {
 
             const content = 'console.log("Four score and seven years ago")'
 
-            const bigbandModel = new BigbandModel(spec, "somedir")
-            const instrument = bigbandModel.getInstrument('r1/s1/p1/f1')
-            
-            const bigbandFileRunner = new BigbandFileRunner(bigbandModel, 
-                bigbandModel.findSectionModel(instrument.section.path), true, DeployMode.IF_CHANGED)            
-            const dir = tmp.dirSync({keep: true}).name
+            async function compileAndRun(bigbandSpec, pathToInstrument, content) {
 
-            const srcFile = path.resolve(dir, (instrument.instrument as LambdaInstrument).getEntryPointFile() + '.ts')
+                const bigbandModel = new BigbandModel(bigbandSpec, "somedir")
+                const instrument = bigbandModel.getInstrument(pathToInstrument)
+                
+                const bigbandFileRunner = new BigbandFileRunner(bigbandModel, 
+                    bigbandModel.findSectionModel(instrument.section.path), true, DeployMode.IF_CHANGED)            
+                const dir = tmp.dirSync({keep: true}).name
 
-            fs.writeFileSync(srcFile, content)
+                const srcFile = path.resolve(dir, (instrument.instrument as LambdaInstrument).getEntryPointFile() + '.ts')
 
-            const npmPackageDir = path.resolve(__dirname, '..')
-            const temp = await bigbandFileRunner.compileInstrument(dir, npmPackageDir, instrument)
+                fs.writeFileSync(srcFile, content)
 
-            const outDir = tmp.dirSync({keep: true}).name
-            temp.zb.unzip(outDir)
+                const npmPackageDir = path.resolve(__dirname, '..')
+                const temp = await bigbandFileRunner.compileInstrument(dir, npmPackageDir, instrument)
 
-
-            const cp = child_process.fork(path.resolve(outDir, `${instrument.instrument.fullyQualifiedName()}_Handler.js`), [], 
-                    {stdio: "pipe"})
+                const outDir = tmp.dirSync({keep: true}).name
+                temp.zb.unzip(outDir)
 
 
-            const stdout: string[] = []
-            await new Promise((resolve, reject) => {
-                cp.stdout.on('data', data => {
-                    stdout.push(data.toString())
+                const cp = child_process.fork(path.resolve(outDir, `${instrument.instrument.fullyQualifiedName()}_Handler.js`), [], 
+                        {stdio: "pipe"})
+
+
+                const stdout: string[] = []
+                await new Promise((resolve, reject) => {
+                    cp.stdout.on('data', data => {
+                        stdout.push(data.toString())
+                    })
+        
+                    cp.stderr.on('data', data => {
+                        reject(new Error(`Output emitted to stderr. First line: "${data.toString()}"`))
+                    })
+        
+                    cp.on('exit',  (code, signal) => {
+                        resolve({code, signal})
+                    })    
                 })
-    
-                cp.stderr.on('data', data => {
-                    reject(new Error(`Output emitted to stderr. First line: "${data.toString()}"`))
-                })
-    
-                cp.on('exit',  (code, signal) => {
-                    resolve({code, signal})
-                })    
-            })
 
-            expect(stdout.join('\n').trim()).to.equal('Four score and seven years ago')
+                return stdout.join('\n').trim()
+            }
+
+            const output = await compileAndRun(spec, "r1/s1/p1/f1", content)
+            expect(output).to.equal('Four score and seven years ago')
         })
     })
 
