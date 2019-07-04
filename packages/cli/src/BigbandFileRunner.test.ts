@@ -31,8 +31,48 @@ describe('BigbandFileRunner', () => {
     const b = new Bigband(bigbandInit)
 
     describe("compilation", () => {
-        it ("compiles", async () => {
 
+        async function compileAndRun(bigbandSpec, pathToInstrument, content) {
+
+            const bigbandModel = new BigbandModel(bigbandSpec, "somedir")
+            const instrument = bigbandModel.getInstrument(pathToInstrument)
+            
+            const bigbandFileRunner = new BigbandFileRunner(bigbandModel, 
+                bigbandModel.findSectionModel(instrument.section.path), true, DeployMode.IF_CHANGED)            
+            const dir = tmp.dirSync({keep: true}).name
+
+            const srcFile = path.resolve(dir, (instrument.instrument as LambdaInstrument).getEntryPointFile() + '.ts')
+
+            fs.writeFileSync(srcFile, content)
+
+            const npmPackageDir = path.resolve(__dirname, '..')
+            const temp = await bigbandFileRunner.compileInstrument(dir, npmPackageDir, instrument)
+
+            const outDir = tmp.dirSync({keep: true}).name
+            temp.zb.unzip(outDir)
+
+            const cp = child_process.fork(path.resolve(outDir, 
+                    `${instrument.instrument.fullyQualifiedName()}_Handler.js`), [], {stdio: "pipe"})
+
+            const stdout: string[] = []
+            await new Promise((resolve, reject) => {
+                cp.stdout.on('data', data => {
+                    stdout.push(data.toString())
+                })
+    
+                cp.stderr.on('data', data => {
+                    reject(new Error(`Output emitted to stderr. First line: "${data.toString()}"`))
+                })
+    
+                cp.on('exit',  (code, signal) => {
+                    resolve({code, signal})
+                })    
+            })
+
+            return stdout.join('\n').trim()
+        }
+
+        it ("compiles", async () => {
             const f1 = new LambdaInstrument("p1", "f1", "file_1")
             
             const spec: BigbandSpec = {
@@ -44,51 +84,7 @@ describe('BigbandFileRunner', () => {
                 }]
             }
 
-            const content = 'console.log("Four score and seven years ago")'
-
-            async function compileAndRun(bigbandSpec, pathToInstrument, content) {
-
-                const bigbandModel = new BigbandModel(bigbandSpec, "somedir")
-                const instrument = bigbandModel.getInstrument(pathToInstrument)
-                
-                const bigbandFileRunner = new BigbandFileRunner(bigbandModel, 
-                    bigbandModel.findSectionModel(instrument.section.path), true, DeployMode.IF_CHANGED)            
-                const dir = tmp.dirSync({keep: true}).name
-
-                const srcFile = path.resolve(dir, (instrument.instrument as LambdaInstrument).getEntryPointFile() + '.ts')
-
-                fs.writeFileSync(srcFile, content)
-
-                const npmPackageDir = path.resolve(__dirname, '..')
-                const temp = await bigbandFileRunner.compileInstrument(dir, npmPackageDir, instrument)
-
-                const outDir = tmp.dirSync({keep: true}).name
-                temp.zb.unzip(outDir)
-
-
-                const cp = child_process.fork(path.resolve(outDir, `${instrument.instrument.fullyQualifiedName()}_Handler.js`), [], 
-                        {stdio: "pipe"})
-
-
-                const stdout: string[] = []
-                await new Promise((resolve, reject) => {
-                    cp.stdout.on('data', data => {
-                        stdout.push(data.toString())
-                    })
-        
-                    cp.stderr.on('data', data => {
-                        reject(new Error(`Output emitted to stderr. First line: "${data.toString()}"`))
-                    })
-        
-                    cp.on('exit',  (code, signal) => {
-                        resolve({code, signal})
-                    })    
-                })
-
-                return stdout.join('\n').trim()
-            }
-
-            const output = await compileAndRun(spec, "r1/s1/p1/f1", content)
+            const output = await compileAndRun(spec, "r1/s1/p1/f1", 'console.log("Four score and seven years ago")')
             expect(output).to.equal('Four score and seven years ago')
         })
     })
