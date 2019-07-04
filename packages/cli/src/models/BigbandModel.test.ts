@@ -108,7 +108,7 @@ describe('BigbandModel', () => {
                 }
 
                 expect(() => new BigbandModel(spec, "somedir")).to.throw(
-                    'Bad wire. Supplier section "r1/s1" does not contain the given supplier instrument ("p2/f2")')
+                    'Section r1/s1 does not contain an instrument at sub path ("p2/f2")')
             })
             it('fails if a wire references a dangling supplier', () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
@@ -123,7 +123,7 @@ describe('BigbandModel', () => {
                 }
 
                 expect(() => new BigbandModel(spec, "somedir")).to.throw(
-                    'Instrument "p1/f1" cannot be used as a consumer because it is not a member of the "r1/s1" section')
+                    'Section r1/s1 does not contain an instrument at sub path ("p1/f1")')
             })
             it('fails if a wire references a dangling section', () => {
                 const f1 = new LambdaInstrument("p1", "f1", "src/file_1")

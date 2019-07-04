@@ -22,8 +22,14 @@ export class SectionModel {
         return `${this.bigband.name}-${this.section.name}`;
     }
 
-    findInstrument(path: string): InstrumentModel|null {
-        return this.instruments.find(im => im.instrument.path === path) || null
+    getInstrumentModel(instrument: Instrument): InstrumentModel {
+        const subPath = instrument.path
+        const ret = this.instruments.find(curr => curr.instrument.path === subPath)
+        if (!ret) {
+            throw new Error(`Section ${this.path} does not contain an instrument at sub path ("${subPath}")`)
+        }
+
+        return ret
     }
 
     validate() {
