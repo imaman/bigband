@@ -130,6 +130,20 @@ export class BigbandModel {
         return this.spec.bigband
     }
 
+    /**
+     * Fetches an instrument by its full path. Throws an exception if not found.
+     *
+     * @param {string} path
+     * @returns {InstrumentModel}
+     */
+    getInstrument(path: string): InstrumentModel {
+        const ret = this.instrumentByPath.get(path)
+        if (!ret) {
+            throw new Error(`No instrument was found at path "${path}"`)
+        }
+        return ret
+    }
+
     searchInstrument(instrumentName: string): LookupResult {
         const matches: LookupResult[] = [];
         const names: string[] = [];    

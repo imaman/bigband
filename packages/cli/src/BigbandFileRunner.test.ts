@@ -11,6 +11,7 @@ import { BigbandFileRunner } from './BigbandFileRunner';
 import { BigbandModel } from './models/BigbandModel';
 import { DeployMode } from './Packager';
 import { S3Ref } from './S3Ref';
+import { InstrumentModel } from './models/InstrumentModel';
 
 
 describe('BigbandFileRunner', () => {
@@ -26,12 +27,12 @@ describe('BigbandFileRunner', () => {
     describe("cloudformation template generation", () => {
 
         function computePushedInstruments(bigbandModel: BigbandModel, names) {
-            return names.map(curr => bigbandModel.searchInstrument(curr))
-                .map(lookupResult => ({
-                        physicalName: lookupResult.physicalName,
+            return names.map(curr => bigbandModel.getInstrument(curr))
+                .map((im: InstrumentModel) => ({
+                        physicalName: im.physicalName,
                         wasPushed: true,
-                        model: lookupResult.instrumentModel,
-                        s3Ref: new S3Ref("my_bucket", `my_prefix/${lookupResult.physicalName}.zip`)
+                        model: im,
+                        s3Ref: new S3Ref("my_bucket", `my_prefix/${im.physicalName}.zip`)
                     }))
         }
         it("places the definition inside template", () => {
@@ -51,7 +52,7 @@ describe('BigbandFileRunner', () => {
                     DeployMode.IF_CHANGED)            
 
             const templateBody = bigbandFileRunner.buildCloudFormationTemplate(
-                computePushedInstruments(bigbandModel, ["f1"]))
+                computePushedInstruments(bigbandModel, ["r1/s1/p1/f1"]))
 
             expect(templateBody).to.eql({
                 "AWSTemplateFormatVersion": "2010-09-09",
@@ -88,7 +89,8 @@ describe('BigbandFileRunner', () => {
             const bigbandFileRunner = new BigbandFileRunner(bigbandModel, bigbandModel.findSectionModel("r1/s1"), true,
                     DeployMode.IF_CHANGED)            
 
-            const templateBody = bigbandFileRunner.buildCloudFormationTemplate(computePushedInstruments(bigbandModel, ["this-is-the-name"]))
+            const templateBody = bigbandFileRunner.buildCloudFormationTemplate(computePushedInstruments(bigbandModel, 
+                ["r1/s1/abc/def/this-is-the-name"]))
 
             expect(templateBody).to.eql({
                 "AWSTemplateFormatVersion": "2010-09-09",
@@ -128,7 +130,7 @@ describe('BigbandFileRunner', () => {
                         DeployMode.IF_CHANGED)            
 
                 const templateBody = bigbandFileRunner.buildCloudFormationTemplate(
-                    computePushedInstruments(bigbandModel, ["f1", "f2"]))
+                    computePushedInstruments(bigbandModel, ["r1/s1/p1/f1", "r1/s1/p2/f2"]))
 
 
                 console.log(JSON.stringify(templateBody, null, 2))

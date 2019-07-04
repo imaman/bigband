@@ -144,7 +144,7 @@ export class BigbandFileRunner {
             Resources: {}
         };
     
-        pushedInstruments.forEach(curr => {
+        for (const curr of pushedInstruments) {
             const def = this.namer.getPhysicalDefinition(curr.model.instrument)
 
             // TODO(imaman): support cross-section wiring
@@ -159,7 +159,7 @@ export class BigbandFileRunner {
 
             const nameInStack = curr.model.instrument.fullyQualifiedName(NameStyle.PASCAL_CASE)
             ret.Resources[nameInStack] = def.get();
-        });
+        }
 
         return ret
     }

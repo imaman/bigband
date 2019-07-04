@@ -88,7 +88,18 @@ describe('InstrumentModel', () => {
             }
 
             const bm = new BigbandModel(bigbandSpec, "_")
+            
             return bm.findSectionModel(s.section.path)
+        }
+
+        function createInstrumentModel(s: SectionSpec, pathToInstrument: string) {
+            const bigbandSpec: BigbandSpec = {
+                bigband: b,
+                sections: [s]
+            }
+
+            const bm = new BigbandModel(bigbandSpec, "_")
+            return bm.getInstrument(pathToInstrument)
         }
 
         it('returns an empty array if no wirings were defined', async () => { 
@@ -99,8 +110,8 @@ describe('InstrumentModel', () => {
                 wiring: []
             }
 
-            const sectionModel = createSectionModel(spec)
-            expect(sectionModel.instruments[0].wirings).to.eql([])
+            const m = createInstrumentModel(spec, "r1/s1/p1/f1")
+            expect(m.wirings).to.eql([])
         });
         it('returns an empty array if no wirings were defined for the given consumer', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
@@ -112,8 +123,8 @@ describe('InstrumentModel', () => {
                 wiring: [w12]
             }
 
-            const sectionModel = createSectionModel(spec)
-            expect(sectionModel.instruments[1].wirings.map(x => x.toString())).to.eql([])
+            const m = createInstrumentModel(spec, "r1/s1/p1/f2")
+            expect(m.wirings.map(x => x.toString())).to.eql([])
         });
         it('returns all wirings for the given consumer', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
@@ -127,8 +138,8 @@ describe('InstrumentModel', () => {
                 wiring: [w12, w13]
             }
 
-            const sectionModel = createSectionModel(spec)
-            expect(sectionModel.instruments[0].wirings.map(x => x.toString())).to.eql([
+            const m = createInstrumentModel(spec, "r1/s1/p1/f1")
+            expect(m.wirings.map(x => x.toString())).to.eql([
                 "r1/s1/p1/f1: w12 -> r1/s1/p1/f2",
                 "r1/s1/p1/f1: w13 -> r1/s1/p1/f3"
             ])
@@ -145,8 +156,8 @@ describe('InstrumentModel', () => {
                 wiring: [w12, w23]
             }
 
-            const sectionModel = createSectionModel(spec)
-            expect(sectionModel.instruments[0].wirings.map(x => x.toString())).to.eql([
+            const m = createInstrumentModel(spec, "r1/s1/p1/f1")
+            expect(m.wirings.map(x => x.toString())).to.eql([
                 "r1/s1/p1/f1: w12 -> r1/s1/p1/f2"
             ])
         });
