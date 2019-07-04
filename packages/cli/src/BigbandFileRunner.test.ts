@@ -174,7 +174,7 @@ describe('BigbandFileRunner', () => {
                 })
             })
         })
-        xit("allows cross-section wiring", () => {
+        it("allows cross-section wiring", () => {
             const f1 = new LambdaInstrument(["p1"], "f1", "src/file_1")
             const f2 = new LambdaInstrument(["p2"], "f2", "src/file_1")
 
@@ -202,10 +202,8 @@ describe('BigbandFileRunner', () => {
                     DeployMode.IF_CHANGED)            
 
             const templateBody = bigbandFileRunner.buildCloudFormationTemplate(
-                computePushedInstruments(bigbandModel, ["f1"]))
+                computePushedInstruments(bigbandModel, ["r1/s1/p1/f1"]))
 
-
-            console.log(JSON.stringify(templateBody, null, 2))
             expect(templateBody).to.eql({
                 "AWSTemplateFormatVersion": "2010-09-09",
                 "Transform": "AWS::Serverless-2016-10-31",

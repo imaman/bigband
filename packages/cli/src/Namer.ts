@@ -17,6 +17,10 @@ export class Namer {
         const arn = `arn:aws:${instrument.arnService()}:${this.section.region}:` + 
                 `${this.bigband.awsAccount}:${instrument.arnType()}${physicalName}`;
 
+        // TODO(imaman): omit dashes from the arn and physical names. use dashses only for separating path components:
+        //      <reg>-<sec>-<p1>-<p2>-<namme>
+        // This will help in reducing the length of the physical name/ARN
+        // TODO(imaman): validate that no two instruments have the same dash-omitted physical name
         return new ResolvedName(instrument.fullyQualifiedName(), physicalName, arn)
     }
 
