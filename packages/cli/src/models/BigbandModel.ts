@@ -46,7 +46,7 @@ interface InspectedItem {
 export class BigbandModel {
 
     private readonly sectionByPath = new Map<string, SectionModel>()
-    private readonly instrumentByPath = new Map<string, InstrumentModel>()
+    private readonly instrumentModelByPath = new Map<string, InstrumentModel>()
 
     public readonly dir: string
     constructor(private readonly spec: BigbandSpec, defaultDir: string) {
@@ -74,10 +74,10 @@ export class BigbandModel {
                 const wires: WireModel[] = []
                 
                 const im = new InstrumentModel(this.spec.bigband, s.section, i, wires, false)
-                if (this.instrumentByPath.has(im.path)) {
+                if (this.instrumentModelByPath.has(im.path)) {
                     throw new Error(`Instrument path collision. two (or more) instruments share the same path: "${im.path}"`)
                 }
-                this.instrumentByPath.set(im.path, im)
+                this.instrumentModelByPath.set(im.path, im)
                 acc.push(im)
                 wiresByInstrumentPath.set(im.path, wires)
             }
@@ -138,7 +138,7 @@ export class BigbandModel {
      * @returns {InstrumentModel}
      */
     getInstrument(path: string): InstrumentModel {
-        const ret = this.instrumentByPath.get(path)
+        const ret = this.instrumentModelByPath.get(path)
         if (!ret) {
             throw new Error(`No instrument was found at path "${path}"`)
         }
@@ -207,7 +207,7 @@ export class BigbandModel {
     }
 
     private get instruments(): InstrumentModel[] {
-        const ret = [...this.instrumentByPath.values()]
+        const ret = [...this.instrumentModelByPath.values()]
         ret.sort(byPath)
         return ret
     }
