@@ -1,5 +1,6 @@
 import * as chai from 'chai';
 import chaiSubset = require('chai-subset');
+import * as tmp from 'tmp'
 
 chai.use(chaiSubset);
 const {expect} = chai;
@@ -23,6 +24,28 @@ describe('BigbandFileRunner', () => {
         s3Prefix: "my_prefix"
     }
     const b = new Bigband(bigbandInit)
+
+    describe("compilation", async () => {
+        const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
+
+        const spec: BigbandSpec = {
+            bigband: b,
+            sections: [{
+                section: new Section("r1", "s1"), 
+                instruments: [f1],
+                wiring: []
+            }]
+        }
+
+        const bigbandModel = new BigbandModel(spec, "somedir")
+        const section = bigbandModel.findSectionModel("r1/s1")
+        const instrument = bigbandModel.getInstrument('r1/s1/p1/f1')
+        
+        const bigbandFileRunner = new BigbandFileRunner(bigbandModel, section, true, DeployMode.IF_CHANGED)            
+        const dir = tmp.dirSync() 
+        throw new Error('dir='+ dir)       
+        await bigbandFileRunner.pushCode(dir, dir, instrument)
+    })
 
     describe("cloudformation template generation", () => {
 
@@ -132,8 +155,6 @@ describe('BigbandFileRunner', () => {
                 const templateBody = bigbandFileRunner.buildCloudFormationTemplate(
                     computePushedInstruments(bigbandModel, ["r1/s1/p1/f1", "r1/s1/p2/f2"]))
 
-
-                console.log(JSON.stringify(templateBody, null, 2))
                 expect(templateBody).to.eql({
                     "AWSTemplateFormatVersion": "2010-09-09",
                     "Transform": "AWS::Serverless-2016-10-31",

@@ -147,11 +147,10 @@ export class BigbandFileRunner {
         for (const curr of pushedInstruments) {
             const def = this.namer.getPhysicalDefinition(curr.model.instrument)
 
-            // TODO(imaman): support cross-section wiring
-            curr.model.wirings.forEach((wireModel: WireModel) => {
+            for (const wireModel of curr.model.wirings) {
                 const arn = wireModel.supplier.arn
                 wireModel.supplier.instrument.contributeToConsumerDefinition(wireModel.consumer.section, def, arn);
-            });
+            }
     
             if (curr.s3Ref.isOk()) {
                 def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri());
@@ -164,7 +163,7 @@ export class BigbandFileRunner {
         return ret
     }
 
-    private async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel)
+    async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel)
             : Promise<PushedInstrument> {
         if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
             throw new Error(`Bad value. ${dir} is not a directory.`);
@@ -210,9 +209,9 @@ export class BigbandFileRunner {
     
             const mapping = {};
             // TODO(imaman): coverage
-            instrumentModel.wirings.forEach(wireModel => {
+            for (const wireModel of instrumentModel.wirings) {
                 mapping[wireModel.name] = {name: wireModel.supplier.physicalName, region: section.region};
-            });
+            }
             frag.add(new DeployableAtom('bigband/deps.js', 
                 `module.exports = ${JSON.stringify(mapping)}`));
     
@@ -238,7 +237,7 @@ export class BigbandFileRunner {
     
             return {zb, packager}
         } catch (e) {
-            e.message = `(instrument: "${instrument.fullyQualifiedName()}", rootDir: "${d}", npmPackageDir: ` + 
+            e.message = `(instrument: "${instrumentModel.path}", rootDir: "${d}", npmPackageDir: ` + 
                 `"${npmPackageDir}") ${e.message}`;
             throw e;
         }
