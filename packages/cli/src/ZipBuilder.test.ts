@@ -86,7 +86,7 @@ describe('ZipBuilder', () => {
             const str = await zip.file('a/b/commands/Logs.ts').async('text');
             expect(str).to.contain('let describeLogStreamsResp: DescribeLogStreamsResponse');
 
-            expect(zip.file('a/b/commands/Invoke.ts')).to.be.not.null;
+            expect(zip.file('a/b/commands/Exec.ts')).to.be.not.null;
             expect(zip.file('a/b/commands/fdkm39mfdndmf')).to.be.null;
         });
     });
@@ -175,7 +175,7 @@ describe('ZipBuilder', () => {
         //     DhfmFU/JVuW/E5mTHRV9Ko7YI4Cz/9xaMOLKtTAlTdA=
         //     MgRwaKqyz7Cmz0GW+fDxMjPp7vg2WiKALu7yycgaWzs=
 
-        xit('can scan a node_modules directory and merge it', async () => {
+        it('can scan a node_modules directory and merge it', async () => {
             const zb = new ZipBuilder();
             const fragA = zb.newFragment();
             fragA.scan('node_modules/moment', path.resolve(__dirname, '../../example/node_modules/moment'));
@@ -189,7 +189,7 @@ describe('ZipBuilder', () => {
             const mergedPojo = await ZipBuilder.toPojo(mergedBuffer);
             comparePojos(originalPojo, mergedPojo);
         });
-        xit('roundtrips without losing a bit', async () => {
+        it('roundtrips without losing a bit', async () => {
             const zb = new ZipBuilder();
             const fragA = zb.newFragment();
             fragA.scan('node_modules/moment', path.resolve(__dirname, '../../example/node_modules/moment'));

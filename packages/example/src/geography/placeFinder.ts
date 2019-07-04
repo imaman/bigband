@@ -30,12 +30,17 @@ export async function runLambda(context, event, mapping) {
 
     const timePassed = 'N/A'; //moment(`2015-09-21`).fromNow();
 
+    if (answers.length) {
+        console.log(`top answer for "${q}" is "${answers[0].answer}"`)
+    } else {
+        console.log(`No answer for "${q}"`)
+    }
     return {
         statusCode: 200,
         headers: { 
           "content-type": 'application/json', 
         },
-        body: {query: q, timePassed, bylineKeys: Object.keys(byline), inputLength: q.length, answers: answers.map(curr => curr.answer)}
+        body: {query: q, timePassed, bylineKeys: Object.keys(byline), inputLength: "__3_" + q.length, answers: answers.map(curr => curr.answer)}
     };
 }
 

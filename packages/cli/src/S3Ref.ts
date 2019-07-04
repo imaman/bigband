@@ -1,7 +1,7 @@
 import { AwsFactory } from './AwsFactory';
 
 export class S3Ref {
-  constructor(public readonly s3Bucket, public readonly s3Key) {}
+  constructor(public readonly s3Bucket: string, public readonly s3Key: string) {}
 
   static EMPTY = new S3Ref("", "");
 

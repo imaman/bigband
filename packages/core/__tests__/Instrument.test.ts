@@ -7,7 +7,7 @@ const {expect} = chai;
 import 'mocha';
 
 
-import {Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType, NameStyle, Bigband} from '../src'
+import {Section, DynamoDbInstrument, LambdaInstrument, DynamoDbAttributeType, NameStyle} from '../src'
 
 function newLambda(packageName: string[], name: string, controllerPath: string, cloudFormationProperties?) {
     return new LambdaInstrument(packageName, name, controllerPath, cloudFormationProperties);
@@ -15,27 +15,7 @@ function newLambda(packageName: string[], name: string, controllerPath: string, 
 
 
 describe('Instruments', () => {
-    describe('cando', () => {
-        it ('adds an IAM policy', () => {
-            const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-
-            instrument.canDo('uvw:xyz', 'arn:aws:something:foo:bar')
-            expect(instrument.getDefinition().get()).to.containSubset({Properties: {
-                Policies: [{
-                    Statement: [{
-                        Action: ['uvw:xyz'],
-                        Effect: 'Allow',
-                        Resource: 'arn:aws:something:foo:bar'
-                    }]
-                }]
-            }});
-        });
-
-        it ('rejects package name that contain dashses', () => {
-            expect(() => newLambda(['x-y'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "x-y"');
-            expect(() => newLambda(['xy-'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "xy-"');
-            expect(() => newLambda(['x', '-', 'y'], 'abc', '')).to.throw('The hyphen symbol is not allowed in package names. Found: "-"');
-        });
+    describe('naming', () => {
         it ('rejects package name that contain uppercase letters', () => {
             expect(() => newLambda(['foo', 'Bar'], 'abc', '')).to.throw('Upper-case symbols are not allowed in package names. Found: "Bar"');
             expect(() => newLambda(['Foo', 'bar'], 'abc', '')).to.throw('Upper-case symbols are not allowed in package names. Found: "Foo"');
@@ -46,31 +26,17 @@ describe('Instruments', () => {
     describe('bigband', () => {
         it('can be initialized from an object', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-            const bigband = new Bigband({
-                name: "bigband_1",
-                awsAccount: "acc_300",
-                profileName: "p_1",
-                s3Bucket: "b_1",
-                s3Prefix: "s_1"
-            });
-            const rig = new Section(bigband, "eu-central-1", "prod-main");
-            expect(instrument.arn(rig)).to.equal('arn:aws:lambda:eu-central-1:acc_300:function:bigband_1-prod-main-p1-p2-p3-abc');
+            expect(instrument.name).to.equal("abc")
+            expect(instrument.fullyQualifiedName()).to.equal("p1-p2-p3-abc")
         })
     })
-
-    function newBigband(awsAccount, name, s3Bucket, s3Prefix, profileName) {
-        return new Bigband({awsAccount, name, s3Bucket, s3Prefix, profileName})
-    }
 
     describe('Lambda', () => {
         it('produces cloudformation', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.getPhysicalDefinition(rig).get()).to.deep.equal({
+            expect(instrument.getDefinition().get()).to.deep.equal({
                 Type: "AWS::Serverless::Function",
                 Properties: {
-                    FunctionName: "scope_1-prod-main-p1-p2-p3-abc",
                     Handler: "p1-p2-p3-abc_Handler.handle",
                     Runtime: "nodejs8.10",
                     Policies: [],
@@ -86,25 +52,39 @@ describe('Instruments', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
             expect(instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)).to.equal('p1P2P3Abc');
         });
+        describe("fullyQualifiedName() - PascalCased", () => {
+            function toPascalCase(path: string[], name: string) {
+                return newLambda(path, name, '').fullyQualifiedName(NameStyle.PASCAL_CASE)
+            }
+
+            it("concatenates tokens, capitalizing the first letter", () => {
+                expect(toPascalCase(["buffered", "input"], "stream")).to.equal("BufferedInputStream")
+            })
+            it("rejects inputs with multiple consecutive dash signs", () => {
+                expect(() => toPascalCase(["buffered--input"], "stream-"))
+                        .to.throw('One of the tokens ("buffered--input") contains multiple consecutive dash signs')
+            })
+            it("it treats dash-separated tokens as individual tokens", () => {
+                expect(toPascalCase(["progress-monitor-input"], "stream")).to.equal("ProgressMonitorInputStream")
+            })
+        })
         it('has ARN', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.arn(rig)).to.equal('arn:aws:lambda:eu-central-1:acc_100:function:scope_1-prod-main-p1-p2-p3-abc');
+            expect(instrument.arnService()).to.equal('lambda')
+            expect(instrument.arnType()).to.equal('function:')
         });
         it('contributes to consumers', () => {
             const consumer = newLambda(['p1', 'p2', 'p3'], 'c1', '');
             const supplier = newLambda(['p4', 'p5', 'p6'], 'c2', '');
 
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_2");
-            const rig = new Section(scope, "eu-central-1", "prod-main");
-            supplier.contributeToConsumerDefinition(rig, consumer.getDefinition());
+            const section = new Section("eu-central-1", "prod-main");
+            supplier.contributeToConsumerDefinition(section, consumer.getDefinition(), "ARN_OF_SUPPLIER");
             expect(consumer.getDefinition().get()).to.containSubset({Properties: {
                 Policies: [{
                     Statement: [{
                         Action: ['lambda:InvokeFunction'],
                         Effect: 'Allow',
-                        Resource: 'arn:aws:lambda:eu-central-1:acc_100:function:scope_1-prod-main-p4-p5-p6-c2'
+                        Resource: 'ARN_OF_SUPPLIER'
                     }]
                 }]
             }});
@@ -112,14 +92,10 @@ describe('Instruments', () => {
     });
     describe('Dynamo', () => {
         it('produces yml', () => {
-            debugger;
             const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', {name: 'id', type: DynamoDbAttributeType.STRING});
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.getPhysicalDefinition(rig).get()).to.deep.equal({
+            expect(instrument.getDefinition().get()).to.deep.equal({
                 Type: "AWS::DynamoDB::Table",
                 Properties: {
-                    TableName: "scope_1-prod-main-p1-p2-p3-table_1",
                     AttributeDefinitions: [{
                         AttributeName: "id",
                         AttributeType: "S"
@@ -136,9 +112,7 @@ describe('Instruments', () => {
             const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING},
                 {name: 'n', type: DynamoDbAttributeType.NUMBER});
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
+            expect(instrument.getDefinition().get()).to.containSubset({
                 Properties: {
                     AttributeDefinitions: [
                         { AttributeName: "id", AttributeType: "S" }, 
@@ -154,9 +128,7 @@ describe('Instruments', () => {
         it('uses pay-per-request, by default', () => {
             const instrument = new DynamoDbInstrument(['p1', 'p2', 'p3'], 'table_1', 
                 {name: 'id', type: DynamoDbAttributeType.STRING});
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
+            expect(instrument.getDefinition().get()).to.containSubset({
                 Properties: {
                     BillingMode: 'PAY_PER_REQUEST'
                 }
@@ -172,9 +144,7 @@ describe('Instruments', () => {
                       writeCapacityUnits: 576
                   }
                 });
-            const scope = newBigband("acc_100", "scope_1", "b_1", "s_1", "p_1");
-            const rig = new Section(scope, "eu-central-1", "prod-main");
-            expect(instrument.getPhysicalDefinition(rig).get()).to.containSubset({
+            expect(instrument.getDefinition().get()).to.containSubset({
                 Properties: {
                     BillingMode: 'PROVISIONED',
                     ProvisionedThroughput: {

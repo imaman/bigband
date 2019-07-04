@@ -15,6 +15,7 @@ export class LambdaInstrument extends Instrument {
 
     private npmPackageName: string = '';
 
+    // TODO(imaman): replace :any with something more precise
     constructor(packageName: string|string[], name: string, private readonly controllerPath: string, cloudFormationProperties: any = {}) {
         super(packageName, name);
 
@@ -128,7 +129,7 @@ export class LambdaInstrument extends Instrument {
         return fragment;
     }
 
-    contributeToConsumerDefinition(rig: Section, consumerDef: Definition) {
+    contributeToConsumerDefinition(section: Section, consumerDef: Definition, myArn: string) {
         consumerDef.mutate(o => o.Properties.Policies.push({
             Version: '2012-10-17',
             Statement: [{ 
@@ -136,7 +137,7 @@ export class LambdaInstrument extends Instrument {
                 Action: [
                   'lambda:InvokeFunction'
                 ],
-                Resource: this.arn(rig)
+                Resource: myArn
             }]
         }));
     }

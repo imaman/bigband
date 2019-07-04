@@ -20,7 +20,7 @@ describe('deployablefragment', () => {
             const arr: DeployableAtom[] = [];
             frag.forEach(a => arr.push(a));
 
-            expect(arr.map(a => a.path)).to.include('x/y/commands/Invoke.ts');
+            expect(arr.map(a => a.path)).to.include('x/y/commands/Exec.ts');
         });
 
         it('scans this folder', () => {

@@ -25,4 +25,31 @@ export class Misc {
         bigbandPackageDir = bigbandPackageDir || findPackageDir();
         return bigbandPackageDir;
     }
+
+    static flatten<T>(arr: T[][]): T[] {
+        const ret: T[] = []
+        arr.forEach(curr => {
+            curr.forEach(t => ret.push(t))
+        })
+        return ret
+    }
+
+    static checkDuplicates(names: string[]): string[] {
+        const uniqueNames = new Set<string>(names);
+        if (uniqueNames.size === names.length) {
+            return [];
+        }
+    
+        const ret: string[] = [];
+        names.forEach(n => {
+            if (uniqueNames.has(n)) {
+                uniqueNames.delete(n);
+            } else {
+                ret.push(n);
+            }
+        });
+    
+        ret.sort()
+        return ret;
+    }    
 }

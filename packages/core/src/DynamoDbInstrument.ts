@@ -79,7 +79,7 @@ export class DynamoDbInstrument extends Instrument {
         return new DeployableFragment();
     }
 
-    contributeToConsumerDefinition(rig: Section, consumerDef: Definition): void {
+    contributeToConsumerDefinition(section: Section, consumerDef: Definition, myArn: string): void {
         consumerDef.mutate(o => o.Properties.Policies.push({
             Version: '2012-10-17',
             Statement: [{ 
@@ -87,7 +87,7 @@ export class DynamoDbInstrument extends Instrument {
                 Action: [
                   'dynamodb:*'
                 ],
-                Resource: this.arn(rig)
+                Resource: myArn
             }]
         }));
     }

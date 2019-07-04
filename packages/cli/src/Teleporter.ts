@@ -78,7 +78,7 @@ export class Teleporter {
         return results.map(curr => curr.handle);
     }
 
-    private async mergeFragments(handles: BlobPoolHandle[], s3Ref: S3Ref, instrumentName: string): Promise<number> {
+    private async mergeFragments(handles: BlobPoolHandle[], s3Ref: S3Ref): Promise<number> {
         const buffers: Buffer[] = await Promise.all(handles.map(k => this.blobPool.get(k)));
         const buf: Buffer = await ZipBuilder.merge(buffers);
 
@@ -86,9 +86,9 @@ export class Teleporter {
         return buf.byteLength;
     }
 
-    public async nonIncrementalTeleport(zipBuilder: ZipBuilder, destination: S3Ref, instrumentName: string): Promise<number> {
+    public async nonIncrementalTeleport(zipBuilder: ZipBuilder, destination: S3Ref): Promise<number> {
         const delta = await this.uploadFragments(zipBuilder);
-        return await this.mergeFragments(delta, destination, instrumentName);    
+        return await this.mergeFragments(delta, destination);    
     }
 
     public async teleport(zipBuilder: ZipBuilder) {

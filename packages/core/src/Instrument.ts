@@ -4,12 +4,9 @@ import {Definition} from './Definition';
 
 export enum NameStyle {
     DASH,
-    CAMEL_CASE
-}
-
-
-class Dependency {
-    constructor(readonly consumer: Instrument, readonly supplier: Instrument, readonly name: string) {}
+    CAMEL_CASE,
+    PASCAL_CASE,
+    SLASH
 }
 
 
@@ -21,15 +18,13 @@ class Dependency {
  * arranged in directories). This enables logical grouping of related instruments. The packageName (denoting a "path
  * in the tree") is specified as an array of string: ["p1", "p2", "p3"] denotes a package nested inside the
  * ["p1", "p2"] package. For brevity, a packageName can also be specified as a plain string: "p1" is equivalent to
- * ["p1"]. The instrument's plain name is must be unique within its package. In other words: two instruments can have
+ * ["p1"]. The instrument's plain name must be unique within its package. In other words: two instruments can have
  * the same simple name if they belond to two different packages.
  */
 export abstract class Instrument {
 
     protected readonly definition = new Definition();
-    public readonly dependencies: Dependency[] = [];
     private readonly packageName: string[];
-
 
     /**
      * Initializes an Instrument.
@@ -38,61 +33,19 @@ export abstract class Instrument {
      * @param {string} plainName the instrument's simple name (must be unique within its package). See "Naming" above.
      * @memberof Instrument
      */
-    constructor(packageName: string|string[], private readonly _name: string) {
+    constructor(packageName: string|string[], public readonly name: string) {
         this.packageName = (Array.isArray(packageName) ? packageName : [packageName]);
         if (!this.packageName.join('').trim().length) {
             throw new Error('pacakge name cannot be empty');
-        }
-
-        const withHyphen = this.packageName.find(curr => curr.includes('-'));
-        if (withHyphen) {
-            throw new Error(`The hyphen symbol is not allowed in package names. Found: "${withHyphen}"`);
         }
 
         const withUpperCase = this.packageName.find(curr => curr.search(/[A-Z]/) >= 0)
         if (withUpperCase) {
             throw new Error(`Upper-case symbols are not allowed in package names. Found: "${withUpperCase}"`);
         }
-        if (!this._name.trim().length) {
+        if (!this.name.trim().length) {
             throw new Error('name cannot be empty');
         }
-    }
-
-    /**
-     * Declares an inter-instrument dependency. It indicates that this instrument ("the consumer") will use the
-     * supplier instrument
-     *  
-     * @param supplier the supplier instrument.
-     * @param name the name of the dependency. 
-     */
-    uses(supplier: Instrument, name: string) {
-        const existingDep = this.dependencies.find(d => d.name === name);
-        if (existingDep) {
-            throw new Error(`Name conflict. This instrument (${this.fullyQualifiedName()}) already has a dependency named ${name} (on ${existingDep.supplier.fullyQualifiedName()})`);
-        }
-        this.dependencies.push(new Dependency(this, supplier, name));
-    }
-    
-    /**
-     * Adds an IAM permission to this instrument
-     *
-     * @param {string} action the action to be allowed 
-     * @param {string} arn specifies the resource that this instrument is being granted permission to access   
-     * @returns this
-     * @memberof Instrument
-     */
-    canDo(action: string, arn: string) {
-        this.definition.mutate(o => o.Properties.Policies.push({
-            Version: '2012-10-17',
-            Statement: [{ 
-                Effect: "Allow",
-                Action: [
-                  action,
-                ],
-                Resource: arn
-            }]
-        }));      
-        return this;
     }
 
     /**
@@ -101,7 +54,6 @@ export abstract class Instrument {
      */
     abstract createFragment(pathPrefix: string): DeployableFragment
 
-
     /**
      * Called on supplier instruments (as per the [[uses]] method). This allows supplier instruments to affect the
      * cloudformation template of their consumer insturments. A supplier would typically add an IAM permission to its
@@ -109,7 +61,7 @@ export abstract class Instrument {
      * @param section 
      * @param consumerDef 
      */
-    abstract contributeToConsumerDefinition(section: Section, consumerDef: Definition): void
+    abstract contributeToConsumerDefinition(section: Section, consumerDef: Definition, myArn: string): void
 
     /**
      * Returns the AWS service namespace to be used when constructing the ARN of this instrument. For instance, in a
@@ -140,14 +92,6 @@ export abstract class Instrument {
     abstract getEntryPointFile(): string
 
     /**
-     * Returns the plain name of this instrument.
-     */
-    name(): string {
-        return this._name;
-    }
-
-
-    /**
      * Computes the full name of this instrument. The full name is a composition of the "last name" (as specified by the
      * package name) with the "first name" (this instrument's name)
      *
@@ -156,42 +100,37 @@ export abstract class Instrument {
      * @memberof Instrument
      */
     fullyQualifiedName(style: NameStyle = NameStyle.DASH) {
-        if (style == NameStyle.DASH) {
-            return this.packageName.concat(this.name()).join('-');
+        const tokens = this.packageName.concat(this.name)
+        if (style == NameStyle.CAMEL_CASE) {
+            return toCamelCase(tokens)
+        } 
+        
+        if (style == NameStyle.PASCAL_CASE) {
+            return toPascalCase(tokens)        
         }
-        const ret = camelCase(this.packageName.concat(this.name()));
-        return ret;
+
+        if (style == NameStyle.SLASH) {
+            return tokens.join("/")
+        }
+
+        return tokens.join('-');
     }
 
-    /**
-     * Computes the physical name of the instrument at the given section. The physical name contains the names of the
-     * enclosing bigband and section as well as the [[fullyQualifiedName]].
-     * @param section
-     */
-    physicalName(section: Section) {
-        return `${section.isolationScope.name}-${section.name}-${this.fullyQualifiedName()}`;
-    }
-    
-    /**
-     * Computes the ARN of this instrument at the given section
-     * @param section 
-     */
-    arn(section: Section): string {
-        return `arn:aws:${this.arnService()}:${section.region}:${section.isolationScope.awsAccount}:${this.arnType()}${this.physicalName(section)}`;
+    get topLevelPackageName(): string {
+        return this.packageName.length === 0 ? "" : this.packageName[0]
     }
 
     getDefinition() : Definition {
         return this.definition;
     }
 
-    getPhysicalDefinition(section: Section) : Definition {
-        const copy = JSON.parse(JSON.stringify(this.definition.get()));
-        copy.Properties[this.nameProperty()] = this.physicalName(section);
-        return new Definition(copy);
+    // TODO(imaman): rename this. "path" now denotes the full path to an instrument not just it "directories"path()
+    get path(): string {
+        return this.fullyQualifiedName(NameStyle.SLASH)
     }
 }
 
-function camelCase(...args) {
+function toCamelCase(...args) {
     function capitalize(s: string) {
         if (!s) {
             throw new Error('Cannot capitalize an empty string');
@@ -200,4 +139,26 @@ function camelCase(...args) {
     }
 
     return [].concat(...args).map((curr, i) => i === 0 ? curr : capitalize(curr)).join('');
+}
+
+function toPascalCase(tokens: string[]) {
+    const violation = tokens.find(curr => curr.indexOf("--") >= 0)
+    if (violation) {
+        throw new Error(`One of the tokens ("${violation}") contains multiple consecutive dash signs`)
+    }
+    
+    return flatten(tokens.map(curr => curr.split("-")))
+        .filter(s => Boolean(s))
+        .map(curr => curr.substr(0, 1).toUpperCase() + curr.substr(1)).join('')
+}
+
+function flatten(input: string[][]): string[] {
+    const ret: string[] = [];
+    for (const a  of input) {
+        for (const b of a) {
+            ret.push(b);
+        }
+    }
+
+    return ret
 }

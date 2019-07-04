@@ -1,16 +1,15 @@
 import {AwsFactory} from '../AwsFactory'
 import { DescribeLogStreamsRequest, GetLogEventsRequest, GetLogEventsResponse, DescribeLogStreamsResponse } from 'aws-sdk/clients/cloudwatchlogs';
-import {loadSpec} from '../BigbandFileRunner';
-import {lookupFunction} from './Invoke';
-
-
+import {BigbandFileRunner} from '../BigbandFileRunner';
+import { LookupResult } from '../models/BigbandModel';
 
 async function main(bigbandFile: string, lambdaName: string, limit: number) {
-    const spec = await loadSpec(bigbandFile);
-    const {rig, instrument} = lookupFunction(lambdaName, spec);
+    const model = await BigbandFileRunner.loadModel(bigbandFile);
+    // TODO(imaman): fail if this is not a lambda instrument
+    const lookupResult: LookupResult = model.searchInspect(lambdaName);
 
-    const cloudWatchLogs = new AwsFactory(rig.region, rig.isolationScope.profileName).newCloudWatchLogs();
-    const logGroupName = `/aws/lambda/${instrument.physicalName(rig)}`;
+    const cloudWatchLogs = AwsFactory.fromSection(lookupResult.sectionModel).newCloudWatchLogs();
+    const logGroupName = `/aws/lambda/${lookupResult.physicalName}`;
 
     const describeLogStreamsReq: DescribeLogStreamsRequest = {
         logGroupName,
@@ -107,7 +106,7 @@ function shouldKeep(message?: string) {
 
 export class LogsCommand {
     static async run(argv) {
-        const temp = await main(argv.bigbandFile, argv.functionName, argv.limit);
+        const temp = await main(argv.bigbandFile, argv.path, argv.limit);
         return JSON.stringify(temp, null, 2);
     }
 }

@@ -2,9 +2,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as hash from 'hash.js'
 const Module = require('module');
+require('ts-node').register({})
 
 import { AwsFactory } from './AwsFactory';
-import { NameStyle, Section, Instrument, LambdaInstrument } from 'bigband-core';
+import { BigbandSpec, NameStyle, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult, DeployMode } from './Packager'
 import { DeployableAtom } from 'bigband-core'
 import { ZipBuilder } from './ZipBuilder'
@@ -15,329 +16,295 @@ import { logger } from './logger';
 import { S3BlobPool } from './Teleporter';
 import { Misc } from './Misc';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME } from './scotty';
+import { BigbandModel } from './models/BigbandModel';
+import { SectionModel } from './models/SectionModel';
+import { InstrumentModel } from './models/InstrumentModel';
+import { Namer } from './Namer';
+import { WireModel } from './models/WireModel';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
-export {DeployMode} from './Packager'
+export { DeployMode } from './Packager'
 
-export async function runBigbandFile(bigbandFile: string, sectionName: string, teleportingEnabled: boolean, deployMode: DeployMode) {
-    const t0 = Date.now();
-    if (Number(process.versions.node.split('.')[0]) < 8) {
-        throw new Error('You must use node version >= 8 to run this program');
-    }
-    const bigbandSpec = await loadSpec(bigbandFile);
-    const section = bigbandSpec.sections.length === 1 && !sectionName ? bigbandSpec.sections[0] : bigbandSpec.sections.find(curr => curr.name === sectionName);
-    if (!section) {
-        throw new Error(`Failed to find a rig named ${sectionName} in ${bigbandSpec.sections.map(curr => curr.name).join(', ')}`);
-    }
-
-    await Promise.all([runSpec(bigbandSpec, section, teleportingEnabled, deployMode), configureBucket(section)]);
-    const dt = (Date.now() - t0) / 1000;
-    return `Section "${section.name}" shipped in ${dt.toFixed(1)}s`;        
-}
-
-export interface BigbandSpec {
-    sections: Section[]
-    instruments: Instrument[]
-    dir: string
-}
-
-export async function runSpec(bigbandSpec: BigbandSpec, rig: Section, teleportingEnabled: boolean, deployMode: DeployMode) {
-    // Check that user-supplied instruments do not put instruments inside the "bigband" package (as "bigband" is
-    // reserved for bigband's own use).
-    // Naturally, this check must take place before we introduce bigband's own instruments.
-    const violation = bigbandSpec.instruments.find(curr => curr.fullyQualifiedName().toLowerCase().startsWith('bigband'))
-    if (violation) {
-        throw new Error(`Instrument "${violation.fullyQualifiedName()}" has a bad name: the fully qualified name of\n`
-            + `an\n instrument is not allowed to start with "bigband"`);
-    }
-
-    const cfp = new CloudFormationPusher(rig);
-    cfp.peekAtExistingStack();
-
-    const poolPrefix = `${ttlPrefix(rig)}/fragments`;
-    const blobPool = new S3BlobPool(AwsFactory.fromRig(rig), rig.isolationScope.s3Bucket, poolPrefix);
-
-    const teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
-        Description: 'Rematerializes a deployable at the deployment site',
-        MemorySize: 2560,
-        Timeout: 30
-        })
-        .fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME)
-        .canDo('s3:GetObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${poolPrefix}/*`)
-        .canDo('s3:PutObject', `arn:aws:s3:::${rig.isolationScope.s3Bucket}/${rig.isolationScope.s3Prefix}/${DEPLOYABLES_FOLDER}/*`);
-
-
-    logger.info(`Shipping section "${rig.name}" to ${rig.region}`);
-
-    const ps = bigbandSpec.instruments.map(instrument => 
-        pushCode(bigbandSpec.dir, bigbandSpec.dir, rig, instrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
-
-    // scotty needs slightly different parameters so we pushCode() it separately. 
-    ps.push(pushCode(Misc.bigbandPackageDir(), bigbandSpec.dir, rig, teleportInstrument, teleportInstrument, blobPool, teleportingEnabled, deployMode));
-    
-    const pushedInstruments = await Promise.all(ps);
-
-    const stack = {
-        AWSTemplateFormatVersion: '2010-09-09',
-        Transform: 'AWS::Serverless-2016-10-31',
-        Description: "description goes here",
-        Resources: {}
-    };
-
-    pushedInstruments.forEach(curr => {
-        const def = curr.instrument.getPhysicalDefinition(rig);
-        curr.instrument.dependencies.forEach(d => {
-            d.supplier.contributeToConsumerDefinition(rig, def);
-        });
-
-        if (curr.s3Ref.isOk()) {
-            def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri());
-        }
-
-        stack.Resources[curr.instrument.fullyQualifiedName(NameStyle.CAMEL_CASE)] = def.get();
-    });
-
-    await cfp.deploy(stack)
-    const lambda = AwsFactory.fromRig(rig).newLambda();
-
-    await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
-        const req: UpdateFunctionCodeRequest = {
-            FunctionName: curr.physicalName,
-            S3Bucket: curr.s3Ref.s3Bucket,
-            S3Key: curr.s3Ref.s3Key
-        };    
-        try {
-            return await lambda.updateFunctionCode(req).promise();
-        } catch (e) {
-            logger.error(`lambda.updateFunctionCode failure (${JSON.stringify(req)})`, e);
-            throw new Error(`Failed to update code of ${curr.physicalName}`);
-        }
+function grantPermission(instrument: Instrument, action: string, arn: string) {
+    instrument.getDefinition().mutate(o => o.Properties.Policies.push({
+        Version: '2012-10-17',
+        Statement: [{ 
+            Effect: "Allow",
+            Action: [
+              action,
+            ],
+            Resource: arn
+        }]
     }));
 }
 
-let numChangesToModuleRequire = 0;
-function installCustomRequire() {
-    if (numChangesToModuleRequire > 0) {
-        throw new Error(`numChangesToModuleRequire expected to be zero (was: ${numChangesToModuleRequire})`);
+
+export interface PushedInstrument {
+    s3Ref: S3Ref
+    wasPushed: boolean
+    physicalName: string
+    model: InstrumentModel
+}
+
+
+// TODO(imaman): coverage. can be hard.
+export class BigbandFileRunner {
+    private readonly awsFactory: AwsFactory
+    private readonly poolPrefix: string
+    private readonly blobPool: S3BlobPool
+    private readonly teleportInstrument: Instrument
+    private readonly namer: Namer
+
+    constructor(private readonly bigbandModel: BigbandModel, 
+        private readonly sectionModel: SectionModel, 
+        private readonly teleportingEnabled: boolean, 
+        private readonly deployMode: DeployMode) {
+            this.awsFactory = AwsFactory.fromSection(this.sectionModel)
+            this.poolPrefix = `${this.ttlPrefix()}/fragments`;
+            this.blobPool = new S3BlobPool(this.awsFactory, this.bigbandModel.bigband.s3Bucket, this.poolPrefix);
+            this.teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
+                Description: 'Rematerializes a deployable at the deployment site',
+                MemorySize: 2560,
+                Timeout: 30
+            }).fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME);
+        
+            this.namer = new Namer(bigbandModel.bigband, sectionModel.section)
+    
+        }
+
+    // TODO(imaman): rename to ship()
+    static async runBigbandFile(bigbandFile: string, pathToSection: string, teleportingEnabled: boolean, deployMode: DeployMode) {
+        const t0 = Date.now();
+        if (Number(process.versions.node.split('.')[0]) < 8) {
+            throw new Error('You must use node version >= 8 to run this program');
+        }
+        const bigbandModel = await BigbandFileRunner.loadModel(bigbandFile);
+        const sectionModel = bigbandModel.findSectionModel(pathToSection)
+        
+        const flow = new BigbandFileRunner(bigbandModel, sectionModel, teleportingEnabled, deployMode)
+
+        await Promise.all([flow.runSpec(), flow.configureBucket()]);
+        const dt = (Date.now() - t0) / 1000;
+        return `Section "${sectionModel.section.name}" shipped in ${dt.toFixed(1)}s`;        
     }
 
-    numChangesToModuleRequire += 1;
-    const originalRequire = Module.prototype.require;
+    private async runSpec() {
+        const cfp = new CloudFormationPusher(this.awsFactory);
+        cfp.peekAtExistingStack();
+            
+        grantPermission(this.teleportInstrument, 's3:GetObject', 
+            `arn:aws:s3:::${this.bigbandModel.bigband.s3Bucket}/${this.poolPrefix}/*`);
+    
+        grantPermission(this.teleportInstrument, 's3:PutObject',
+            `arn:aws:s3:::${this.bigbandModel.bigband.s3Bucket}/${this.bigbandModel.bigband.s3Prefix}/` + 
+                `${DEPLOYABLES_FOLDER}/*`);
+        
+        const section = this.sectionModel.section
+        logger.info(`Shipping section "${section.name}" to ${section.region}`);
+    
+        const dir = this.bigbandModel.dir
+        if (!dir) {
+            throw new Error('Found a fasly dir') 
+        }
+    
+        const ps = this.sectionModel.instruments.map(im => this.pushCode(dir, dir, im));
+    
+        const teleportModel = new InstrumentModel(this.bigbandModel.bigband, this.sectionModel.section,
+            this.teleportInstrument, [], true)
+        // teleporter needs slightly different parameters so we pushCode() it separately. 
+        ps.push(this.pushCode(Misc.bigbandPackageDir(), dir, teleportModel));
+        
+        const pushedInstruments = await Promise.all(ps);
+    
+        const templateBody = this.buildCloudFormationTemplate(pushedInstruments)
+        await cfp.deploy(templateBody)
+        const lambda = this.awsFactory.newLambda();
+    
+        await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
+            const req: UpdateFunctionCodeRequest = {
+                FunctionName: curr.physicalName,
+                S3Bucket: curr.s3Ref.s3Bucket,
+                S3Key: curr.s3Ref.s3Key
+            };    
+            try {
+                return await lambda.updateFunctionCode(req).promise();
+            } catch (e) {
+                logger.error(`lambda.updateFunctionCode failure (${JSON.stringify(req)})`, e);
+                throw new Error(`Failed to update code of ${curr.physicalName}`);
+            }
+        }));
+    }        
 
-    function runOriginalRequire(m, arg) {
-        return originalRequire.apply(m, [arg]);
-    }
+    buildCloudFormationTemplate(pushedInstruments: PushedInstrument[]) {
+        const ret = {
+            AWSTemplateFormatVersion: '2010-09-09',
+            Transform: 'AWS::Serverless-2016-10-31',
+            Description: "description goes here",
+            Resources: {}
+        };
+    
+        for (const curr of pushedInstruments) {
+            const def = this.namer.getPhysicalDefinition(curr.model.instrument)
 
-    Module.prototype.require = function(arg) {
-        try {
-            return runOriginalRequire(this, arg);
-        } catch (err) {
-            if (!err.message.startsWith("Cannot find module ")) {
-                throw err;
+            for (const wireModel of curr.model.wirings) {
+                const arn = wireModel.supplier.arn
+                wireModel.supplier.instrument.contributeToConsumerDefinition(wireModel.consumer.section, def, arn);
+            }
+    
+            if (curr.s3Ref.isOk()) {
+                def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri());
             }
 
-            let dir = Misc.bigbandPackageDir();
-            if (path.basename(path.dirname(dir)) === 'node_modules') {
-                dir = path.dirname(path.dirname(dir));
+            const nameInStack = curr.model.instrument.fullyQualifiedName(NameStyle.PASCAL_CASE)
+            ret.Resources[nameInStack] = def.get();
+        }
+
+        return ret
+    }
+
+    private async pushCode(dir: string, npmPackageDir: string, instrumentModel: InstrumentModel)
+            : Promise<PushedInstrument> {
+        if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+            throw new Error(`Bad value. ${dir} is not a directory.`);
+        }
+        
+        const instrument = instrumentModel.instrument
+        const physicalName = this.namer.physicalName(instrument);
+        const def = this.namer.getPhysicalDefinition(instrument)
+        if (!instrument.getEntryPointFile()) {
+            return {
+                s3Ref: S3Ref.EMPTY,
+                wasPushed: false,
+                physicalName,
+                model: instrumentModel
             }
-
-            return runOriginalRequire(this, path.resolve(dir, 'node_modules', arg));
         }
-    };
-
-
-    return () => { 
-        if (numChangesToModuleRequire !== 1) {
-            throw new Error('More than one change to Module.require()');
+    
+        const {zb, packager} = await this.compileInstrument(dir, npmPackageDir, instrumentModel);
+        const pushResult: PushResult = await packager.pushToS3(this.namer.resolve(instrument),
+            `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
+            zb, this.namer.physicalName(this.teleportInstrument), this.teleportingEnabled, this.deployMode);
+        const resource = def.get();
+        resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
+    
+        return {
+            s3Ref: pushResult.deployableLocation,
+            wasPushed: pushResult.wasPushed,
+            physicalName,
+            model: instrumentModel
         }
-        Module.prototype.require = originalRequire;
-        --numChangesToModuleRequire;
-    };
-}
-
-function readVersionFromRcFile(dir: string) {
-    try {
-        const p = path.resolve(path.resolve(dir, '.bigbandrc'));
-        const pojo = JSON.parse(fs.readFileSync(p, 'utf-8'));
-        return pojo.bigbandFileProtocolVersion;
-    } catch (e) {
-        return -1;
-    }
-}
-
-export async function loadSpec(bigbandFile: string): Promise<BigbandSpec> {
-    if (!bigbandFile) {
-        throw new Error('bigbandFile cannot be falsy');
-    }
-
-    const d = path.dirname(path.resolve(bigbandFile));
-    const protcolVersion = readVersionFromRcFile(d);
-    const packager = new Packager(d, d, '', '');
-    const file = path.parse(bigbandFile).name;
-    const zb = await packager.run(`${file}.ts`, 'spec_compiled', '');
-    const specDeployedDir = packager.unzip(zb, 'spec_deployed');
-    const pathToRequire = path.resolve(specDeployedDir, 'build', `${file}.js`);
-
-    const uninstall = installCustomRequire();
-    let ret: BigbandSpec
-    try {
-        logger.silly(`Loading compiled bigbandfile from ${pathToRequire} using protocolversion ${protcolVersion}`);
-        ret = require(pathToRequire).run();
-    } finally {
-        uninstall();
-    }
-
-    if (!ret.dir) {
-        ret.dir = d;
-    }
-
-    checkSpec(ret);
-    return ret;
-}
-
-
-function checkDuplicates(names: string[]): string[] {
-    const uniqueNames = new Set<string>(names);
-    if (uniqueNames.size === names.length) {
-        return [];
-    }
-
-    const ret: string[] = [];
-    names.forEach(n => {
-        if (uniqueNames.has(n)) {
-            uniqueNames.delete(n);
-        } else {
-            ret.push(n);
-        }
-    });
-
-    return ret;
-}
-
-function checkSpec(spec: BigbandSpec) {
-    let dupes = checkDuplicates(spec.sections.map(r => r.name));
-    if (dupes.length) {
-        throw new Error(`Found two (or more) rigs with the same name: ${JSON.stringify(dupes)}`);
-    }
-
-    dupes = checkDuplicates(spec.instruments.map(r => r.name()));
-    if (dupes.length) {
-        throw new Error(`Found two (or more) instruments with the same name: ${JSON.stringify(dupes)}`);
-    }
-
-    // TODO(imaman): validate names!
-}
-
-async function pushCode(dir: string, npmPackageDir: string, rig: Section, instrument: Instrument, 
-    teleportInstrument: Instrument,  blobPool: S3BlobPool, teleportingEnabled: boolean, deployMode: DeployMode) {
-    if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
-        throw new Error(`Bad value. ${dir} is not a directory.`);
     }
     
-    const physicalName = instrument.physicalName(rig);
-    const def = instrument.getPhysicalDefinition(rig);
-    if (!instrument.getEntryPointFile()) {
-        return {
-            s3Ref: S3Ref.EMPTY,
-            wasPushed: false,
-            physicalName,
-            instrument
+    async compileInstrument(d: string, npmPackageDir: string, instrumentModel: InstrumentModel) {
+        const model: SectionModel = this.sectionModel
+        const section = model.section
+        const instrument = instrumentModel.instrument
+        try {
+            const packager = new Packager(d, npmPackageDir, this.bigbandModel.bigband.s3Bucket, 
+                this.bigbandModel.bigband.s3Prefix, this.awsFactory, this.blobPool);
+            const pathPrefix = 'build';
+            logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
+            const frag = instrument.createFragment(pathPrefix);
+    
+            const mapping = {};
+            // TODO(imaman): coverage
+            for (const wireModel of instrumentModel.wirings) {
+                mapping[wireModel.name] = {name: wireModel.supplier.physicalName, region: section.region};
+            }
+            frag.add(new DeployableAtom('bigband/deps.js', 
+                `module.exports = ${JSON.stringify(mapping)}`));
+    
+            const sha256 = hash.sha256();
+            const atomConsumer = (a: DeployableAtom) => {
+                sha256.update(a.path);
+                sha256.update(a.content);
+            };
+    
+    
+            const zb: ZipBuilder = await packager.run(
+                instrument.getEntryPointFile(), 
+                pathPrefix, 
+                (instrument as LambdaInstrument).getNpmPackage()) as ZipBuilder;
+            zb.forEach(atomConsumer);
+            frag.forEach(atomConsumer);
+    
+            const fp = Buffer.from(sha256.digest()).toString('base64');
+            frag.add(new DeployableAtom('bigband/build_manifest.js',
+                `module.exports = "${fp}";`));
+    
+            zb.importFragment(frag);
+    
+            return {zb, packager}
+        } catch (e) {
+            e.message = `(instrument: "${instrumentModel.path}", rootDir: "${d}", npmPackageDir: ` + 
+                `"${npmPackageDir}") ${e.message}`;
+            throw e;
         }
     }
-
-    const {zb, packager} = await compileInstrument(dir, npmPackageDir, rig, instrument, blobPool);
-    const pushResult: PushResult = await packager.pushToS3(instrument, `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
-        zb, teleportInstrument.physicalName(rig), teleportingEnabled, deployMode);
-    const resource = def.get();
-    resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
-
-    return {
-        s3Ref: pushResult.deployableLocation,
-        wasPushed: pushResult.wasPushed,
-        physicalName,
-        instrument
-    }
-}
-
-async function compileInstrument(d: string, npmPackageDir: string, rig: Section, instrument: Instrument, blobPool: S3BlobPool) {
-    try {
-        const packager = new Packager(d, npmPackageDir, rig.isolationScope.s3Bucket, rig.isolationScope.s3Prefix, rig, blobPool);
-        const pathPrefix = 'build';
-        logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
-        const frag = instrument.createFragment(pathPrefix);
-
-        const mapping = {};
-        instrument.dependencies.forEach(d => {
-            mapping[d.name] = {name: d.supplier.physicalName(rig), region: rig.region};
-        });
-        frag.add(new DeployableAtom('bigband/deps.js', 
-            `module.exports = ${JSON.stringify(mapping)}`));
-
-        const sha256 = hash.sha256();
-        const atomConsumer = (a: DeployableAtom) => {
-            sha256.update(a.path);
-            sha256.update(a.content);
+    
+    
+    private ttlPrefix() {
+        return `${this.bigbandModel.bigband.s3Prefix}/TTL/7d`;
+    }     
+    
+    private async configureBucket() {
+        // You can check the content of the TTL folder via:
+        // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
+    
+        const s3 = this.awsFactory.newS3();
+        const prefix = `${this.ttlPrefix()}/`;
+        const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
+            Bucket: this.bigbandModel.bigband.s3Bucket,
+            LifecycleConfiguration: {
+                Rules: [
+                    {
+                        Expiration: {
+                            Days: 7
+                        },
+                        Filter: {
+                            Prefix: prefix
+                        },
+                        ID: "BigbandStandardTTL7D",
+                        Status: "Enabled"
+                    }
+                ]
+            }
         };
-
-
-        const zb: ZipBuilder = await packager.run(
-            instrument.getEntryPointFile(), 
-            pathPrefix, 
-            (instrument as LambdaInstrument).getNpmPackage()) as ZipBuilder;
-        zb.forEach(atomConsumer);
-        frag.forEach(atomConsumer);
-
-        const fp = Buffer.from(sha256.digest()).toString('base64');
-        frag.add(new DeployableAtom('bigband/build_manifest.js',
-            `module.exports = "${fp}";`));
-
-        zb.importFragment(frag);
-
-        return {zb, packager}
-    } catch (e) {
-        e.message = `(instrument: "${instrument.fullyQualifiedName()}", rootDir: "${d}", npmPackageDir: "${npmPackageDir}") ${e.message}`;
-        throw e;
-    }
-}
-
-
-function ttlPrefix(rig: Section) {
-    return `${rig.isolationScope.s3Prefix}/TTL/7d`;
-}
-
-async function configureBucket(rig: Section) {
-    // You can check the content of the TTL folder via:
-    // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
-
-    const s3 = AwsFactory.fromRig(rig).newS3();
-    const prefix = `${ttlPrefix(rig)}/`;
-    const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
-        Bucket: rig.isolationScope.s3Bucket,
-        LifecycleConfiguration: {
-            Rules: [
-                {
-                    Expiration: {
-                        Days: 7
-                    },
-                    Filter: {
-                        Prefix: prefix
-                    },
-                    ID: "BigbandStandardTTL7D",
-                    Status: "Enabled"
-                }
-            ]
+    
+        try {
+            await s3.putBucketLifecycleConfiguration(req).promise();
+            logger.silly(`expiration policy set via ${JSON.stringify(req)}`);
+        } catch (e) {
+            console.error(`s3.putBucketLifecycleConfiguration failure (request: ${JSON.stringify(req)})`, e);
+            throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
         }
-    };
+    }    
 
-    try {
-        await s3.putBucketLifecycleConfiguration(req).promise();
-        logger.silly(`expiration policy set via ${JSON.stringify(req)}`);
-    } catch (e) {
-        console.error(`s3.putBucketLifecycleConfiguration failure (request: ${JSON.stringify(req)})`, e);
-        throw new Error(`Failed to set lifecycle policies (bucket: ${req.Bucket}, prefix: ${prefix})`);
-    }
+    static async loadModel(bigbandFile: string): Promise<BigbandModel> {
+        if (!bigbandFile) {
+            throw new Error('bigbandFile cannot be falsy');
+        }
+
+        const pathToRequire = path.resolve(bigbandFile)
+    
+        // const uninstall = installCustomRequire();
+        let bigbandSpec: BigbandSpec
+        try {
+            logger.silly(`Loading bigbandfile from ${pathToRequire} using protocolversion`);
+            const f = require(path.resolve(bigbandFile))
+            bigbandSpec = f.run()
+        } finally {
+            // uninstall();
+        }
+    
+        return new BigbandModel(bigbandSpec, path.dirname(pathToRequire))
+    }    
 }
+
+
+
+
 
 
 // TODO list:
