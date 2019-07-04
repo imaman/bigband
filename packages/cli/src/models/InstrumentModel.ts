@@ -2,10 +2,13 @@ import { Instrument, WireSpec, Section, Bigband } from "bigband-core";
 import { Misc } from "../Misc";
 import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
+import { WireModel } from "./WireModel";
 
 export class InstrumentModel {
     constructor(private readonly bigband: Bigband, public readonly section: Section, public readonly instrument: Instrument,
-        public readonly wirings: WireSpec[], private readonly isSystemInstrument) {}
+        // TODO(imaman): make wirings private
+        // TODO(imaman): rename to wires
+        public readonly wirings: WireModel[], private readonly isSystemInstrument) {}
 
     get physicalName(): string {
         return new Namer(this.bigband, this.section).physicalName(this.instrument)
@@ -13,6 +16,11 @@ export class InstrumentModel {
 
     get path(): string {
         return new Namer(this.bigband, this.section).path(this.instrument)
+    }
+
+    get arn(): string {
+        const namer = new Namer(this.bigband, this.section)
+        return namer.resolve(this.instrument).arn
     }
 
     validate() {

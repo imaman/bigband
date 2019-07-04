@@ -113,7 +113,7 @@ describe('InstrumentModel', () => {
             }
 
             const sectionModel = createSectionModel(spec)
-            expect(sectionModel.instruments[1].wirings).to.eql([])
+            expect(sectionModel.instruments[1].wirings.map(x => x.toString())).to.eql([])
         });
         it('returns all wirings for the given consumer', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
@@ -128,7 +128,10 @@ describe('InstrumentModel', () => {
             }
 
             const sectionModel = createSectionModel(spec)
-            expect(sectionModel.instruments[0].wirings).to.eql([w12, w13])
+            expect(sectionModel.instruments[0].wirings.map(x => x.toString())).to.eql([
+                "r1/s1/p1/f1: w12 -> r1/s1/p1/f2",
+                "r1/s1/p1/f1: w13 -> r1/s1/p1/f3"
+            ])
         });
         it('returns wirings only for the given consumer', async () => { 
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
@@ -143,7 +146,9 @@ describe('InstrumentModel', () => {
             }
 
             const sectionModel = createSectionModel(spec)
-            expect(sectionModel.instruments[0].wirings).to.eql([w12])
+            expect(sectionModel.instruments[0].wirings.map(x => x.toString())).to.eql([
+                "r1/s1/p1/f1: w12 -> r1/s1/p1/f2"
+            ])
         });
     });
 });

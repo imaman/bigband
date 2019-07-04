@@ -20,6 +20,7 @@ import { BigbandModel } from './models/BigbandModel';
 import { SectionModel } from './models/SectionModel';
 import { InstrumentModel } from './models/InstrumentModel';
 import { Namer } from './Namer';
+import { WireModel } from './models/WireModel';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
@@ -147,9 +148,9 @@ export class BigbandFileRunner {
             const def = this.namer.getPhysicalDefinition(curr.model.instrument)
 
             // TODO(imaman): support cross-section wiring
-            curr.model.wirings.forEach(d => {
-                const arn = this.namer.resolve(d.supplier).arn
-                d.supplier.contributeToConsumerDefinition(this.sectionModel.section, def, arn);
+            curr.model.wirings.forEach((wireModel: WireModel) => {
+                const arn = wireModel.supplier.arn
+                wireModel.supplier.instrument.contributeToConsumerDefinition(wireModel.consumer.section, def, arn);
             });
     
             if (curr.s3Ref.isOk()) {
@@ -209,8 +210,8 @@ export class BigbandFileRunner {
     
             const mapping = {};
             // TODO(imaman): coverage
-            instrumentModel.wirings.forEach(w => {
-                mapping[w.name] = {name: this.namer.physicalName(w.supplier), region: section.region};
+            instrumentModel.wirings.forEach(wireModel => {
+                mapping[wireModel.name] = {name: wireModel.supplier.physicalName, region: section.region};
             });
             frag.add(new DeployableAtom('bigband/deps.js', 
                 `module.exports = ${JSON.stringify(mapping)}`));

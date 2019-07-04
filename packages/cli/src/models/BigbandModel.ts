@@ -4,6 +4,7 @@ import { SectionModel } from "./SectionModel";
 import { InstrumentModel } from "./InstrumentModel";
 import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
+import { WireModel } from "./WireModel";
 
 
 
@@ -55,6 +56,7 @@ export class BigbandModel {
 
         this.dir = spec.dir || defaultDir
 
+        const wiresByInstrumentPath = new Map<string, WireModel[]>()
         for (const s of spec.sections) {
             // we create an array, pass it down to the sectionmodel and then populate it. Due to the absence of
             // package-visibility in typescript, this trick allow us to create mututally-dependent object without having
@@ -67,13 +69,17 @@ export class BigbandModel {
             this.sectionByPath.set(sm.path, sm)
 
             for (const i of s.instruments) {
-                const wires = s.wiring.filter(w => w.consumer === i)
+                // Again, we create an array pass it down to the created object (InstrumentModel) and mutate it
+                // later - to avoid state-mutating methods on the created object.
+                const wires: WireModel[] = []
+                
                 const im = new InstrumentModel(this.spec.bigband, s.section, i, wires, false)
                 if (this.instrumentByPath.has(im.path)) {
                     throw new Error(`Instrument path collision. two (or more) instruments share the same path: "${im.path}"`)
                 }
                 this.instrumentByPath.set(im.path, im)
                 acc.push(im)
+                wiresByInstrumentPath.set(im.path, wires)
             }
 
             acc.sort(byPath)
@@ -101,8 +107,21 @@ export class BigbandModel {
                     throw new Error(`Bad wire. Section "${supplierSectionModel.path}" does not contain the given ` + 
                         `instrument ("${w.supplier.path}")`)
                 }
+
+                const wireModel = new WireModel(w, consumer, supplier)
+                const wires = wiresByInstrumentPath.get(consumer.path)
+                if (!wires) {
+                    throw new Error(`Inconceivable. No wires were found (path=${consumer.path})`)
+                }
+                wires.push(wireModel)
             }
         }
+
+        for (const wires of wiresByInstrumentPath.values()) {
+            wires.sort((a, b) => a.name.localeCompare(b.name))
+        }
+
+        // TODO(imaman): test that an instrument has all of its wiremodels, sorted
 
         this.validate()
     }
