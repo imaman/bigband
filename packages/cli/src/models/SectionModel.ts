@@ -1,4 +1,4 @@
-import { SectionSpec, Instrument, Bigband, WireSpec, NameStyle } from "bigband-core";
+import { SectionSpec, Instrument, Bigband } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
 import { NameValidator } from "../NameValidator";
 
@@ -20,10 +20,6 @@ export class SectionModel {
 
     get physicalName(): string {
         return `${this.bigband.name}-${this.section.name}`;
-    }
-
-    get wires(): WireSpec[] {
-        return this.spec.wiring
     }
 
     findInstrument(path: string): InstrumentModel|null {

@@ -1,4 +1,4 @@
-import { Instrument, WireSpec, Section, Bigband } from "bigband-core";
+import { Instrument, Section, Bigband } from "bigband-core";
 import { Misc } from "../Misc";
 import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";

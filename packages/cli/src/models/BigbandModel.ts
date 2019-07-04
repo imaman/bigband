@@ -100,12 +100,13 @@ export class BigbandModel {
                 const supplierSection: Section = w.supplierSection || s.section
                 const supplierSectionModel = this.sectionByPath.get(supplierSection.path)
                 if (!supplierSectionModel) {
-                    throw new Error(`Bad wire. Section "${supplierSection.path}" is not a member of the bigband`)
+                    throw new Error(`Bad wire. Supplier section "${supplierSection.path}" is not a member of ` + 
+                        'the bigband')
                 }
                 const supplier = supplierSectionModel.findInstrument(w.supplier.path)
                 if (!supplier) {
-                    throw new Error(`Bad wire. Section "${supplierSectionModel.path}" does not contain the given ` + 
-                        `instrument ("${w.supplier.path}")`)
+                    throw new Error(`Bad wire. Supplier section "${supplierSectionModel.path}" does not contain ` + 
+                        `the given supplier instrument ("${w.supplier.path}")`)
                 }
 
                 const wireModel = new WireModel(w, consumer, supplier)
@@ -302,28 +303,7 @@ export class BigbandModel {
 
                 set.add(im.section)
             }
-        }
-       
-        for (const s of this.sections) {
-            for (const w of s.wires) {
-                const set = sectionByInstrument.get(w.supplier)
-                const supplierSection = w.supplierSection || s.section
-                if (!set) {
-                    throw new Error(`Instrument "${w.supplier.fullyQualifiedName()}" cannot be used as a supplier because it is not placed in any section`)
-                }
-                if (!set.has(supplierSection)) {
-                    throw new Error(`Instrument "${w.supplier.fullyQualifiedName()}" cannot be used as a supplier because it is not a member of the ${supplierSection.name} section`)
-                }
-            }
-        }
-
-        // const wiringsWithbadSuppliers = this.spec.wiring.filter(w => !set.has(w.supplier))
-        // if (wiringsWithbadSuppliers.length) {
-        //     const w = wiringsWithbadSuppliers[0]
-        //     throw new Error(`Instrument "${w.supplier.fullyQualifiedName()}" cannot be used as a supplier because ` + 
-        //         `it is not a member of the "${this.section.name}" section`)
-        // }
-
+        }       
         
         // TODO(imaman): validate name length + characters
     }
