@@ -43,19 +43,19 @@ describe('BigbandFileRunner', () => {
                     wiring: []
                 }]
             }
-            
+
+            const content = 'console.log("Four score and seven years ago")'
+
             const bigbandModel = new BigbandModel(spec, "somedir")
-            const section = bigbandModel.findSectionModel("r1/s1")
             const instrument = bigbandModel.getInstrument('r1/s1/p1/f1')
             
-            const bigbandFileRunner = new BigbandFileRunner(bigbandModel, section, true, DeployMode.IF_CHANGED)            
+            const bigbandFileRunner = new BigbandFileRunner(bigbandModel, 
+                bigbandModel.findSectionModel(instrument.section.path), true, DeployMode.IF_CHANGED)            
             const dir = tmp.dirSync({keep: true}).name
 
-            const srcFile = path.resolve(dir, 'file_1.ts')
+            const srcFile = path.resolve(dir, (instrument.instrument as LambdaInstrument).getEntryPointFile() + '.ts')
 
-            console.log('srcFile=' + srcFile + ', dir=' + dir)
-
-            fs.writeFileSync(srcFile, 'console.log("Four score and seven years ago")')
+            fs.writeFileSync(srcFile, content)
 
             const npmPackageDir = path.resolve(__dirname, '..')
             const temp = await bigbandFileRunner.compileInstrument(dir, npmPackageDir, instrument)
@@ -64,7 +64,8 @@ describe('BigbandFileRunner', () => {
             temp.zb.unzip(outDir)
 
 
-            const cp = child_process.fork(path.resolve(outDir, 'p1-f1_Handler.js'), [], {stdio: "pipe"})
+            const cp = child_process.fork(path.resolve(outDir, `${instrument.instrument.fullyQualifiedName()}_Handler.js`), [], 
+                    {stdio: "pipe"})
 
 
             const stdout: string[] = []
