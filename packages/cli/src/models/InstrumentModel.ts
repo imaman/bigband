@@ -3,6 +3,8 @@ import { Misc } from "../Misc";
 import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
 import { WireModel } from "./WireModel";
+import { NavigationNode, InspectedItem } from "../NavigationNode";
+import { Role } from "./BigbandModel";
 
 export class InstrumentModel {
     constructor(private readonly bigband: Bigband, public readonly section: Section, public readonly instrument: Instrument,
@@ -41,5 +43,40 @@ export class InstrumentModel {
         if (dups.length) {
             throw new Error(`Name collision(s) in wiring of "${this.physicalName}": ${JSON.stringify(dups)}`)
         }
+    }
+
+    generateNavigationNodes(root: NavigationNode) {
+        let node = root.navigate(this.section.path)
+        if (!node) {
+            throw new Error(`Path ${this.section.path} leads to nowhere`)
+        }
+
+        const acc: string[] = []
+
+        acc.push(this.section.path)
+
+        const tokens = this.instrument.path.split('/')
+        for (let i = 0; i < tokens.length; ++i) {
+            const curr = tokens[i]
+            acc.push(curr)
+            let item: InspectedItem
+            if (i === tokens.length - 1) {
+                item = {
+                    path: acc.join('/'),
+                    role: Role.INSTRUMENT,
+                    subPath: '',
+                    type: this.instrument.arnService()
+                }
+            } else {
+                item = {
+                    path: acc.join('/'),
+                    role: Role.PATH,
+                    subPath: ''
+                }
+            }
+            node = node.addChild(curr, item)
+        }
+
+        return node
     }
 }

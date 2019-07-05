@@ -1,6 +1,8 @@
 import { SectionSpec, Instrument, Bigband } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
 import { NameValidator } from "../NameValidator";
+import { NavigationNode } from "../NavigationNode";
+import { Role } from "./BigbandModel";
 
 export class SectionModel {
     constructor(readonly bigband: Bigband, private readonly spec: SectionSpec,
@@ -38,5 +40,18 @@ export class SectionModel {
             throw new Error(`Bad section name: "${name}"`)
         }
         this.instruments.forEach(curr => curr.validate())
+    }
+
+    generateNavigationNodes(root: NavigationNode) {
+        const regNode = root.addChild(this.section.region, {
+            path: this.section.region,
+            role: Role.REGION,
+            subPath: ''
+        })
+        return regNode.addChild(this.section.name, {
+            path: this.path,
+            role: Role.SECTION,
+            subPath: ''
+        })
     }
 }

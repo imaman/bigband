@@ -5,6 +5,7 @@ import { InstrumentModel } from "./InstrumentModel";
 import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
 import { WireModel } from "./WireModel";
+import { InspectedItem, NavigationNode } from "../NavigationNode";
 
 
 
@@ -36,13 +37,6 @@ export interface InsepctResult {
 }
 
 
-interface InspectedItem {
-    path: string
-    role: Role
-    subPath: string
-    type?: string
-    instrument?: InstrumentModel
-}
 export class BigbandModel {
 
     private readonly sectionByPath = new Map<string, SectionModel>()
@@ -213,45 +207,62 @@ export class BigbandModel {
     }
 
     inspect(path_: string): InsepctResult {
-        const acc: InspectedItem[] = [];
-
-        this.sections.forEach(curr => {
-            acc.push({path: curr.section.region, role: Role.REGION, subPath: ''})
-            acc.push({path: curr.path, role: Role.SECTION, subPath: ''})
+        const root = new NavigationNode("", {
+            path: '',
+            role: Role.BIGBAND,
+            subPath: ''
         })
+        for (const curr of this.sections) {
+            curr.generateNavigationNodes(root)
+            // acc.push({path: curr.section.region, role: Role.REGION, subPath: ''})
+            // acc.push({path: curr.path, role: Role.SECTION, subPath: ''})
+        }
         for (const i of this.instruments) {
-            const item = {
-                path: i.path,
-                role: Role.INSTRUMENT,
-                subPath: '',
-                type: i.instrument.arnService(),
-                instrument: i 
-            }
+            i.generateNavigationNodes(root)
+            // const item = {
+            //     path: i.path,
+            //     role: Role.INSTRUMENT,
+            //     subPath: '',
+            //     type: i.instrument.arnService(),
+            //     instrument: i 
+            // }
 
-            if (i.path === path_) {
-                return {list: [item]}
-            }
-            acc.push(item)
+            // if (i.path === path_) {
+            //     return {list: [item]}
+            // }
+            // acc.push(item)
         }
 
-        const path = path_.length ? path_ + '/' : path_
-        const matchingPaths = acc
-            .filter(curr => curr.path.startsWith(path))
-            .map(curr => generateEntry(curr, path))
+        const path = path_
+        const navNode = root.navigate(path)
 
-        const set = new Set<String>()
-        const chosen = matchingPaths.filter(curr => {
-            if (set.has(curr.subPath)) {
-                return false
-            } 
+        if (!navNode) {
+            return {list: []}
+        }
 
-            set.add(curr.subPath)
-            return true
-        })
 
-        chosen.sort(byPath)
+        if (navNode.children.length) {
+            return {list: navNode.children.map(curr => curr.item)}
+        }
 
-        return {list: chosen}
+        return {list: [navNode.item]}
+        // const matchingPaths = acc
+        //     .filter(curr => curr.path.startsWith(path))
+        //     .map(curr => generateEntry(curr, path))
+
+        // const set = new Set<String>()
+        // const chosen = matchingPaths.filter(curr => {
+        //     if (set.has(curr.subPath)) {
+        //         return false
+        //     } 
+
+        //     set.add(curr.subPath)
+        //     return true
+        // })
+
+        // chosen.sort(byPath)
+
+        // return {list: chosen}
     }
 
     searchInspect(path: string): LookupResult {
@@ -318,6 +329,7 @@ function trimAt(p: string, stopAt: string) {
 }
 
 export enum Role {
+    BIGBAND,
     REGION,
     SECTION,
     PATH,
