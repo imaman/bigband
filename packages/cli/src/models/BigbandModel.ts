@@ -214,23 +214,9 @@ export class BigbandModel {
         })
         for (const curr of this.sections) {
             curr.generateNavigationNodes(root)
-            // acc.push({path: curr.section.region, role: Role.REGION, subPath: ''})
-            // acc.push({path: curr.path, role: Role.SECTION, subPath: ''})
         }
         for (const i of this.instruments) {
             i.generateNavigationNodes(root)
-            // const item = {
-            //     path: i.path,
-            //     role: Role.INSTRUMENT,
-            //     subPath: '',
-            //     type: i.instrument.arnService(),
-            //     instrument: i 
-            // }
-
-            // if (i.path === path_) {
-            //     return {list: [item]}
-            // }
-            // acc.push(item)
         }
 
         const path = path_
@@ -246,23 +232,6 @@ export class BigbandModel {
         }
 
         return {list: [navNode.item]}
-        // const matchingPaths = acc
-        //     .filter(curr => curr.path.startsWith(path))
-        //     .map(curr => generateEntry(curr, path))
-
-        // const set = new Set<String>()
-        // const chosen = matchingPaths.filter(curr => {
-        //     if (set.has(curr.subPath)) {
-        //         return false
-        //     } 
-
-        //     set.add(curr.subPath)
-        //     return true
-        // })
-
-        // chosen.sort(byPath)
-
-        // return {list: chosen}
     }
 
     searchInspect(path: string): LookupResult {
