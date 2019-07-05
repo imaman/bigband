@@ -73,7 +73,6 @@ describe('BigbandFileRunner', () => {
             `
             fs.writeFileSync(stubFile, stubFileContent)
 
-            // path.resolve(outDir, `${instrument.instrument.fullyQualifiedName()}_Handler.js`
             const cp = child_process.fork(stubFile, [], {stdio: "pipe"})
 
             const stdout: string[] = []
@@ -86,7 +85,7 @@ describe('BigbandFileRunner', () => {
                     reject(new Error(`Output emitted to stderr. First line: "${data.toString()}"`))
                 })
     
-                cp.on('exit',  (code, signal) => {
+                cp.on('exit', (code, signal) => {
                     resolve({code, signal})
                 })    
             })
@@ -108,12 +107,11 @@ describe('BigbandFileRunner', () => {
 
             const content = `
                 export async function runLambda(context, event) {
-                    return {context, event}
+                    return "context.a=" + context.a + ", event.b=" + event.b
                 }
             `
             const output = await compileAndRun(spec, "r1/s1/p1/f1", content, {context: {a: 1}, event: {b: 2}})
-            var d = {context: {a: 1}, event: {b: 2}}
-            expect(JSON.parse(output)).to.eql(d)
+            expect(JSON.parse(output)).to.eql("context.a=1, event.b=2")
         })
     })
 
