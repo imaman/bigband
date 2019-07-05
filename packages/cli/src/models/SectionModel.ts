@@ -46,12 +46,10 @@ export class SectionModel {
         const regNode = root.addChild(this.section.region, {
             path: this.section.region,
             role: Role.REGION,
-            subPath: ''
         })
         return regNode.addChild(this.section.name, {
             path: this.path,
             role: Role.SECTION,
-            subPath: ''
         })
     }
 }

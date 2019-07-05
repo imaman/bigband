@@ -326,8 +326,8 @@ describe('BigbandModel', () => {
             }
             expect(actual).to.eql({
                 list: [
-                    {path: "r1/s1/p1/f3", subPath: 'f3', role: Role.INSTRUMENT, type: 'lambda'},
-                    {path: "r1/s1/p1/p2", subPath: 'p2', role: Role.PATH}
+                    {path: "r1/s1/p1/f3", role: Role.INSTRUMENT, type: 'lambda'},
+                    {path: "r1/s1/p1/p2", role: Role.PATH}
                 ]
             })
         })
@@ -346,7 +346,7 @@ describe('BigbandModel', () => {
             }
             expect(actual).to.eql({
                 list: [
-                    { path: "r1", subPath: 'r1', role: Role.REGION }
+                    { path: "r1", role: Role.REGION }
                 ]
             })
         })
@@ -370,8 +370,8 @@ describe('BigbandModel', () => {
             }
             expect(actual).to.eql({
                 list: [
-                    { path: "region_a/s1", subPath: 's1', role: Role.SECTION },
-                    { path: "region_a/s3", subPath: 's3', role: Role.SECTION }
+                    { path: "region_a/s1", role: Role.SECTION },
+                    { path: "region_a/s3", role: Role.SECTION }
                 ]
             })
         })
@@ -391,7 +391,7 @@ describe('BigbandModel', () => {
             }
             expect(actual).to.eql({
                 list: [
-                    { path: "reg-a/sec-a/p1/p2/f1", subPath: '', role: Role.INSTRUMENT, type: 'lambda' }
+                    { path: "reg-a/sec-a/p1/p2/f1", role: Role.INSTRUMENT, type: 'lambda' }
                 ]
             })
         })

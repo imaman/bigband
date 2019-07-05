@@ -4,7 +4,6 @@ import { InstrumentModel } from "./models/InstrumentModel";
 export interface InspectedItem {
     path: string
     role: Role
-    subPath: string
     type?: string
     instrument?: InstrumentModel
 }

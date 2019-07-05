@@ -64,14 +64,12 @@ export class InstrumentModel {
                 item = {
                     path: acc.join('/'),
                     role: Role.INSTRUMENT,
-                    subPath: '',
                     type: this.instrument.arnService()
                 }
             } else {
                 item = {
                     path: acc.join('/'),
                     role: Role.PATH,
-                    subPath: ''
                 }
             }
             node = node.addChild(curr, item)

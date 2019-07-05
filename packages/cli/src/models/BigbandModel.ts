@@ -209,8 +209,7 @@ export class BigbandModel {
     inspect(path_: string): InsepctResult {
         const root = new NavigationNode("", {
             path: '',
-            role: Role.BIGBAND,
-            subPath: ''
+            role: Role.BIGBAND
         })
         for (const curr of this.sections) {
             curr.generateNavigationNodes(root)
@@ -305,18 +304,3 @@ export enum Role {
     INSTRUMENT
 }
 
-function generateEntry(i: any, path: string) {
-    const pathSuffix = i.path.substr(path.length)
-    const trimmedPath = trimAt(pathSuffix, "/")
-    const isPath = trimmedPath != pathSuffix
-
-
-    i.subPath = trimmedPath
-    if (isPath) {
-        i.role = Role.PATH
-        i.path = path + trimmedPath
-        delete i.type
-    }
-
-    return i
-}
