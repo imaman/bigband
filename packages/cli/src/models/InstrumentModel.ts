@@ -3,7 +3,7 @@ import { Misc } from "../Misc";
 import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
 import { WireModel } from "./WireModel";
-import { NavigationNode, InspectedItem } from "../NavigationNode";
+import { NavigationNode, NavigationItem } from "../NavigationNode";
 import { Role } from "./BigbandModel";
 
 export class InstrumentModel {
@@ -59,7 +59,7 @@ export class InstrumentModel {
         for (let i = 0; i < tokens.length; ++i) {
             const curr = tokens[i]
             acc.push(curr)
-            let item: InspectedItem
+            let item: NavigationItem
             if (i === tokens.length - 1) {
                 item = {
                     path: acc.join('/'),

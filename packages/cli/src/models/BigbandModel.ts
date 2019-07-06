@@ -5,7 +5,7 @@ import { InstrumentModel } from "./InstrumentModel";
 import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
 import { WireModel } from "./WireModel";
-import { InspectedItem, NavigationNode } from "../NavigationNode";
+import { NavigationItem, NavigationNode } from "../NavigationNode";
 
 
 
@@ -33,7 +33,7 @@ export interface LookupResult {
 
 
 export interface InsepctResult {
-    list: InspectedItem[]
+    list: NavigationItem[]
 }
 
 
@@ -243,7 +243,7 @@ export class BigbandModel {
             throw new Error(`No instrument found under "${path}"`)
         }
 
-        const first: InspectedItem = list[0]
+        const first: NavigationItem = list[0]
         if (first.role !== Role.INSTRUMENT || !first.instrument) {
             throw new Error(`The specifeid path (${path}) does not refer to an instrument`)
         }

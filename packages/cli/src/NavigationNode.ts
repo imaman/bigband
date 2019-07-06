@@ -1,7 +1,7 @@
 import { Role } from "./models/BigbandModel";
 import { InstrumentModel } from "./models/InstrumentModel";
 
-export interface InspectedItem {
+export interface NavigationItem {
     path: string
     role: Role
     type?: string
@@ -11,9 +11,9 @@ export interface InspectedItem {
 export class NavigationNode {
 
     public readonly children: NavigationNode[] = []
-    constructor(public readonly token: string, public readonly item: InspectedItem)  {}
+    constructor(public readonly token: string, public readonly item: NavigationItem)  {}
 
-    addChild(token: string, item: InspectedItem): NavigationNode {
+    addChild(token: string, item: NavigationItem): NavigationNode {
         const child = this.downTo(token)
         if (child) {
             return child
