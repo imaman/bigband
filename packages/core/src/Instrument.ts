@@ -125,7 +125,7 @@ export abstract class Instrument {
     }
 
     // TODO(imaman): rename this. "path" now denotes the full path to an instrument not just it "directories"path()
-    get path(): string {
+    get sectionRelativePath(): string {
         return this.fullyQualifiedName(NameStyle.SLASH)
     }
 }

@@ -55,7 +55,7 @@ export class InstrumentModel {
 
         acc.push(this.section.path)
 
-        const tokens = this.instrument.path.split('/')
+        const tokens = this.instrument.sectionRelativePath.split('/')
         for (let i = 0; i < tokens.length; ++i) {
             const curr = tokens[i]
             acc.push(curr)

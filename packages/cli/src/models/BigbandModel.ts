@@ -87,7 +87,7 @@ export class BigbandModel {
             for (const w of s.wiring) {
                 const consumer = sm.getInstrumentModel(w.consumer)
                 if (!consumer) {
-                    throw new Error(`Instrument "${w.consumer.path}" cannot be used as a consumer ` +
+                    throw new Error(`Instrument "${w.consumer.sectionRelativePath}" cannot be used as a consumer ` +
                         `because it is not a member of the "${sm.path}" section`)
                 }
                 
@@ -100,7 +100,7 @@ export class BigbandModel {
                 const supplier = supplierSectionModel.getInstrumentModel(w.supplier)
                 if (!supplier) {
                     throw new Error(`Bad wire. Supplier section "${supplierSectionModel.path}" does not contain ` + 
-                        `the given supplier instrument ("${w.supplier.path}")`)
+                        `the given supplier instrument ("${w.supplier.sectionRelativePath}")`)
                 }
 
                 const wireModel = new WireModel(w, consumer, supplier)
