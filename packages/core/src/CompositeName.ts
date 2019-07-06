@@ -12,7 +12,11 @@ export class CompositeName {
     }
 
     static fromString(slashSeparatedString: string): CompositeName {
-        return new CompositeName(slashSeparatedString.split('/'))
+        return new CompositeName(CompositeName.split(slashSeparatedString))
+    }
+
+    static split(slashSeparatedString: string): string[] {
+        return slashSeparatedString.split('/')
     }
 
     append(token: string): CompositeName {

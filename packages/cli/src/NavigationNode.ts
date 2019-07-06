@@ -1,5 +1,6 @@
 import { Role } from "./models/BigbandModel";
 import { InstrumentModel } from "./models/InstrumentModel";
+import { CompositeName } from "bigband-core";
 
 export interface NavigationItem {
     path: string
@@ -38,9 +39,9 @@ export class NavigationNode {
         if (!path) {
             return this
         }
-        const tokens = path.split('/')
+
         let ret: NavigationNode|null = this
-        for (const token of tokens) {
+        for (const token of CompositeName.split(path)) {
             if (!ret) {
                 return ret
             }
