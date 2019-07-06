@@ -25,8 +25,8 @@ export class SectionModel {
     }
 
     getInstrumentModel(instrument: Instrument): InstrumentModel {
-        const subPath = instrument.sectionRelativePath
-        const ret = this.instruments.find(curr => curr.instrument.sectionRelativePath === subPath)
+        const subPath = instrument.sectionRelativeName
+        const ret = this.instruments.find(curr => curr.instrument.sectionRelativeName === subPath)
         if (!ret) {
             throw new Error(`Section ${this.path} does not contain an instrument at sub path ("${subPath}")`)
         }
