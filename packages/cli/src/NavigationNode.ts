@@ -6,7 +6,7 @@ export interface NavigationItem {
     path: string
     role: Role
     type?: string
-    instrument?: InstrumentModel
+    // instrument?: InstrumentModel
 }
 
 export class NavigationNode {
@@ -42,7 +42,7 @@ export class NavigationNode {
 
         let ret: NavigationNode|null = this
         for (const token of CompositeName.split(path)) {
-            if (!ret) {
+            if (!ret) { 
                 return ret
             }
             ret = ret.downTo(token)

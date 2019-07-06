@@ -190,9 +190,6 @@ describe('BigbandModel', () => {
 
             const model = new BigbandModel(spec, "somedir")
             const actual = model.inspect("r1/s1/p1")
-            for(const curr of actual.list) {
-                delete curr.instrument
-            }
             expect(actual).to.eql({
                 list: [
                     {path: "r1/s1/p1/f3", role: Role.INSTRUMENT, type: 'lambda'},
@@ -210,9 +207,6 @@ describe('BigbandModel', () => {
 
             const model = new BigbandModel(spec, "somedir")
             const actual = model.inspect("")
-            for(const curr of actual.list) {
-                delete curr.instrument
-            }
             expect(actual).to.eql({
                 list: [
                     { path: "r1", role: Role.REGION }
@@ -234,9 +228,6 @@ describe('BigbandModel', () => {
 
             const model = new BigbandModel(spec, "somedir")
             const actual = model.inspect("region_a")
-            for(const curr of actual.list) {
-                delete curr.instrument
-            }
             expect(actual).to.eql({
                 list: [
                     { path: "region_a/s1", role: Role.SECTION },
@@ -255,9 +246,6 @@ describe('BigbandModel', () => {
 
             const model = new BigbandModel(spec, "somedir")
             const actual = model.inspect("reg-a/sec-a/p1/p2/f1")
-            for(const curr of actual.list) {
-                delete curr.instrument
-            }
             expect(actual).to.eql({
                 list: [
                     { path: "reg-a/sec-a/p1/p2/f1", role: Role.INSTRUMENT, type: 'lambda' }

@@ -202,18 +202,18 @@ export class BigbandModel {
         }
 
         const first: NavigationItem = list[0]
-        if (first.role !== Role.INSTRUMENT || !first.instrument) {
+        if (first.role !== Role.INSTRUMENT) {
             throw new Error(`The specifeid path (${path}) does not refer to an instrument`)
         }
 
-        const section = first.instrument.section
-        const sectionModel = this.findSectionModel(section.path)
+        const instrument = this.getInstrument(first.path)
+        const sectionModel = this.findSectionModel(instrument.section.path)
 
         return  {
-            instrumentModel: first.instrument,
-            instrument: first.instrument.instrument,
-            physicalName: first.instrument.physicalName,
-            section,
+            instrumentModel: instrument,
+            instrument: instrument.instrument,
+            physicalName: instrument.physicalName,
+            section: instrument.section,
             sectionModel
         }
     }
