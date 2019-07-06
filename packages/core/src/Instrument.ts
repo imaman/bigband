@@ -103,6 +103,8 @@ export abstract class Instrument {
      * @memberof Instrument
      */
     fullyQualifiedName(style: NameStyle = NameStyle.DASH) {
+
+        // TODO(imaman): move everything into compositename
         const tokens = this.cname.all
         if (style == NameStyle.CAMEL_CASE) {
             return toCamelCase(tokens)

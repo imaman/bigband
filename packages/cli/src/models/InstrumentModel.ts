@@ -1,4 +1,4 @@
-import { Instrument, Section, Bigband } from "bigband-core";
+import { Instrument, Section, Bigband, CompositeName } from "bigband-core";
 import { Misc } from "../Misc";
 import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
@@ -51,30 +51,25 @@ export class InstrumentModel {
             throw new Error(`Path ${this.section.path} leads to nowhere`)
         }
 
-        const acc: string[] = []
+        let path = CompositeName.fromString(this.section.path)
 
-        acc.push(this.section.path)
-
-        const tokens = this.instrument.sectionRelativeName.split('/')
-        for (let i = 0; i < tokens.length; ++i) {
-            const curr = tokens[i]
-            acc.push(curr)
-            let item: NavigationItem
-            if (i === tokens.length - 1) {
-                item = {
-                    path: acc.join('/'),
-                    role: Role.INSTRUMENT,
-                    type: this.instrument.arnService()
-                }
-            } else {
-                item = {
-                    path: acc.join('/'),
-                    role: Role.PATH,
-                }
+        for (const curr of this.instrument.cname.butLast().all) {
+            path = path.append(curr)
+            let item: NavigationItem  = {
+                path: path.toString(),
+                role: Role.PATH,
             }
             node = node.addChild(curr, item)
         }
 
-        return node
+        const last = this.instrument.cname.last("")
+        path = path.append(last)
+        const item = {
+            path: path.toString(),
+            role: Role.INSTRUMENT,
+            type: this.instrument.arnService()
+        }
+
+        return node.addChild(last, item)
     }
 }

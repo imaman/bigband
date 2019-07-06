@@ -19,18 +19,38 @@ export class CompositeName {
         return slashSeparatedString.split('/')
     }
 
-    append(token: string): CompositeName {
+    append(suffix: string|CompositeName): CompositeName {
+        if (suffix instanceof CompositeName) {
+            new CompositeName(this.tokens.concat(suffix.tokens))
+        }
+
         const temp = [...this.tokens]
-        temp.push(token)
+        temp.push(suffix as string)
         return new CompositeName(temp)
     }
 
     first(defaultValue: string): string {
-        if (!this.tokens.length) {
+        if (this.isEmpty) {
             return defaultValue
         }
 
         return this.tokens[0]
+    }
+
+    last(defaultValue: string): string {
+        if (this.isEmpty) {
+            return defaultValue
+        }
+
+        return this.tokens[this.tokens.length - 1]
+    }
+
+    butLast(): CompositeName {
+        return new CompositeName(this.tokens.slice(0, -1))
+    }
+
+    get isEmpty(): boolean {
+        return !this.tokens.length
     }
 
     get all(): string[] {
