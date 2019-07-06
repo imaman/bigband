@@ -139,48 +139,6 @@ export class BigbandModel {
         return ret
     }
 
-    searchInstrument(instrumentName: string): LookupResult {
-        const matches: LookupResult[] = [];
-        const names: string[] = [];    
-        const exactMatches: LookupResult[] = []
-    
-
-       this.sections.forEach(sectionModel => {
-            sectionModel.instruments.forEach(curr => {
-                const physicalName = new Namer(this.bigband, sectionModel.section).physicalName(curr.instrument)
-                const lookupResult: LookupResult = {
-                    section: sectionModel.section, 
-                    instrument: curr.instrument, 
-                    instrumentModel: curr,
-                    physicalName, 
-                    sectionModel
-                };
-
-                if (curr.instrument.name == instrumentName) {
-                    exactMatches.push(lookupResult)
-                } 
-                names.push(physicalName);
-                if (physicalName.indexOf(instrumentName) >= 0) {
-                    matches.push(lookupResult);
-                }
-            });
-        });
-
-        if (exactMatches.length === 1) {
-            return exactMatches[0]
-        }
-    
-        if (!matches.length) {
-            throw new Error(`Instrument "${instrumentName}" not found in ${JSON.stringify(names)}`);
-        }
-    
-        if (matches.length > 1) {
-            throw new Error(`Multiple matches on "${instrumentName}": ${JSON.stringify(matches.map(x => x.physicalName))}`);
-        }
-    
-        return matches[0];    
-    }
-
     // TODO(imaman): section name is not enough for finding a section. you need the region too.
     // TODO(imaman): rename this method
     findSectionModel(path: string): SectionModel {

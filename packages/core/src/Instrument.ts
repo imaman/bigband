@@ -1,6 +1,7 @@
 import {DeployableFragment} from './DeployableFragment';
 import {Section} from './Section';
 import {Definition} from './Definition';
+import { CompositeName } from './CompositeName';
 
 export enum NameStyle {
     DASH,
@@ -24,7 +25,7 @@ export enum NameStyle {
 export abstract class Instrument {
 
     protected readonly definition = new Definition();
-    private readonly packageName: string[];
+    readonly cname: CompositeName
 
     /**
      * Initializes an Instrument.
@@ -33,17 +34,19 @@ export abstract class Instrument {
      * @param {string} plainName the instrument's simple name (must be unique within its package). See "Naming" above.
      * @memberof Instrument
      */
-    constructor(packageName: string|string[], public readonly name: string) {
-        this.packageName = (Array.isArray(packageName) ? packageName : [packageName]);
-        if (!this.packageName.join('').trim().length) {
+    constructor(packageName: string|string[], simpleName: string) {
+        const arr = (Array.isArray(packageName) ? packageName : [packageName])
+        const temp = CompositeName.fromArray(arr)
+        this.cname = temp.append(simpleName)
+        if (!arr.join('').trim().length) {
             throw new Error('pacakge name cannot be empty');
         }
 
-        const withUpperCase = this.packageName.find(curr => curr.search(/[A-Z]/) >= 0)
+        const withUpperCase = arr.find(curr => curr.search(/[A-Z]/) >= 0)
         if (withUpperCase) {
             throw new Error(`Upper-case symbols are not allowed in package names. Found: "${withUpperCase}"`);
         }
-        if (!this.name.trim().length) {
+        if (!simpleName.trim().length) {
             throw new Error('name cannot be empty');
         }
     }
@@ -100,7 +103,7 @@ export abstract class Instrument {
      * @memberof Instrument
      */
     fullyQualifiedName(style: NameStyle = NameStyle.DASH) {
-        const tokens = this.packageName.concat(this.name)
+        const tokens = this.cname.all
         if (style == NameStyle.CAMEL_CASE) {
             return toCamelCase(tokens)
         } 
@@ -117,7 +120,7 @@ export abstract class Instrument {
     }
 
     get topLevelPackageName(): string {
-        return this.packageName.length === 0 ? "" : this.packageName[0]
+        return this.cname.first("")
     }
 
     getDefinition() : Definition {

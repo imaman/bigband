@@ -26,7 +26,7 @@ describe('Instruments', () => {
     describe('bigband', () => {
         it('can be initialized from an object', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-            expect(instrument.name).to.equal("abc")
+            expect(instrument.cname.toString()).to.equal("p1/p2/p3/abc")
             expect(instrument.fullyQualifiedName()).to.equal("p1-p2-p3-abc")
         })
     })

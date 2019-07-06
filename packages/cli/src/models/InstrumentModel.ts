@@ -26,7 +26,7 @@ export class InstrumentModel {
     }
 
     validate() {
-        if (!NameValidator.isOk(this.instrument.name)) {
+        if (!NameValidator.isCompositeNameOk(this.instrument.cname)) {
             throw new Error(`Bad instrument name: "${this.instrument.fullyQualifiedName()}"`)
         }
         // Reserve the "bigband" top-level package for system instruments.
