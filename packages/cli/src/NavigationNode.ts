@@ -1,5 +1,4 @@
 import { Role } from "./models/BigbandModel";
-import { InstrumentModel } from "./models/InstrumentModel";
 import { CompositeName } from "bigband-core";
 
 export interface NavigationItem {
