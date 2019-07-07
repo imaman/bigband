@@ -1,8 +1,10 @@
-import { SectionSpec, Instrument, Bigband } from "bigband-core";
+import { SectionSpec, Instrument, Bigband, CompositeName } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
 import { NameValidator } from "../NameValidator";
 import { NavigationNode } from "../NavigationNode";
 import { Role } from "./BigbandModel";
+import { NavigationPoint } from "../NavigationPoint";
+import { InstrumentListNavigationPoint } from "./InstrumentListNavigationPoint";
 
 export class SectionModel {
     constructor(readonly bigband: Bigband, private readonly spec: SectionSpec,
@@ -32,6 +34,50 @@ export class SectionModel {
         }
 
         return ret
+    }
+
+    getNavigationPoint(): NavigationPoint|null {
+        class B implements NavigationPoint {
+            constructor(private readonly sec: SectionModel) {}
+            describe(): string { return "" }
+            describeLong(): string[] { return [] }
+            act(): string { return "-" }
+            downTo(name: CompositeName): NavigationPoint|null {
+                if (name.isEmpty) {
+                    return this
+                }
+
+                const token = name.first("")
+                const matching = this.sec.instruments.filter(im => im.instrument.cname.first("") === token)
+                if (!matching.length) {
+                    return null
+                } 
+
+                return new InstrumentListNavigationPoint(matching)
+            }
+        }
+
+        class A implements NavigationPoint {
+            constructor(private readonly sec: SectionModel) {}
+            describe(): string { return "" }
+            describeLong(): string[] { return [] }
+            act(): string { return "-" }
+            downTo(name: CompositeName): NavigationPoint|null {
+                if (name.isEmpty) {
+                    return this
+                }
+
+                const token = name.first("")
+                if (this.sec.section.name !== token) {
+                    return null
+                } 
+
+                return new B(this.sec)
+            }
+        }
+
+
+        return new A(this)
     }
 
     validate() {

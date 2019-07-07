@@ -1,4 +1,4 @@
-import { BigbandSpec, Instrument, Section, Bigband } from "bigband-core";
+import { BigbandSpec, Instrument, Section, Bigband, CompositeName } from "bigband-core";
 import { Misc } from "../Misc";
 import { SectionModel } from "./SectionModel";
 import { InstrumentModel } from "./InstrumentModel";
@@ -6,6 +6,7 @@ import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
 import { WireModel } from "./WireModel";
 import { NavigationItem, NavigationNode } from "../NavigationNode";
+import { NavigationPoint } from "../NavigationPoint";
 
 
 
@@ -216,6 +217,33 @@ export class BigbandModel {
             section: instrument.section,
             sectionModel
         }
+    }
+
+    getNavigationPoint(): NavigationPoint {
+
+
+        class A implements NavigationPoint {
+
+            constructor(private readonly bigbandModel: BigbandModel) {}
+            describe(): string { return "" }
+            describeLong(): string[] { return [] }
+            act(): string { return "-" }
+            downTo(name: CompositeName): NavigationPoint|null {
+                if (name.isEmpty) {
+                    return this
+                }
+
+                const token = name.first("")
+                const s = this.bigbandModel.sections.find(s => s.section.region === token) 
+                if (!s) {
+                    return null
+                }
+
+                return s.getNavigationPoint()
+            }
+        }
+
+        return new A(this)
     }
 
     validate() {

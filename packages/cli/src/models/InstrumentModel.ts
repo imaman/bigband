@@ -5,6 +5,7 @@ import { NameValidator } from "../NameValidator";
 import { WireModel } from "./WireModel";
 import { NavigationNode, NavigationItem } from "../NavigationNode";
 import { Role } from "./BigbandModel";
+import { NavigationPoint } from "../NavigationPoint";
 
 export class InstrumentModel {
     constructor(private readonly bigband: Bigband, public readonly section: Section, public readonly instrument: Instrument,
@@ -70,6 +71,50 @@ export class InstrumentModel {
             type: this.instrument.arnService()
         }
 
-        node = node.addChild(last, item)
+        node = node.addChild(last, item)        
+    }
+
+    getNavigationPoint(): NavigationPoint|null {
+        class B implements NavigationPoint {
+            constructor(private readonly model: InstrumentModel) {}
+            describe(): string { return "" }
+            describeLong(): string[] { return [] }
+            act(): string { return "-" }
+            downTo(name: CompositeName): NavigationPoint|null {
+                if (name.isEmpty) {
+                    return this
+                }
+
+                const token = name.first("")
+                const im = this.sec.instruments.find(im => im.instrument.cname.first("") === token)
+                if (!im) {
+                    return null
+                } 
+
+                return im.getNavigationPoint()
+            }
+        }
+
+        class A implements NavigationPoint {
+            constructor(private readonly model: InstrumentModel, suffix: CompositeName) {}
+            describe(): string { return "" }
+            describeLong(): string[] { return [] }
+            act(): string { return "-" }
+            downTo(name: CompositeName): NavigationPoint|null {
+                if (name.isEmpty) {
+                    return this
+                }
+
+                const token = name.first("")
+                if (this.sec.section.name !== token) {
+                    return null
+                } 
+
+                return new B(this.sec)
+            }
+        }
+
+
+        return new A(this, this.instrument.cname)
     }
 }
