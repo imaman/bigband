@@ -70,6 +70,6 @@ export class InstrumentModel {
             type: this.instrument.arnService()
         }
 
-        return node.addChild(last, item)
+        node = node.addChild(last, item)
     }
 }
