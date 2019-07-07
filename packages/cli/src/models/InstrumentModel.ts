@@ -3,8 +3,8 @@ import { Misc } from "../Misc";
 import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
 import { WireModel } from "./WireModel";
-import { NavigationNode, NavigationItem } from "../NavigationNode";
-import { Role } from "./BigbandModel";
+import { NavigationNode } from "../NavigationNode";
+import { Role, NavigationItem } from "bigband-core";
 
 export class InstrumentModel {
     constructor(private readonly bigband: Bigband, public readonly section: Section, public readonly instrument: Instrument,
@@ -70,6 +70,8 @@ export class InstrumentModel {
             type: this.instrument.arnService()
         }
 
-        node = node.addChild(last, item)
+        const instrumentNode = node.addChild(last, item)
+
+        // const items: NavigationItem[] = this.instrument.getNavigationItems()
     }
 }

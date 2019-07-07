@@ -1,5 +1,6 @@
 import {BigbandFileRunner} from '../BigbandFileRunner';
-import { Role } from '../models/BigbandModel';
+import { Role } from 'bigband-core';
+
 
 async function main(bigbandFile: string, path: string, longListing: boolean) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);

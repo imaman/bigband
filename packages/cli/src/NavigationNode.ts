@@ -1,12 +1,5 @@
-import { Role } from "./models/BigbandModel";
-import { CompositeName } from "bigband-core";
+import { CompositeName, NavigationItem } from "bigband-core";
 
-export interface NavigationItem {
-    path: string
-    role: Role
-    type?: string
-    // instrument?: InstrumentModel
-}
 
 export class NavigationNode {
 

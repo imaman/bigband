@@ -6,8 +6,8 @@ const {expect} = chai;
 
 import 'mocha';
 
-import { BigbandSpec, LambdaInstrument, Section, wire, Bigband } from 'bigband-core';
-import { BigbandModel, LookupResult, Role } from './BigbandModel'
+import { BigbandSpec, Role, LambdaInstrument, Section, wire, Bigband } from 'bigband-core';
+import { BigbandModel } from './BigbandModel'
 
 
 describe('BigbandModel', () => {

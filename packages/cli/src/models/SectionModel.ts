@@ -2,7 +2,7 @@ import { SectionSpec, Instrument, Bigband } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
 import { NameValidator } from "../NameValidator";
 import { NavigationNode } from "../NavigationNode";
-import { Role } from "./BigbandModel";
+import { Role } from "bigband-core";
 
 export class SectionModel {
     constructor(readonly bigband: Bigband, private readonly spec: SectionSpec,

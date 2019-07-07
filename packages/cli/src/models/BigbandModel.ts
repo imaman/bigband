@@ -1,11 +1,10 @@
-import { BigbandSpec, Instrument, Section, Bigband } from "bigband-core";
+import { BigbandSpec, Instrument, Section, Bigband, NavigationItem, Role } from "bigband-core";
 import { Misc } from "../Misc";
 import { SectionModel } from "./SectionModel";
 import { InstrumentModel } from "./InstrumentModel";
-import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
 import { WireModel } from "./WireModel";
-import { NavigationItem, NavigationNode } from "../NavigationNode";
+import { NavigationNode } from "../NavigationNode";
 
 
 
@@ -252,13 +251,5 @@ function trimAt(p: string, stopAt: string) {
     }
 
     return p.substr(0, index)
-}
-
-export enum Role {
-    BIGBAND,
-    REGION,
-    SECTION,
-    PATH,
-    INSTRUMENT
 }
 
