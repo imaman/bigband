@@ -9,7 +9,6 @@ export interface NavigationItem {
     // instrument?: InstrumentModel
 }
 
-
 export class NavigationNode {
 
     public readonly children: NavigationNode[] = []
