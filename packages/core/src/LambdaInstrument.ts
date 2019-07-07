@@ -2,6 +2,9 @@ import {DeployableAtom, DeployableFragment} from './DeployableFragment';
 import { Section } from './Section'
 import { Definition } from './Definition'
 import { Instrument } from './Instrument'
+import { NavigationItem, Role } from './NavigationItem';
+import { stringify } from 'querystring';
+import { CompositeName } from './CompositeName';
 
 export class LambdaInstrument extends Instrument {
     private static readonly BASE_DEF = {
@@ -140,6 +143,14 @@ export class LambdaInstrument extends Instrument {
                 Resource: myArn
             }]
         }));
+    }
+
+    getNavigationItems(path: CompositeName): Map<string, NavigationItem> {
+        const ret = new Map<string, NavigationItem>()
+        ret.set('info', {role: Role.LOCAL_COMMAND, path: path.append('info').toString()})
+        ret.set('exec', {role: Role.COMMAND, path: path.append('exec').toString()})
+        ret.set('logs', {role: Role.COMMAND, path: path.append('logs').toString()})
+        return ret
     }
 }
 

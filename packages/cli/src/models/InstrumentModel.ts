@@ -73,7 +73,7 @@ export class InstrumentModel {
 
         const instrumentNode = node.addChild(last, item)
 
-        const items: Map<string, NavigationItem> = this.instrument.getNavigationItems()
+        const items: Map<string, NavigationItem> = this.instrument.getNavigationItems(CompositeName.fromString(this.path))
 
         for (const token of items.keys()) {
             const item = items.get(token)

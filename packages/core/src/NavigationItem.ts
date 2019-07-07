@@ -3,7 +3,9 @@ export enum Role {
     REGION,
     SECTION,
     PATH,
-    INSTRUMENT
+    INSTRUMENT,
+    LOCAL_COMMAND,
+    COMMAND
 }
 
 
