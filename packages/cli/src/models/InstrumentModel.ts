@@ -73,6 +73,14 @@ export class InstrumentModel {
 
         const instrumentNode = node.addChild(last, item)
 
-        const items: NavigationItem[] = this.instrument.getNavigationItems()
+        const items: Map<string, NavigationItem> = this.instrument.getNavigationItems()
+
+        for (const token of items.keys()) {
+            const item = items.get(token)
+            if (!item) {
+                throw new Error('No item found at ' + token)
+            }
+            instrumentNode.addChild(token, item)
+        }
     }
 }

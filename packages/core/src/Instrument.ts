@@ -135,8 +135,8 @@ export abstract class Instrument {
         return this.fullyQualifiedName(NameStyle.SLASH)
     }
 
-    getNavigationItems(): NavigationItem[] {
-        return []
+    getNavigationItems(): Map<string, NavigationItem> {
+        return new Map<string, NavigationItem>()
     }
 }
 
