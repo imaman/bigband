@@ -2,6 +2,7 @@ import {DeployableFragment} from './DeployableFragment';
 import {Section} from './Section';
 import {Definition} from './Definition';
 import { CompositeName } from './CompositeName';
+import { NavigationItem } from './NavigationItem';
 
 export enum NameStyle {
     DASH,
@@ -132,6 +133,10 @@ export abstract class Instrument {
     // TODO(imaman): rename this. "path" now denotes the full path to an instrument not just it "directories"path()
     get sectionRelativeName(): string {
         return this.fullyQualifiedName(NameStyle.SLASH)
+    }
+
+    getNavigationItems(): NavigationItem[] {
+        return []
     }
 }
 

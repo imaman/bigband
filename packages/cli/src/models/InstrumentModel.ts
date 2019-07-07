@@ -7,7 +7,8 @@ import { NavigationNode } from "../NavigationNode";
 import { Role, NavigationItem } from "bigband-core";
 
 export class InstrumentModel {
-    constructor(private readonly bigband: Bigband, public readonly section: Section, public readonly instrument: Instrument,
+    constructor(private readonly bigband: Bigband, public readonly section: Section,
+        public readonly instrument: Instrument,
         // TODO(imaman): make wirings private
         // TODO(imaman): rename to wires
         public readonly wirings: WireModel[], private readonly isSystemInstrument) {}
@@ -72,6 +73,6 @@ export class InstrumentModel {
 
         const instrumentNode = node.addChild(last, item)
 
-        // const items: NavigationItem[] = this.instrument.getNavigationItems()
+        const items: NavigationItem[] = this.instrument.getNavigationItems()
     }
 }
