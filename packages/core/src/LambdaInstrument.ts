@@ -5,6 +5,7 @@ import { Instrument } from './Instrument'
 import { NavigationItem, Role } from './NavigationItem';
 import { stringify } from 'querystring';
 import { CompositeName } from './CompositeName';
+import { AwsFactory } from './AwsFactory';
 
 export class LambdaInstrument extends Instrument {
     private static readonly BASE_DEF = {
@@ -145,14 +146,14 @@ export class LambdaInstrument extends Instrument {
         }));
     }
 
-    getNavigationItems(path: CompositeName, arn: string): Map<string, NavigationItem> {
+    getNavigationItems(path: CompositeName, arn: string, awsFactory: AwsFactory): Map<string, NavigationItem> {
         const info = (s: string) => {
             return this.getDefinition().get()
         }
 
         const ret = new Map<string, NavigationItem>()
         ret.set('def', {role: Role.LOCAL_COMMAND, path: path.append('info').toString(), action: info})
-        ret.set('describe', {role: Role.COMMAND, path: path.append('exec').toString()})
+        ret.set('describe', {role: Role.COMMAND, path: path.append('desc').toString()})
         ret.set('exec', {role: Role.COMMAND, path: path.append('exec').toString()})
         ret.set('logs', {role: Role.COMMAND, path: path.append('logs').toString()})
         return ret

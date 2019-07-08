@@ -1,16 +1,12 @@
-import { SectionSpec, Instrument, Bigband } from "bigband-core";
+import { SectionSpec, Instrument, Bigband, Section } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
 import { NameValidator } from "../NameValidator";
 import { NavigationNode } from "../NavigationNode";
 import { Role } from "bigband-core";
 
 export class SectionModel {
-    constructor(readonly bigband: Bigband, private readonly spec: SectionSpec,
+    constructor(readonly bigband: Bigband, public readonly section: Section,
             private readonly instruments_: InstrumentModel[] = []) {}
-
-    get section() {
-        return this.spec.section
-    }
 
     get path(): string {
         return this.section.path

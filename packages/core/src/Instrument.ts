@@ -3,6 +3,7 @@ import {Section} from './Section';
 import {Definition} from './Definition';
 import { CompositeName } from './CompositeName';
 import { NavigationItem } from './NavigationItem';
+import { AwsFactory } from './AwsFactory';
 
 export enum NameStyle {
     DASH,
@@ -135,7 +136,7 @@ export abstract class Instrument {
         return this.fullyQualifiedName(NameStyle.SLASH)
     }
 
-    getNavigationItems(path: CompositeName, arn: string): Map<string, NavigationItem> {
+    getNavigationItems(path: CompositeName, arn: string, awsFactory: AwsFactory): Map<string, NavigationItem> {
         return new Map<string, NavigationItem>()
     }
 }

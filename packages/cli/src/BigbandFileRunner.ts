@@ -21,6 +21,7 @@ import { SectionModel } from './models/SectionModel';
 import { InstrumentModel } from './models/InstrumentModel';
 import { Namer } from './Namer';
 import { WireModel } from './models/WireModel';
+import { CloudProvider } from './CloudProvider';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
@@ -110,7 +111,7 @@ export class BigbandFileRunner {
     
         const ps = this.sectionModel.instruments.map(im => this.pushCode(dir, dir, im));
     
-        const teleportModel = new InstrumentModel(this.bigbandModel.bigband, this.sectionModel.section,
+        const teleportModel = new InstrumentModel(this.bigbandModel.bigband, this.sectionModel,
             this.teleportInstrument, [], true)
         // teleporter needs slightly different parameters so we pushCode() it separately. 
         ps.push(this.pushCode(Misc.bigbandPackageDir(), dir, teleportModel));
@@ -149,7 +150,8 @@ export class BigbandFileRunner {
 
             for (const wireModel of curr.model.wirings) {
                 const arn = wireModel.supplier.arn
-                wireModel.supplier.instrument.contributeToConsumerDefinition(wireModel.consumer.section, def, arn);
+                wireModel.supplier.instrument.contributeToConsumerDefinition(wireModel.consumer.section.section, def,
+                    arn);
             }
     
             if (curr.s3Ref.isOk()) {

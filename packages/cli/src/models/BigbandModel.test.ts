@@ -246,11 +246,28 @@ describe('BigbandModel', () => {
 
             const model = new BigbandModel(spec, "somedir")
             const actual = model.inspect("reg-a/sec-a/p1/p2/f1")
-            expect(actual).to.eql({
-                list: [
-                    { path: "reg-a/sec-a/p1/p2/f1", role: Role.INSTRUMENT, type: 'lambda' }
-                ]
-            })
+
+            expect(actual).to.containSubset({
+                "list": [
+                    {
+                        "role": Role.LOCAL_COMMAND,
+                        "path": "reg-a/sec-a/p1/p2/f1/info"
+                    },
+                    {
+                        "role": Role.COMMAND,
+                        "path": "reg-a/sec-a/p1/p2/f1/desc"
+                    },
+                    {
+                        "role": Role.COMMAND,
+                        "path": "reg-a/sec-a/p1/p2/f1/exec"
+                    },
+                    {
+                        "role": Role.COMMAND,
+                        "path": "reg-a/sec-a/p1/p2/f1/logs"
+                    }
+                ]}                     
+                    // { path: "reg-a/sec-a/p1/p2/f1", role: Role.INSTRUMENT, type: 'lambda' }
+            )
         })
     })
 });

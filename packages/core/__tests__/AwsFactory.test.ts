@@ -6,28 +6,12 @@ const {expect} = chai;
 
 import 'mocha';
 
-import { AwsFactory } from 'bigband-core'
-import { SectionModel } from './models/SectionModel';
-import { Bigband, SectionSpec, Section } from 'bigband-core';
 
+import {AwsFactory} from '../src/AwsFactory'
 
 describe('AwsFactory', () => {
     it('does something', () => {
-        const bigband = new Bigband({
-            awsAccount: "myaccount",
-            name: "my-bigband-name",
-            profileName: "myprofile",
-            s3Bucket: "mybucket",
-            s3Prefix: "myprefix"
-        })
-
-        const sectionSpec: SectionSpec = {
-            section: new Section("myregion", "my-section-name"),
-            instruments: [],
-            wiring: []
-        }
-
-        const awsFactory = AwsFactory.fromSection(new SectionModel(bigband, sectionSpec))
+        const awsFactory = new AwsFactory("my-bigband-name-my-section-name", "myregion", "myprofile") 
         expect(awsFactory.newLambda()).to.exist
         expect(awsFactory.profileName).to.equal("myprofile")
         expect(awsFactory.region).to.equal("myregion")

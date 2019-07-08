@@ -48,23 +48,11 @@ describe('SectionModel', () => {
         // TODO(imaman): check validity of region (small-caps, digits, dash)
         describe("name", () => {
             it("allows dash-separated sequences of lower-case letters and digits", () => {
-                const spec: SectionSpec = {
-                    section: new Section("r1", "abc-def58-xyz"), 
-                    instruments: [],
-                    wiring: []
-                }
-    
-                const model = new SectionModel(b, spec)
+                const model = new SectionModel(b, new Section("r1", "abc-def58-xyz"))
                 expect(() => model.validate()).not.to.throw()
             });
             it("rejects upper-case letters", () => {
-                const spec: SectionSpec = {
-                    section: new Section("r1", "aBc"), 
-                    instruments: [],
-                    wiring: []
-                }
-    
-                const model = new SectionModel(b, spec)
+                const model = new SectionModel(b, new Section("r1", "aBc"))
                 expect(() => model.validate()).to.throw()
             });
         })

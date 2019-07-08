@@ -56,7 +56,7 @@ export class BigbandModel {
             // package-visibility in typescript, this trick allow us to create mututally-dependent object without having
             // them exposed state-mutating methods.
             const acc: InstrumentModel[] = []
-            const sm = new SectionModel(this.spec.bigband, s, acc)
+            const sm = new SectionModel(this.spec.bigband, s.section, acc)
             if (this.sectionByPath.has(sm.path)) {
                 throw new Error(`Section path collision. two (or more) sections share the same path: "${sm.path}"`)
             }
@@ -67,7 +67,7 @@ export class BigbandModel {
                 // later - to avoid state-mutating methods on the created object.
                 const wires: WireModel[] = []
                 
-                const im = new InstrumentModel(this.spec.bigband, s.section, i, wires, false)
+                const im = new InstrumentModel(this.spec.bigband, sm, i, wires, false)
                 if (this.instrumentModelByPath.has(im.path)) {
                     throw new Error(`Instrument path collision. two (or more) instruments share the same path: "${im.path}"`)
                 }
@@ -217,7 +217,7 @@ export class BigbandModel {
             instrumentModel: instrument,
             instrument: instrument.instrument,
             physicalName: instrument.physicalName,
-            section: instrument.section,
+            section: instrument.section.section,
             sectionModel
         }
     }
@@ -242,7 +242,7 @@ export class BigbandModel {
                     sectionByInstrument.set(im.instrument, set)
                 }
 
-                set.add(im.section)
+                set.add(im.section.section)
             }
         }       
         
