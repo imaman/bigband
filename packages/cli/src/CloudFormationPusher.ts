@@ -1,4 +1,4 @@
-import {AwsFactory} from './AwsFactory';
+import { AwsFactory } from 'bigband-core'
 
 import { CreateChangeSetInput, ExecuteChangeSetInput, DescribeChangeSetInput, DescribeChangeSetOutput, DescribeStacksInput, DescribeStacksOutput } from 'aws-sdk/clients/cloudformation';
 import {Section} from 'bigband-core';

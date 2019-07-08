@@ -4,7 +4,7 @@ import * as hash from 'hash.js'
 const Module = require('module');
 require('ts-node').register({})
 
-import { AwsFactory } from './AwsFactory';
+import { AwsFactory } from 'bigband-core'
 import { BigbandSpec, NameStyle, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult, DeployMode } from './Packager'
 import { DeployableAtom } from 'bigband-core'
@@ -60,7 +60,7 @@ export class BigbandFileRunner {
         private readonly sectionModel: SectionModel, 
         private readonly teleportingEnabled: boolean, 
         private readonly deployMode: DeployMode) {
-            this.awsFactory = AwsFactory.fromSection(this.sectionModel)
+            this.awsFactory = CloudProvider.newAwsFactory(this.sectionModel)
             this.poolPrefix = `${this.ttlPrefix()}/fragments`;
             this.blobPool = new S3BlobPool(this.awsFactory, this.bigbandModel.bigband.s3Bucket, this.poolPrefix);
             this.teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {

@@ -6,7 +6,7 @@ const {expect} = chai;
 
 import 'mocha';
 
-import { AwsFactory } from './AwsFactory'
+import { AwsFactory } from 'bigband-core'
 import { SectionModel } from './models/SectionModel';
 import { Bigband, SectionSpec, Section } from 'bigband-core';
 

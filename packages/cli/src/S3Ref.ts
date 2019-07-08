@@ -1,4 +1,4 @@
-import { AwsFactory } from './AwsFactory';
+import { AwsFactory } from 'bigband-core'
 
 export class S3Ref {
   constructor(public readonly s3Bucket: string, public readonly s3Key: string) {}

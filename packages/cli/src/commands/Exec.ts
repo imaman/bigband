@@ -1,15 +1,15 @@
 import * as AWS from 'aws-sdk'
-import { AwsFactory } from '../AwsFactory'
 import { BigbandFileRunner } from '../BigbandFileRunner';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
 import { LookupResult } from '../models/BigbandModel';
+import { CloudProvider } from '../CloudProvider';
 
 async function invokeFunction(bigbandFile: string, path: string, input: string) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
 
     const lookupResult: LookupResult = model.searchInspect(path)
     
-    var lambda: AWS.Lambda = AwsFactory.fromSection(lookupResult.sectionModel).newLambda();
+    var lambda: AWS.Lambda = CloudProvider.newAwsFactory(lookupResult.sectionModel).newLambda();
     const params: InvocationRequest = {
         FunctionName: lookupResult.physicalName,
         InvocationType: 'RequestResponse', 

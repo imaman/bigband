@@ -1,6 +1,6 @@
 import { S3Ref } from "./S3Ref";
 import { ZipBuilder } from "./ZipBuilder";
-import { AwsFactory } from "./AwsFactory";
+import { AwsFactory } from 'bigband-core'
 import { logger } from './logger';
 import * as hash from 'hash.js'
 

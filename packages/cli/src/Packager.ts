@@ -6,7 +6,7 @@ import * as uuidv1 from 'uuid/v1';
 import * as os from 'os';
 
 import { logger } from './logger';
-import { AwsFactory } from './AwsFactory';
+import { AwsFactory } from 'bigband-core'
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver } from './NpmPackageResolver'
 import { BigbandInstallation } from 'bigband-core';
