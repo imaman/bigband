@@ -33,6 +33,7 @@ export interface LookupResult {
 
 export interface InsepctResult {
     list: NavigationItem[]
+    data?: any
 }
 
 
@@ -185,6 +186,10 @@ export class BigbandModel {
 
         if (navNode.children.length) {
             return {list: navNode.children.map(curr => curr.item)}
+        }
+
+        if (navNode.item.action) {
+            return {list: [], data: navNode.item.action("")}
         }
 
         return {list: [navNode.item]}

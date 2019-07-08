@@ -13,4 +13,5 @@ export interface NavigationItem {
     path: string
     role: Role
     type?: string
+    action?: (_: string) => any
 }

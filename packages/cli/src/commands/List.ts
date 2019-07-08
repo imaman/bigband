@@ -4,12 +4,16 @@ import { Role } from 'bigband-core';
 
 async function main(bigbandFile: string, path: string, longListing: boolean) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
-    const data = model.inspect(path)
+    const inspectResult = model.inspect(path)
+
+    if (inspectResult.data) {
+        return JSON.stringify(inspectResult.data, null, 2)
+    }
     if (!longListing) {
-        return data.list.map(curr => curr.path).join('\n')
+        return inspectResult.list.map(curr => curr.path).join('\n')
     }
 
-    const table: string[][] = data.list.map(curr => [
+    const table: string[][] = inspectResult.list.map(curr => [
         Role[curr.role].toLowerCase().substr(0, 1), curr.type || '', curr.path])
     const widths = new Array<number>(table[0].length).fill(0)
     table.forEach(line => {

@@ -146,8 +146,11 @@ export class LambdaInstrument extends Instrument {
     }
 
     getNavigationItems(path: CompositeName): Map<string, NavigationItem> {
+        const info = (s: string) => {
+            return this.getDefinition().get()
+        }
         const ret = new Map<string, NavigationItem>()
-        ret.set('info', {role: Role.LOCAL_COMMAND, path: path.append('info').toString()})
+        ret.set('info', {role: Role.LOCAL_COMMAND, path: path.append('info').toString(), action: info})
         ret.set('exec', {role: Role.COMMAND, path: path.append('exec').toString()})
         ret.set('logs', {role: Role.COMMAND, path: path.append('logs').toString()})
         return ret
