@@ -1,4 +1,3 @@
-import {Section} from 'bigband-core'
 import * as AWS from 'aws-sdk';
 import { SectionModel } from './models/SectionModel';
 
