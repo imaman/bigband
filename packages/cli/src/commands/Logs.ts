@@ -6,7 +6,7 @@ import { CloudProvider } from '../CloudProvider';
 async function main(bigbandFile: string, lambdaName: string, limit: number) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
     // TODO(imaman): fail if this is not a lambda instrument
-    const lookupResult: LookupResult = model.searchInspect(lambdaName);
+    const lookupResult: LookupResult = await model.searchInspect(lambdaName);
 
     const cloudWatchLogs = CloudProvider.newAwsFactory(lookupResult.sectionModel).newCloudWatchLogs();
     const logGroupName = `/aws/lambda/${lookupResult.physicalName}`;

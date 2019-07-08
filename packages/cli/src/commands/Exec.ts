@@ -7,7 +7,7 @@ import { CloudProvider } from '../CloudProvider';
 async function invokeFunction(bigbandFile: string, path: string, input: string) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
 
-    const lookupResult: LookupResult = model.searchInspect(path)
+    const lookupResult: LookupResult = await model.searchInspect(path)
     
     var lambda: AWS.Lambda = CloudProvider.newAwsFactory(lookupResult.sectionModel).newLambda();
     const params: InvocationRequest = {

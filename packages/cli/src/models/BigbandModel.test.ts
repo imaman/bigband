@@ -177,7 +177,7 @@ describe('BigbandModel', () => {
         })
     })
     describe("navigate", () => {
-        it("it returns all instruments at the given path", () => {
+        it("it returns all instruments at the given path", async () => {
             const s1 = new Section("r1", "s1")
             const f1 = new LambdaInstrument(["p1", "p2"], "f1", "")
             const f2 = new LambdaInstrument(["p1", "p2"], "f2", "")
@@ -189,7 +189,7 @@ describe('BigbandModel', () => {
             ]}
 
             const model = new BigbandModel(spec, "somedir")
-            const actual = model.inspect("r1/s1/p1")
+            const actual = await model.inspect("r1/s1/p1")
             expect(actual).to.eql({
                 list: [
                     {path: "r1/s1/p1/f3", role: Role.INSTRUMENT, type: 'lambda'},
@@ -197,7 +197,7 @@ describe('BigbandModel', () => {
                 ]
             })
         })
-        it("it returns regions when no path is given", () => {
+        it("it returns regions when no path is given", async () => {
             const s1 = new Section("r1", "s1")
             const f1 = new LambdaInstrument(["p1", "p2"], "f1", "")
             const spec: BigbandSpec = {
@@ -206,14 +206,14 @@ describe('BigbandModel', () => {
             ]}
 
             const model = new BigbandModel(spec, "somedir")
-            const actual = model.inspect("")
+            const actual = await model.inspect("")
             expect(actual).to.eql({
                 list: [
                     { path: "r1", role: Role.REGION }
                 ]
             })
         })
-        it("it shows sections when given the region as a path", () => {
+        it("it shows sections when given the region as a path", async () => {
             const s1 = new Section("region_a", "s1")
             const s2 = new Section("region_b", "s2")
             const s3 = new Section("region_a", "s3")
@@ -227,7 +227,7 @@ describe('BigbandModel', () => {
             ]}
 
             const model = new BigbandModel(spec, "somedir")
-            const actual = model.inspect("region_a")
+            const actual = await model.inspect("region_a")
             expect(actual).to.eql({
                 list: [
                     { path: "region_a/s1", role: Role.SECTION },
@@ -235,7 +235,7 @@ describe('BigbandModel', () => {
                 ]
             })
         })
-        it("it shows an instrument when given the full path to it", () => {
+        it("it shows an instrument when given the full path to it", async () => {
             const s1 = new Section("reg-a", "sec-a")
             const f1 = new LambdaInstrument(["p1", "p2"], "f1", "")
             const spec: BigbandSpec = {
@@ -245,7 +245,7 @@ describe('BigbandModel', () => {
             ]}
 
             const model = new BigbandModel(spec, "somedir")
-            const actual = model.inspect("reg-a/sec-a/p1/p2/f1")
+            const actual = await model.inspect("reg-a/sec-a/p1/p2/f1")
 
             expect(actual).to.containSubset({
                 "list": [

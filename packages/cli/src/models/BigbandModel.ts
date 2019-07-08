@@ -164,7 +164,7 @@ export class BigbandModel {
         return ret
     }
 
-    inspect(path_: string): InsepctResult {
+    async inspect(path_: string): Promise<InsepctResult> {
         const root = new NavigationNode("", {
             path: '',
             role: Role.BIGBAND
@@ -189,14 +189,14 @@ export class BigbandModel {
         }
 
         if (navNode.item.action) {
-            return {list: [], data: navNode.item.action("")}
+            return {list: [], data: await navNode.item.action("")}
         }
 
         return {list: [navNode.item]}
     }
 
-    searchInspect(path: string): LookupResult {
-        const list = this.inspect(path).list
+    async searchInspect(path: string): Promise<LookupResult> {
+        const list = (await this.inspect(path)).list
         if (list.length > 1) {
             throw new Error(`Multiple matches on "${path}": ${JSON.stringify(list.map(x => x.path))}`);
         }    

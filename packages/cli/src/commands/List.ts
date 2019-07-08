@@ -4,7 +4,7 @@ import { Role } from 'bigband-core';
 
 async function main(bigbandFile: string, path: string, longListing: boolean) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
-    const inspectResult = model.inspect(path)
+    const inspectResult = await model.inspect(path)
 
     if (inspectResult.data) {
         return JSON.stringify(inspectResult.data, null, 2)
