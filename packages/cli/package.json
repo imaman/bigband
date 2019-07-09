@@ -34,7 +34,7 @@
   "license": "MIT",
   "dependencies": {
     "@types/node": "^10.12.5",
-    "aws-sdk": "^2.353.0",
+    "aws-sdk": "^2.409.0",
     "bigband-core": "^0.1.38",
     "del": "^3.0.0",
     "detective-typescript": "^4.1.1",
