@@ -251,7 +251,7 @@ describe('BigbandModel', () => {
                 "list": [
                     {
                         "role": Role.LOCAL_COMMAND,
-                        "path": "reg-a/sec-a/p1/p2/f1/info"
+                        "path": "reg-a/sec-a/p1/p2/f1/def"
                     },
                     {
                         "role": Role.COMMAND,
