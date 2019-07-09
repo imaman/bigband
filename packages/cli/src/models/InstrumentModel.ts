@@ -79,7 +79,7 @@ export class InstrumentModel {
         const awsFactory = CloudProvider.newAwsFactory(this.section)
         
         const items: Map<string, NavigationItem> = this.instrument.getNavigationItems(
-            CompositeName.fromString(this.path), this.arn, awsFactory)
+            CompositeName.fromString(this.path), this.arn, this.physicalName, awsFactory)
 
         for (const token of items.keys()) {
             const item = items.get(token)
