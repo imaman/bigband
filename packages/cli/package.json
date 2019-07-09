@@ -1,6 +1,6 @@
 {
   "name": "bigband",
-  "version": "0.1.149",
+  "version": "0.1.150",
   "description": "Build production grade serverless systems.",
   "keywords": [
     "typescript",
