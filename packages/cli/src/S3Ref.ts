@@ -21,15 +21,17 @@ export class S3Ref {
     return {bucket: this.s3Bucket, key: this.s3Key}
   }
 
-  static async put(factory: AwsFactory, s3Ref: S3Ref, buf: Buffer, contentType = "application/zip") {
+  static async put(factory: AwsFactory, s3Ref: S3Ref, buf: Buffer, contentType = "application/zip"): Promise<number> {
     const s3 = factory.newS3();
     try {
-        return s3.putObject({
+        await s3.putObject({
           Bucket: s3Ref.s3Bucket,
           Key: s3Ref.s3Key,
           Body: buf,
           ContentType: contentType
         }).promise();
+
+        return 5
       } catch (e) {
         console.log(`S3 putObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${s3Ref.s3Bucket}, Key:${s3Ref.s3Key}`);
         throw e;
