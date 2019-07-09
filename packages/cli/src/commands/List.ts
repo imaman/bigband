@@ -6,9 +6,6 @@ async function main(bigbandFile: string, path: string, longListing: boolean) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
     const inspectResult = await model.inspect(path)
 
-    if (inspectResult.data) {
-        return JSON.stringify(inspectResult.data, null, 2)
-    }
     if (!longListing) {
         return inspectResult.list.map(curr => curr.path).join('\n')
     }

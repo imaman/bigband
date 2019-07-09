@@ -188,10 +188,6 @@ export class BigbandModel {
             return {list: navNode.children.map(curr => curr.item)}
         }
 
-        if (navNode.item.action) {
-            return {list: [], data: await navNode.item.action("")}
-        }
-
         return {list: [navNode.item]}
     }
 

@@ -9,6 +9,7 @@ import {ListCommand} from './commands/List'
 import {logger} from './logger'
 import * as yargs from 'yargs';
 import { Exec } from './commands/Exec';
+import { RunCommand } from './commands/Run';
 
 
 function specFileAndSectionOptions(yargs) {
@@ -59,7 +60,10 @@ yargs
             type: 'boolean'
         });
     }, argv => run(ListCommand.run, argv))
-    .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')
+    .command('$0 [path]' , 'Runs a command at the given path', yargs => {
+        specFileAndSectionOptions(yargs)
+    }, argv => run(RunCommand.run, argv))
+    // .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')
     .help()
     .argv;
 
