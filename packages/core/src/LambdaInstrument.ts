@@ -151,9 +151,13 @@ export class LambdaInstrument extends Instrument {
             return this.getDefinition().get()
         }
 
+        const desc = (s: string) => {
+            return awsFactory.newLambda().getFunction({FunctionName: arn}).promise()
+        }
+
         const ret = new Map<string, NavigationItem>()
-        ret.set('def', {role: Role.LOCAL_COMMAND, path: path.append('info').toString(), action: info})
-        ret.set('describe', {role: Role.COMMAND, path: path.append('desc').toString()})
+        ret.set('def', {role: Role.LOCAL_COMMAND, path: path.append('def').toString(), action: info})
+        ret.set('desc', {role: Role.COMMAND, path: path.append('desc').toString(), action: desc})
         ret.set('exec', {role: Role.COMMAND, path: path.append('exec').toString()})
         ret.set('logs', {role: Role.COMMAND, path: path.append('logs').toString()})
         return ret
