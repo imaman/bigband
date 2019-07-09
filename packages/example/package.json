@@ -1,7 +1,7 @@
 {
   "name": "demo",
   "private": true,
-  "version": "1.0.47",
+  "version": "1.0.48",
   "description": "Bigband's demo app",
   "main": "index.js",
   "scripts": {
