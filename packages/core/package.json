@@ -1,6 +1,6 @@
 {
   "name": "bigband-core",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "Bigband's core.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
