@@ -48,7 +48,7 @@ export class InstrumentModel {
         }
     }
 
-    generateNavigationNodes(root: NavigationNode) {
+    generateNavigationNodes(root: NavigationNode, generateSynthetic = true) {
         let node = root.navigate(this.section.path)
         if (!node) {
             throw new Error(`Path ${this.section.path} leads to nowhere`)
@@ -78,15 +78,17 @@ export class InstrumentModel {
 
         const awsFactory = CloudProvider.newAwsFactory(this.section)
         
-        const items: Map<string, NavigationItem> = this.instrument.getNavigationItems(
-            CompositeName.fromString(this.path), this.arn, this.physicalName, awsFactory)
+        if (generateSynthetic) {
+            const items: Map<string, NavigationItem> = this.instrument.getNavigationItems(
+                CompositeName.fromString(this.path), this.arn, this.physicalName, awsFactory)
 
-        for (const token of items.keys()) {
-            const item = items.get(token)
-            if (!item) {
-                throw new Error('No item found at ' + token)
+            for (const token of items.keys()) {
+                const item = items.get(token)
+                if (!item) {
+                    throw new Error('No item found at ' + token)
+                }
+                instrumentNode.addChild(token, item)
             }
-            instrumentNode.addChild(token, item)
         }
     }
 }

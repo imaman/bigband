@@ -3,7 +3,6 @@ import { Section } from './Section'
 import { Definition } from './Definition'
 import { Instrument } from './Instrument'
 import { NavigationItem, Role } from './NavigationItem';
-import { stringify } from 'querystring';
 import { CompositeName } from './CompositeName';
 import { AwsFactory } from './AwsFactory';
 import { DescribeLogStreamsResponse, GetLogEventsRequest, GetLogEventsResponse, DescribeLogStreamsRequest } from 'aws-sdk/clients/cloudwatchlogs';

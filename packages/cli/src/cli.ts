@@ -17,8 +17,6 @@ function specFileAndSectionOptions(yargs) {
         descirbe: 'path to a bigband file (.ts)',
         default: 'bigband.config.ts'
     })
-
-    return yargs;
 }
 
 yargs

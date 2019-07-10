@@ -164,7 +164,7 @@ export class BigbandModel {
         return ret
     }
 
-    async inspect(path_: string): Promise<InsepctResult> {
+    async inspect(path_: string, includeSynthetic = true): Promise<InsepctResult> {
         const root = new NavigationNode("", {
             path: '',
             role: Role.BIGBAND
@@ -172,8 +172,9 @@ export class BigbandModel {
         for (const curr of this.sections) {
             curr.generateNavigationNodes(root)
         }
+
         for (const i of this.instruments) {
-            i.generateNavigationNodes(root)
+            i.generateNavigationNodes(root, includeSynthetic)
         }
 
         const path = path_
@@ -192,7 +193,7 @@ export class BigbandModel {
     }
 
     async searchInspect(path: string): Promise<LookupResult> {
-        const list = (await this.inspect(path)).list
+        const list = (await this.inspect(path, false)).list
         if (list.length > 1) {
             throw new Error(`Multiple matches on "${path}": ${JSON.stringify(list.map(x => x.path))}`);
         }    
