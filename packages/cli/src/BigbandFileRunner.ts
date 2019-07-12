@@ -63,7 +63,7 @@ export class BigbandFileRunner {
         private readonly deployMode: DeployMode) {
             this.awsFactory = CloudProvider.newAwsFactory(this.sectionModel)
             this.poolPrefix = `${this.ttlPrefix()}/fragments`;
-            this.blobPool = new S3BlobPool(this.awsFactory, this.bigbandModel.bigband.s3Bucket, this.poolPrefix);
+            this.blobPool = new S3BlobPool(this.awsFactory, this.s3Bucket, this.poolPrefix);
             this.teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
                 Description: 'Rematerializes a deployable at the deployment site',
                 MemorySize: 2560,
@@ -73,6 +73,11 @@ export class BigbandFileRunner {
             this.namer = new Namer(bigbandModel.bigband, sectionModel.section)
     
         }
+
+
+    private get s3Bucket(): string {
+        return this.bigbandModel.bigband.s3Bucket
+    }
 
     // TODO(imaman): rename to ship()
     static async runBigbandFile(bigbandFile: string, pathToSection: string, teleportingEnabled: boolean, deployMode: DeployMode) {
@@ -95,10 +100,10 @@ export class BigbandFileRunner {
         cfp.peekAtExistingStack();
             
         grantPermission(this.teleportInstrument, 's3:GetObject', 
-            `arn:aws:s3:::${this.bigbandModel.bigband.s3Bucket}/${this.poolPrefix}/*`);
+            `arn:aws:s3:::${this.s3Bucket}/${this.poolPrefix}/*`);
     
         grantPermission(this.teleportInstrument, 's3:PutObject',
-            `arn:aws:s3:::${this.bigbandModel.bigband.s3Bucket}/${this.bigbandModel.bigband.s3Prefix}/` + 
+            `arn:aws:s3:::${this.s3Bucket}/${this.bigbandModel.bigband.s3Prefix}/` + 
                 `${DEPLOYABLES_FOLDER}/*`);
         
         const section = this.sectionModel.section
@@ -203,7 +208,7 @@ export class BigbandFileRunner {
         const section = model.section
         const instrument = instrumentModel.instrument
         try {
-            const packager = new Packager(d, npmPackageDir, this.bigbandModel.bigband.s3Bucket, 
+            const packager = new Packager(d, npmPackageDir, this.s3Bucket, 
                 this.bigbandModel.bigband.s3Prefix, this.awsFactory, this.blobPool);
             const pathPrefix = 'build';
             logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
@@ -257,7 +262,7 @@ export class BigbandFileRunner {
         const s3 = this.awsFactory.newS3();
         const prefix = `${this.ttlPrefix()}/`;
         const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
-            Bucket: this.bigbandModel.bigband.s3Bucket,
+            Bucket: this.s3Bucket,
             LifecycleConfiguration: {
                 Rules: [
                     {
