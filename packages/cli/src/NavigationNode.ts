@@ -27,7 +27,6 @@ export class NavigationNode {
         return null
     }
 
-    
     navigate(path: string): NavigationNode|null {
         if (!path) {
             return this

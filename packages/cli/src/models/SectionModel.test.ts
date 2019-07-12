@@ -16,7 +16,6 @@ describe('SectionModel', () => {
         awsAccount: "a",
         name: "b",
         profileName: "p",
-        s3Bucket: "my_bucket",
         s3Prefix: "my_prefix"
     })
 
@@ -35,7 +34,7 @@ describe('SectionModel', () => {
             const f1 = new LambdaInstrument("p1", "f1", "src/file_1")
             const f2 = new LambdaInstrument("p1", "f2", "src/file_2")
             const spec: SectionSpec = {
-                section: new Section("r1", "s1"), 
+                section: new Section("r1", "my_bucket", "s1"), 
                 instruments: [f1, f2],
                 wiring: []
             }
@@ -48,11 +47,11 @@ describe('SectionModel', () => {
         // TODO(imaman): check validity of region (small-caps, digits, dash)
         describe("name", () => {
             it("allows dash-separated sequences of lower-case letters and digits", () => {
-                const model = new SectionModel(b, new Section("r1", "abc-def58-xyz"))
+                const model = new SectionModel(b, new Section("r1", "my_bucket", "abc-def58-xyz"))
                 expect(() => model.validate()).not.to.throw()
             });
             it("rejects upper-case letters", () => {
-                const model = new SectionModel(b, new Section("r1", "aBc"))
+                const model = new SectionModel(b, new Section("r1", "my_bucket", "aBc"))
                 expect(() => model.validate()).to.throw()
             });
         })

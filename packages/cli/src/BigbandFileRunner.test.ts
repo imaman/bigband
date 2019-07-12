@@ -99,7 +99,7 @@ describe('BigbandFileRunner', () => {
             const spec: BigbandSpec = {
                 bigband: b,
                 sections: [{
-                    section: new Section("r1", "s1"), 
+                    section: new Section("r1", "b1", "s1"), 
                     instruments: [f1],
                     wiring: []
                 }]
@@ -132,7 +132,7 @@ describe('BigbandFileRunner', () => {
             const spec: BigbandSpec = {
                 bigband: b,
                 sections: [{
-                    section: new Section("r1", "s1"), 
+                    section: new Section("r1", "b1", "s1"), 
                     instruments: [f1],
                     wiring: []
                 }]
@@ -170,7 +170,7 @@ describe('BigbandFileRunner', () => {
             const spec: BigbandSpec = {
                 bigband: b,
                 sections: [{
-                    section: new Section("r1", "s1"), 
+                    section: new Section("r1", "b1", "s1"), 
                     instruments: [f1],
                     wiring: []
                 }]
@@ -210,7 +210,7 @@ describe('BigbandFileRunner', () => {
                 const spec: BigbandSpec = {
                     bigband: b,
                     sections: [{
-                        section: new Section("r1", "s1"), 
+                        section: new Section("r1", "b1", "s1"), 
                         instruments: [f1, f2],
                         wiring: [wire(f1, "w1", f2)]
                     }]
@@ -267,8 +267,8 @@ describe('BigbandFileRunner', () => {
             const f1 = new LambdaInstrument(["p1"], "f1", "src/file_1")
             const f2 = new LambdaInstrument(["p2"], "f2", "src/file_1")
 
-            const s1 = new Section("r1", "s1")
-            const s2 = new Section("r2", "s2")
+            const s1 = new Section("r1", "b1", "s1")
+            const s2 = new Section("r2", "b1", "s2")
 
             const spec: BigbandSpec = {
                 bigband: b,

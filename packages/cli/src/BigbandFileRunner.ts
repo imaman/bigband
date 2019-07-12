@@ -76,7 +76,7 @@ export class BigbandFileRunner {
 
 
     private get s3Bucket(): string {
-        return this.bigbandModel.bigband.s3Bucket
+        return this.sectionModel.section.s3Bucket
     }
 
     // TODO(imaman): rename to ship()

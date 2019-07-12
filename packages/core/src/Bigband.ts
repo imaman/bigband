@@ -34,13 +34,6 @@ export class Bigband {
     readonly profileName: string
 
     /**
-     * The name of an S3 bucket to be used by this bigband for pushing data/code into the AWS cloud
-     *
-     * @type {string}
-     * @memberof Bigband
-     */
-    readonly s3Bucket: string
-    /**
      * A prefix that will be used for the names of all objects written into [[s3Bucket]] by the bigband
      *
      * @type {string}
@@ -52,7 +45,6 @@ export class Bigband {
         this.name = init.name
         this.awsAccount = init.awsAccount
         this.profileName = init.profileName
-        this.s3Bucket = init.s3Bucket
         this.s3Prefix = init.s3Prefix
     }
 }
@@ -79,13 +71,6 @@ export interface BigbandInit {
      * @memberof BigbandInit
      */
     profileName: string
-    /**
-     * The name of an S3 bucket to be used by this bigband for pushing data/code into the AWS cloud
-     *
-     * @type {string}
-     * @memberof BigbandInit
-     */
-    s3Bucket: string
     /**
      * A prefix that will be used for the names of all objects written into [[s3Bucket]] by the bigband
      *

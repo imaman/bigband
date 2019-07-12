@@ -31,10 +31,11 @@ export class Section {
      * Creates an instance of Section.
      *
      * @param {string} region the AWS region this section will be deployed at
+     * @param {string} s3Bucket The name of an S3 bucket to be used for pushing data/code into the AWS cloud
      * @param {string} name the name of the section. Should be unique within its Bigband
      * @memberof Section
      */
-    constructor(public readonly region: string, public readonly name: string) {}
+    constructor(public readonly region: string, public readonly s3Bucket: string, public readonly name: string) {}
 
 
     get path(): string {
