@@ -21,7 +21,7 @@ export class S3Ref {
     return {bucket: this.s3Bucket, key: this.s3Key}
   }
 
-  static async put_(factory: AwsFactory, s3Ref: S3Ref, buf: Buffer, contentType = "application/zip") {
+  static async put(factory: AwsFactory, s3Ref: S3Ref, buf: Buffer, contentType = "application/zip") {
     const s3 = factory.newS3();
     try {
         await s3.putObject({
