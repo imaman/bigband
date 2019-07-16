@@ -60,12 +60,21 @@ export class S3Ref {
 
   static async exists(factory: AwsFactory, s3Ref: S3Ref): Promise<boolean> {
     const s3 = factory.newS3();
+
     try {
-        const req: AWS.S3.HeadObjectRequest = {
+
+        if (s3Ref.s3Key === '') {
+          const req: AWS.S3.HeadBucketRequest = {
+            Bucket: s3Ref.s3Bucket
+          }
+          await s3.headBucket(req).promise();
+        } else {
+          const req: AWS.S3.HeadObjectRequest = {
             Bucket: s3Ref.s3Bucket,
             Key: s3Ref.s3Key
+          }
+          await s3.headObject(req).promise();
         }
-        await s3.headObject(req).promise();
         return true;
       } catch (e) {
         return false;
