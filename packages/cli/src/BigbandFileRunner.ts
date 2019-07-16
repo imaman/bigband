@@ -22,6 +22,7 @@ import { InstrumentModel } from './models/InstrumentModel';
 import { Namer } from './Namer';
 import { WireModel } from './models/WireModel';
 import { CloudProvider } from './CloudProvider';
+import { CreateBucketRequest } from 'aws-sdk/clients/s3';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
@@ -256,10 +257,34 @@ export class BigbandFileRunner {
     }     
     
     private async configureBucket() {
+        const s3Ref = new S3Ref(this.s3Bucket, "")
+        const exists = await S3Ref.exists(this.awsFactory, s3Ref)
+        const s3 = this.awsFactory.newS3();
+        logger.info("exists=" + exists + ", s3ref=" + s3Ref)
+        if (!exists) {
+            const cbr: CreateBucketRequest = {
+                Bucket: this.s3Bucket,
+                CreateBucketConfiguration: {
+                    LocationConstraint: this.sectionModel.section.region
+                }
+            }
+            try {
+                logger.info("creating a new bucket at " + JSON.stringify(cbr))
+                await s3.createBucket(cbr).promise()
+            } catch (e) {
+                logger.info("got an exception", e)
+                // check existence (again) in case the bucket was just created by someone else
+                const existsNow = await S3Ref.exists(this.awsFactory, s3Ref)
+                logger.info("existsnow?=" + existsNow)
+                if (!existsNow) {
+                    throw new Error(`Failed to create an S3 Bucket (${s3Ref})`)
+                }
+            }
+        }
+
         // You can check the content of the TTL folder via:
         // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
     
-        const s3 = this.awsFactory.newS3();
         const prefix = `${this.ttlPrefix()}/`;
         const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
             Bucket: this.s3Bucket,
