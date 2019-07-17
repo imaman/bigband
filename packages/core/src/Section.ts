@@ -35,7 +35,7 @@ export class Section {
      * @param {string} name the name of the section. Should be unique within its Bigband
      * @memberof Section
      */
-    constructor(public readonly region: string, public readonly s3Bucket: string, public readonly name: string) {}
+    constructor(public readonly region: string, public readonly name: string, public readonly s3Bucket?: number) {}
 
 
     get path(): string {

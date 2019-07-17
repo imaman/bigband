@@ -26,7 +26,7 @@ describe('Namer', () => {
             const spec: BigbandSpec = {
                 bigband: b,
                 sections: [
-                    {section: new Section("r1", "b1", "s1"),  instruments: [f1], wiring: []}
+                    {section: new Section("r1", "s1"),  instruments: [f1], wiring: []}
                 ]
             }
             
@@ -43,7 +43,7 @@ describe('Namer', () => {
             const spec: BigbandSpec = {
                 bigband: b,
                 sections: [
-                    {section: new Section("r1", "my_bucket", "s1"),  instruments: [f1], wiring: []}
+                    {section: new Section("r1", "s1"),  instruments: [f1], wiring: []}
                 ]
             }
             
@@ -65,7 +65,7 @@ describe('Namer', () => {
             const spec: BigbandSpec = {
                 bigband: b,
                 sections: [
-                    {section: new Section("r1", "my_bucket", "s1"),  instruments: [f1], wiring: []}
+                    {section: new Section("r1", "s1"),  instruments: [f1], wiring: []}
                 ]
             }
             
