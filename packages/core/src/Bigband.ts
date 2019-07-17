@@ -50,7 +50,9 @@ export class Bigband {
         this.profileName = init.profileName
         this.s3Prefix = init.s3Prefix
         this.s3BucketGuid = init.s3BucketGuid
-        this.s3BucketPrefix = init.s3BucketPrefix || 'www-github-com-imaman-bigband'
+        this.s3BucketPrefix = init.s3BucketPrefix || 'npm-bigband'
+
+        // TODO(imaman): check validity of the s3BucketGuid and s3BucketPrefix
     }
 }
 

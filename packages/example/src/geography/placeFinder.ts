@@ -1,6 +1,5 @@
 import {lookup} from './model';
 import AWS = require('aws-sdk');
-import { PutRecordInput } from 'aws-sdk/clients/kinesis';
 import * as byline from 'byline';
 
 
@@ -19,14 +18,6 @@ export async function runLambda(context, event, mapping) {
         }
     };
     await client.put(req).promise();
-
-    const kinesis = new AWS.Kinesis({region: mapping.queryStream.region})
-    const putReq: PutRecordInput = {
-        StreamName: mapping.queryStream.name,
-        Data: JSON.stringify({streamedQuery: q, timestamp: Date.now()}),
-        PartitionKey: 'q1'
-    };
-    await kinesis.putRecord(putReq).promise();
 
     const timePassed = 'N/A'; //moment(`2015-09-21`).fromNow();
 

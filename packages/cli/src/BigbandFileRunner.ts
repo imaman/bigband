@@ -77,7 +77,11 @@ export class BigbandFileRunner {
 
 
     private get s3Bucket(): string {
-        return this.sectionModel.section.s3Bucket
+        if (this.sectionModel.section.s3Bucket) {
+            return this.sectionModel.section.s3Bucket
+        }
+
+        return `${this.bigbandModel.bigband.s3BucketPrefix}-${this.bigbandModel.bigband.s3BucketGuid}`;
     }
 
     // TODO(imaman): rename to ship()
@@ -276,7 +280,7 @@ export class BigbandFileRunner {
             }
         }
         try {
-            logger.info("creating a new bucket at " + JSON.stringify(cbr))
+            logger.silly("creating a new bucket: " + JSON.stringify(cbr))
             await s3.createBucket(cbr).promise()
         } catch (e) {
             logger.silly("createBucket() failed", e)

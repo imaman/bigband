@@ -2,14 +2,15 @@ import { KinesisStreamConsumer, KinesisStreamInstrument, LambdaInstrument, Dynam
 
 
 const bigband = new Bigband({
-    name: 'bb-example2',
-    awsAccount: '196625562809',
-    profileName: 'imaman',
-    s3Prefix: 'root'});
+        name: 'bb-example4',
+        awsAccount: '196625562809',
+        profileName: 'imaman',
+        s3Prefix: 'root',
+        s3BucketGuid: '181e936d-be6a-48a1-85b3-4d953b480f25'
+    });
 
-const bucketId =  '3b587a1b-1a29-47d4-ad2c-27cb5d478bb0-im-bucket'
-const prod = new Section('eu-west-2', bucketId, 'prod');
-const staging = new Section('eu-west-2', bucketId, 'staging');
+const prod = new Section('eu-west-2', 'prod');
+const staging = new Section('eu-west-2', 'staging');
 // const importantDates = new LambdaInstrument('chronology', 'improtant-dates', 'src/chronology/compute', {
 //     Description: "returns important dates for a year",
 //     MemorySize: 1024,
