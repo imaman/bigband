@@ -259,18 +259,10 @@ export class BigbandFileRunner {
     }     
     
     private async createBucketIfNeeded() {
-        const t0 = Date.now()
-        const ret = await this.createBucketIfNeededImpl()
-        const t1 = Date.now()
-        logger.info("t1-t0=" + (t1-t0))
-        return ret
-    }
-    
-    private async createBucketIfNeededImpl() {
         const s3Ref = new S3Ref(this.s3Bucket, "")
         const exists = await S3Ref.exists(this.awsFactory, s3Ref)
         const s3 = this.awsFactory.newS3();
-        logger.info("exists=" + exists + ", s3ref=" + s3Ref)
+        logger.silly("exists=" + exists + ", s3ref=" + s3Ref)
         if (exists) {
             return
         }
@@ -285,10 +277,10 @@ export class BigbandFileRunner {
             logger.info("creating a new bucket at " + JSON.stringify(cbr))
             await s3.createBucket(cbr).promise()
         } catch (e) {
-            logger.info("got an exception", e)
+            logger.silly("createBucket() failed", e)
             // check existence (again) in case the bucket was just created by someone else
             const existsNow = await S3Ref.exists(this.awsFactory, s3Ref)
-            logger.info("existsnow?=" + existsNow)
+            logger.silly("existsnow?=" + existsNow)
             if (!existsNow) {
                 throw new Error(`Failed to create an S3 Bucket (${s3Ref})`)
             }
