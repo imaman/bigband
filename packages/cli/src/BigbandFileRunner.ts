@@ -192,9 +192,12 @@ export class BigbandFileRunner {
         }
     
         const {zb, packager} = await this.compileInstrument(dir, npmPackageDir, instrumentModel);
-        const pushResult: PushResult = await packager.pushToS3(this.namer.resolve(instrument),
-            `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
-            zb, this.namer.physicalName(this.teleportInstrument), this.teleportingEnabled, this.deployMode);
+
+        const s3Ref = new S3Ref(this.s3Bucket, 
+            `${this.bigbandModel.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/${physicalName}.zip`)
+
+        const pushResult: PushResult = await packager.pushToS3(this.namer.resolve(instrument), s3Ref, zb, 
+            this.namer.physicalName(this.teleportInstrument), this.teleportingEnabled, this.deployMode);
         const resource = def.get();
         resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
     
@@ -211,8 +214,7 @@ export class BigbandFileRunner {
         const section = model.section
         const instrument = instrumentModel.instrument
         try {
-            const packager = new Packager(d, npmPackageDir, this.s3Bucket, 
-                this.bigbandModel.bigband.s3Prefix, this.awsFactory, this.blobPool);
+            const packager = new Packager(d, npmPackageDir, this.awsFactory, this.blobPool);
             const pathPrefix = 'build';
             logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
             const frag = instrument.createFragment(pathPrefix);

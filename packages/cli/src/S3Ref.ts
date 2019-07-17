@@ -1,7 +1,11 @@
 import { AwsFactory } from 'bigband-core'
 
 export class S3Ref {
-  constructor(public readonly s3Bucket: string, public readonly s3Key: string) {}
+  constructor(public readonly s3Bucket: string, public readonly s3Key: string) {
+    if (s3Key.indexOf("//") >= 0 || s3Key.startsWith("/") || s3Key.endsWith("/")) {
+      throw new Error(`Bad S3 KEY: "${s3Key}"`)
+    }
+  }
 
   static EMPTY = new S3Ref("", "");
 

@@ -35,12 +35,8 @@ export class Packager {
   private workingDirCreated = false;
   private readonly npmPackageDir;
 
-  constructor(private readonly rootDir: string, npmPackageDir: string, private readonly s3Bucket: string,
-      private readonly s3Prefix: string, private readonly awsFactory: AwsFactory,
+  constructor(private readonly rootDir: string, npmPackageDir: string, private readonly awsFactory: AwsFactory,
       private readonly blobPool: S3BlobPool) {
-    if (s3Prefix.endsWith('/')) {
-      throw new Error(`s3Prefix ${s3Prefix} cannot have a trailing slash`)
-    }
     if (!path.isAbsolute(npmPackageDir)) {
       throw new Error(`Expected an absolute path but got ${npmPackageDir}.`);
     }
@@ -128,8 +124,9 @@ export class Packager {
     return outDir;
   }
 
-  public async pushToS3(name: ResolvedName, s3Object: string, zipBuilder: ZipBuilder, teleportLambdaName: string,
-      teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
+  public async pushToS3(name: ResolvedName, deployableLocation: S3Ref, zipBuilder: ZipBuilder,
+      teleportLambdaName: string, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
+
     const factory = this.awsFactory
 
     const p = factory.newLambda().getFunction({
@@ -140,14 +137,11 @@ export class Packager {
     const getFunctionResponse: GetFunctionResponse|null = await p;
     const c = getFunctionResponse && getFunctionResponse.Configuration && getFunctionResponse.Configuration.CodeSha256;
 
-    const s3Key = `${this.s3Prefix}/${s3Object}`;
-
     const ret: PushResult = {
-      deployableLocation: new S3Ref(this.s3Bucket, s3Key),
+      deployableLocation,
       wasPushed: true
     };
 
-    const deployableLocation = ret.deployableLocation;
     logger.silly(`Comparing fingerprints for ${name.fullyQualifiedName}:\n  ${c}\n  ${fingeprint}`);
     if (deployMode === DeployMode.IF_CHANGED) {
       if (c && c == fingeprint) {
