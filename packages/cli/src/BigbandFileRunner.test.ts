@@ -10,7 +10,7 @@ const {expect} = chai;
 
 import 'mocha';
 
-import { LambdaInstrument, Section, BigbandSpec, Bigband, wire } from 'bigband-core';
+import { LambdaInstrument, Section, BigbandSpec, Bigband, wire, BigbandInit } from 'bigband-core';
 import { BigbandFileRunner } from './BigbandFileRunner';
 import { BigbandModel } from './models/BigbandModel';
 import { DeployMode } from './Packager';
@@ -24,12 +24,12 @@ interface LambdaInput {
 }
 
 describe('BigbandFileRunner', () => {
-    const bigbandInit = {
+    const bigbandInit: BigbandInit = {
         awsAccount: "a",
         name: "b",
         profileName: "p",
-        s3Bucket: "my_bucket",
-        s3Prefix: "my_prefix"
+        s3Prefix: "my_prefix",
+        s3BucketGuid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     }
     const b = new Bigband(bigbandInit)
 

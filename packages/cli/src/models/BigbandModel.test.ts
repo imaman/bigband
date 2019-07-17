@@ -15,7 +15,8 @@ describe('BigbandModel', () => {
         awsAccount: "a",
         name: "b",
         profileName: "p",
-        s3Prefix: "my_prefix"
+        s3Prefix: "my_prefix",
+        s3BucketGuid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     }
     const b = new Bigband(bigbandInit)
 
@@ -26,7 +27,8 @@ describe('BigbandModel', () => {
                     awsAccount: "a",
                     name,
                     profileName: "p",
-                    s3Prefix: "my_prefix"
+                    s3Prefix: "my_prefix",
+                    s3BucketGuid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
                 }
                 return new BigbandModel({bigband: new Bigband(init), sections: []}, "_")
             }

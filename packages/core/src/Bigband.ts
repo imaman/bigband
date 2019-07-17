@@ -34,18 +34,23 @@ export class Bigband {
     readonly profileName: string
 
     /**
-     * A prefix that will be used for the names of all objects written into [[s3Bucket]] by the bigband
+     * A prefix that will be used for the names of all objects written into S3 buckets by the bigband tool
      *
      * @type {string}
      * @memberof Bigband
      */
     readonly s3Prefix: string
 
+    readonly s3BucketGuid: string
+    readonly s3BucketPrefix: string
+
     constructor(init: BigbandInit) {
         this.name = init.name
         this.awsAccount = init.awsAccount
         this.profileName = init.profileName
         this.s3Prefix = init.s3Prefix
+        this.s3BucketGuid = init.s3BucketGuid
+        this.s3BucketPrefix = init.s3BucketPrefix || 'www-github-com-imaman-bigband'
     }
 }
 
@@ -72,10 +77,13 @@ export interface BigbandInit {
      */
     profileName: string
     /**
-     * A prefix that will be used for the names of all objects written into [[s3Bucket]] by the bigband
+     * A prefix that will be used for the names of all objects written into S3 buckets by the bigband tool
      *
      * @type {string}
      * @memberof BigbandInit
      */
     s3Prefix: string
+
+    s3BucketGuid: string
+    s3BucketPrefix?: string
 }

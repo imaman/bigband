@@ -16,7 +16,8 @@ describe('SectionModel', () => {
         awsAccount: "a",
         name: "b",
         profileName: "p",
-        s3Prefix: "my_prefix"
+        s3Prefix: "my_prefix",
+        s3BucketGuid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     })
 
     describe('instruments', () => {
