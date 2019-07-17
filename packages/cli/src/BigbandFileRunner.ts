@@ -259,6 +259,14 @@ export class BigbandFileRunner {
     }     
     
     private async createBucketIfNeeded() {
+        const t0 = Date.now()
+        const ret = await this.createBucketIfNeededImpl()
+        const t1 = Date.now()
+        logger.info("t1-t0=" + (t1-t0))
+        return ret
+    }
+    
+    private async createBucketIfNeededImpl() {
         const s3Ref = new S3Ref(this.s3Bucket, "")
         const exists = await S3Ref.exists(this.awsFactory, s3Ref)
         const s3 = this.awsFactory.newS3();
@@ -311,6 +319,7 @@ export class BigbandFileRunner {
         };
     
         try {
+            const s3 = this.awsFactory.newS3();
             await s3.putBucketLifecycleConfiguration(req).promise();
             logger.silly(`expiration policy set via ${JSON.stringify(req)}`);
         } catch (e) {
