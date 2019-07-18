@@ -1,4 +1,5 @@
 import { AwsFactory } from 'bigband-core'
+import { logger } from './logger';
 
 export class S3Ref {
   constructor(public readonly s3Bucket: string, public readonly s3Key: string) {
@@ -26,6 +27,7 @@ export class S3Ref {
   }
 
   static async put(factory: AwsFactory, s3Ref: S3Ref, buf: Buffer, contentType = "application/zip") {
+    logger.silly('Putting into ' + s3Ref)
     const s3 = factory.newS3();
     try {
         await s3.putObject({
@@ -35,12 +37,13 @@ export class S3Ref {
           ContentType: contentType
         }).promise();
       } catch (e) {
-        console.log(`S3 putObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${s3Ref.s3Bucket}, Key:${s3Ref.s3Key}`);
+        logger.error(`S3 putObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${s3Ref.s3Bucket}, Key:${s3Ref.s3Key}`);
         throw e;
       }      
   }
 
   static async get(factory: AwsFactory, s3Ref: S3Ref): Promise<Buffer> {
+    logger.silly('Getting from ' + s3Ref)
     const s3 = factory.newS3();
     let resp: AWS.S3.GetObjectOutput;
     try {
@@ -50,7 +53,7 @@ export class S3Ref {
         }
         resp = await s3.getObject(req).promise();
       } catch (e) {
-        console.log(`S3 getObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${s3Ref.s3Bucket}, Key:${s3Ref.s3Key}`);
+        logger.error(`S3 getObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${s3Ref.s3Bucket}, Key:${s3Ref.s3Key}`);
         throw e;
       }  
 
