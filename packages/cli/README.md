@@ -51,11 +51,11 @@ Create a `bigband.config.ts` file, as shown below. Place it at the same director
 import { Bigband, LambdaInstrument, Section } from 'bigband-core';
 
 const bigband = new Bigband({
-    name: 'hello-bigband',
-    awsAccount: '<YOUR-AWS-ACCOUNT-ID>',
-    profileName: '<YOUR-AWS-PROFILE-NAME>',
-    s3BucketGuid: '<A-GUID>',
-    s3Prefix: 'hello-bigband-root'});
+        name: 'hello-bigband',
+        awsAccount: '<YOUR-AWS-ACCOUNT-ID>',
+        profileName: '<YOUR-AWS-PROFILE-NAME>',
+        s3BucketGuid: '<A-GUID>'
+    });
 
 const prod = new Section('eu-west-2', 'prod');
  
