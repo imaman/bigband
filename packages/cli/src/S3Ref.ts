@@ -1,7 +1,12 @@
-import { AwsFactory } from './AwsFactory';
+import { AwsFactory } from 'bigband-core'
+import { logger } from './logger';
 
 export class S3Ref {
-  constructor(public readonly s3Bucket: string, public readonly s3Key: string) {}
+  constructor(public readonly s3Bucket: string, public readonly s3Key: string) {
+    if (s3Key.indexOf("//") >= 0 || s3Key.startsWith("/") || s3Key.endsWith("/")) {
+      throw new Error(`Bad S3 KEY: "${s3Key}"`)
+    }
+  }
 
   static EMPTY = new S3Ref("", "");
 
@@ -22,21 +27,23 @@ export class S3Ref {
   }
 
   static async put(factory: AwsFactory, s3Ref: S3Ref, buf: Buffer, contentType = "application/zip") {
+    logger.silly('Putting into ' + s3Ref)
     const s3 = factory.newS3();
     try {
-        return s3.putObject({
+        await s3.putObject({
           Bucket: s3Ref.s3Bucket,
           Key: s3Ref.s3Key,
           Body: buf,
           ContentType: contentType
         }).promise();
       } catch (e) {
-        console.log(`S3 putObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${s3Ref.s3Bucket}, Key:${s3Ref.s3Key}`);
+        logger.error(`S3 putObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${s3Ref.s3Bucket}, Key:${s3Ref.s3Key}`);
         throw e;
       }      
   }
 
   static async get(factory: AwsFactory, s3Ref: S3Ref): Promise<Buffer> {
+    logger.silly('Getting from ' + s3Ref)
     const s3 = factory.newS3();
     let resp: AWS.S3.GetObjectOutput;
     try {
@@ -46,7 +53,7 @@ export class S3Ref {
         }
         resp = await s3.getObject(req).promise();
       } catch (e) {
-        console.log(`S3 getObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${s3Ref.s3Bucket}, Key:${s3Ref.s3Key}`);
+        logger.error(`S3 getObject error. Profile: ${factory.profileName}, Region: ${factory.region}, Bucket:${s3Ref.s3Bucket}, Key:${s3Ref.s3Key}`);
         throw e;
       }  
 
@@ -60,12 +67,21 @@ export class S3Ref {
 
   static async exists(factory: AwsFactory, s3Ref: S3Ref): Promise<boolean> {
     const s3 = factory.newS3();
+
     try {
-        const req: AWS.S3.HeadObjectRequest = {
+
+        if (s3Ref.s3Key === '') {
+          const req: AWS.S3.HeadBucketRequest = {
+            Bucket: s3Ref.s3Bucket
+          }
+          await s3.headBucket(req).promise();
+        } else {
+          const req: AWS.S3.HeadObjectRequest = {
             Bucket: s3Ref.s3Bucket,
             Key: s3Ref.s3Key
+          }
+          await s3.headObject(req).promise();
         }
-        await s3.headObject(req).promise();
         return true;
       } catch (e) {
         return false;

@@ -17,14 +17,14 @@ describe('InstrumentModel', () => {
         awsAccount: "a",
         name: "b",
         profileName: "p",
-        s3Bucket: "my_bucket",
-        s3Prefix: "my_prefix"
+        s3Prefix: "my_prefix",
+        s3BucketGuid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     })
 
     describe("validation", () => {
         describe("the 'bigband' top level package", () => {
             it("is locked for a non system instrument", () => {
-                const s = new Section("r1", "s1")
+                const s = new SectionModel(b, new Section("r1", "s1"))
                 const instrument = new LambdaInstrument("bigband", "f1", "")
                 const model = new InstrumentModel(b, s, instrument, [], false)
     
@@ -32,7 +32,7 @@ describe('InstrumentModel', () => {
                     'Instrument "bigband-f1" has a bad name: the fully qualified name of an instrument is not allowed to start with "bigband"')
             })
             it("is locked for a non system instrument also when using the array notation", () => {
-                const s = new Section("r1", "s1")
+                const s = new SectionModel(b, new Section("r1", "s1"))
                 const instrument = new LambdaInstrument(["bigband"], "f1", "")
                 const model = new InstrumentModel(b, s, instrument, [], false)
     
@@ -40,21 +40,21 @@ describe('InstrumentModel', () => {
                     'Instrument "bigband-f1" has a bad name: the fully qualified name of an instrument is not allowed to start with "bigband"')
             })    
             it("is not locked for system instruments", () => {
-                const s = new Section("r1", "s1")
+                const s = new SectionModel(b, new Section("r1", "s1"))
                 const instrument = new LambdaInstrument(["bigband"], "f1", "")
                 const model = new InstrumentModel(b, s, instrument, [], true)
     
                 expect(() => model.validate()).not.to.throw()
             })    
             it("top level package name which starts with 'bigband' is not locked", () => {
-                const s = new Section("r1", "s1")
+                const s = new SectionModel(b, new Section("r1", "s1"))
                 const instrument = new LambdaInstrument(["bigband1111"], "f1", "")
                 const model = new InstrumentModel(b, s, instrument, [], false)
     
                 expect(() => model.validate()).not.to.throw()
             })    
             it("'bigband' is not locked as a non top-level package name", () => {
-                const s = new Section("r1", "s1")
+                const s = new SectionModel(b, new Section("r1", "s1"))
                 const instrument = new LambdaInstrument(["abc", "bigband"], "f1", "")
                 const model = new InstrumentModel(b, s, instrument, [], false)
     
@@ -62,7 +62,7 @@ describe('InstrumentModel', () => {
             })    
         })
         describe("name", () => {
-            const s = new Section("r1", "s1")
+            const s = new SectionModel(b, new Section("r1", "s1"))
             function newInstrumentModel(packageName: string[], name: string) {
                 return new InstrumentModel(b, s, new LambdaInstrument(packageName, name, ""), [], false)
             }

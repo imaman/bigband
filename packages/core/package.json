@@ -1,6 +1,6 @@
 {
   "name": "bigband-core",
-  "version": "0.1.38",
+  "version": "0.1.42",
   "description": "Bigband's core.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -38,5 +38,5 @@
   "files": [
     "lib/**/*"
   ],
-  "gitHead": "549e840ce87c88f723b2da81a3167d33c6826a68"
+  "gitHead": "e332da497919fa4149373b409416232029e8608a"
 }

@@ -1,10 +1,10 @@
-import { BigbandSpec, Instrument, Section, Bigband } from "bigband-core";
+import { BigbandSpec, Instrument, Section, Bigband, NavigationItem, Role } from "bigband-core";
 import { Misc } from "../Misc";
 import { SectionModel } from "./SectionModel";
 import { InstrumentModel } from "./InstrumentModel";
-import { Namer } from "../Namer";
 import { NameValidator } from "../NameValidator";
 import { WireModel } from "./WireModel";
+import { NavigationNode } from "../NavigationNode";
 
 
 
@@ -32,17 +32,11 @@ export interface LookupResult {
 
 
 export interface InsepctResult {
-    list: InspectedItem[]
+    list: NavigationItem[]
+    data?: any
 }
 
 
-interface InspectedItem {
-    path: string
-    role: Role
-    subPath: string
-    type?: string
-    instrument?: InstrumentModel
-}
 export class BigbandModel {
 
     private readonly sectionByPath = new Map<string, SectionModel>()
@@ -62,7 +56,7 @@ export class BigbandModel {
             // package-visibility in typescript, this trick allow us to create mututally-dependent object without having
             // them exposed state-mutating methods.
             const acc: InstrumentModel[] = []
-            const sm = new SectionModel(this.spec.bigband, s, acc)
+            const sm = new SectionModel(this.spec.bigband, s.section, acc)
             if (this.sectionByPath.has(sm.path)) {
                 throw new Error(`Section path collision. two (or more) sections share the same path: "${sm.path}"`)
             }
@@ -73,7 +67,7 @@ export class BigbandModel {
                 // later - to avoid state-mutating methods on the created object.
                 const wires: WireModel[] = []
                 
-                const im = new InstrumentModel(this.spec.bigband, s.section, i, wires, false)
+                const im = new InstrumentModel(this.spec.bigband, sm, i, wires, false)
                 if (this.instrumentModelByPath.has(im.path)) {
                     throw new Error(`Instrument path collision. two (or more) instruments share the same path: "${im.path}"`)
                 }
@@ -93,7 +87,7 @@ export class BigbandModel {
             for (const w of s.wiring) {
                 const consumer = sm.getInstrumentModel(w.consumer)
                 if (!consumer) {
-                    throw new Error(`Instrument "${w.consumer.path}" cannot be used as a consumer ` +
+                    throw new Error(`Instrument "${w.consumer.sectionRelativeName}" cannot be used as a consumer ` +
                         `because it is not a member of the "${sm.path}" section`)
                 }
                 
@@ -106,7 +100,7 @@ export class BigbandModel {
                 const supplier = supplierSectionModel.getInstrumentModel(w.supplier)
                 if (!supplier) {
                     throw new Error(`Bad wire. Supplier section "${supplierSectionModel.path}" does not contain ` + 
-                        `the given supplier instrument ("${w.supplier.path}")`)
+                        `the given supplier instrument ("${w.supplier.sectionRelativeName}")`)
                 }
 
                 const wireModel = new WireModel(w, consumer, supplier)
@@ -145,48 +139,6 @@ export class BigbandModel {
         return ret
     }
 
-    searchInstrument(instrumentName: string): LookupResult {
-        const matches: LookupResult[] = [];
-        const names: string[] = [];    
-        const exactMatches: LookupResult[] = []
-    
-
-       this.sections.forEach(sectionModel => {
-            sectionModel.instruments.forEach(curr => {
-                const physicalName = new Namer(this.bigband, sectionModel.section).physicalName(curr.instrument)
-                const lookupResult: LookupResult = {
-                    section: sectionModel.section, 
-                    instrument: curr.instrument, 
-                    instrumentModel: curr,
-                    physicalName, 
-                    sectionModel
-                };
-
-                if (curr.instrument.name == instrumentName) {
-                    exactMatches.push(lookupResult)
-                } 
-                names.push(physicalName);
-                if (physicalName.indexOf(instrumentName) >= 0) {
-                    matches.push(lookupResult);
-                }
-            });
-        });
-
-        if (exactMatches.length === 1) {
-            return exactMatches[0]
-        }
-    
-        if (!matches.length) {
-            throw new Error(`Instrument "${instrumentName}" not found in ${JSON.stringify(names)}`);
-        }
-    
-        if (matches.length > 1) {
-            throw new Error(`Multiple matches on "${instrumentName}": ${JSON.stringify(matches.map(x => x.physicalName))}`);
-        }
-    
-        return matches[0];    
-    }
-
     // TODO(imaman): section name is not enough for finding a section. you need the region too.
     // TODO(imaman): rename this method
     findSectionModel(path: string): SectionModel {
@@ -212,50 +164,36 @@ export class BigbandModel {
         return ret
     }
 
-    inspect(path_: string): InsepctResult {
-        const acc: InspectedItem[] = [];
-
-        this.sections.forEach(curr => {
-            acc.push({path: curr.section.region, role: Role.REGION, subPath: ''})
-            acc.push({path: curr.path, role: Role.SECTION, subPath: ''})
+    async inspect(path_: string, includeSynthetic = true): Promise<InsepctResult> {
+        const root = new NavigationNode("", {
+            path: '',
+            role: Role.BIGBAND
         })
-        for (const i of this.instruments) {
-            const item = {
-                path: i.path,
-                role: Role.INSTRUMENT,
-                subPath: '',
-                type: i.instrument.arnService(),
-                instrument: i 
-            }
-
-            if (i.path === path_) {
-                return {list: [item]}
-            }
-            acc.push(item)
+        for (const curr of this.sections) {
+            curr.generateNavigationNodes(root)
         }
 
-        const path = path_.length ? path_ + '/' : path_
-        const matchingPaths = acc
-            .filter(curr => curr.path.startsWith(path))
-            .map(curr => generateEntry(curr, path))
+        for (const i of this.instruments) {
+            i.generateNavigationNodes(root, includeSynthetic)
+        }
 
-        const set = new Set<String>()
-        const chosen = matchingPaths.filter(curr => {
-            if (set.has(curr.subPath)) {
-                return false
-            } 
+        const path = path_
+        const navNode = root.navigate(path)
 
-            set.add(curr.subPath)
-            return true
-        })
+        if (!navNode) {
+            return {list: []}
+        }
 
-        chosen.sort(byPath)
 
-        return {list: chosen}
+        if (navNode.children.length) {
+            return {list: navNode.children.map(curr => curr.item)}
+        }
+
+        return {list: [navNode.item]}
     }
 
-    searchInspect(path: string): LookupResult {
-        const list = this.inspect(path).list
+    async searchInspect(path: string): Promise<LookupResult> {
+        const list = (await this.inspect(path, false)).list
         if (list.length > 1) {
             throw new Error(`Multiple matches on "${path}": ${JSON.stringify(list.map(x => x.path))}`);
         }    
@@ -264,19 +202,19 @@ export class BigbandModel {
             throw new Error(`No instrument found under "${path}"`)
         }
 
-        const first: InspectedItem = list[0]
-        if (first.role !== Role.INSTRUMENT || !first.instrument) {
+        const first: NavigationItem = list[0]
+        if (first.role !== Role.INSTRUMENT) {
             throw new Error(`The specifeid path (${path}) does not refer to an instrument`)
         }
 
-        const section = first.instrument.section
-        const sectionModel = this.findSectionModel(section.path)
+        const instrument = this.getInstrument(first.path)
+        const sectionModel = this.findSectionModel(instrument.section.path)
 
         return  {
-            instrumentModel: first.instrument,
-            instrument: first.instrument.instrument,
-            physicalName: first.instrument.physicalName,
-            section,
+            instrumentModel: instrument,
+            instrument: instrument.instrument,
+            physicalName: instrument.physicalName,
+            section: instrument.section.section,
             sectionModel
         }
     }
@@ -301,7 +239,7 @@ export class BigbandModel {
                     sectionByInstrument.set(im.instrument, set)
                 }
 
-                set.add(im.section)
+                set.add(im.section.section)
             }
         }       
         
@@ -317,25 +255,3 @@ function trimAt(p: string, stopAt: string) {
     return p.substr(0, index)
 }
 
-export enum Role {
-    REGION,
-    SECTION,
-    PATH,
-    INSTRUMENT
-}
-
-function generateEntry(i: any, path: string) {
-    const pathSuffix = i.path.substr(path.length)
-    const trimmedPath = trimAt(pathSuffix, "/")
-    const isPath = trimmedPath != pathSuffix
-
-
-    i.subPath = trimmedPath
-    if (isPath) {
-        i.role = Role.PATH
-        i.path = path + trimmedPath
-        delete i.type
-    }
-
-    return i
-}

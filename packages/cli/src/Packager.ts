@@ -6,7 +6,7 @@ import * as uuidv1 from 'uuid/v1';
 import * as os from 'os';
 
 import { logger } from './logger';
-import { AwsFactory } from './AwsFactory';
+import { AwsFactory } from 'bigband-core'
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver } from './NpmPackageResolver'
 import { BigbandInstallation } from 'bigband-core';
@@ -35,12 +35,8 @@ export class Packager {
   private workingDirCreated = false;
   private readonly npmPackageDir;
 
-  constructor(private readonly rootDir: string, npmPackageDir: string, private readonly s3Bucket: string,
-      private readonly s3Prefix: string, private readonly awsFactory: AwsFactory,
+  constructor(private readonly rootDir: string, npmPackageDir: string, private readonly awsFactory: AwsFactory,
       private readonly blobPool: S3BlobPool) {
-    if (s3Prefix.endsWith('/')) {
-      throw new Error(`s3Prefix ${s3Prefix} cannot have a trailing slash`)
-    }
     if (!path.isAbsolute(npmPackageDir)) {
       throw new Error(`Expected an absolute path but got ${npmPackageDir}.`);
     }
@@ -128,29 +124,37 @@ export class Packager {
     return outDir;
   }
 
-  public async pushToS3(name: ResolvedName, s3Object: string, zipBuilder: ZipBuilder, teleportLambdaName: string,
-      teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
+  public async pushToS3(name: ResolvedName, deployableLocation: S3Ref, zipBuilder: ZipBuilder,
+      teleportLambdaName: string, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
+
     const factory = this.awsFactory
 
+
+    // TODO(imaman): can we get this information earlier to reduce possible waiting?
+    const existsPromise = S3Ref.exists(this.awsFactory, deployableLocation)
+
+    // TODO(imaman): ditto, get earlier
     const p = factory.newLambda().getFunction({
       FunctionName: name.physicalName
     }).promise().catch(e => null);
     const buf = await zipBuilder.toBuffer();
     const fingeprint = ZipBuilder.bufferTo256Fingerprint(buf);
     const getFunctionResponse: GetFunctionResponse|null = await p;
-    const c = getFunctionResponse && getFunctionResponse.Configuration && getFunctionResponse.Configuration.CodeSha256;
-
-    const s3Key = `${this.s3Prefix}/${s3Object}`;
+    let c = getFunctionResponse && getFunctionResponse.Configuration && getFunctionResponse.Configuration.CodeSha256;
 
     const ret: PushResult = {
-      deployableLocation: new S3Ref(this.s3Bucket, s3Key),
+      deployableLocation,
       wasPushed: true
     };
 
-    const deployableLocation = ret.deployableLocation;
+    const exists = await existsPromise 
+    if (!exists) {
+      logger.silly(`Previous deployment of ${name.physicalName} was not found`)
+    }
+
     logger.silly(`Comparing fingerprints for ${name.fullyQualifiedName}:\n  ${c}\n  ${fingeprint}`);
     if (deployMode === DeployMode.IF_CHANGED) {
-      if (c && c == fingeprint) {
+      if (exists && c && c == fingeprint) {
         logger.info(`No code changes in ${name.fullyQualifiedName}`);
         ret.wasPushed = false;
         return ret;
@@ -177,21 +181,19 @@ export class Packager {
     if (teleportingEnabled) {
       try {
         const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
-        if (!invocationResponse.FunctionError) {
-          logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${name.fullyQualifiedName}`);
-          return ret;
+        if (invocationResponse.FunctionError) {
+          logger.silly('teleporter returned an error:\n' + JSON.stringify(invocationResponse));
+          throw new Error(`Teleporting of ${name.physicalName} failed: ${invocationResponse.FunctionError}`);
         }
-  
-        logger.silly('teleporter returned an error:\n' + JSON.stringify(invocationResponse));
-        throw new Error(`Teleporting of ${name.physicalName} failed: ${invocationResponse.FunctionError}`);
+        logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${name.fullyQualifiedName}`);
+        return ret;
       } catch (e) {
         logger.silly('Teleporting error', e);
       }  
     }
 
     const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation)
-    logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${name.fullyQualifiedName}`);
-    
+    logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${name.fullyQualifiedName}`);    
     return ret;
   }
 

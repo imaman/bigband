@@ -26,7 +26,7 @@ describe('Instruments', () => {
     describe('bigband', () => {
         it('can be initialized from an object', () => {
             const instrument = newLambda(['p1', 'p2', 'p3'], 'abc', '');
-            expect(instrument.name).to.equal("abc")
+            expect(instrument.cname.toString()).to.equal("p1/p2/p3/abc")
             expect(instrument.fullyQualifiedName()).to.equal("p1-p2-p3-abc")
         })
     })
@@ -77,7 +77,7 @@ describe('Instruments', () => {
             const consumer = newLambda(['p1', 'p2', 'p3'], 'c1', '');
             const supplier = newLambda(['p4', 'p5', 'p6'], 'c2', '');
 
-            const section = new Section("eu-central-1", "prod-main");
+            const section = new Section("eu-central-1", "b1", "prod-main");
             supplier.contributeToConsumerDefinition(section, consumer.getDefinition(), "ARN_OF_SUPPLIER");
             expect(consumer.getDefinition().get()).to.containSubset({Properties: {
                 Policies: [{

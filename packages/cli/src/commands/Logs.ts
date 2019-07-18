@@ -1,14 +1,14 @@
-import {AwsFactory} from '../AwsFactory'
 import { DescribeLogStreamsRequest, GetLogEventsRequest, GetLogEventsResponse, DescribeLogStreamsResponse } from 'aws-sdk/clients/cloudwatchlogs';
 import {BigbandFileRunner} from '../BigbandFileRunner';
 import { LookupResult } from '../models/BigbandModel';
+import { CloudProvider } from '../CloudProvider';
 
 async function main(bigbandFile: string, lambdaName: string, limit: number) {
     const model = await BigbandFileRunner.loadModel(bigbandFile);
     // TODO(imaman): fail if this is not a lambda instrument
-    const lookupResult: LookupResult = model.searchInspect(lambdaName);
+    const lookupResult: LookupResult = await model.searchInspect(lambdaName);
 
-    const cloudWatchLogs = AwsFactory.fromSection(lookupResult.sectionModel).newCloudWatchLogs();
+    const cloudWatchLogs = CloudProvider.newAwsFactory(lookupResult.sectionModel).newCloudWatchLogs();
     const logGroupName = `/aws/lambda/${lookupResult.physicalName}`;
 
     const describeLogStreamsReq: DescribeLogStreamsRequest = {

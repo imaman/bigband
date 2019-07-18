@@ -10,36 +10,39 @@ const {expect} = chai;
 
 import 'mocha';
 
-import { LambdaInstrument, Section, BigbandSpec, Bigband, wire, DeployableAtom } from 'bigband-core';
+import { LambdaInstrument, Section, BigbandSpec, Bigband, wire, BigbandInit } from 'bigband-core';
 import { BigbandFileRunner } from './BigbandFileRunner';
 import { BigbandModel } from './models/BigbandModel';
 import { DeployMode } from './Packager';
 import { S3Ref } from './S3Ref';
 import { InstrumentModel } from './models/InstrumentModel';
-import { pathExists } from 'fs-extra';
-import { inspect } from 'util';
 
+
+interface LambdaInput {
+    event: any
+    context: any
+}
 
 describe('BigbandFileRunner', () => {
-    const bigbandInit = {
+    const bigbandInit: BigbandInit = {
         awsAccount: "a",
         name: "b",
         profileName: "p",
-        s3Bucket: "my_bucket",
-        s3Prefix: "my_prefix"
+        s3Prefix: "my_prefix",
+        s3BucketGuid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     }
     const b = new Bigband(bigbandInit)
 
     describe("compilation", () => {
 
-        async function compileAndRun(bigbandSpec, pathToInstrument, content) {
+        async function compileAndRun(bigbandSpec, pathToInstrument, content: string, input: LambdaInput) {
 
             const bigbandModel = new BigbandModel(bigbandSpec, "somedir")
             const instrument = bigbandModel.getInstrument(pathToInstrument)
             
             const bigbandFileRunner = new BigbandFileRunner(bigbandModel, 
                 bigbandModel.findSectionModel(instrument.section.path), true, DeployMode.IF_CHANGED)            
-            const dir = tmp.dirSync({keep: true}).name
+            const dir = tmp.dirSync().name
 
             const srcFile = path.resolve(dir, (instrument.instrument as LambdaInstrument).getEntryPointFile() + '.ts')
 
@@ -48,11 +51,29 @@ describe('BigbandFileRunner', () => {
             const npmPackageDir = path.resolve(__dirname, '..')
             const temp = await bigbandFileRunner.compileInstrument(dir, npmPackageDir, instrument)
 
-            const outDir = tmp.dirSync({keep: true}).name
+            const outDir = tmp.dirSync().name
             temp.zb.unzip(outDir)
 
-            const cp = child_process.fork(path.resolve(outDir, 
-                    `${instrument.instrument.fullyQualifiedName()}_Handler.js`), [], {stdio: "pipe"})
+            const stubFile = path.resolve(outDir, "stub.js")
+
+            const stubFileContent = `
+                const handler = require('./${instrument.instrument.fullyQualifiedName()}_Handler.js')
+
+                async function run() {
+                    return new Promise((resolve, reject) => {
+                        const cb = (err, done) => {
+                            if (err) return reject(err) 
+                            resolve(JSON.stringify(done))
+                        }   
+                        handler.handle(${JSON.stringify(input.event)}, ${JSON.stringify(input.context)}, cb)
+                    })
+                }
+
+                run().then(v => console.log(v)).catch(e => console.error('failure', e))
+            `
+            fs.writeFileSync(stubFile, stubFileContent)
+
+            const cp = child_process.fork(stubFile, [], {stdio: "pipe"})
 
             const stdout: string[] = []
             await new Promise((resolve, reject) => {
@@ -64,7 +85,7 @@ describe('BigbandFileRunner', () => {
                     reject(new Error(`Output emitted to stderr. First line: "${data.toString()}"`))
                 })
     
-                cp.on('exit',  (code, signal) => {
+                cp.on('exit', (code, signal) => {
                     resolve({code, signal})
                 })    
             })
@@ -72,7 +93,7 @@ describe('BigbandFileRunner', () => {
             return stdout.join('\n').trim()
         }
 
-        it ("compiles", async () => {
+        it.only("compiles", async () => {
             const f1 = new LambdaInstrument("p1", "f1", "file_1")
             
             const spec: BigbandSpec = {
@@ -84,8 +105,13 @@ describe('BigbandFileRunner', () => {
                 }]
             }
 
-            const output = await compileAndRun(spec, "r1/s1/p1/f1", 'console.log("Four score and seven years ago")')
-            expect(output).to.equal('Four score and seven years ago')
+            const content = `
+                export async function runLambda(context, event) {
+                    return "context.a=" + context.a + ", event.b=" + event.b
+                }
+            `
+            const output = await compileAndRun(spec, "r1/s1/p1/f1", content, {context: {a: 1}, event: {b: 2}})
+            expect(JSON.parse(output)).to.eql("context.a=1, event.b=2")
         })
     })
 

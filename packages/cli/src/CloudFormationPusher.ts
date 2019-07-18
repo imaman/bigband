@@ -1,4 +1,4 @@
-import {AwsFactory} from './AwsFactory';
+import { AwsFactory } from 'bigband-core'
 
 import { CreateChangeSetInput, ExecuteChangeSetInput, DescribeChangeSetInput, DescribeChangeSetOutput, DescribeStacksInput, DescribeStacksOutput } from 'aws-sdk/clients/cloudformation';
 import {Section} from 'bigband-core';
@@ -13,7 +13,6 @@ function computeFingerprint(spec, name): string {
     const str = JSON.stringify({spec, name});
     return hash.sha256().update(str).digest('hex');
 }
-
 
 const FINGERPRINT_KEY = 'bigband_fingerprint'
 
@@ -66,7 +65,7 @@ export class CloudFormationPusher {
         this.resolver(t.Value);
     }
 
-    async deploy(templateBody) {
+    async deploy(templateBody, deployablesLocation: string) {
         const newFingerprint = computeFingerprint(templateBody, this.stackName);
         const existingFingerprint = await this.existingFingerprint;
         logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
@@ -83,7 +82,9 @@ export class CloudFormationPusher {
             Capabilities: ['CAPABILITY_IAM'],
             // TODO(imaman): put it in S3 to get a higher upper limit on the size of the stack.
             TemplateBody: JSON.stringify(templateBody),
-            Tags: [{Key: FINGERPRINT_KEY, Value: newFingerprint}]
+            Tags: [
+                {Key: FINGERPRINT_KEY, Value: newFingerprint}
+            ]
         };
 
         logger.silly('StackSpec: ' + JSON.stringify(templateBody, null, 2));

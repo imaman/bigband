@@ -9,6 +9,7 @@ import {ListCommand} from './commands/List'
 import {logger} from './logger'
 import * as yargs from 'yargs';
 import { Exec } from './commands/Exec';
+import { RunCommand } from './commands/Run';
 
 
 function specFileAndSectionOptions(yargs) {
@@ -16,8 +17,6 @@ function specFileAndSectionOptions(yargs) {
         descirbe: 'path to a bigband file (.ts)',
         default: 'bigband.config.ts'
     })
-
-    return yargs;
 }
 
 yargs
@@ -59,7 +58,10 @@ yargs
             type: 'boolean'
         });
     }, argv => run(ListCommand.run, argv))
-    .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')
+    .command('$0 [path]' , 'Runs a command at the given path', yargs => {
+        specFileAndSectionOptions(yargs)
+    }, argv => run(RunCommand.run, argv))
+    // .demandCommand(1, 1, 'You must specify exactly one command', 'You must specify exactly one command')
     .help()
     .argv;
 
@@ -71,9 +73,15 @@ async function ship(argv) {
 function run(handler, argv) {
     Promise.resolve()
         .then(() => handler(argv))
-        .then(output => logger.info(output, () => process.exit(0)))
+        .then(output => {
+            logger.on('finish', () => process.exit(0))
+            logger.info(output)
+            logger.end()
+        })
         .catch(e => {
             console.log('Error', e);
-            logger.error('Exiting: ', e, () => process.exit(-1));
+            logger.on('finish', () => process.exit(-1))
+            logger.error('Exiting: ', e)
+            logger.end()
         });
 }

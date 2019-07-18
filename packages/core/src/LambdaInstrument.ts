@@ -2,6 +2,10 @@ import {DeployableAtom, DeployableFragment} from './DeployableFragment';
 import { Section } from './Section'
 import { Definition } from './Definition'
 import { Instrument } from './Instrument'
+import { NavigationItem, Role } from './NavigationItem';
+import { CompositeName } from './CompositeName';
+import { AwsFactory } from './AwsFactory';
+import { DescribeLogStreamsResponse, GetLogEventsRequest, GetLogEventsResponse, DescribeLogStreamsRequest } from 'aws-sdk/clients/cloudwatchlogs';
 
 export class LambdaInstrument extends Instrument {
     private static readonly BASE_DEF = {
@@ -141,6 +145,116 @@ export class LambdaInstrument extends Instrument {
             }]
         }));
     }
+
+    getNavigationItems(path: CompositeName, arn: string, physicalName: string, awsFactory: AwsFactory): Map<string, NavigationItem> {
+        const info = (s: string) => this.getDefinition().get()
+        const desc = (s: string) => awsFactory.newLambda().getFunction({FunctionName: arn}).promise()
+        const logs = (s: string) => getLogs(awsFactory, physicalName, 50)
+
+        const ret = new Map<string, NavigationItem>()
+        ret.set('def', {role: Role.LOCAL_COMMAND, path: path.append('def').toString(), action: info})
+        ret.set('desc', {role: Role.COMMAND, path: path.append('desc').toString(), action: desc})
+        ret.set('exec', {role: Role.COMMAND, path: path.append('exec').toString()})
+        ret.set('logs', {role: Role.COMMAND, path: path.append('logs').toString(), action: logs})
+        return ret
+    }
 }
 
+
+
+async function getLogs(awsFactory: AwsFactory, physicalName: string, limit: number) {
+    const cloudWatchLogs = awsFactory.newCloudWatchLogs();
+    const logGroupName = `/aws/lambda/${physicalName}`
+
+    const describeLogStreamsReq: DescribeLogStreamsRequest = {
+        logGroupName,
+        orderBy: 'LastEventTime',
+        descending: true,
+        limit: 1
+    }
+
+    let describeLogStreamsResp: DescribeLogStreamsResponse
+    try {
+        describeLogStreamsResp = await cloudWatchLogs.describeLogStreams(describeLogStreamsReq).promise();
+    } catch (e) {
+        throw new Error(`Failed to find log streams (logGroupName = ${logGroupName}):\n${e.message}`);
+    }
+
+    if (!describeLogStreamsResp.logStreams || describeLogStreamsResp.logStreams.length < 1) {
+        console.log('No log stream was found');
+        return;
+    }
+
+    const stream = describeLogStreamsResp.logStreams[0];
+    const logStreamName = stream.logStreamName;
+    if (!logStreamName) {
+        throw new Error('log stream is empty');
+    }
+
+    const getLogEventsReq: GetLogEventsRequest = {
+        logGroupName,
+        logStreamName,
+        limit,
+        startFromHead: false
+    }
+    const getLogEventsResp: GetLogEventsResponse = await cloudWatchLogs.getLogEvents(getLogEventsReq).promise();
+
+    if (!getLogEventsResp.events) {
+        return [];
+    }
+    return getLogEventsResp.events.filter(event => shouldKeep(event.message)).map(format);
+}
+
+function format(event): any[] {
+    const message = event.message;
+    let lines: any[] = message.split('\n').map(x => formatTabs(x)).filter(Boolean);
+    if (!lines.length) {
+        return [];
+    }
+
+    const firstLine = lines[0];
+    const timeIndication = computeTimeIndication(firstLine);
+    if (firstLine.endsWith('_BIGBAND_ERROR_SINK_')) {
+        const data = JSON.parse(lines.slice(1).join('\n'));
+        lines = [firstLine, data];
+    }
+    
+    if (timeIndication) {
+        lines.unshift(`<${timeIndication} ago> `);
+    }
+
+    return lines;
+}
+
+function computeTimeIndication(s: string): string {
+    const tokens = s.split(' ');
+    if (tokens.length <= 0) {
+        return '';
+    }
+
+    const first = tokens[0];
+    const d = Date.parse(first);
+    const secs = (Date.now() - d) / 1000;
+    return secs > 59 ? `${Math.round(secs / 60)} minutes` : `${Math.round(secs)} seconds`;
+}
+
+function formatTabs(s: string) {
+    return s.replace(/\t/g, ' ');
+}
+
+function shouldKeep(message?: string) {
+    if (!message) {
+        return false;
+    }
+    if (message.startsWith("START RequestId:")) {
+        return false;
+    }
+    if (message.startsWith("END RequestId:")) {
+        return false;
+    }
+    if (message.startsWith("REPORT RequestId:")) {
+        return false;
+    }
+    return true;
+}
 

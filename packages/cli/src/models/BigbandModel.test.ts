@@ -6,8 +6,8 @@ const {expect} = chai;
 
 import 'mocha';
 
-import { BigbandSpec, LambdaInstrument, Section, wire, Bigband } from 'bigband-core';
-import { BigbandModel, LookupResult, Role } from './BigbandModel'
+import { BigbandSpec, Role, LambdaInstrument, Section, wire, Bigband } from 'bigband-core';
+import { BigbandModel } from './BigbandModel'
 
 
 describe('BigbandModel', () => {
@@ -15,8 +15,8 @@ describe('BigbandModel', () => {
         awsAccount: "a",
         name: "b",
         profileName: "p",
-        s3Bucket: "my_bucket",
-        s3Prefix: "my_prefix"
+        s3Prefix: "my_prefix",
+        s3BucketGuid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     }
     const b = new Bigband(bigbandInit)
 
@@ -27,8 +27,8 @@ describe('BigbandModel', () => {
                     awsAccount: "a",
                     name,
                     profileName: "p",
-                    s3Bucket: "my_bucket",
-                    s3Prefix: "my_prefix"
+                    s3Prefix: "my_prefix",
+                    s3BucketGuid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
                 }
                 return new BigbandModel({bigband: new Bigband(init), sections: []}, "_")
             }
@@ -176,139 +176,8 @@ describe('BigbandModel', () => {
             });
         })
     })
-
-    describe("searchInstrument", () => {
-        it("finds an instrument if there is an exact physical name match", () => {
-            const s1 = new Section("r1", "s1")
-            const s2 = new Section("r1", "s2")
-            const f1 = new LambdaInstrument("p1", "f1", "")
-            const f2 = new LambdaInstrument("p1", "f2", "")
-            const f3 = new LambdaInstrument("p1", "f3", "")
-            const f4 = new LambdaInstrument("p1", "f4", "")
-            const spec: BigbandSpec = {
-                bigband: b,
-                sections: [
-                    {
-                        section: s1, 
-                        instruments: [f1, f2],
-                        wiring: []
-                    },
-                    {
-                        section: s2, 
-                        instruments: [f3, f4],
-                        wiring: []
-                    }
-                ]
-            }
-
-            const model = new BigbandModel(spec, "somedir")
-            expect(model.searchInstrument("b-s1-p1-f1")).to.containSubset({
-                physicalName: 'b-s1-p1-f1',
-                instrument: f1,
-                section: s1
-            })
-        })
-        it("finds an instrument if there is a unique substring match", () => {
-            const s1 = new Section("r1", "s1")
-            const s2 = new Section("r1", "s2")
-            const f1 = new LambdaInstrument("p1", "f11aa", "")
-            const f2 = new LambdaInstrument("p1", "f22bb", "")
-            const spec: BigbandSpec = {
-                bigband: b,
-                sections: [
-                    {
-                        section: s1, 
-                        instruments: [f1, f2],
-                        wiring: []
-                    },
-                    {
-                        section: s2, 
-                        instruments: [f1, f2],
-                        wiring: []
-                    }
-                ]
-            }
-
-            const model = new BigbandModel(spec, "somedir")
-            expect(model.searchInstrument("2-p1-f22")).to.containSubset({
-                physicalName: 'b-s2-p1-f22bb',
-                instrument: f2,
-                section: s2
-            })
-        })
-        it("throws if the there is are multiple substring matches", () => {
-            const s1 = new Section("r1", "s1")
-            const s2 = new Section("r1", "s2")
-            const f1 = new LambdaInstrument("p1", "f11aa", "")
-            const f2 = new LambdaInstrument("p1", "f22bb", "")
-            const spec: BigbandSpec = {
-                bigband: b,
-                sections: [
-                    {
-                        section: s1, 
-                        instruments: [f1, f2],
-                        wiring: []
-                    },
-                    {
-                        section: s2, 
-                        instruments: [f1, f2],
-                        wiring: []
-                    }
-                ]
-            }
-
-            const model = new BigbandModel(spec, "somedir")
-            expect(() => model.searchInstrument("1-f")).to.throw(
-                'Multiple matches on "1-f": ["b-s1-p1-f11aa","b-s1-p1-f22bb","b-s2-p1-f11aa","b-s2-p1-f22bb"]')
-        })
-        it("throws if the there are zero substring matches", () => {
-            const s1 = new Section("r1", "s1")
-            const s2 = new Section("r1", "s2")
-            const f1 = new LambdaInstrument("p1", "f11aa", "")
-            const f2 = new LambdaInstrument("p1", "f22bb", "")
-            const spec: BigbandSpec = {
-                bigband: b,
-                sections: [
-                    {
-                        section: s1, 
-                        instruments: [f1, f2],
-                        wiring: []
-                    },
-                    {
-                        section: s2, 
-                        instruments: [f1, f2],
-                        wiring: []
-                    }
-                ]
-            }
-
-            const model = new BigbandModel(spec, "somedir")
-            expect(() => model.searchInstrument("f33")).to.throw(
-                'Instrument "f33" not found in ["b-s1-p1-f11aa","b-s1-p1-f22bb","b-s2-p1-f11aa","b-s2-p1-f22bb"]')
-        })
-        it("an exact simple name match, trumps substring matches with other instruments", () => {
-            const s1 = new Section("r1", "s1")
-            const f1 = new LambdaInstrument("p1", "abc", "")
-            const f2 = new LambdaInstrument("abc", "xyz", "")
-            const spec: BigbandSpec = {
-                bigband: b,
-                sections: [{
-                    section: s1, 
-                    instruments: [f1, f2],
-                    wiring: []
-                }]
-            }
-
-            const model = new BigbandModel(spec, "somedir")
-            expect(model.searchInstrument("abc")).to.containSubset({
-                physicalName: 'b-s1-p1-abc',
-                instrument: f1,
-                section: s1
-            })
-        })
-    })
     describe("navigate", () => {
-        it("it returns all instruments at the given path", () => {
+        it("it returns all instruments at the given path", async () => {
             const s1 = new Section("r1", "s1")
             const f1 = new LambdaInstrument(["p1", "p2"], "f1", "")
             const f2 = new LambdaInstrument(["p1", "p2"], "f2", "")
@@ -320,18 +189,15 @@ describe('BigbandModel', () => {
             ]}
 
             const model = new BigbandModel(spec, "somedir")
-            const actual = model.inspect("r1/s1/p1")
-            for(const curr of actual.list) {
-                delete curr.instrument
-            }
+            const actual = await model.inspect("r1/s1/p1")
             expect(actual).to.eql({
                 list: [
-                    {path: "r1/s1/p1/f3", subPath: 'f3', role: Role.INSTRUMENT, type: 'lambda'},
-                    {path: "r1/s1/p1/p2", subPath: 'p2', role: Role.PATH}
+                    {path: "r1/s1/p1/f3", role: Role.INSTRUMENT, type: 'lambda'},
+                    {path: "r1/s1/p1/p2", role: Role.PATH}
                 ]
             })
         })
-        it("it returns regions when no path is given", () => {
+        it("it returns regions when no path is given", async () => {
             const s1 = new Section("r1", "s1")
             const f1 = new LambdaInstrument(["p1", "p2"], "f1", "")
             const spec: BigbandSpec = {
@@ -340,17 +206,14 @@ describe('BigbandModel', () => {
             ]}
 
             const model = new BigbandModel(spec, "somedir")
-            const actual = model.inspect("")
-            for(const curr of actual.list) {
-                delete curr.instrument
-            }
+            const actual = await model.inspect("")
             expect(actual).to.eql({
                 list: [
-                    { path: "r1", subPath: 'r1', role: Role.REGION }
+                    { path: "r1", role: Role.REGION }
                 ]
             })
         })
-        it("it shows sections when given the region as a path", () => {
+        it("it shows sections when given the region as a path", async () => {
             const s1 = new Section("region_a", "s1")
             const s2 = new Section("region_b", "s2")
             const s3 = new Section("region_a", "s3")
@@ -364,18 +227,15 @@ describe('BigbandModel', () => {
             ]}
 
             const model = new BigbandModel(spec, "somedir")
-            const actual = model.inspect("region_a")
-            for(const curr of actual.list) {
-                delete curr.instrument
-            }
+            const actual = await model.inspect("region_a")
             expect(actual).to.eql({
                 list: [
-                    { path: "region_a/s1", subPath: 's1', role: Role.SECTION },
-                    { path: "region_a/s3", subPath: 's3', role: Role.SECTION }
+                    { path: "region_a/s1", role: Role.SECTION },
+                    { path: "region_a/s3", role: Role.SECTION }
                 ]
             })
         })
-        it("it shows an instrument when given the full path to it", () => {
+        it("it shows an instrument when given the full path to it", async () => {
             const s1 = new Section("reg-a", "sec-a")
             const f1 = new LambdaInstrument(["p1", "p2"], "f1", "")
             const spec: BigbandSpec = {
@@ -385,15 +245,29 @@ describe('BigbandModel', () => {
             ]}
 
             const model = new BigbandModel(spec, "somedir")
-            const actual = model.inspect("reg-a/sec-a/p1/p2/f1")
-            for(const curr of actual.list) {
-                delete curr.instrument
-            }
-            expect(actual).to.eql({
-                list: [
-                    { path: "reg-a/sec-a/p1/p2/f1", subPath: '', role: Role.INSTRUMENT, type: 'lambda' }
-                ]
-            })
+            const actual = await model.inspect("reg-a/sec-a/p1/p2/f1")
+
+            expect(actual).to.containSubset({
+                "list": [
+                    {
+                        "role": Role.LOCAL_COMMAND,
+                        "path": "reg-a/sec-a/p1/p2/f1/def"
+                    },
+                    {
+                        "role": Role.COMMAND,
+                        "path": "reg-a/sec-a/p1/p2/f1/desc"
+                    },
+                    {
+                        "role": Role.COMMAND,
+                        "path": "reg-a/sec-a/p1/p2/f1/exec"
+                    },
+                    {
+                        "role": Role.COMMAND,
+                        "path": "reg-a/sec-a/p1/p2/f1/logs"
+                    }
+                ]}                     
+                    // { path: "reg-a/sec-a/p1/p2/f1", role: Role.INSTRUMENT, type: 'lambda' }
+            )
         })
     })
 });

@@ -1,6 +1,4 @@
-import {Section} from 'bigband-core'
 import * as AWS from 'aws-sdk';
-import { SectionModel } from './models/SectionModel';
 
 export class AwsFactory {
     private readonly options: any;
@@ -11,11 +9,6 @@ export class AwsFactory {
             region,
             credentials
         };
-    }
-
-    static fromSection(sectionModel: SectionModel) {
-        return new AwsFactory(sectionModel.physicalName, sectionModel.section.region,
-            sectionModel.bigband.profileName);
     }
 
     newCloudFormation() {

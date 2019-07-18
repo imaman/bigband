@@ -34,13 +34,6 @@ The Bigband system has three main parts:
 - Have an AWS profile setup on your local machine ([instructions](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html))
 - Optional: have [npx](https://www.npmjs.com/package/npx) installed (if you do not want to use `npx` you can run `bigband` directly via `node_modules/.bin/bigband`)
 
-
-### Install
-
-```
-npm install --save-dev bigband
-```
-
 ### Prepare an S3 bucket
 Bigband uses AWS' S3 for pushing data/code into the AWS cloud. You can either:
 
@@ -52,11 +45,20 @@ If you chose the latter use the following command:
 aws s3 mb s3://<YOUR-S3-BUCKET-NAME>
 ```
 
+### Create a folder and Install
+
+```
+mkdir hello-bigband
+cd hello-bigband
+npm init -y
+npm install --save-dev bigband
+```
+
 ### Define your bigband
 Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. Don't forget to *replace the placeholder values* (`<YOUR-AWS-ACCOUNT-ID>`, `<YOUR-AWS-PROFILE-NAME>`, and `<YOUR-S3-BUCKET-NAME>`) with your own values.
 
 ```typescript
-import { Bigband, LambdaInstrument, Section } from 'bigband-core/lib/index';
+import { Bigband, LambdaInstrument, Section } from 'bigband-core';
 
 const bigband = new Bigband({
     name: 'hello-bigband',
@@ -64,18 +66,26 @@ const bigband = new Bigband({
     profileName: '<YOUR-AWS-PROFILE-NAME>',
     s3Bucket: '<YOUR-S3-BUCKET-NAME>',
     s3Prefix: 'hello-bigband-root'});
-const prod = new Section(bigband, 'eu-west-2', 'prod');
 
+const prod = new Section('eu-west-2', 'prod');
+ 
 const greeter = new LambdaInstrument('misc', 'greeter', 'src/greeter', {
     Description: "plain old greeter",
-    MemorySize: 1024,
+    MemorySize: 256,
     Timeout: 15   
 });
+ 
 
 export function run() {
     return {
-        sections: [prod],
-        instruments: [greeter]
+        bigband,
+        sections: [
+            {
+                section: prod,
+                instruments: [greeter],
+                wiring: []
+            }
+        ]
     }
 }
 ```

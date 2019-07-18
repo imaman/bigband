@@ -1,10 +1,9 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as hash from 'hash.js'
-const Module = require('module');
 require('ts-node').register({})
 
-import { AwsFactory } from './AwsFactory';
+import { AwsFactory } from 'bigband-core'
 import { BigbandSpec, NameStyle, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult, DeployMode } from './Packager'
 import { DeployableAtom } from 'bigband-core'
@@ -20,7 +19,8 @@ import { BigbandModel } from './models/BigbandModel';
 import { SectionModel } from './models/SectionModel';
 import { InstrumentModel } from './models/InstrumentModel';
 import { Namer } from './Namer';
-import { WireModel } from './models/WireModel';
+import { CloudProvider } from './CloudProvider';
+import { CreateBucketRequest } from 'aws-sdk/clients/s3';
 
 const DEPLOYABLES_FOLDER = 'deployables';
 
@@ -60,9 +60,9 @@ export class BigbandFileRunner {
         private readonly sectionModel: SectionModel, 
         private readonly teleportingEnabled: boolean, 
         private readonly deployMode: DeployMode) {
-            this.awsFactory = AwsFactory.fromSection(this.sectionModel)
+            this.awsFactory = CloudProvider.newAwsFactory(this.sectionModel)
             this.poolPrefix = `${this.ttlPrefix()}/fragments`;
-            this.blobPool = new S3BlobPool(this.awsFactory, this.bigbandModel.bigband.s3Bucket, this.poolPrefix);
+            this.blobPool = new S3BlobPool(this.awsFactory, this.s3Bucket, this.poolPrefix);
             this.teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
                 Description: 'Rematerializes a deployable at the deployment site',
                 MemorySize: 2560,
@@ -72,6 +72,15 @@ export class BigbandFileRunner {
             this.namer = new Namer(bigbandModel.bigband, sectionModel.section)
     
         }
+
+
+    private get s3Bucket(): string {
+        if (this.sectionModel.section.s3Bucket) {
+            return this.sectionModel.section.s3Bucket
+        }
+
+        return `${this.bigbandModel.bigband.s3BucketPrefix}-${this.bigbandModel.bigband.s3BucketGuid}`;
+    }
 
     // TODO(imaman): rename to ship()
     static async runBigbandFile(bigbandFile: string, pathToSection: string, teleportingEnabled: boolean, deployMode: DeployMode) {
@@ -84,6 +93,8 @@ export class BigbandFileRunner {
         
         const flow = new BigbandFileRunner(bigbandModel, sectionModel, teleportingEnabled, deployMode)
 
+        await flow.createBucketIfNeeded()
+        
         await Promise.all([flow.runSpec(), flow.configureBucket()]);
         const dt = (Date.now() - t0) / 1000;
         return `Section "${sectionModel.section.name}" shipped in ${dt.toFixed(1)}s`;        
@@ -94,11 +105,11 @@ export class BigbandFileRunner {
         cfp.peekAtExistingStack();
             
         grantPermission(this.teleportInstrument, 's3:GetObject', 
-            `arn:aws:s3:::${this.bigbandModel.bigband.s3Bucket}/${this.poolPrefix}/*`);
+            `arn:aws:s3:::${this.s3Bucket}/${this.poolPrefix}/*`);
     
+        const deployablesLocation = `${this.s3Bucket}/${this.bigbandModel.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/*`
         grantPermission(this.teleportInstrument, 's3:PutObject',
-            `arn:aws:s3:::${this.bigbandModel.bigband.s3Bucket}/${this.bigbandModel.bigband.s3Prefix}/` + 
-                `${DEPLOYABLES_FOLDER}/*`);
+            `arn:aws:s3:::${deployablesLocation}`);
         
         const section = this.sectionModel.section
         logger.info(`Shipping section "${section.name}" to ${section.region}`);
@@ -110,7 +121,7 @@ export class BigbandFileRunner {
     
         const ps = this.sectionModel.instruments.map(im => this.pushCode(dir, dir, im));
     
-        const teleportModel = new InstrumentModel(this.bigbandModel.bigband, this.sectionModel.section,
+        const teleportModel = new InstrumentModel(this.bigbandModel.bigband, this.sectionModel,
             this.teleportInstrument, [], true)
         // teleporter needs slightly different parameters so we pushCode() it separately. 
         ps.push(this.pushCode(Misc.bigbandPackageDir(), dir, teleportModel));
@@ -118,7 +129,7 @@ export class BigbandFileRunner {
         const pushedInstruments = await Promise.all(ps);
     
         const templateBody = this.buildCloudFormationTemplate(pushedInstruments)
-        await cfp.deploy(templateBody)
+        await cfp.deploy(templateBody, deployablesLocation)
         const lambda = this.awsFactory.newLambda();
     
         await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
@@ -149,7 +160,8 @@ export class BigbandFileRunner {
 
             for (const wireModel of curr.model.wirings) {
                 const arn = wireModel.supplier.arn
-                wireModel.supplier.instrument.contributeToConsumerDefinition(wireModel.consumer.section, def, arn);
+                wireModel.supplier.instrument.contributeToConsumerDefinition(wireModel.consumer.section.section, def,
+                    arn);
             }
     
             if (curr.s3Ref.isOk()) {
@@ -182,9 +194,12 @@ export class BigbandFileRunner {
         }
     
         const {zb, packager} = await this.compileInstrument(dir, npmPackageDir, instrumentModel);
-        const pushResult: PushResult = await packager.pushToS3(this.namer.resolve(instrument),
-            `${DEPLOYABLES_FOLDER}/${physicalName}.zip`, 
-            zb, this.namer.physicalName(this.teleportInstrument), this.teleportingEnabled, this.deployMode);
+
+        const s3Ref = new S3Ref(this.s3Bucket, 
+            `${this.bigbandModel.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/${physicalName}.zip`)
+
+        const pushResult: PushResult = await packager.pushToS3(this.namer.resolve(instrument), s3Ref, zb, 
+            this.namer.physicalName(this.teleportInstrument), this.teleportingEnabled, this.deployMode);
         const resource = def.get();
         resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
     
@@ -201,8 +216,7 @@ export class BigbandFileRunner {
         const section = model.section
         const instrument = instrumentModel.instrument
         try {
-            const packager = new Packager(d, npmPackageDir, this.bigbandModel.bigband.s3Bucket, 
-                this.bigbandModel.bigband.s3Prefix, this.awsFactory, this.blobPool);
+            const packager = new Packager(d, npmPackageDir, this.awsFactory, this.blobPool);
             const pathPrefix = 'build';
             logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
             const frag = instrument.createFragment(pathPrefix);
@@ -248,14 +262,42 @@ export class BigbandFileRunner {
         return `${this.bigbandModel.bigband.s3Prefix}/TTL/7d`;
     }     
     
+    private async createBucketIfNeeded() {
+        const s3Ref = new S3Ref(this.s3Bucket, "")
+        const exists = await S3Ref.exists(this.awsFactory, s3Ref)
+        const s3 = this.awsFactory.newS3();
+        logger.silly("exists=" + exists + ", s3ref=" + s3Ref)
+        if (exists) {
+            return
+        }
+
+        const cbr: CreateBucketRequest = {
+            Bucket: this.s3Bucket,
+            CreateBucketConfiguration: {
+                LocationConstraint: this.sectionModel.section.region
+            }
+        }
+        try {
+            logger.silly("creating a new bucket: " + JSON.stringify(cbr))
+            await s3.createBucket(cbr).promise()
+        } catch (e) {
+            logger.silly("createBucket() failed", e)
+            // check existence (again) in case the bucket was just created by someone else
+            const existsNow = await S3Ref.exists(this.awsFactory, s3Ref)
+            logger.silly("existsnow?=" + existsNow)
+            if (!existsNow) {
+                throw new Error(`Failed to create an S3 Bucket (${s3Ref})`)
+            }
+        }
+    }
+
     private async configureBucket() {
         // You can check the content of the TTL folder via:
         // $ aws s3 ls s3://<isolation_scope_name>/root/TTL/7d/fragments/
     
-        const s3 = this.awsFactory.newS3();
         const prefix = `${this.ttlPrefix()}/`;
         const req: AWS.S3.PutBucketLifecycleConfigurationRequest = {
-            Bucket: this.bigbandModel.bigband.s3Bucket,
+            Bucket: this.s3Bucket,
             LifecycleConfiguration: {
                 Rules: [
                     {
@@ -273,6 +315,7 @@ export class BigbandFileRunner {
         };
     
         try {
+            const s3 = this.awsFactory.newS3();
             await s3.putBucketLifecycleConfiguration(req).promise();
             logger.silly(`expiration policy set via ${JSON.stringify(req)}`);
         } catch (e) {

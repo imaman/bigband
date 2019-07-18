@@ -1,14 +1,12 @@
-import { SectionSpec, Instrument, Bigband } from "bigband-core";
+import { SectionSpec, Instrument, Bigband, Section } from "bigband-core";
 import { InstrumentModel } from "./InstrumentModel";
 import { NameValidator } from "../NameValidator";
+import { NavigationNode } from "../NavigationNode";
+import { Role } from "bigband-core";
 
 export class SectionModel {
-    constructor(readonly bigband: Bigband, private readonly spec: SectionSpec,
+    constructor(readonly bigband: Bigband, public readonly section: Section,
             private readonly instruments_: InstrumentModel[] = []) {}
-
-    get section() {
-        return this.spec.section
-    }
 
     get path(): string {
         return this.section.path
@@ -23,8 +21,8 @@ export class SectionModel {
     }
 
     getInstrumentModel(instrument: Instrument): InstrumentModel {
-        const subPath = instrument.path
-        const ret = this.instruments.find(curr => curr.instrument.path === subPath)
+        const subPath = instrument.sectionRelativeName
+        const ret = this.instruments.find(curr => curr.instrument.sectionRelativeName === subPath)
         if (!ret) {
             throw new Error(`Section ${this.path} does not contain an instrument at sub path ("${subPath}")`)
         }
@@ -38,5 +36,16 @@ export class SectionModel {
             throw new Error(`Bad section name: "${name}"`)
         }
         this.instruments.forEach(curr => curr.validate())
+    }
+
+    generateNavigationNodes(root: NavigationNode) {
+        const regNode = root.addChild(this.section.region, {
+            path: this.section.region,
+            role: Role.REGION,
+        })
+        return regNode.addChild(this.section.name, {
+            path: this.path,
+            role: Role.SECTION,
+        })
     }
 }

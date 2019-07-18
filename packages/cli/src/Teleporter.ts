@@ -1,6 +1,6 @@
 import { S3Ref } from "./S3Ref";
 import { ZipBuilder } from "./ZipBuilder";
-import { AwsFactory } from "./AwsFactory";
+import { AwsFactory } from 'bigband-core'
 import { logger } from './logger';
 import * as hash from 'hash.js'
 
@@ -87,6 +87,9 @@ export class Teleporter {
     }
 
     public async nonIncrementalTeleport(zipBuilder: ZipBuilder, destination: S3Ref): Promise<number> {
+        // TODO(imaman): this results in non-teleporting-deployment doing both upload and a download.
+        //      time is wasted on the download
+        
         const delta = await this.uploadFragments(zipBuilder);
         return await this.mergeFragments(delta, destination);    
     }
