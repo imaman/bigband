@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as hash from 'hash.js'
-const Module = require('module');
 require('ts-node').register({})
 
 import { AwsFactory } from 'bigband-core'
@@ -20,7 +19,6 @@ import { BigbandModel } from './models/BigbandModel';
 import { SectionModel } from './models/SectionModel';
 import { InstrumentModel } from './models/InstrumentModel';
 import { Namer } from './Namer';
-import { WireModel } from './models/WireModel';
 import { CloudProvider } from './CloudProvider';
 import { CreateBucketRequest } from 'aws-sdk/clients/s3';
 
@@ -109,9 +107,9 @@ export class BigbandFileRunner {
         grantPermission(this.teleportInstrument, 's3:GetObject', 
             `arn:aws:s3:::${this.s3Bucket}/${this.poolPrefix}/*`);
     
+        const deployablesLocation = `${this.s3Bucket}/${this.bigbandModel.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/*`
         grantPermission(this.teleportInstrument, 's3:PutObject',
-            `arn:aws:s3:::${this.s3Bucket}/${this.bigbandModel.bigband.s3Prefix}/` + 
-                `${DEPLOYABLES_FOLDER}/*`);
+            `arn:aws:s3:::${deployablesLocation}`);
         
         const section = this.sectionModel.section
         logger.info(`Shipping section "${section.name}" to ${section.region}`);
@@ -131,7 +129,7 @@ export class BigbandFileRunner {
         const pushedInstruments = await Promise.all(ps);
     
         const templateBody = this.buildCloudFormationTemplate(pushedInstruments)
-        await cfp.deploy(templateBody)
+        await cfp.deploy(templateBody, deployablesLocation)
         const lambda = this.awsFactory.newLambda();
     
         await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
