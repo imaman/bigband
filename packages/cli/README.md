@@ -12,7 +12,7 @@ Build production grade serveless systems.
 - Super-fast deployments.
 - Proven - came out of [testim.io](https://www.testim.io/) where it is used to drive two business-critical large-scale projects.
 - Reusability - say goodbye to copy-pasting huge YAML snippets.
-- IAM permissions are automatically managed for you - say goodebye to getting a `___ is not authorized to perform: ___ on resource ___` at runtime.
+- IAM permissions are automatically managed for you - say goodebye to getting an `___ is not authorized to perform: ___ on resource ___` error at runtime.
 - Dependencies are injected into your code wrapped by high-level APIs - say goodebye to getting a runtime errors due to a mis-constructed an ARN.
 - Secure - Bigband does its best to protect you from potentially costly mistakes. For instance, it will guard against cycles of lambda functions.
 
@@ -34,17 +34,6 @@ The Bigband system has three main parts:
 - Have an AWS profile setup on your local machine ([instructions](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html))
 - Optional: have [npx](https://www.npmjs.com/package/npx) installed (if you do not want to use `npx` you can run `bigband` directly via `node_modules/.bin/bigband`)
 
-### Prepare an S3 bucket
-Bigband uses AWS' S3 for pushing data/code into the AWS cloud. You can either:
-
-- use a pre-existing S3 bucket (all Bigband writes take place under a key-prefix which you control) 
-- or, you can create a new bucket.
-
-If you chose the latter use the following command:
-```bash
-aws s3 mb s3://<YOUR-S3-BUCKET-NAME>
-```
-
 ### Create a folder and Install
 
 ```
@@ -52,10 +41,11 @@ mkdir hello-bigband
 cd hello-bigband
 npm init -y
 npm install --save-dev bigband
+mkdir src
 ```
 
 ### Define your bigband
-Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. Don't forget to *replace the placeholder values* (`<YOUR-AWS-ACCOUNT-ID>`, `<YOUR-AWS-PROFILE-NAME>`, and `<YOUR-S3-BUCKET-NAME>`) with your own values.
+Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. Don't forget to *replace the placeholder values* (`<YOUR-AWS-ACCOUNT-ID>`, `<YOUR-AWS-PROFILE-NAME>`, and `<A-GUID>`) with your own values.
 
 ```typescript
 import { Bigband, LambdaInstrument, Section } from 'bigband-core';
@@ -64,12 +54,12 @@ const bigband = new Bigband({
     name: 'hello-bigband',
     awsAccount: '<YOUR-AWS-ACCOUNT-ID>',
     profileName: '<YOUR-AWS-PROFILE-NAME>',
-    s3Bucket: '<YOUR-S3-BUCKET-NAME>',
+    s3BucketGuid: '<A-GUID>',
     s3Prefix: 'hello-bigband-root'});
 
 const prod = new Section('eu-west-2', 'prod');
  
-const greeter = new LambdaInstrument('misc', 'greeter', 'src/greeter', {
+const greeter = new LambdaInstrument('myapp', 'greeter', 'src/greeter', {
     Description: "plain old greeter",
     MemorySize: 256,
     Timeout: 15   
@@ -109,13 +99,13 @@ This function expects to receive an input with two string fields `lastName`, `fi
 We deploy via Bigband's `ship` command. This will setup everything in the AWS cloud as needed.
 
 ```bash
-npx bigband ship
+npx bigband ship eu-west-2/prod
 ```
 
 Once you run it, deployment will begin. First-time deployments usually take on the order of 60-90s to complete (as all necessary AWS resources need to be created via `cloudformation`). Subsequent deployments should be much faster. Here is a full transcript of the `ship` command:
 
 ```
-$ npx bigband ship
+$ npx bigband ship eu-west-2/prod
 Shipping section "prod" to eu-west-2
 Compiling misc-greeter
 Compiling bigband-system-teleport
@@ -140,16 +130,10 @@ Bottom line: freely run `bigband ship` whenever you need to deploy.
 
 
 ### Let's greet
-Use Bigband's `invoke` command to send a payload of your choice to a lambda instrument. The general format is as follows:
+Use Bigband's `exec` command to send a payload of your choice to a lambda instrument. In our case the function name is `greeter` and the input JSON is an object with two fields (`firstName`, `lastName`):
 
 ```
-npx bigband invoke --function-name <name-of-a-lambda-instrument> --input <JSON>
-```
-
-In this tutorial, the function name is `greeter` and the input JSON is an object with two fields (`firstName`, `lastName`):
-
-```
-$ npx bigband invoke --function-name greeter --input '{"firstName": "James", "lastName": "Bond"}'
+$ npx bigband exec eu-west-2/prod/myapp/greeter --input '{"firstName": "James", "lastName": "Bond"}'
 {
   "StatusCode": 200,
   "LogResult": [
