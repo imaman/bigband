@@ -87,6 +87,9 @@ export class Teleporter {
     }
 
     public async nonIncrementalTeleport(zipBuilder: ZipBuilder, destination: S3Ref): Promise<number> {
+        // TODO(imaman): this results in non-teleporting-deployment doing both upload and a download.
+        //      time is wasted on the download
+        
         const delta = await this.uploadFragments(zipBuilder);
         return await this.mergeFragments(delta, destination);    
     }

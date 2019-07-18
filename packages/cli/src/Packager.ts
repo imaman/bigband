@@ -130,8 +130,10 @@ export class Packager {
     const factory = this.awsFactory
 
 
+    // TODO(imaman): can we get this information earlier to reduce possible waiting?
     const existsPromise = S3Ref.exists(this.awsFactory, deployableLocation)
 
+    // TODO(imaman): ditto, get earlier
     const p = factory.newLambda().getFunction({
       FunctionName: name.physicalName
     }).promise().catch(e => null);

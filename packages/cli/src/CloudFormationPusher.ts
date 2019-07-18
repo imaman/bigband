@@ -9,8 +9,8 @@ import {logger} from './logger';
 const CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS = 5 * 60;
 
 
-function computeFingerprint(spec, name, deployableLocation): string {
-    const str = JSON.stringify({spec, name, deployableLocation});
+function computeFingerprint(spec, name): string {
+    const str = JSON.stringify({spec, name});
     return hash.sha256().update(str).digest('hex');
 }
 
@@ -66,7 +66,7 @@ export class CloudFormationPusher {
     }
 
     async deploy(templateBody, deployablesLocation: string) {
-        const newFingerprint = computeFingerprint(templateBody, this.stackName, deployablesLocation);
+        const newFingerprint = computeFingerprint(templateBody, this.stackName);
         const existingFingerprint = await this.existingFingerprint;
         logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
         if (newFingerprint === existingFingerprint) {
