@@ -48,7 +48,7 @@ export class Bigband {
         this.name = init.name
         this.awsAccount = init.awsAccount
         this.profileName = init.profileName
-        this.s3Prefix = init.s3Prefix
+        this.s3Prefix = init.s3Prefix || 'bigband-root'
         this.s3BucketGuid = init.s3BucketGuid
         this.s3BucketPrefix = init.s3BucketPrefix || 'npm-bigband'
 
@@ -84,7 +84,7 @@ export interface BigbandInit {
      * @type {string}
      * @memberof BigbandInit
      */
-    s3Prefix: string
+    s3Prefix?: string
 
     s3BucketGuid: string
     s3BucketPrefix?: string
