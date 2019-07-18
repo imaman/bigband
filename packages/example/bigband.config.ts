@@ -1,12 +1,12 @@
-import { KinesisStreamConsumer, KinesisStreamInstrument, LambdaInstrument, DynamoDbAttributeType, Bigband, DynamoDbInstrument, Section, wire } from 'bigband-core/lib/index';
+import { LambdaInstrument, DynamoDbAttributeType, Bigband, DynamoDbInstrument, Section, wire } from 'bigband-core/lib/index';
 
 
 const bigband = new Bigband({
-        name: 'bb-example4',
+        name: 'bb-example-d',
         awsAccount: '196625562809',
         profileName: 'imaman',
         s3Prefix: 'root',
-        s3BucketGuid: '181e936d-be6a-48a1-85b3-4d953b480f25'
+        s3BucketGuid: '3afcf26f-31a9-4dcb-97ad-d573b2410c2e'
     });
 
 const prod = new Section('eu-west-2', 'prod');

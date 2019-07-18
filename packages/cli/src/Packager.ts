@@ -129,22 +129,30 @@ export class Packager {
 
     const factory = this.awsFactory
 
+
+    const existsPromise = S3Ref.exists(this.awsFactory, deployableLocation)
+
     const p = factory.newLambda().getFunction({
       FunctionName: name.physicalName
     }).promise().catch(e => null);
     const buf = await zipBuilder.toBuffer();
     const fingeprint = ZipBuilder.bufferTo256Fingerprint(buf);
     const getFunctionResponse: GetFunctionResponse|null = await p;
-    const c = getFunctionResponse && getFunctionResponse.Configuration && getFunctionResponse.Configuration.CodeSha256;
+    let c = getFunctionResponse && getFunctionResponse.Configuration && getFunctionResponse.Configuration.CodeSha256;
 
     const ret: PushResult = {
       deployableLocation,
       wasPushed: true
     };
 
+    const exists = await existsPromise 
+    if (!exists) {
+      logger.silly(`Previous deployment of ${name.physicalName} was not found`)
+    }
+
     logger.silly(`Comparing fingerprints for ${name.fullyQualifiedName}:\n  ${c}\n  ${fingeprint}`);
     if (deployMode === DeployMode.IF_CHANGED) {
-      if (c && c == fingeprint) {
+      if (exists && c && c == fingeprint) {
         logger.info(`No code changes in ${name.fullyQualifiedName}`);
         ret.wasPushed = false;
         return ret;
@@ -171,21 +179,19 @@ export class Packager {
     if (teleportingEnabled) {
       try {
         const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
-        if (!invocationResponse.FunctionError) {
-          logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${name.fullyQualifiedName}`);
-          return ret;
+        if (invocationResponse.FunctionError) {
+          logger.silly('teleporter returned an error:\n' + JSON.stringify(invocationResponse));
+          throw new Error(`Teleporting of ${name.physicalName} failed: ${invocationResponse.FunctionError}`);
         }
-  
-        logger.silly('teleporter returned an error:\n' + JSON.stringify(invocationResponse));
-        throw new Error(`Teleporting of ${name.physicalName} failed: ${invocationResponse.FunctionError}`);
+        logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${name.fullyQualifiedName}`);
+        return ret;
       } catch (e) {
         logger.silly('Teleporting error', e);
       }  
     }
 
     const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation)
-    logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${name.fullyQualifiedName}`);
-    
+    logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${name.fullyQualifiedName}`);    
     return ret;
   }
 
