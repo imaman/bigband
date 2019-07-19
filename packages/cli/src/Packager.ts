@@ -50,9 +50,9 @@ export class Packager {
     }
   }
 
-  private async compile(relatvieTsFile: string, relativeOutDir: string) {
+  private async compile(relativeTsFile: string, relativeOutDir: string) {
     const outDir = this.newOutDir(relativeOutDir);
-    const fileToCompile = this.toAbs(relatvieTsFile);
+    const fileToCompile = this.toAbs(relativeTsFile);
 
     logger.silly(`Compiling ${fileToCompile}`);
     const command = `tsc --outDir "${outDir}" --preserveConstEnums --strictNullChecks --sourceMap --target es2015 --module commonjs --allowJs --checkJs false --lib es2015,dom --rootDir "${this.rootDir}" "${fileToCompile}"`
