@@ -218,8 +218,8 @@ export class BigbandFileRunner {
         try {
             const pathPrefix = 'build';
             logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
-            const frag_ = instrument.createFragment(`../..`);
-            const packager = new Packager(d, npmPackageDir, this.awsFactory, this.blobPool, frag_);
+            const handlerFragment = instrument.createFragment(`../..`);
+            const packager = new Packager(d, npmPackageDir, this.awsFactory, this.blobPool, handlerFragment);
     
             const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix,
                     (instrument as LambdaInstrument).getNpmPackage(),
@@ -238,17 +238,17 @@ export class BigbandFileRunner {
                 mapping[wireModel.name] = {name: wireModel.supplier.physicalName, region: section.region};
             }
 
-            const frag = new DeployableFragment()
-            frag.add(new DeployableAtom('bigband/deps.js', 
+            const bigbandFolderFragment = new DeployableFragment()
+            bigbandFolderFragment.add(new DeployableAtom('bigband/deps.js', 
                 `module.exports = ${JSON.stringify(mapping)}`));
         
-            frag.forEach(fingerprintCalculator);
+            bigbandFolderFragment.forEach(fingerprintCalculator);
     
             const fp = Buffer.from(sha256.digest()).toString('base64');
-            frag.add(new DeployableAtom('bigband/build_manifest.js',
+            bigbandFolderFragment.add(new DeployableAtom('bigband/build_manifest.js',
                 `module.exports = "${fp}";`));
     
-            zb.importFragment(frag);
+            zb.importFragment(bigbandFolderFragment);
     
             return {zb, packager}
         } catch (e) {
