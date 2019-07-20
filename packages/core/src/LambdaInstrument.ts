@@ -107,11 +107,11 @@ export class LambdaInstrument extends Instrument {
 
 
         const content = `
-            const {runLambda} = require('${requireExpression}');
-            const mapping = require('./bigband/deps.js');
-            const fp = require('./bigband/build_manifest.js');
+            import {runLambda} from '${requireExpression}';
+            const mapping = require('../../../bigband/deps.js');
+            const fp = require('../../../bigband/build_manifest.js');
 
-            function handle(event, context, callback) {
+            export function handle(event, context, callback) {
                 try {
                     Promise.resolve()
                     .then(() => runLambda(context, event, mapping, fp))
@@ -125,11 +125,9 @@ export class LambdaInstrument extends Instrument {
                     callback(e);
                 }
             }
-
-            module.exports = {handle};
         `;
 
-        fragment.add(new DeployableAtom(this.getHandlerFile() + '.js', content));
+        fragment.add(new DeployableAtom('handler.ts', content));
         return fragment;
     }
 

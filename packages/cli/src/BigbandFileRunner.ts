@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as hash from 'hash.js'
 require('ts-node').register({})
 
-import { AwsFactory } from 'bigband-core'
+import { AwsFactory, DeployableFragment } from 'bigband-core'
 import { BigbandSpec, NameStyle, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult, DeployMode } from './Packager'
 import { DeployableAtom } from 'bigband-core'
@@ -216,32 +216,33 @@ export class BigbandFileRunner {
         const section = model.section
         const instrument = instrumentModel.instrument
         try {
-            const packager = new Packager(d, npmPackageDir, this.awsFactory, this.blobPool);
             const pathPrefix = 'build';
             logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
-            const frag = instrument.createFragment(pathPrefix);
+            const frag_ = instrument.createFragment(`../..`);
+            const packager = new Packager(d, npmPackageDir, this.awsFactory, this.blobPool, frag_);
     
+            const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix,
+                    (instrument as LambdaInstrument).getNpmPackage(),
+                    instrumentModel.instrument.fullyQualifiedName());
+    
+            const sha256 = hash.sha256();
+            const fingerprintCalculator = (a: DeployableAtom) => {
+                sha256.update(a.path);
+                sha256.update(a.content);
+            };
+            zb.forEach(fingerprintCalculator);
+
             const mapping = {};
             // TODO(imaman): coverage
             for (const wireModel of instrumentModel.wirings) {
                 mapping[wireModel.name] = {name: wireModel.supplier.physicalName, region: section.region};
             }
+
+            const frag = new DeployableFragment()
             frag.add(new DeployableAtom('bigband/deps.js', 
                 `module.exports = ${JSON.stringify(mapping)}`));
-    
-            const sha256 = hash.sha256();
-            const atomConsumer = (a: DeployableAtom) => {
-                sha256.update(a.path);
-                sha256.update(a.content);
-            };
-    
-    
-            const zb: ZipBuilder = await packager.run(
-                instrument.getEntryPointFile(), 
-                pathPrefix, 
-                (instrument as LambdaInstrument).getNpmPackage()) as ZipBuilder;
-            zb.forEach(atomConsumer);
-            frag.forEach(atomConsumer);
+        
+            frag.forEach(fingerprintCalculator);
     
             const fp = Buffer.from(sha256.digest()).toString('base64');
             frag.add(new DeployableAtom('bigband/build_manifest.js',
