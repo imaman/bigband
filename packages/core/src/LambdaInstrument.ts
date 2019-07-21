@@ -91,10 +91,6 @@ export class LambdaInstrument extends Instrument {
         return this.controllerPath;
     }
 
-    private getHandlerFile() {
-        return this.fullyQualifiedName() + '_Handler';
-    }
-
     createFragment(pathPrefix: string) {
         const fragment = new DeployableFragment();
         let requireExpression = `./${pathPrefix}/${this.getEntryPointFile()}`;
