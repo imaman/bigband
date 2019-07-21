@@ -46,7 +46,7 @@ export class Bigband {
 
     constructor(init: BigbandInit) {
         this.name = init.name
-        this.awsAccount = init.awsAccount
+        this.awsAccount = init.awsAccount || ''
         this.profileName = init.profileName
         this.s3Prefix = init.s3Prefix || 'bigband-root'
         this.s3BucketGuid = init.s3BucketGuid
@@ -70,7 +70,7 @@ export interface BigbandInit {
      * @type {string}
      * @memberof BigbandInit
      */
-    awsAccount: string
+    awsAccount?: string
     /**
      * The name of an AWS named profile defined on the local machine
      *
