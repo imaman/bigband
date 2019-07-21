@@ -107,10 +107,10 @@ Once you run it, deployment will begin. First-time deployments usually take on t
 ```
 $ npx bigband ship eu-west-2/prod
 Shipping section "prod" to eu-west-2
-Compiling misc-greeter
+Compiling myapp-greeter
 Compiling bigband-system-teleport
 Non-teleporting deployment (0.541MB) of bigband-system-teleport
-Non-teleporting deployment (0.002MB) of misc-greeter
+Non-teleporting deployment (0.002MB) of myapp-greeter
 Creating change set
 .
 ..
