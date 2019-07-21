@@ -3,7 +3,7 @@ import AWS = require('aws-sdk');
 import * as byline from 'byline';
 
 
-export async function runLambda(context, event, mapping) {
+export async function runLambda(context, event, mapping, fp) {
     const client = new AWS.DynamoDB.DocumentClient({region: mapping.distanceTable.region});
     const q = event.query;
     const answers = lookup(q);
