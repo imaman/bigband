@@ -341,7 +341,8 @@ export class BigbandFileRunner {
         } finally {
             // uninstall();
         }
-    
+
+        bigbandSpec.bigband.awsAccount = await AwsFactory.getAccountId(bigbandSpec.bigband.profileName)
         return new BigbandModel(bigbandSpec, path.dirname(pathToRequire))
     }    
 }
