@@ -10,6 +10,7 @@
       "es2017",
       "dom"
     ],
+    "incremental": true,
     "checkJs": false,
     "outDir": "lib",
   },
