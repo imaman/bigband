@@ -37,7 +37,7 @@
     "aws-sdk": "^2.409.0",
     "bigband-core": "^0.1.45",
     "del": "^3.0.0",
-    "detective-typescript": "^4.1.1",
+    "detective-typescript": "^5.4.0",
     "hash.js": "^1.1.5",
     "jszip": "^3.1.5",
     "mkdirp": "^0.5.1",
