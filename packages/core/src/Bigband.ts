@@ -23,7 +23,7 @@ export class Bigband {
      * @type {string}
      * @memberof Bigband
      */
-    readonly awsAccount: string
+    awsAccount: string
 
     /**
      * The name of an AWS named profile defined on the local machine
