@@ -31,5 +31,19 @@ export class AwsFactory {
     newS3(): AWS.S3 {
         return new AWS.S3(this.options);
     }
+
+    newSts(): AWS.STS {
+        return new AWS.STS(this.options)
+    }
+
+    static async getAccountId(profileName: string): Promise<string> {
+        const sts = new AwsFactory("", "", profileName).newSts()
+        const resp = await sts.getCallerIdentity().promise()
+        const ret = resp.Account
+        if (!ret) {
+            throw new Error(`No account ID found for proile "${profileName}"`)
+        }
+        return ret
+    }
 } 
 
