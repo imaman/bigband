@@ -54,7 +54,7 @@ describe('Namer', () => {
             
             expect(resolvedName.fullyQualifiedName).to.eql("p1-p2-f1")
             expect(resolvedName.physicalName).to.eql("b-s1-p1-p2-f1")
-            expect(resolvedName.arn_).to.eql("arn:aws:lambda:r1:a:function:b-s1-p1-p2-f1")
+            expect(resolvedName.arn).to.eql("arn:aws:lambda:r1:a:function:b-s1-p1-p2-f1")
         });
     })
 
