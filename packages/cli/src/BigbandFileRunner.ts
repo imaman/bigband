@@ -159,7 +159,7 @@ export class BigbandFileRunner {
             const def = this.namer.getPhysicalDefinition(curr.model.instrument)
 
             for (const wireModel of curr.model.wirings) {
-                const arn = wireModel.supplier.arn
+                const arn = wireModel.supplier.arn_
                 wireModel.supplier.instrument.contributeToConsumerDefinition(wireModel.consumer.section.section, def,
                     arn);
             }

@@ -23,9 +23,9 @@ export class InstrumentModel {
         return new Namer(this.bigband, this.section.section).path(this.instrument)
     }
 
-    get arn(): string {
+    get arn_(): string {
         const namer = new Namer(this.bigband, this.section.section)
-        return namer.resolve(this.instrument).arn
+        return namer.resolve(this.instrument).arn_
     }
 
     validate() {
@@ -80,7 +80,7 @@ export class InstrumentModel {
         
         if (generateSynthetic) {
             const items: Map<string, NavigationItem> = this.instrument.getNavigationItems(
-                CompositeName.fromString(this.path), this.arn, this.physicalName, awsFactory)
+                CompositeName.fromString(this.path), this.arn_, this.physicalName, awsFactory)
 
             for (const token of items.keys()) {
                 const item = items.get(token)
