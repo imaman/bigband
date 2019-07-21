@@ -5,6 +5,12 @@ dir=`dirname $(readlink -f "$0")`
 
 cd $dir
 
+pushd ../../
+lerna run build
+
+popd
+
+
 debugArgs=""
 if [ "$1" == "--d" ]; then
     debugArgs="--inspect --inspect-brk"
