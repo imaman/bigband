@@ -159,7 +159,7 @@ export class BigbandFileRunner {
             const def = this.namer.getPhysicalDefinition(curr.model.instrument)
 
             for (const wireModel of curr.model.wirings) {
-                const arn = wireModel.supplier.arn
+                const arn = wireModel.supplier.arn_
                 wireModel.supplier.instrument.contributeToConsumerDefinition(wireModel.consumer.section.section, def,
                     arn);
             }
@@ -341,7 +341,8 @@ export class BigbandFileRunner {
         } finally {
             // uninstall();
         }
-    
+
+        bigbandSpec.bigband.awsAccount = await AwsFactory.getAccountId(bigbandSpec.bigband.profileName)
         return new BigbandModel(bigbandSpec, path.dirname(pathToRequire))
     }    
 }
