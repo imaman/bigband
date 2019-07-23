@@ -8,7 +8,7 @@ async function main(bigbandFile: string, lambdaName: string, limit: number) {
     // TODO(imaman): fail if this is not a lambda instrument
     const lookupResult: LookupResult = await model.searchInspect(lambdaName);
 
-    const cloudWatchLogs = CloudProvider.newAwsFactory(lookupResult.sectionModel).newCloudWatchLogs();
+    const cloudWatchLogs = CloudProvider.get(lookupResult.sectionModel).newCloudWatchLogs();
     const logGroupName = `/aws/lambda/${lookupResult.physicalName}`;
 
     const describeLogStreamsReq: DescribeLogStreamsRequest = {

@@ -76,7 +76,7 @@ export class InstrumentModel {
         const instrumentNode = node.addChild(last, item)
 
 
-        const awsFactory = CloudProvider.newAwsFactory(this.section)
+        const awsFactory = CloudProvider.get(this.section)
         
         if (generateSynthetic) {
             const items: Map<string, NavigationItem> = this.instrument.getNavigationItems(
