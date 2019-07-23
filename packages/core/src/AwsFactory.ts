@@ -5,15 +5,18 @@ export class AwsFactory {
 
     constructor(readonly stackName: string, readonly region: string, readonly profileName: string) {
         const credentials = new AWS.SharedIniFileCredentials({profile: this.profileName});
-        if (!credentials.accessKeyId) {
-            // TODO(imaman): introduce the notion of 'user-friendly' exceptions which are dumped 
-            // to the terminal w/o the stacktrace.
-            throw new Error(`No credentials found for profile name "${profileName}"`)
-        }
         this.options = {
             region,
             credentials
         };
+    }
+
+    validate() {
+        if (!this.options.credentials.accessKeyId) {
+            // TODO(imaman): introduce the notion of 'user-friendly' exceptions which are dumped 
+            // to the terminal w/o the stacktrace.
+            throw new Error(`No credentials found for profile name "${this.profileName}"`)
+        }
     }
 
     newCloudFormation() {
