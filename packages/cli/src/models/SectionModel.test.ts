@@ -48,12 +48,17 @@ describe('SectionModel', () => {
         // TODO(imaman): check validity of region (small-caps, digits, dash)
         describe("name", () => {
             it("allows dash-separated sequences of lower-case letters and digits", () => {
-                const model = new SectionModel(b, new Section("r1", "abc-def58-xyz"))
+                const s = new Section("r1", "abc-def58-xyz")
+                const bm = new BigbandModel({bigband: b, sections: [{section: s, instruments: [], wiring: []}]}, "_")
+                const model = bm.findSectionModel("r1/abc-def58-xyz")
                 expect(() => model.validate()).not.to.throw()
             });
             it("rejects upper-case letters", () => {
-                const model = new SectionModel(b, new Section("r1", "aBc"))
-                expect(() => model.validate()).to.throw()
+                const s = new Section("r1", "aBc")
+
+                expect(() => 
+                        new BigbandModel({bigband: b, sections: [{section: s, instruments: [], wiring: []}]}, "_"))
+                        .to.throw('Bad section name: "aBc"')
             });
         })
     })
