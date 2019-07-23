@@ -16,6 +16,7 @@ import { BigbandModel } from './models/BigbandModel';
 import { DeployMode } from './Packager';
 import { S3Ref } from './S3Ref';
 import { InstrumentModel } from './models/InstrumentModel';
+import { CloudProvider } from './CloudProvider';
 
 
 interface LambdaInput {
@@ -27,7 +28,7 @@ describe('BigbandFileRunner', () => {
     const bigbandInit: BigbandInit = {
         awsAccount: "a",
         name: "b",
-        profileName: "p",
+        profileName: CloudProvider.UNIT_TESTING_PROFILE_NAME,
         s3Prefix: "my_prefix",
         s3BucketGuid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     }
