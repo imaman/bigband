@@ -1,5 +1,6 @@
 import { AwsFactory } from 'bigband-core'
 import { logger } from './logger';
+import { CloudProvider } from './CloudProvider';
 
 export class S3Ref {
   constructor(public readonly s3Bucket: string, public readonly s3Key: string) {
@@ -65,8 +66,8 @@ export class S3Ref {
       return ret as Buffer;
   }
 
-  static async exists(factory: AwsFactory, s3Ref: S3Ref): Promise<boolean> {
-    const s3 = factory.newS3();
+  static async exists(cloudProvider: CloudProvider, s3Ref: S3Ref): Promise<boolean> {
+    const s3 = cloudProvider.newAwsFactory().newS3();
 
     try {
 

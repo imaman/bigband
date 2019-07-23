@@ -1,19 +1,26 @@
 import * as AWS from 'aws-sdk';
+import { Credentials } from 'aws-sdk';
 
 export class AwsFactory {
     private readonly options: any;
 
-    constructor(readonly stackName: string, readonly region: string, readonly profileName: string) {
-        const credentials = new AWS.SharedIniFileCredentials({profile: this.profileName});
+    constructor(readonly stackName: string, readonly region: string, readonly profileName: string, 
+            credentials: Credentials) {
+        this.options = {
+            region,
+            credentials
+        };
+    }
+
+    static create(stackName: string, region: string, profileName: string): AwsFactory {
+        const credentials = new AWS.SharedIniFileCredentials({profile: profileName});
         if (!credentials.accessKeyId) {
             // TODO(imaman): introduce the notion of 'user-friendly' exceptions which are dumped 
             // to the terminal w/o the stacktrace.
             throw new Error(`No credentials found for profile name "${profileName}"`)
         }
-        this.options = {
-            region,
-            credentials
-        };
+
+        return new AwsFactory(stackName, region, profileName, credentials)
     }
 
     newCloudFormation() {
@@ -37,7 +44,7 @@ export class AwsFactory {
     }
 
     static async getAccountId(profileName: string): Promise<string> {
-        const sts = new AwsFactory("", "", profileName).newSts()
+        const sts = AwsFactory.create("", "", profileName).newSts()
         const resp = await sts.getCallerIdentity().promise()
         const ret = resp.Account
         if (!ret) {

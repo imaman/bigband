@@ -140,10 +140,10 @@ export class LambdaInstrument extends Instrument {
         }));
     }
 
-    getNavigationItems(path: CompositeName, arn: string, physicalName: string, awsFactory: AwsFactory): Map<string, NavigationItem> {
+    getNavigationItems(path: CompositeName, arn: string, physicalName: string, awsFactoryProvider: () => AwsFactory): Map<string, NavigationItem> {
         const info = (s: string) => this.getDefinition().get()
-        const desc = (s: string) => awsFactory.newLambda().getFunction({FunctionName: arn}).promise()
-        const logs = (s: string) => getLogs(awsFactory, physicalName, 50)
+        const desc = (s: string) => awsFactoryProvider().newLambda().getFunction({FunctionName: arn}).promise()
+        const logs = (s: string) => getLogs(awsFactoryProvider(), physicalName, 50)
 
         const ret = new Map<string, NavigationItem>()
         ret.set('def', {role: Role.LOCAL_COMMAND, path: path.append('def').toString(), action: info})

@@ -5,6 +5,7 @@ import {Section} from 'bigband-core';
 import * as uuid from 'uuid/v1';
 import * as hash from 'hash.js';
 import {logger} from './logger';
+import { CloudProvider } from './CloudProvider';
 
 const CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS = 5 * 60;
 
@@ -23,9 +24,9 @@ export class CloudFormationPusher {
     private readonly existingFingerprint;
     private resolver;
 
-    constructor(awsFactory: AwsFactory) {
-        this.cloudFormation = awsFactory.newCloudFormation();
-        this.stackName = awsFactory.stackName
+    constructor(cloudProvider: CloudProvider) {
+        this.cloudFormation = cloudProvider.newAwsFactory().newCloudFormation();
+        this.stackName = cloudProvider.newAwsFactory().stackName
 
         this.existingFingerprint = new Promise<string>(resolver => {
             this.resolver = resolver;

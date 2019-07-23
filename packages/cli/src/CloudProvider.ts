@@ -2,8 +2,10 @@ import { SectionModel } from "./models/SectionModel";
 import { AwsFactory } from "bigband-core";
 
 export class CloudProvider {
-    static newAwsFactory(sectionModel: SectionModel): AwsFactory {
-        return new AwsFactory(sectionModel.physicalName, sectionModel.section.region,
-            sectionModel.bigband.profileName);
+    constructor(private readonly sectionModel: SectionModel) {}
+
+    newAwsFactory(): AwsFactory {
+        return AwsFactory.create(this.sectionModel.physicalName, this.sectionModel.section.region,
+            this.sectionModel.bigband.profileName);
     }
 }
