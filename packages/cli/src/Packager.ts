@@ -19,7 +19,6 @@ import { ZipBuilder } from './ZipBuilder';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME, CONTRIVED_OUT_FILE_NAME } from './scotty'
 import { Misc } from './Misc';
 import { ResolvedName } from './ResolvedName';
-import { CloudProvider } from './CloudProvider';
 
 export enum DeployMode {
   ALWAYS = 1,
@@ -38,7 +37,7 @@ export class Packager {
   private workingDirCreated = false;
   private readonly npmPackageDir;
 
-  constructor(private readonly rootDir: string, npmPackageDir: string, private readonly cloudProvider: CloudProvider,
+  constructor(private readonly rootDir: string, npmPackageDir: string, private readonly awsFactory: AwsFactory,
       private readonly blobPool: S3BlobPool, private readonly fragment: DeployableFragment) {    
     if (!path.isAbsolute(npmPackageDir)) {
       throw new Error(`Expected an absolute path but got ${npmPackageDir}.`);
@@ -178,11 +177,14 @@ export class Packager {
   public async pushToS3(name: ResolvedName, deployableLocation: S3Ref, zipBuilder: ZipBuilder,
       teleportLambdaName: string, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
 
+    const factory = this.awsFactory
+
+
     // TODO(imaman): can we get this information earlier to reduce possible waiting?
-    const existsPromise = S3Ref.exists(this.cloudProvider, deployableLocation)
+    const existsPromise = S3Ref.exists(this.awsFactory, deployableLocation)
 
     // TODO(imaman): ditto, get earlier
-    const p = this.cloudProvider.newAwsFactory().newLambda().getFunction({
+    const p = factory.newLambda().getFunction({
       FunctionName: name.physicalName
     }).promise().catch(e => null);
     const buf = await zipBuilder.toBuffer();
@@ -228,7 +230,7 @@ export class Packager {
     
     if (teleportingEnabled) {
       try {
-        const invocationResponse: InvocationResponse = await this.cloudProvider.newAwsFactory().newLambda().invoke(invocationRequest).promise();
+        const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
         if (invocationResponse.FunctionError) {
           logger.silly('teleporter returned an error:\n' + JSON.stringify(invocationResponse));
           throw new Error(`Teleporting of ${name.physicalName} failed: ${invocationResponse.FunctionError}`);

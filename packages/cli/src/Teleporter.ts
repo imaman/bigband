@@ -3,7 +3,6 @@ import { ZipBuilder } from "./ZipBuilder";
 import { AwsFactory } from 'bigband-core'
 import { logger } from './logger';
 import * as hash from 'hash.js'
-import { CloudProvider } from "./CloudProvider";
 
 type BlobPoolHandle = string;
 
@@ -20,14 +19,10 @@ function toS3FriendlyName(s: string) {
 }
 
 export class S3BlobPool {
-    constructor(public readonly provider: CloudProvider, private readonly s3Bucket: string, private readonly s3Prefix: string) {
+    constructor(public readonly factory: AwsFactory, private readonly s3Bucket: string, private readonly s3Prefix: string) {
         if (s3Prefix.endsWith('/')) {
             throw new Error(`Bad argument: s3Prefix ("${s3Prefix}")`);
         }
-    }
-
-    private get factory(): AwsFactory {
-        return this.provider.newAwsFactory()
     }
 
     public async put(buf: Buffer): Promise<PutResult> {
@@ -35,7 +30,7 @@ export class S3BlobPool {
         const handle: string = toS3FriendlyName(base64);
 
         const s3Ref = new S3Ref(this.s3Bucket, `${this.s3Prefix}/${handle}`);
-        if (await S3Ref.exists(this.provider, s3Ref)) {
+        if (await S3Ref.exists(this.factory, s3Ref)) {
             return {handle, bytesSent: 0};
         }
 
@@ -87,7 +82,7 @@ export class Teleporter {
         const buffers: Buffer[] = await Promise.all(handles.map(k => this.blobPool.get(k)));
         const buf: Buffer = await ZipBuilder.merge(buffers);
 
-        await S3Ref.put(this.blobPool.provider.newAwsFactory(), s3Ref, buf, CONTENT_TYPE);
+        await S3Ref.put(this.blobPool.factory, s3Ref, buf, CONTENT_TYPE);
         return buf.byteLength;
     }
 

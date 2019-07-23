@@ -50,19 +50,19 @@ export interface PushedInstrument {
 
 // TODO(imaman): coverage. can be hard.
 export class BigbandFileRunner {
+    private readonly awsFactory: AwsFactory
     private readonly poolPrefix: string
     private readonly blobPool: S3BlobPool
     private readonly teleportInstrument: Instrument
     private readonly namer: Namer
-    private readonly cloudProvider: CloudProvider
 
     constructor(private readonly bigbandModel: BigbandModel, 
         private readonly sectionModel: SectionModel, 
         private readonly teleportingEnabled: boolean, 
         private readonly deployMode: DeployMode) {
-            this.cloudProvider = new CloudProvider(sectionModel)
+            this.awsFactory = CloudProvider.newAwsFactory(this.sectionModel)
             this.poolPrefix = `${this.ttlPrefix()}/fragments`;
-            this.blobPool = new S3BlobPool(this.cloudProvider, this.s3Bucket, this.poolPrefix);
+            this.blobPool = new S3BlobPool(this.awsFactory, this.s3Bucket, this.poolPrefix);
             this.teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
                 Description: 'Rematerializes a deployable at the deployment site',
                 MemorySize: 2560,
@@ -71,7 +71,8 @@ export class BigbandFileRunner {
         
             this.namer = new Namer(bigbandModel.bigband, sectionModel.section)
     
-    }
+        }
+
 
     private get s3Bucket(): string {
         if (this.sectionModel.section.s3Bucket) {
@@ -100,7 +101,7 @@ export class BigbandFileRunner {
     }
 
     private async runSpec() {
-        const cfp = new CloudFormationPusher(this.cloudProvider);
+        const cfp = new CloudFormationPusher(this.awsFactory);
         cfp.peekAtExistingStack();
             
         grantPermission(this.teleportInstrument, 's3:GetObject', 
@@ -129,7 +130,7 @@ export class BigbandFileRunner {
     
         const templateBody = this.buildCloudFormationTemplate(pushedInstruments)
         await cfp.deploy(templateBody, deployablesLocation)
-        const lambda = this.cloudProvider.newAwsFactory().newLambda();
+        const lambda = this.awsFactory.newLambda();
     
         await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
             const req: UpdateFunctionCodeRequest = {
@@ -218,7 +219,7 @@ export class BigbandFileRunner {
             const pathPrefix = 'build';
             logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
             const handlerFragment = instrument.createFragment(`../..`);
-            const packager = new Packager(d, npmPackageDir, this.cloudProvider, this.blobPool, handlerFragment);
+            const packager = new Packager(d, npmPackageDir, this.awsFactory, this.blobPool, handlerFragment);
     
             const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix,
                     (instrument as LambdaInstrument).getNpmPackage(),
@@ -264,8 +265,8 @@ export class BigbandFileRunner {
     
     private async createBucketIfNeeded() {
         const s3Ref = new S3Ref(this.s3Bucket, "")
-        const exists = await S3Ref.exists(this.cloudProvider, s3Ref)
-        const s3 = this.cloudProvider.newAwsFactory().newS3();
+        const exists = await S3Ref.exists(this.awsFactory, s3Ref)
+        const s3 = this.awsFactory.newS3();
         logger.silly("exists=" + exists + ", s3ref=" + s3Ref)
         if (exists) {
             return
@@ -283,7 +284,7 @@ export class BigbandFileRunner {
         } catch (e) {
             logger.silly("createBucket() failed", e)
             // check existence (again) in case the bucket was just created by someone else
-            const existsNow = await S3Ref.exists(this.cloudProvider, s3Ref)
+            const existsNow = await S3Ref.exists(this.awsFactory, s3Ref)
             logger.silly("existsnow?=" + existsNow)
             if (!existsNow) {
                 throw new Error(`Failed to create an S3 Bucket (${s3Ref})`)
@@ -315,7 +316,7 @@ export class BigbandFileRunner {
         };
     
         try {
-            const s3 = this.cloudProvider.newAwsFactory().newS3();
+            const s3 = this.awsFactory.newS3();
             await s3.putBucketLifecycleConfiguration(req).promise();
             logger.silly(`expiration policy set via ${JSON.stringify(req)}`);
         } catch (e) {
