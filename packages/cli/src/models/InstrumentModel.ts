@@ -15,17 +15,20 @@ export class InstrumentModel {
         // TODO(imaman): rename to wires
         public readonly wirings: WireModel[], private readonly isSystemInstrument) {}
 
+    private get namer(): Namer {
+        return new Namer(this.bigband, this.section.section, this.section.bigband.accountId)
+    }
+    
     get physicalName(): string {
-        return new Namer(this.bigband, this.section.section).physicalName(this.instrument)
+        return this.namer.physicalName(this.instrument)
     }
 
     get path(): string {
-        return new Namer(this.bigband, this.section.section).path(this.instrument)
+        return this.namer.path(this.instrument)
     }
 
     get arn(): string {
-        const namer = new Namer(this.bigband, this.section.section)
-        return namer.resolve(this.instrument).arn
+        return this.namer.resolve(this.instrument).arn
     }
 
     validate() {

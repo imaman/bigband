@@ -14,7 +14,6 @@ import { BigbandModel } from './BigbandModel';
 
 describe('InstrumentModel', () => {
     const b = new Bigband({
-        awsAccount: "a",
         name: "b",
         profileName: "p",
         s3Prefix: "my_prefix",

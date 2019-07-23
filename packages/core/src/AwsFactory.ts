@@ -15,7 +15,8 @@ export class AwsFactory {
         if (!this.options.credentials.accessKeyId) {
             // TODO(imaman): introduce the notion of 'user-friendly' exceptions which are dumped 
             // to the terminal w/o the stacktrace.
-            throw new Error(`No credentials found for profile name "${this.profileName}"`)
+            throw new Error(`No credentials found for profile name "${this.profileName}\n` + 
+                'You should check the AWS profiles (AKA: "named profiles") defined on your machine')
         }
     }
 
@@ -37,16 +38,6 @@ export class AwsFactory {
 
     newSts(): AWS.STS {
         return new AWS.STS(this.options)
-    }
-
-    static async getAccountId(profileName: string): Promise<string> {
-        const sts = new AwsFactory("", "", profileName).newSts()
-        const resp = await sts.getCallerIdentity().promise()
-        const ret = resp.Account
-        if (!ret) {
-            throw new Error(`No account ID found for proile "${profileName}"`)
-        }
-        return ret
     }
 } 
 

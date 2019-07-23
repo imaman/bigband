@@ -43,7 +43,7 @@ export class BigbandModel {
     private readonly instrumentModelByPath = new Map<string, InstrumentModel>()
 
     public readonly dir: string
-    constructor(private readonly spec: BigbandSpec, defaultDir: string) {
+    constructor(private readonly spec: BigbandSpec, defaultDir: string, public readonly accountId: string = '<unspecfieid>') {
         if (!defaultDir) {
             throw new Error('defaultDir cannot be falsy')
         }

@@ -13,7 +13,6 @@ import { BigbandModel } from './BigbandModel';
 
 describe('SectionModel', () => {
     const b = new Bigband({
-        awsAccount: "a",
         name: "b",
         profileName: "p",
         s3Prefix: "my_prefix",

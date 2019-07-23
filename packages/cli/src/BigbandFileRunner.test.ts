@@ -26,7 +26,6 @@ interface LambdaInput {
 
 describe('BigbandFileRunner', () => {
     const bigbandInit: BigbandInit = {
-        awsAccount: "a",
         name: "b",
         profileName: CloudProvider.UNIT_TESTING_PROFILE_NAME,
         s3Prefix: "my_prefix",
@@ -239,7 +238,7 @@ describe('BigbandFileRunner', () => {
                                     "Statement": [{
                                         "Effect": "Allow",
                                         "Action": ["lambda:InvokeFunction" ],
-                                        "Resource": "arn:aws:lambda:r1:a:function:b-s1-p2-f2"
+                                        "Resource": "arn:aws:lambda:r1:<unspecfieid>:function:b-s1-p2-f2"
                                     }]
                                 }
                                 ],
@@ -309,7 +308,7 @@ describe('BigbandFileRunner', () => {
                                 "Statement": [{
                                     "Effect": "Allow",
                                     "Action": ["lambda:InvokeFunction" ],
-                                    "Resource": "arn:aws:lambda:r2:a:function:b-s2-p2-f2"
+                                    "Resource": "arn:aws:lambda:r2:<unspecfieid>:function:b-s2-p2-f2"
                                 }]
                             }
                             ],

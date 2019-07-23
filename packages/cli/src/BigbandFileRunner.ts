@@ -69,7 +69,7 @@ export class BigbandFileRunner {
                 Timeout: 30
             }).fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME);
         
-            this.namer = new Namer(bigbandModel.bigband, sectionModel.section)
+            this.namer = new Namer(bigbandModel.bigband, sectionModel.section, bigbandModel.accountId)
     
         }
 
@@ -342,8 +342,8 @@ export class BigbandFileRunner {
             // uninstall();
         }
 
-        bigbandSpec.bigband.awsAccount = await AwsFactory.getAccountId(bigbandSpec.bigband.profileName)
-        return new BigbandModel(bigbandSpec, path.dirname(pathToRequire))
+        const accountId = await CloudProvider.getAccountId(bigbandSpec.bigband.profileName)
+        return new BigbandModel(bigbandSpec, path.dirname(pathToRequire), accountId)
     }    
 }
 

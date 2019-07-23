@@ -2,7 +2,7 @@ import { Instrument, Definition, Section, Bigband, NameStyle } from "bigband-cor
 import { ResolvedName } from "./ResolvedName";
 
 export class Namer {
-    constructor(private readonly bigband: Bigband, private readonly section: Section) {}
+    constructor(private readonly bigband: Bigband, private readonly section: Section, private readonly accountId: string) {}
 
     physicalName(instrument: Instrument): string {
         return `${this.bigband.name}-${this.section.name}-${instrument.fullyQualifiedName()}`;
@@ -15,7 +15,7 @@ export class Namer {
     resolve(instrument: Instrument) {
         const physicalName = this.physicalName(instrument)
         const arn = `arn:aws:${instrument.arnService()}:${this.section.region}:` + 
-                `${this.bigband.awsAccount}:${instrument.arnType()}${physicalName}`;
+                `${this.accountId}:${instrument.arnType()}${physicalName}`;
 
         // TODO(imaman): omit dashes from the arn and physical names. use dashses only for separating path components:
         //      <reg>-<sec>-<p1>-<p2>-<namme>
