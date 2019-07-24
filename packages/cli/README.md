@@ -32,7 +32,7 @@ The Bigband system has three main parts:
 ### Prerequisites
 
 - Have an AWS profile setup on your local machine ([instructions](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html))
-- Optional: have [npx](https://www.npmjs.com/package/npx) installed (if you do not want to use `npx` you can run `bigband` directly via `node_modules/.bin/bigband`)
+- Optional: have [npx](https://www.npmjs.com/package/npx) installed. If you do not want to use `npx` you can run `bigband` directly via `node_modules/.bin/bigband`.
 
 ### Create a folder and Install
 
@@ -47,7 +47,7 @@ mkdir src
 ### Define your bigband
 Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. Do not forget to *replace the placeholder values* (`<YOUR-AWS-PROFILE-NAME>`, and `<A-GUID>`) with your own values.
 
-> :information_source: The AWS profile names are defined in `~/.aws/credentials` (Linux & Mac) or `%USERPROFILE%\.aws\credentials` (Windows).
+> :information_source: AWS [profile names](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) are defined in `~/.aws/credentials` (Linux & Mac) or `%USERPROFILE%\.aws\credentials` (Windows).
 
 ```typescript
 import { Bigband, LambdaInstrument, Section } from 'bigband-core';
