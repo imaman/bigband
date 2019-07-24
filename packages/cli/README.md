@@ -47,7 +47,7 @@ mkdir src
 ### Define your bigband
 Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. Do not forget to *replace the placeholder values* (`<YOUR-AWS-PROFILE-NAME>`, and `<A-GUID>`) with your own values.
 
-> :information_source: **Info**: The AWS profile names are defined in `~/.aws/credentials` (Linux & Mac) or `%USERPROFILE%\.aws\credentials` (Windows).
+> :information_source: The AWS profile names are defined in `~/.aws/credentials` (Linux & Mac) or `%USERPROFILE%\.aws\credentials` (Windows).
 
 ```typescript
 import { Bigband, LambdaInstrument, Section } from 'bigband-core';
