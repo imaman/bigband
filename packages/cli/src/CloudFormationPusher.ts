@@ -198,6 +198,7 @@ export class CloudFormationPusher {
             status = stackDescription.Stacks[0].StackStatus;
             logger.silly('stackDescription.Stacks[0]=\n' + JSON.stringify(stackDescription.Stacks[0], null, 2))
             if (status === 'ROLLBACK_COMPLETE') {
+                // See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-describing-stacks.html
                 throw new Error(`Creation of Cloudformation stack "${stackId}" has failed. Aborting.`)
             }
             if (status.endsWith('_COMPLETE')) {
