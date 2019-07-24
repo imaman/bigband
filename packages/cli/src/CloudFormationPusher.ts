@@ -4,7 +4,6 @@ import { CreateChangeSetInput, ExecuteChangeSetInput, DescribeChangeSetInput, De
 import * as uuid from 'uuid/v1';
 import * as hash from 'hash.js';
 import {logger} from './logger';
-import { silly } from 'winston';
 
 const CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS = 5 * 60;
 
