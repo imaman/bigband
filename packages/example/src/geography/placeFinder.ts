@@ -32,7 +32,7 @@ export async function runLambda(context, event, mapping, fp) {
         headers: { 
           "content-type": 'application/json', 
         },
-        body: {query: q, elipsized: ellipsize(q), timePassed, bylineKeys: Object.keys(byline), inputLength: "_10___" + q.length, answers: answers.map(curr => curr.answer)}
+        body: {query: q, elipsized: ellipsize(q), timePassed, bylineKeys: Object.keys(byline), inputLength: "_11___" + q.length, answers: answers.map(curr => curr.answer)}
     };
 }
 
