@@ -94,6 +94,7 @@ export class CloudFormationPusher {
         try {
             await this.cloudFormation.createChangeSet(createChangeSetReq).promise();
         } catch (e) {
+            logger.silly(`createChangeSet() failed: ${e.code} -- "${e.message}"`)
             if (e.code !== 'ValidationError' || !e.message.startsWith('Stack') || !e.message.endsWith('does not exist')) {
                 throw e;
             }
