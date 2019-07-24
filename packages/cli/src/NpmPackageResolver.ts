@@ -72,9 +72,12 @@ export class NpmPackageResolver {
         const command = 'npm ls --long --json';
         for (const r of this.roots) {
             // TODO(imaman): better output on errors.
-            const execution = await new Promise<{err, stdout, stderr}>(resolve => 
-                child_process.exec(command, {cwd: r, maxBuffer: 20 * 1024 * 1024 }, 
-                    (err, stdout, stderr) => resolve({err, stdout, stderr})));
+            const execution = await new Promise<{err, stdout, stderr}>((resolve, reject) => {
+                    wait(10000).then(() => reject(new Error(
+                        'Timedout while waiting for the following command to complete:\n' + command)))
+                    child_process.exec(command, {cwd: r, maxBuffer: 20 * 1024 * 1024 }, 
+                        (err, stdout, stderr) => resolve({err, stdout, stderr}))
+                });
             const npmLsPojo = JSON.parse(execution.stdout);
             if (!npmLsPojo.name || !npmLsPojo.version) {
                 throw new Error(`Running ${command} in ${r} resulted in a failure:\n${execution.stdout}\n${execution.err}}`);
@@ -130,3 +133,7 @@ export class NpmPackageResolver {
     }
 }
 
+
+function wait(millis: number) {
+    return new Promise(resolve => setTimeout(resolve, millis));
+}
