@@ -71,17 +71,12 @@ export class NpmPackageResolver {
     async prepopulate() {
         const command = 'npm ls --long --json';
         for (const r of this.roots) {
-            // TODO(imaman): better output on errors.
-            const execution = await new Promise<{err, stdout, stderr}>((resolve, reject) => {
-                    wait(10000).then(() => reject(new Error(
-                        'Timedout while waiting for the following command to complete:\n' + command)))
-                    // TODO(imaman): use a different variant of child_process
-                    child_process.exec(command, {cwd: r, maxBuffer: 20 * 1024 * 1024 }, 
-                        (err, stdout, stderr) => resolve({err, stdout, stderr}))
-                });
+            // TODO(imaman): better output on errors
+
+            const execution = await exec('npm', ['ls', '--long', '--json'], r)
             const npmLsPojo = JSON.parse(execution.stdout);
             if (!npmLsPojo.name || !npmLsPojo.version) {
-                throw new Error(`Running ${command} in ${r} resulted in a failure:\n${execution.stdout}\n${execution.err}}`);
+                throw new Error(`Failure from ${execution.commandLine}: Exit code=${execution.exitCode}, stdout=\n${execution.stdout}`);
             }
             this.scanDeps(npmLsPojo, this.graph.rootNode);
         }
@@ -137,4 +132,57 @@ export class NpmPackageResolver {
 
 function wait(millis: number) {
     return new Promise(resolve => setTimeout(resolve, millis));
+}
+
+
+class BoundedString {
+    private readonly arr: string[] = []
+
+    constructor(private name: string, private limit: number, private readonly reject: (_: Error) => void) {}
+
+    push(obj: object) {
+        try {
+            const s = obj.toString()
+            const newLimit = this.limit - s.length
+            if (newLimit < 0) {
+                throw new Error(`Buffer (${this.name}) exhausted`)
+            }
+            this.arr.push(s)    
+        } catch (e) {
+            this.reject(e)            
+        }
+    }
+
+    get value(): string {
+        return this.arr.join('')
+    }
+}
+
+interface Execution {
+    commandLine: string
+    stdout: string
+    stderr: string
+    exitCode: any
+}
+
+function exec(command: string, args: string[], cwd: string): Promise<Execution> {
+    const commandLine = `${cwd}$ ${command} ${args.join(' ')}`
+    return new Promise<Execution>((resolve, reject) => {
+        wait(10000).then(() => reject(new Error(
+            'Timedout while waiting for the following command to complete:\n' + commandLine)))
+
+        const stderr = new BoundedString("stderr", 1024 * 1024 * 50, reject)
+        const stdout = new BoundedString("stdout", 1024 * 1024 * 50, reject)
+
+        const child = child_process.spawn(command, args, {cwd})
+        child.on('exit', code => {
+            logger.silly(`Command <${commandLine}> exited with ${code}`)
+            resolve({commandLine, stdout: stdout.value, stderr: stderr.value, exitCode: code})
+        })
+
+        child.stderr.on('data', data => stderr.push(data))
+        child.stdout.on('data', data => stdout.push(data))
+
+            // (err, stdout, stderr) => resolve({err, stdout, stderr}))
+    })
 }
