@@ -165,7 +165,7 @@ export class BigbandFileRunner {
             }
     
             if (curr.s3Ref.isOk()) {
-                def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri());
+                def.mutate(o => o.Properties.CodeUri = curr.s3Ref.toUri() + "_");
             }
 
             const nameInStack = curr.model.instrument.fullyQualifiedName(NameStyle.PASCAL_CASE)
