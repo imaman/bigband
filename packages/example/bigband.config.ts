@@ -2,7 +2,7 @@ import { LambdaInstrument, DynamoDbAttributeType, Bigband, DynamoDbInstrument, S
 
 
 const bigband = new Bigband({
-        name: 'bb-example-d34',
+        name: 'bb-example-d36',
         profileName: 'imaman',
         s3Prefix: 'root',
         s3BucketGuid: '3afcf26f-31a9-4dcb-97ad-d573b2410c33'
