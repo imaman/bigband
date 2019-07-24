@@ -4,6 +4,7 @@ import { CreateChangeSetInput, ExecuteChangeSetInput, DescribeChangeSetInput, De
 import * as uuid from 'uuid/v1';
 import * as hash from 'hash.js';
 import {logger} from './logger';
+import { silly } from 'winston';
 
 const CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS = 5 * 60;
 
@@ -70,9 +71,10 @@ export class CloudFormationPusher {
         this.resolver(stack)
     }
 
-    // private async deleteStack() {
-    //     await this.cloudFormation.deleteStack({StackName: this.stackName}).promise()
-    // }
+    private async deleteStack() {
+        await this.cloudFormation.deleteStack({StackName: this.stackName}).promise()
+        await this.waitForStackDeletion(this.stackName)
+    }
 
     async deploy(templateBody) {
         const newFingerprint = computeFingerprint(templateBody, this.stackName);
@@ -80,14 +82,16 @@ export class CloudFormationPusher {
         const d = await this.stackDescription
         const needsDeletion = d && d.StackStatus === 'ROLLBACK_COMPLETE'
         if (needsDeletion) {
-            // await this.deleteStack()
-        }
-
-        const existingFingerprint = await this.getFingerprint();
-        logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
-        if (newFingerprint === existingFingerprint) {
-            logger.info(`No stack changes`);
-            return;
+            logger.info(`A previous instance of cloudformation stack with the same name ("${this.stackName}") was found. Trying to delete it`)
+            await this.deleteStack()
+        } else {
+            // we check fingerprints only if the previous instance is valid (i.e., does not need to be deleted)
+            const existingFingerprint = await this.getFingerprint();
+            logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
+            if (newFingerprint === existingFingerprint) {
+                logger.info(`No stack changes`);
+                return;
+            }    
         }
 
         const changeSetName = `cs-${uuid()}`;
@@ -167,6 +171,9 @@ export class CloudFormationPusher {
     }
 
     private async waitForStack(stackId?: string) {
+        // TODO(imaman): this functionality is duplicated in this file
+        // TODO(imaman): use cloudformation.waitFor()
+
         if (!stackId) {
             throw new Error('StackId should not be falsy');
         }
@@ -208,9 +215,50 @@ export class CloudFormationPusher {
             throw new Error(`Stack alarm for stack ID ${stackId}. Current status: ${status}`);
         }
     }
+
+    private async waitForStackDeletion(stackId?: string) {
+        // TODO(imaman): this functionality is duplicated in this file
+        // TODO(imaman): use cloudformation.waitFor()
+        
+        if (!stackId) {
+            throw new Error('StackId should not be falsy');
+        }
+
+        logger.silly(`stack ID: ${stackId}`);
+ 
+        return new Promise(async (resolve, reject) => {
+
+
+            let isWaiting = true
+            this.cloudFormation.waitFor('stackDeleteComplete', {StackName: stackId}).promise()
+                .then(() => {
+                    isWaiting = false
+                    resolve()
+                })
+                .catch(e => {
+                    isWaiting = false
+                    logger.silly('waitfor failed', e)
+                    reject(new Error('Failed while waiting for stack to be deleted'))
+                })
+
+            let iteration = 0;
+            const t0 = Date.now();
+            logger.silly(`Waiting for stack (${stackId}) to be deleted`);
+            while (isWaiting) {
+                showProgress(iteration);
+                
+                const timeInSeconds = Math.trunc((Date.now() - t0) / 1000);
+                if (timeInSeconds > CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS) {
+                    reject(new Error(`stack deletion did not complete in ${timeInSeconds}s. Bailing out.`))
+                }
+                ++iteration;
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
+            }
+        })
+    }
 }
 
-function showProgress(n) {
+function showProgress(n: number) {
     logger.info(new Array(n + 1).fill('.').join(''));
 }
 
