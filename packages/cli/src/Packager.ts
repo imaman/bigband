@@ -235,7 +235,7 @@ export class Packager {
           logger.silly('teleporter returned an error:\n' + JSON.stringify(invocationResponse));
           throw new Error(`Teleporting of ${name.physicalName} failed: ${invocationResponse.FunctionError}`);
         }
-        logger.info(`Teleported ${formatBytes(teleporter.bytesSent)} for ${name.fullyQualifiedName}`);
+        logger.info(`Updated ${name.fullyQualifiedName} (${formatBytes(teleporter.bytesSent)})`)
         return ret;
       } catch (e) {
         logger.silly('Teleporting error', e);
@@ -243,7 +243,7 @@ export class Packager {
     }
 
     const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation)
-    logger.info(`Non-teleporting deployment (${formatBytes(numBytes)}) of ${name.fullyQualifiedName}`);    
+    logger.info(`Pushed ${formatBytes(numBytes)} for ${name.fullyQualifiedName}`);    
     return ret;
   }
 
