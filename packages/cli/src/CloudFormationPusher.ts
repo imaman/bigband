@@ -109,7 +109,7 @@ export class CloudFormationPusher {
         logger.silly('StackSpec: ' + JSON.stringify(templateBody, null, 2));
         logger.silly('stack size in bytes: ' + JSON.stringify(templateBody).length);
         logger.silly('createChangeSetReq=\n' + JSON.stringify(createChangeSetReq, null, 2));
-        logger.info(`Creating change set`);
+        logger.info(`Preparing a change set`);
         try {
             await this.cloudFormation.createChangeSet(createChangeSetReq).promise();
         } catch (e) {
@@ -160,12 +160,13 @@ export class CloudFormationPusher {
             ChangeSetName: changeSetName,
         };
 
-        logger.info('Enacting Change set');
+        logger.info('Enacting the change set');
         try {
             await this.cloudFormation.executeChangeSet(executeChangeSetReq).promise();
             await this.waitForStack(description.StackId);
         } catch (e) {
-            throw new Error(`Changeset enactment failed: ${e.message}\nChangeset description:\n${JSON.stringify(description, null, 2)}`);
+            logger.silly(`Changeset enactment error. changeset description:\n${JSON.stringify(description, null, 2)}`);
+            throw new Error(`Changeset enactment failed: ${e.message}`)
         }
     }
 
