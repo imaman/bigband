@@ -1,6 +1,7 @@
 import {lookup} from './model';
 import AWS = require('aws-sdk');
 import * as byline from 'byline';
+import * as ellipsize from 'ellipsize'
 
 
 export async function runLambda(context, event, mapping, fp) {
@@ -31,7 +32,7 @@ export async function runLambda(context, event, mapping, fp) {
         headers: { 
           "content-type": 'application/json', 
         },
-        body: {query: q, timePassed, bylineKeys: Object.keys(byline), inputLength: "_9___" + q.length, answers: answers.map(curr => curr.answer)}
+        body: {query: q, elipsized: ellipsize(q), timePassed, bylineKeys: Object.keys(byline), inputLength: "_10___" + q.length, answers: answers.map(curr => curr.answer)}
     };
 }
 
