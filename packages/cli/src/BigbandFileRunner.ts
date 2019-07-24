@@ -129,7 +129,7 @@ export class BigbandFileRunner {
         const pushedInstruments = await Promise.all(ps);
     
         const templateBody = this.buildCloudFormationTemplate(pushedInstruments)
-        await cfp.deploy(templateBody, deployablesLocation)
+        await cfp.deploy(templateBody)
         const lambda = this.awsFactory.newLambda();
     
         await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
@@ -199,7 +199,8 @@ export class BigbandFileRunner {
             `${this.bigbandModel.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/${physicalName}.zip`)
 
         const pushResult: PushResult = await packager.pushToS3(this.namer.resolve(instrument), s3Ref, zb, 
-            this.namer.physicalName(this.teleportInstrument), this.teleportingEnabled, this.deployMode);
+            this.namer.physicalName(this.teleportInstrument), this.teleportingEnabled, this.deployMode,
+            !instrumentModel.isSystemInstrument);
         const resource = def.get();
         resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
     

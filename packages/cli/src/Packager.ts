@@ -175,8 +175,10 @@ export class Packager {
   }
 
   public async pushToS3(name: ResolvedName, deployableLocation: S3Ref, zipBuilder: ZipBuilder,
-      teleportLambdaName: string, teleportingEnabled: boolean, deployMode: DeployMode): Promise<PushResult> {      
+      teleportLambdaName: string, teleportingEnabled: boolean, deployMode: DeployMode, 
+      printMessage: boolean): Promise<PushResult> {      
 
+    const logFunc = printMessage ? (x: string) => logger.info(x) : (x: string) => logger.silly(x)
     const factory = this.awsFactory
 
 
@@ -205,7 +207,7 @@ export class Packager {
     logger.silly(`Comparing fingerprints for ${name.fullyQualifiedName}:\n  ${c}\n  ${fingeprint}`);
     if (deployMode === DeployMode.IF_CHANGED) {
       if (exists && c && c == fingeprint) {
-        logger.info(`No code changes in ${name.fullyQualifiedName}`);
+        logFunc(`No code changes in ${name.fullyQualifiedName}`);
         ret.wasPushed = false;
         return ret;
       }
@@ -235,7 +237,7 @@ export class Packager {
           logger.silly('teleporter returned an error:\n' + JSON.stringify(invocationResponse));
           throw new Error(`Teleporting of ${name.physicalName} failed: ${invocationResponse.FunctionError}`);
         }
-        logger.info(`Updated ${name.fullyQualifiedName} (${formatBytes(teleporter.bytesSent)})`)
+        logFunc(`Updated ${name.fullyQualifiedName} (${formatBytes(teleporter.bytesSent)})`)
         return ret;
       } catch (e) {
         logger.silly('Teleporting error', e);
@@ -243,7 +245,7 @@ export class Packager {
     }
 
     const numBytes = await teleporter.nonIncrementalTeleport(zipBuilder, deployableLocation)
-    logger.info(`Pushed ${formatBytes(numBytes)} for ${name.fullyQualifiedName}`);    
+    logFunc(`Pushed ${formatBytes(numBytes)} for ${name.fullyQualifiedName}`)
     return ret;
   }
 

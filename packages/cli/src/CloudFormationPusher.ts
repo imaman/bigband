@@ -65,7 +65,7 @@ export class CloudFormationPusher {
         this.resolver(t.Value);
     }
 
-    async deploy(templateBody, deployablesLocation: string) {
+    async deploy(templateBody) {
         const newFingerprint = computeFingerprint(templateBody, this.stackName);
         const existingFingerprint = await this.existingFingerprint;
         logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);

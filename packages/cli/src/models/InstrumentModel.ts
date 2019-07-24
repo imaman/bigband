@@ -13,7 +13,7 @@ export class InstrumentModel {
         public readonly instrument: Instrument,
         // TODO(imaman): make wirings private
         // TODO(imaman): rename to wires
-        public readonly wirings: WireModel[], private readonly isSystemInstrument) {}
+        public readonly wirings: WireModel[], readonly isSystemInstrument) {}
 
     private get namer(): Namer {
         return new Namer(this.bigband, this.section.section, this.section.bigband.accountId)
