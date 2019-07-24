@@ -75,6 +75,7 @@ export class NpmPackageResolver {
             const execution = await new Promise<{err, stdout, stderr}>((resolve, reject) => {
                     wait(10000).then(() => reject(new Error(
                         'Timedout while waiting for the following command to complete:\n' + command)))
+                    // TODO(imaman): use a different variant of child_process
                     child_process.exec(command, {cwd: r, maxBuffer: 20 * 1024 * 1024 }, 
                         (err, stdout, stderr) => resolve({err, stdout, stderr}))
                 });
