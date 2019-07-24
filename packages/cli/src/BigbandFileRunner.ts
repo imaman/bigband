@@ -264,18 +264,19 @@ export class BigbandFileRunner {
     }     
     
     private async createBucketIfNeeded() {
-        const s3Ref = new S3Ref(this.s3Bucket, "")
-        const exists = await S3Ref.exists(this.awsFactory, s3Ref)
-        const s3 = this.awsFactory.newS3();
-        logger.silly("exists=" + exists + ", s3ref=" + s3Ref)
-        if (exists) {
+        const regionA = await S3Ref.getRegion(this.awsFactory, this.s3Bucket)
+        logger.silly(`region of ${this.s3Bucket} is "${regionA}"`)
+
+        const sectionRegion = this.sectionModel.section.region
+        if (regionA === sectionRegion) {
             return
         }
-
+        
+        const s3 = this.awsFactory.newS3();
         const cbr: CreateBucketRequest = {
             Bucket: this.s3Bucket,
             CreateBucketConfiguration: {
-                LocationConstraint: this.sectionModel.section.region
+                LocationConstraint: sectionRegion
             }
         }
         try {
@@ -284,10 +285,10 @@ export class BigbandFileRunner {
         } catch (e) {
             logger.silly("createBucket() failed", e)
             // check existence (again) in case the bucket was just created by someone else
-            const existsNow = await S3Ref.exists(this.awsFactory, s3Ref)
-            logger.silly("existsnow?=" + existsNow)
-            if (!existsNow) {
-                throw new Error(`Failed to create an S3 Bucket (${s3Ref})`)
+            const regionB = await S3Ref.getRegion(this.awsFactory, this.s3Bucket)
+            logger.silly("regionNow=" + regionB)
+            if (regionB !== sectionRegion) {
+                throw new Error(`Failed to create an S3 Bucket ("${this.s3Bucket}" at "${sectionRegion}"`)
             }
         }
     }

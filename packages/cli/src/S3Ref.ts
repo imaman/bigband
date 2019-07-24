@@ -1,5 +1,6 @@
 import { AwsFactory } from 'bigband-core'
 import { logger } from './logger';
+import { GetBucketLocationRequest } from 'aws-sdk/clients/s3';
 
 export class S3Ref {
   constructor(public readonly s3Bucket: string, public readonly s3Key: string) {
@@ -63,6 +64,23 @@ export class S3Ref {
       }
 
       return ret as Buffer;
+  }
+
+  static async getRegion(factory: AwsFactory, bucketName: string): Promise<string> {
+    const s3 = factory.newS3()
+    const req: GetBucketLocationRequest = {
+      Bucket: bucketName
+    }
+    try {
+      const resp = await s3.getBucketLocation(req).promise()
+      return resp.LocationConstraint || ''  
+    } catch (e) {
+      if (e.code === 'NoSuchBucket') {
+        return ''
+      }
+
+      throw e
+    }
   }
 
   static async exists(factory: AwsFactory, s3Ref: S3Ref): Promise<boolean> {

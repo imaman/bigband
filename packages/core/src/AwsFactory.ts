@@ -15,7 +15,7 @@ export class AwsFactory {
         if (!this.options.credentials.accessKeyId) {
             // TODO(imaman): introduce the notion of 'user-friendly' exceptions which are dumped 
             // to the terminal w/o the stacktrace.
-            throw new Error(`No credentials found for profile name "${this.profileName}\n` + 
+            throw new Error(`No credentials found for profile name "${this.profileName}"\n` + 
                 'You should check the AWS profiles (AKA: "named profiles") defined on your machine')
         }
     }
