@@ -76,7 +76,7 @@ export class CloudFormationPusher {
         logger.info(`Cleaning up a cloudformation stack with the same name ("${this.stackName}") which was stuck ` + 
             `in "${stackDescription.StackStatus}" status`)
         await this.cloudFormation.deleteStack({StackName: this.stackName}).promise()
-        await this.waitForStackDeletion(this.stackName, 'deleted',
+        await this.waitFor(this.stackName, 'deleted',
             () => this.cloudFormation.waitFor('stackDeleteComplete', {StackName: this.stackName}).promise())
         return NO_FINGERPRINT
     }
@@ -241,7 +241,7 @@ export class CloudFormationPusher {
         }
     }
 
-    private async waitForStackDeletion(stackName: string, whatAreWeDoing: string, call: () => Promise<any>) {
+    private async waitFor(stackName: string, whatAreWeDoing: string, call: () => Promise<any>) {
         // TODO(imaman): this functionality is duplicated in this file
         
         if (!stackName) {
