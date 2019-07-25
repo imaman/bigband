@@ -138,39 +138,52 @@ export class CloudFormationPusher {
             StackName: this.stackName,
             ChangeSetName: changeSetName
         };
-        let description: DescribeChangeSetOutput;
-        let iteration = 0;
-        let t0 = Date.now();
-        while (true) {
-            showProgress(iteration);
-            description = await this.cloudFormation.describeChangeSet(describeReq).promise();
-            logger.silly('ChangeSet description=\n' + JSON.stringify(description, null, 2));
-            if (description.Status !== "CREATE_IN_PROGRESS" && description.Status !== 'CREATE_PENDING') {
-                break;
-            }
-            
-            const timeInSeconds = Math.trunc((Date.now() - t0) / 1000);
-            if (timeInSeconds > CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS) {
-                throw new Error(`change set creation did not complete in ${timeInSeconds}s. Bailing out.`)
-            }
-            ++iteration;
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
-        }
 
+
+        const waitReq = {ChangeSetName: changeSetName, StackName: this.stackName}
+        const description: DescribeChangeSetOutput = await this.waitFor(this.stackName, 'created',
+                () => this.cloudFormation.waitFor('changeSetCreateComplete', waitReq).promise())
+
+        // let description: DescribeChangeSetOutput;
+        // let iteration = 0;
+        // let t0 = Date.now();
+        // while (true) {
+        //     showProgress(iteration);
+        //     description = await this.cloudFormation.describeChangeSet(describeReq).promise();
+        //     logger.silly('ChangeSet description=\n' + JSON.stringify(description, null, 2));
+        //     if (description.Status !== "CREATE_IN_PROGRESS" && description.Status !== 'CREATE_PENDING') {
+        //         break;
+        //     }
+            
+        //     const timeInSeconds = Math.trunc((Date.now() - t0) / 1000);
+        //     if (timeInSeconds > CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS) {
+        //         throw new Error(`change set creation did not complete in ${timeInSeconds}s. Bailing out.`)
+        //     }
+        //     ++iteration;
+        //     await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
+        // }
+
+
+        logger.info('description=' + JSON.stringify(description, null, 2))
         const isFailed = description.Status === 'FAILED';
         if (isFailed && description.StatusReason === 'No updates are to be performed.')  {
+            logger.info('L.170')
             logger.info('Change set is empty');
             return ''
         }
 
         if (isFailed) {
+            logger.info('L.176')
             throw new Error(`Bad changeset (${changeSetName}):\n${description.StatusReason}`);
         }
 
         if (!description.StackId) {
+            logger.info('L.180')
             throw new Error('Found a fasly stack ID')
         }
 
+
+        logger.info('L.186')
         return description.StackId
     }
 
@@ -241,20 +254,20 @@ export class CloudFormationPusher {
         }
     }
 
-    private async waitFor(stackName: string, whatAreWeDoing: string, call: () => Promise<any>) {
+    private async waitFor<T>(stackName: string, whatAreWeDoing: string, call: () => Promise<T>): Promise<T> {
         // TODO(imaman): this functionality is duplicated in this file
         
         if (!stackName) {
             throw new Error('StackId should not be falsy');
         }
 
-        return new Promise(async (resolve, reject) => {
+        return new Promise<T>(async (resolve, reject) => {
             let isWaiting = true
 
             call()
-                .then(() => {
+                .then((t: T) => {
                     isWaiting = false
-                    resolve()
+                    resolve(t)
                 })
                 .catch(e => {
                     isWaiting = false
