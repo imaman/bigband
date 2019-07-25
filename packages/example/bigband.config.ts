@@ -2,10 +2,10 @@ import { LambdaInstrument, DynamoDbAttributeType, Bigband, DynamoDbInstrument, S
 
 
 const bigband = new Bigband({
-        name: 'bb-example-d37',
+        name: 'bb-example-d38',
         profileName: 'imaman',
         s3Prefix: 'root',
-        s3BucketGuid: '3afcf26f-31a9-4dcb-97ad-d573b2410c33'
+        s3BucketGuid: '070b8d05-2404-4af0-b3a9-98c39592fd40'
     });
 
 const prod = new Section('eu-west-2', 'prod');
