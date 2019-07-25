@@ -43,6 +43,7 @@ function grantPermission(instrument: Instrument, action: string, arn: string) {
 export interface PushedInstrument {
     s3Ref: S3Ref
     wasPushed: boolean
+    existed: boolean
     physicalName: string
     model: InstrumentModel
 }
@@ -130,21 +131,23 @@ export class BigbandFileRunner {
     
         const templateBody = this.buildCloudFormationTemplate(pushedInstruments)
         await cfp.deploy(templateBody)
-        const lambda = this.awsFactory.newLambda();
     
-        await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
-            const req: UpdateFunctionCodeRequest = {
-                FunctionName: curr.physicalName,
-                S3Bucket: curr.s3Ref.s3Bucket,
-                S3Key: curr.s3Ref.s3Key
-            };    
-            try {
-                return await lambda.updateFunctionCode(req).promise();
-            } catch (e) {
-                logger.error(`lambda.updateFunctionCode failure (${JSON.stringify(req)})`, e);
-                throw new Error(`Failed to update code of ${curr.physicalName}`);
-            }
-        }));
+        const promises = pushedInstruments
+            .filter(curr => curr.s3Ref.isOk() && curr.wasPushed && curr.existed)
+            .map(async curr => {
+                const req: UpdateFunctionCodeRequest = {
+                    FunctionName: curr.physicalName,
+                    S3Bucket: curr.s3Ref.s3Bucket,
+                    S3Key: curr.s3Ref.s3Key
+                };    
+                try {
+                    return await this.awsFactory.newLambda().updateFunctionCode(req).promise();
+                } catch (e) {
+                    logger.error(`lambda.updateFunctionCode failure (${JSON.stringify(req)})`, e);
+                    throw new Error(`Failed to update code of ${curr.physicalName}`);
+                }
+            })
+        await Promise.all(promises)
     }        
 
     buildCloudFormationTemplate(pushedInstruments: PushedInstrument[]) {
@@ -188,6 +191,7 @@ export class BigbandFileRunner {
             return {
                 s3Ref: S3Ref.EMPTY,
                 wasPushed: false,
+                existed: false,
                 physicalName,
                 model: instrumentModel
             }
@@ -207,6 +211,7 @@ export class BigbandFileRunner {
         return {
             s3Ref: pushResult.deployableLocation,
             wasPushed: pushResult.wasPushed,
+            existed: pushResult.existed,
             physicalName,
             model: instrumentModel
         }

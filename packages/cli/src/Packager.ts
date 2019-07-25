@@ -27,7 +27,8 @@ export enum DeployMode {
 
 export interface PushResult {
   deployableLocation: S3Ref
-  wasPushed: boolean
+  wasPushed: boolean,
+  existed: boolean
 }
 
 
@@ -179,16 +180,16 @@ export class Packager {
       printMessage: boolean): Promise<PushResult> {      
 
     const logFunc = printMessage ? (x: string) => logger.info(x) : (x: string) => logger.silly(x)
-    const factory = this.awsFactory
 
 
     // TODO(imaman): can we get this information earlier to reduce possible waiting?
     const existsPromise = S3Ref.exists(this.awsFactory, deployableLocation)
 
+
+    const lambda = this.awsFactory.newLambda()
     // TODO(imaman): ditto, get earlier
-    const p = factory.newLambda().getFunction({
-      FunctionName: name.physicalName
-    }).promise().catch(e => null);
+    const p = lambda.getFunction({FunctionName: name.physicalName}).promise()
+      .catch(e => null)
     const buf = await zipBuilder.toBuffer();
     const fingeprint = ZipBuilder.bufferTo256Fingerprint(buf);
     const getFunctionResponse: GetFunctionResponse|null = await p;
@@ -196,7 +197,8 @@ export class Packager {
 
     const ret: PushResult = {
       deployableLocation,
-      wasPushed: true
+      wasPushed: true,
+      existed: Boolean(getFunctionResponse)
     };
 
     const exists = await existsPromise 
@@ -232,7 +234,7 @@ export class Packager {
     
     if (teleportingEnabled) {
       try {
-        const invocationResponse: InvocationResponse = await factory.newLambda().invoke(invocationRequest).promise();
+        const invocationResponse: InvocationResponse = await lambda.invoke(invocationRequest).promise();
         if (invocationResponse.FunctionError) {
           logger.silly('teleporter returned an error:\n' + JSON.stringify(invocationResponse));
           throw new Error(`Teleporting of ${name.physicalName} failed: ${invocationResponse.FunctionError}`);
