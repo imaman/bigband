@@ -94,17 +94,16 @@ export class CloudFormationPusher {
         }    
 
         const changeSetName = `cs-${uuid()}`;
-        const stackId: string = await this.createChangeSet(templateBody, changeSetName, newFingerprint)
-        if (!stackId) {
-            // Falsy means 'empty-change-set'
+        const hasChanges: boolean = await this.createChangeSet(templateBody, changeSetName, newFingerprint)
+        if (!hasChanges) {
             return
         }
 
-        await this.enactChangeset(changeSetName, stackId)
+        await this.enactChangeset(changeSetName)
     }
 
 
-    async createChangeSet(templateBody, changeSetName: string, newFingerprint: string): Promise<string> {
+    async createChangeSet(templateBody, changeSetName: string, newFingerprint: string): Promise<boolean> {
         const createChangeSetReq: CreateChangeSetInput = {
             StackName: this.stackName,            
             ChangeSetName: changeSetName,
@@ -134,60 +133,30 @@ export class CloudFormationPusher {
             await this.cloudFormation.createChangeSet(createChangeSetReq).promise();
         }
 
-        const describeReq: DescribeChangeSetInput = {
-            StackName: this.stackName,
-            ChangeSetName: changeSetName
-        };
+        const req = {ChangeSetName: changeSetName, StackName: this.stackName}
+        let description: DescribeChangeSetOutput|null = await this.waitFor(this.stackName, 'created',
+                () => this.cloudFormation.waitFor('changeSetCreateComplete', req).promise())
 
+        if (!description) {
+            description = await this.cloudFormation.describeChangeSet(req).promise()
+            logger.silly('got an explicit description')
+        }
 
-        const waitReq = {ChangeSetName: changeSetName, StackName: this.stackName}
-        const description: DescribeChangeSetOutput = await this.waitFor(this.stackName, 'created',
-                () => this.cloudFormation.waitFor('changeSetCreateComplete', waitReq).promise())
-
-        // let description: DescribeChangeSetOutput;
-        // let iteration = 0;
-        // let t0 = Date.now();
-        // while (true) {
-        //     showProgress(iteration);
-        //     description = await this.cloudFormation.describeChangeSet(describeReq).promise();
-        //     logger.silly('ChangeSet description=\n' + JSON.stringify(description, null, 2));
-        //     if (description.Status !== "CREATE_IN_PROGRESS" && description.Status !== 'CREATE_PENDING') {
-        //         break;
-        //     }
-            
-        //     const timeInSeconds = Math.trunc((Date.now() - t0) / 1000);
-        //     if (timeInSeconds > CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS) {
-        //         throw new Error(`change set creation did not complete in ${timeInSeconds}s. Bailing out.`)
-        //     }
-        //     ++iteration;
-        //     await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
-        // }
-
-
-        logger.info('description=' + JSON.stringify(description, null, 2))
+        logger.silly('description=' + JSON.stringify(description, null, 2))
         const isFailed = description.Status === 'FAILED';
-        if (isFailed && description.StatusReason === 'No updates are to be performed.')  {
-            logger.info('L.170')
-            logger.info('Change set is empty');
-            return ''
+        if (isFailed && (description.Changes || []).length === 0) {
+            logger.silly('Change set is empty');
+            return false
         }
 
         if (isFailed) {
-            logger.info('L.176')
             throw new Error(`Bad changeset (${changeSetName}):\n${description.StatusReason}`);
         }
 
-        if (!description.StackId) {
-            logger.info('L.180')
-            throw new Error('Found a fasly stack ID')
-        }
-
-
-        logger.info('L.186')
-        return description.StackId
+        return true
     }
 
-    private async enactChangeset(changeSetName: string, stackId: string) {
+    private async enactChangeset(changeSetName: string) {
         const executeChangeSetReq: ExecuteChangeSetInput = {
             StackName: this.stackName,
             ChangeSetName: changeSetName,
@@ -196,14 +165,14 @@ export class CloudFormationPusher {
         logger.info('Enacting the change set');
         try {
             await this.cloudFormation.executeChangeSet(executeChangeSetReq).promise();
-            await this.waitForStack(stackId);
+            await this.waitForStack(this.stackName);
         } catch (e) {
             logger.silly(`Changeset enactment error`);
             throw new Error(`Changeset enactment failed: ${e.message}`)
         }
     }
 
-    private async waitForStack(stackId?: string) {
+    private async waitForStack(stackId: string|null) {
         // TODO(imaman): this functionality is duplicated in this file
         // TODO(imaman): use cloudformation.waitFor()
 
@@ -254,14 +223,14 @@ export class CloudFormationPusher {
         }
     }
 
-    private async waitFor<T>(stackName: string, whatAreWeDoing: string, call: () => Promise<T>): Promise<T> {
+    private async waitFor<T>(stackName: string, whatAreWeDoing: string, call: () => Promise<T>): Promise<T|null> {
         // TODO(imaman): this functionality is duplicated in this file
         
         if (!stackName) {
             throw new Error('StackId should not be falsy');
         }
 
-        return new Promise<T>(async (resolve, reject) => {
+        return new Promise<T|null>(async (resolve, reject) => {
             let isWaiting = true
 
             call()
@@ -271,8 +240,10 @@ export class CloudFormationPusher {
                 })
                 .catch(e => {
                     isWaiting = false
-                    logger.silly('waitfor failed', e)
-                    reject(new Error(`Failed while waiting for stack to be ${whatAreWeDoing}`))
+                    // We intentially do not report an error here. Rationale: waiting for change-set-creation fails
+                    // when the change set is empty which is not the behavior that we need. instead callers of 
+                    // the CloudFormationPusher.waitFor() need to inspect the situation and determine  
+                    resolve(null)
                 })
 
             let iteration = 0;
