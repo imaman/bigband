@@ -73,10 +73,9 @@ export class CloudFormationPusher {
             return extractFingerprint(stackDescription)
         }
 
-        logger.info(`Cleaning up a cloudformation stack with the same name ("${this.stackName}") which was stuck ` + 
-            `in "${stackDescription.StackStatus}" status`)
+        logger.info(`Cleaning up a rolledback Cloudformation stack`)
         await this.cloudFormation.deleteStack({StackName: this.stackName}).promise()
-        await this.waitFor(this.stackName, 'deleted',
+        await this.waitFor('removal of rolledback stack',
             () => this.cloudFormation.waitFor('stackDeleteComplete', {StackName: this.stackName}).promise())
         return NO_FINGERPRINT
     }
@@ -134,7 +133,7 @@ export class CloudFormationPusher {
         }
 
         const req = {ChangeSetName: changeSetName, StackName: this.stackName}
-        let description: DescribeChangeSetOutput|null = await this.waitFor(this.stackName, 'created',
+        let description: DescribeChangeSetOutput|null = await this.waitFor('changeset creation',
                 () => this.cloudFormation.waitFor('changeSetCreateComplete', req).promise())
 
         if (!description) {
@@ -165,71 +164,68 @@ export class CloudFormationPusher {
         logger.info('Enacting the change set');
         try {
             await this.cloudFormation.executeChangeSet(executeChangeSetReq).promise();
-            await this.waitForStack(this.stackName);
+            await this.waitFor('changeset enactment',
+                () => this.cloudFormation.waitFor('stackUpdateComplete', {StackName: this.stackName}).promise())
         } catch (e) {
             logger.silly(`Changeset enactment error`);
             throw new Error(`Changeset enactment failed: ${e.message}`)
         }
     }
 
-    private async waitForStack(stackId: string|null) {
-        // TODO(imaman): this functionality is duplicated in this file
-        // TODO(imaman): use cloudformation.waitFor()
+    // private async waitForStack(stackId: string|null) {
+    //     // TODO(imaman): this functionality is duplicated in this file
+    //     // TODO(imaman): use cloudformation.waitFor()
 
-        if (!stackId) {
-            throw new Error('StackId should not be falsy');
-        }
+    //     if (!stackId) {
+    //         throw new Error('StackId should not be falsy');
+    //     }
 
-        let iteration = 0;
-        const t0 = Date.now();
-        let stackDescription: DescribeStacksOutput;
-        let status: string;
-        logger.silly(`Waiting for stack (${stackId}) to be updated`);
-        while (true) {
-            showProgress(iteration);
-            const describeReq: DescribeStacksInput = {
-                StackName: stackId,
-            };
-            stackDescription = await this.cloudFormation.describeStacks(describeReq).promise();
-            if (!stackDescription.Stacks) {
-                throw new Error('Missing list of stacks in DescribeStacksOutput');
-            }
-            if (stackDescription.Stacks.length !== 1) {
-                throw new Error(`Expected length to be exactly 1 but got ${stackDescription.Stacks.length}`);
-            }
+    //     let iteration = 0;
+    //     const t0 = Date.now();
+    //     let stackDescription: DescribeStacksOutput;
+    //     let status: string;
+    //     logger.silly(`Waiting for stack (${stackId}) to be updated`);
+    //     while (true) {
+    //         showProgress(iteration);
+    //         const describeReq: DescribeStacksInput = {
+    //             StackName: stackId,
+    //         };
+    //         stackDescription = await this.cloudFormation.describeStacks(describeReq).promise();
+    //         if (!stackDescription.Stacks) {
+    //             throw new Error('Missing list of stacks in DescribeStacksOutput');
+    //         }
+    //         if (stackDescription.Stacks.length !== 1) {
+    //             throw new Error(`Expected length to be exactly 1 but got ${stackDescription.Stacks.length}`);
+    //         }
 
-            status = stackDescription.Stacks[0].StackStatus;
-            logger.silly('stackDescription.Stacks[0]=\n' + JSON.stringify(stackDescription.Stacks[0], null, 2))
-            if (status === 'ROLLBACK_COMPLETE') {
-                // See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-describing-stacks.html
-                throw new Error(`Creation of Cloudformation stack "${stackId}" has failed. Aborting.`)
-            }
-            if (status.endsWith('_COMPLETE')) {
-                break;
-            }
+    //         status = stackDescription.Stacks[0].StackStatus;
+    //         logger.silly('stackDescription.Stacks[0]=\n' + JSON.stringify(stackDescription.Stacks[0], null, 2))
+    //         if (status === 'ROLLBACK_COMPLETE') {
+    //             // See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-describing-stacks.html
+    //             throw new Error(`Creation of Cloudformation stack "${stackId}" has failed. Aborting.`)
+    //         }
+    //         if (status.endsWith('_COMPLETE')) {
+    //             break;
+    //         }
             
-            const timeInSeconds = Math.trunc((Date.now() - t0) / 1000);
-            if (timeInSeconds > CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS) {
-                throw new Error(`change set execution did not complete in ${timeInSeconds}s. Bailing out.`)
-            }
-            ++iteration;
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
-        }
+    //         const timeInSeconds = Math.trunc((Date.now() - t0) / 1000);
+    //         if (timeInSeconds > CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS) {
+    //             throw new Error(`change set execution did not complete in ${timeInSeconds}s. Bailing out.`)
+    //         }
+    //         ++iteration;
+    //         await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
+    //     }
 
-        logger.info(`Stack status: ${status}`);
-        logger.silly(`stack ID: ${stackId}`);
-        if (status !== 'CREATE_COMPLETE' && status !== 'UPDATE_COMPLETE') {
-            throw new Error(`Stack alarm for stack ID ${stackId}. Current status: ${status}`);
-        }
-    }
+    //     logger.info(`Stack status: ${status}`);
+    //     logger.silly(`stack ID: ${stackId}`);
+    //     if (status !== 'CREATE_COMPLETE' && status !== 'UPDATE_COMPLETE') {
+    //         throw new Error(`Stack alarm for stack ID ${stackId}. Current status: ${status}`);
+    //     }
+    // }
 
-    private async waitFor<T>(stackName: string, whatAreWeDoing: string, call: () => Promise<T>): Promise<T|null> {
+    private async waitFor<T>(whatAreWeDoing: string, call: () => Promise<T>): Promise<T|null> {
         // TODO(imaman): this functionality is duplicated in this file
         
-        if (!stackName) {
-            throw new Error('StackId should not be falsy');
-        }
-
         return new Promise<T|null>(async (resolve, reject) => {
             let isWaiting = true
 
@@ -248,13 +244,14 @@ export class CloudFormationPusher {
 
             let iteration = 0;
             const t0 = Date.now();
-            logger.silly(`Waiting for stack (${stackName}) to be ${whatAreWeDoing} `);
+            logger.silly(`Waiting for operation "${whatAreWeDoing}" to take place (stack name: "${this.stackName}")`);
             while (isWaiting) {
                 showProgress(iteration);
                 
                 const timeInSeconds = Math.trunc((Date.now() - t0) / 1000);
                 if (timeInSeconds > CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS) {
-                    reject(new Error(`stack deletion did not complete in ${timeInSeconds}s. Bailing out.`))
+                    reject(new Error(`Operation "${whatAreWeDoing}" on stack "${this.stackName}" ` + 
+                        `did not complete in ${timeInSeconds}s. Bailing out.`))
                 }
                 ++iteration;
                 await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
