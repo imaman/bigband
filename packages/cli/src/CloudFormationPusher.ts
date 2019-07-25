@@ -243,7 +243,6 @@ export class CloudFormationPusher {
 
     private async waitForStackDeletion(stackId?: string) {
         // TODO(imaman): this functionality is duplicated in this file
-        // TODO(imaman): use cloudformation.waitFor()
         
         if (!stackId) {
             throw new Error('StackId should not be falsy');
