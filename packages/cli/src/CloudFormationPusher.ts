@@ -94,12 +94,17 @@ export class CloudFormationPusher {
         }    
 
         const changeSetName = `cs-${uuid()}`;
-        const stackId: string = await this.reallyDeploy(templateBody, changeSetName, newFingerprint)
+        const stackId: string = await this.createChangeSet(templateBody, changeSetName, newFingerprint)
+        if (!stackId) {
+            // Falsy means 'empty-change-set'
+            return
+        }
+
         await this.enactChangeset(changeSetName, stackId)
     }
 
 
-    async reallyDeploy(templateBody, changeSetName: string, newFingerprint: string): Promise<string> {
+    async createChangeSet(templateBody, changeSetName: string, newFingerprint: string): Promise<string> {
         const createChangeSetReq: CreateChangeSetInput = {
             StackName: this.stackName,            
             ChangeSetName: changeSetName,
