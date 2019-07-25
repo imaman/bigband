@@ -13,7 +13,7 @@ const DELAY_BETWEEN_POLLING_ATTEMPTS_IN_SECONDS = 15
 
 const WAITER: WaiterConfiguration = {
     delay: 5, // DELAY_BETWEEN_POLLING_ATTEMPTS_IN_SECONDS,
-    maxAttempts: 1 //TIMEOUT_IN_SECONDS / DELAY_BETWEEN_POLLING_ATTEMPTS_IN_SECONDS
+    maxAttempts: 120 //TIMEOUT_IN_SECONDS / DELAY_BETWEEN_POLLING_ATTEMPTS_IN_SECONDS
 }
 
 function computeFingerprint(spec, name): string {
