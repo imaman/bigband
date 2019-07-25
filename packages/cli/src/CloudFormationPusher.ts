@@ -93,12 +93,13 @@ export class CloudFormationPusher {
             return;
         }    
 
-        this.reallyDeploy(templateBody, newFingerprint)
+        const changeSetName = `cs-${uuid()}`;
+        const stackId: string = await this.reallyDeploy(templateBody, changeSetName, newFingerprint)
+        await this.enactChangeset(changeSetName, stackId)
     }
 
 
-    async reallyDeploy(templateBody, newFingerprint: string) {
-        const changeSetName = `cs-${uuid()}`;
+    async reallyDeploy(templateBody, changeSetName: string, newFingerprint: string): Promise<string> {
         const createChangeSetReq: CreateChangeSetInput = {
             StackName: this.stackName,            
             ChangeSetName: changeSetName,
@@ -154,12 +155,21 @@ export class CloudFormationPusher {
         const isFailed = description.Status === 'FAILED';
         if (isFailed && description.StatusReason === 'No updates are to be performed.')  {
             logger.info('Change set is empty');
-            return;
+            return ''
         }
 
         if (isFailed) {
             throw new Error(`Bad changeset (${changeSetName}):\n${description.StatusReason}`);
         }
+
+        if (!description.StackId) {
+            throw new Error('Found a fasly stack ID')
+        }
+
+        return description.StackId
+    }
+
+    private async enactChangeset(changeSetName: string, stackId: string) {
         const executeChangeSetReq: ExecuteChangeSetInput = {
             StackName: this.stackName,
             ChangeSetName: changeSetName,
@@ -168,9 +178,9 @@ export class CloudFormationPusher {
         logger.info('Enacting the change set');
         try {
             await this.cloudFormation.executeChangeSet(executeChangeSetReq).promise();
-            await this.waitForStack(description.StackId);
+            await this.waitForStack(stackId);
         } catch (e) {
-            logger.silly(`Changeset enactment error. changeset description:\n${JSON.stringify(description, null, 2)}`);
+            logger.silly(`Changeset enactment error`);
             throw new Error(`Changeset enactment failed: ${e.message}`)
         }
     }
