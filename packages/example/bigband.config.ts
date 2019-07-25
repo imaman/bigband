@@ -16,10 +16,10 @@ const staging = new Section('eu-west-2', 'staging');
 //     Timeout: 15   
 // });
 
-const placeFinder = new LambdaInstrument('geography', 'place-finder', 'src/geography/placeFinder', {
+const placeFinder = new LambdaInstrument('geography', 'site-finder7', 'src/geography/placeFinder', {
     Description: 'returns names of places that best match the given query',
-    MemorySize: 1024,
-    Timeout: 30      
+    MemorySize: 512,
+    Timeout: 28      
 });
 
 // const healthChecker = new LambdaInstrument('geography', 'health-checker', 'src/geography/healthChecker', {

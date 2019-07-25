@@ -4,9 +4,17 @@ import { CreateChangeSetInput, ExecuteChangeSetInput, DescribeChangeSetOutput, D
 import * as uuid from 'uuid/v1';
 import * as hash from 'hash.js';
 import {logger} from './logger';
+import { WaiterConfiguration } from 'aws-sdk/lib/service';
 
-const CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS = 5 * 60;
 const NO_FINGERPRINT = ''
+
+const TIMEOUT_IN_SECONDS = 3; //5 * 60;
+const DELAY_BETWEEN_POLLING_ATTEMPTS_IN_SECONDS = 15
+
+const WAITER: WaiterConfiguration = {
+    delay: 5, // DELAY_BETWEEN_POLLING_ATTEMPTS_IN_SECONDS,
+    maxAttempts: 1 //TIMEOUT_IN_SECONDS / DELAY_BETWEEN_POLLING_ATTEMPTS_IN_SECONDS
+}
 
 function computeFingerprint(spec, name): string {
     const str = JSON.stringify({spec, name});
@@ -75,8 +83,10 @@ export class CloudFormationPusher {
 
         logger.info(`Cleaning up a rolledback Cloudformation stack`)
         await this.cloudFormation.deleteStack({StackName: this.stackName}).promise()
+
+        const req = {StackName: this.stackName, $waiter: WAITER}
         await this.waitFor('removal of rolledback stack',
-            () => this.cloudFormation.waitFor('stackDeleteComplete', {StackName: this.stackName}).promise())
+            () => this.cloudFormation.waitFor('stackDeleteComplete', req).promise())
         return NO_FINGERPRINT
     }
 
@@ -132,7 +142,7 @@ export class CloudFormationPusher {
             await this.cloudFormation.createChangeSet(createChangeSetReq).promise();
         }
 
-        const req = {ChangeSetName: changeSetName, StackName: this.stackName}
+        const req = {ChangeSetName: changeSetName, StackName: this.stackName, $waiter: WAITER}
         let description: DescribeChangeSetOutput|null = await this.waitFor('changeset creation',
                 () => this.cloudFormation.waitFor('changeSetCreateComplete', req).promise())
 
@@ -164,8 +174,10 @@ export class CloudFormationPusher {
         logger.info('Enacting the change set');
         try {
             await this.cloudFormation.executeChangeSet(executeChangeSetReq).promise();
+
+            const req = {StackName: this.stackName, $waiter: WAITER}
             await this.waitFor('changeset enactment',
-                () => this.cloudFormation.waitFor('stackUpdateComplete', {StackName: this.stackName}).promise())
+                () => this.cloudFormation.waitFor('stackUpdateComplete', req).promise())
         } catch (e) {
             logger.silly(`Changeset enactment error`);
             throw new Error(`Changeset enactment failed: ${e.message}`)
@@ -232,9 +244,11 @@ export class CloudFormationPusher {
             call()
                 .then((t: T) => {
                     isWaiting = false
+                    logger.silly('waitfor succeeded')
                     resolve(t)
                 })
                 .catch(e => {
+                    logger.silly('waitfor errored ', e)
                     isWaiting = false
                     // We intentially do not report an error here. Rationale: waiting for change-set-creation fails
                     // when the change set is empty which is not the behavior that we need. instead callers of 
@@ -243,16 +257,16 @@ export class CloudFormationPusher {
                 })
 
             let iteration = 0;
-            const t0 = Date.now();
+            // const t0 = Date.now();
             logger.silly(`Waiting for operation "${whatAreWeDoing}" to take place (stack name: "${this.stackName}")`);
             while (isWaiting) {
                 showProgress(iteration);
                 
-                const timeInSeconds = Math.trunc((Date.now() - t0) / 1000);
-                if (timeInSeconds > CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS) {
-                    reject(new Error(`Operation "${whatAreWeDoing}" on stack "${this.stackName}" ` + 
-                        `did not complete in ${timeInSeconds}s. Bailing out.`))
-                }
+                // const timeInSeconds = Math.trunc((Date.now() - t0) / 1000);
+                // if (timeInSeconds > CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS) {
+                //     reject(new Error(`Operation "${whatAreWeDoing}" on stack "${this.stackName}" ` + 
+                //         `did not complete in ${timeInSeconds}s. Bailing out.`))
+                // }
                 ++iteration;
                 await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
             }
