@@ -88,7 +88,7 @@ export class CloudFormationPusher {
         logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
         let shouldDeploy = areFingrprintsDifferent(existingFingerprint, newFingerprint)
 
-        if (false && !shouldDeploy) {
+        if (!shouldDeploy) {
             logger.info(`No stack changes`);
             return;
         }    
