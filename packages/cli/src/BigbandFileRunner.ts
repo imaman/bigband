@@ -151,7 +151,7 @@ export class BigbandFileRunner {
         const ret = {
             AWSTemplateFormatVersion: '2010-09-09',
             Transform: 'AWS::Serverless-2016-10-31',
-            Description: "description goes here",
+            Description: this.bigbandModel.bigband.description,
             Resources: {}
         };
     
