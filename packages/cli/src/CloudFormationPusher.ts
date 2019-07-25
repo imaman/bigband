@@ -6,7 +6,7 @@ import * as hash from 'hash.js';
 import {logger} from './logger';
 
 const CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS = 5 * 60;
-
+const NO_FINGERPRINT = ''
 
 function computeFingerprint(spec, name): string {
     const str = JSON.stringify({spec, name});
@@ -19,31 +19,18 @@ export class CloudFormationPusher {
 
     private readonly cloudFormation: AWS.CloudFormation;
     private readonly stackName: string;
-    private resolver;
+    private resolve: (s: Stack|undefined) => void;
+    private reject: (e: Error) => void;
     private stackDescription: Promise<Stack|null>
 
     constructor(awsFactory: AwsFactory) {
         this.cloudFormation = awsFactory.newCloudFormation();
         this.stackName = awsFactory.stackName
 
-        this.stackDescription = new Promise<Stack>(resolver => {
-            this.resolver = resolver;
+        this.stackDescription = new Promise<Stack>((resolve, reject) => {
+            this.resolve = resolve
+            this.reject = reject
         });
-    }
-
-    private async getFingerprint(): Promise<string> {
-        const s = await this.stackDescription
-
-        if (!s || !s.Tags) {
-            return ''
-        }
-
-        const t = s.Tags.find(t => t.Key === FINGERPRINT_KEY);
-        if (!t || !t.Value) {
-            return ''
-        }
-
-        return t.Value
     }
 
     async peekAtExistingStack() {
@@ -55,44 +42,62 @@ export class CloudFormationPusher {
             resp  = await this.cloudFormation.describeStacks(req).promise();
         } catch (e) {
             logger.silly(`Could not get the details of the stack (${this.stackName}`, e);
-            this.resolver('');
+            this.resolve(undefined);
             return;    
         }
 
         logger.silly('describeStacks response=\n' + JSON.stringify(resp, null, 2))
 
-        if (!resp.Stacks || resp.Stacks.length !== 1) {
-            this.resolver(null);
+        if (!resp.Stacks) {
+            this.resolve(undefined);
             return;
+        }
+        
+        if (resp.Stacks.length !== 1) {
+            this.reject(new Error(`More than one stacks matched this name ${req.StackName}`))
+            return
         }
 
         const stack: Stack = resp.Stacks[0];
-        this.resolver(stack)
+        this.resolve(stack)
     }
 
-    private async deleteStack() {
+    private async locatePreexistingStack() {
+        const stackDescription: Stack|null = await this.stackDescription
+
+        if (!stackDescription) {
+            return NO_FINGERPRINT
+        }
+
+        if (stackDescription.StackStatus !== 'ROLLBACK_COMPLETE') {
+            return extractFingerprint(stackDescription)
+        }
+
+        logger.info(`Cleaning up a cloudformation stack with the same name ("${this.stackName}") which was stuck ` + 
+            `in "${stackDescription.StackStatus}" status`)
         await this.cloudFormation.deleteStack({StackName: this.stackName}).promise()
         await this.waitForStackDeletion(this.stackName)
+
+        return NO_FINGERPRINT
     }
 
     async deploy(templateBody) {
+        const existingFingerprint = await this.locatePreexistingStack()
         const newFingerprint = computeFingerprint(templateBody, this.stackName);
 
-        const d = await this.stackDescription
-        const needsDeletion = d && d.StackStatus === 'ROLLBACK_COMPLETE'
-        if (needsDeletion) {
-            logger.info(`A previous instance of cloudformation stack with the same name ("${this.stackName}") was found. Trying to delete it`)
-            await this.deleteStack()
-        } else {
-            // we check fingerprints only if the previous instance is valid (i.e., does not need to be deleted)
-            const existingFingerprint = await this.getFingerprint();
-            logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
-            if (newFingerprint === existingFingerprint) {
-                logger.info(`No stack changes`);
-                return;
-            }    
-        }
+        logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
+        let shouldDeploy = areFingrprintsDifferent(existingFingerprint, newFingerprint)
 
+        if (!shouldDeploy) {
+            logger.info(`No stack changes`);
+            return;
+        }    
+
+        this.reallyDeploy(templateBody, newFingerprint)
+    }
+
+
+    async reallyDeploy(templateBody, newFingerprint: string) {
         const changeSetName = `cs-${uuid()}`;
         const createChangeSetReq: CreateChangeSetInput = {
             StackName: this.stackName,            
@@ -232,8 +237,6 @@ export class CloudFormationPusher {
         logger.silly(`stack ID: ${stackId}`);
  
         return new Promise(async (resolve, reject) => {
-
-
             let isWaiting = true
             this.cloudFormation.waitFor('stackDeleteComplete', {StackName: stackId}).promise()
                 .then(() => {
@@ -265,6 +268,28 @@ export class CloudFormationPusher {
 
 function showProgress(n: number) {
     logger.info(new Array(n + 1).fill('.').join(''));
+}
+
+
+function areFingrprintsDifferent(existingFingerprint: string, newFingerprint: string) {
+    if (existingFingerprint === NO_FINGERPRINT) {
+        return true
+    }
+
+    return existingFingerprint !== newFingerprint
+}
+
+function extractFingerprint(stackDescription: Stack): string {
+    if (!stackDescription || !stackDescription.Tags) {
+        return NO_FINGERPRINT
+    }
+
+    const t = stackDescription.Tags.find(t => t.Key === FINGERPRINT_KEY);
+    if (!t || !t.Value) {
+        return NO_FINGERPRINT
+    }
+
+    return t.Value
 }
 
 // Errors found while running example/bigband.config.ts { InvalidChangeSetStatus: ChangeSet [arn:aws:cloudformation:eu-west-2:274788167589:stack/bb-example-prod-major/4361c080-e6bc-11e8-bca5-504dcd6bf9fe] cannot be executed in its current status of [FAILED]
