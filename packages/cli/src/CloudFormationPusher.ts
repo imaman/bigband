@@ -76,17 +76,25 @@ export class CloudFormationPusher {
             return NO_FINGERPRINT
         }
 
-        if (stackDescription.StackStatus !== 'ROLLBACK_COMPLETE') {
-            return extractFingerprint(stackDescription)
+        if (stackDescription.StackStatus === 'ROLLBACK_COMPLETE') {
+            await this.removeStack()            
+            return NO_FINGERPRINT
         }
+        return extractFingerprint(stackDescription)
+    }
 
+    // TODO(imaman): if we somehow call this from the wrong place we will destroy a stack
+    // and data will be lost. need to add safe guards:
+    //   (i) better testing (despite the difficulty of testing AWS-intenstive code)
+    //   (ii) hace this method check description of the stack on its own. delete the stack only if the status is
+    //        ROLLBACK_COMPLETE + other conditions are met (no resources exist)
+    private async removeStack() {
         logger.info(`Cleaning up a rolledback Cloudformation stack`)
         await this.cloudFormation.deleteStack({StackName: this.stackName}).promise()
 
         const req = {StackName: this.stackName, $waiter: WAITER}
         await this.waitFor('removal of rolledback stack',
             () => this.cloudFormation.waitFor('stackDeleteComplete', req).promise())
-        return NO_FINGERPRINT
     }
 
     async deploy(templateBody) {
@@ -105,6 +113,10 @@ export class CloudFormationPusher {
         if (!hasChanges) {
             return
         }
+
+        // TODO(imaman): we need to verify here that we do not accidentally delete resource that maintain persistent
+        // data (to prevent accidental loss of data). allow such deletion only if the instrument has
+        // been marked for deletion.
 
         await this.enactChangeset(changeSetName)
     }
