@@ -94,9 +94,8 @@ export class CloudFormationPusher {
         const newFingerprint = computeFingerprint(templateBody, this.stackName);
 
         logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
-        let shouldDeploy = areFingrprintsDifferent(existingFingerprint, newFingerprint)
-
-        if (!shouldDeploy) {
+        let identical = areFingrprintsIdentical(existingFingerprint, newFingerprint)
+        if (identical) {
             logger.info(`No stack changes`);
             return;
         }    
@@ -221,12 +220,12 @@ function showProgress(n: number) {
 }
 
 
-function areFingrprintsDifferent(existingFingerprint: string, newFingerprint: string) {
+function areFingrprintsIdentical(existingFingerprint: string, newFingerprint: string) {
     if (existingFingerprint === NO_FINGERPRINT) {
-        return true
+        return false
     }
 
-    return existingFingerprint !== newFingerprint
+    return existingFingerprint === newFingerprint
 }
 
 function extractFingerprint(stackDescription: Stack): string {
