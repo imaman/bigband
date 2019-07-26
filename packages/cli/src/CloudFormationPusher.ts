@@ -77,7 +77,7 @@ export class CloudFormationPusher {
         }
 
         if (stackDescription.StackStatus === 'ROLLBACK_COMPLETE') {
-            await this.removeStack()            
+            await this.purgeStack()            
             return NO_FINGERPRINT
         }
         return extractFingerprint(stackDescription)
@@ -88,7 +88,7 @@ export class CloudFormationPusher {
     //   (i) better testing (despite the difficulty of testing AWS-intenstive code)
     //   (ii) hace this method check description of the stack on its own. delete the stack only if the status is
     //        ROLLBACK_COMPLETE + other conditions are met (no resources exist)
-    private async removeStack() {
+    private async purgeStack() {
         logger.info(`Cleaning up a rolledback Cloudformation stack`)
         await this.cloudFormation.deleteStack({StackName: this.stackName}).promise()
 
