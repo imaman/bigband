@@ -75,7 +75,8 @@ export class LogSamplerController extends AbstractController<any, any> {
 let c: LogSamplerController;
 
 export async function runLambda(context, event, mapping, buildFingerprint) {
-    c = c || new LogSamplerController(mapping, buildFingerprint);
+    c = c || new LogSamplerController();
+    c.initialize(mapping, buildFingerprint)
     return await c.runLambda(event, context);
 }
  

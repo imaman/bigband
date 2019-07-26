@@ -103,19 +103,20 @@ export class LambdaInstrument extends Instrument {
 
 
         const content = `
-            import {runLambda} from '${requireExpression}';
+            import {controller} from '${requireExpression}';
             const mapping = require('../../../bigband/deps.js');
             const fp = require('../../../bigband/build_manifest.js');
 
+            controller.initialize(mapping, fp)
             export function handle(event, context, callback) {
                 try {
-                    Promise.resolve()
-                    .then(() => runLambda(context, event, mapping, fp))
-                    .then(response => callback(null, response))
-                    .catch(e => {
-                        console.error('Exception caught from promise flow (event=\\n:' + JSON.stringify(event).substring(0, 1000) + ")\\n\\n", e);
-                        callback(e);
-                    });
+                    return Promise.resolve()
+                        .then(() => controller.runLambda(event, context))
+                        .then(response => callback(null, response))
+                        .catch(e => {
+                            console.error('Exception caught from promise flow (event=\\n:' + JSON.stringify(event).substring(0, 1000) + ")\\n\\n", e);
+                            callback(e);
+                        });
                 } catch (e) {
                     console.error('Exception caught:', e);
                     callback(e);
