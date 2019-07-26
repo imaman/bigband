@@ -8,12 +8,11 @@ import { WaiterConfiguration } from 'aws-sdk/lib/service';
 
 const NO_FINGERPRINT = ''
 
-const TIMEOUT_IN_SECONDS = 3; //5 * 60;
-const DELAY_BETWEEN_POLLING_ATTEMPTS_IN_SECONDS = 15
-
+// TODO(imaman): make it possible to control these with a flag 
+//   (in case some huge CF stack needs more than 10m)
 const WAITER: WaiterConfiguration = {
-    delay: 5, // DELAY_BETWEEN_POLLING_ATTEMPTS_IN_SECONDS,
-    maxAttempts: 120 //TIMEOUT_IN_SECONDS / DELAY_BETWEEN_POLLING_ATTEMPTS_IN_SECONDS
+    delay: 5, 
+    maxAttempts: 120 
 }
 
 function computeFingerprint(spec, name): string {
