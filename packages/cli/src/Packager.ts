@@ -19,6 +19,7 @@ import { ZipBuilder } from './ZipBuilder';
 import { CONTRIVED_NPM_PACAKGE_NAME, CONTRIVED_IN_FILE_NAME, CONTRIVED_OUT_FILE_NAME } from './scotty'
 import { Misc } from './Misc';
 import { ResolvedName } from './ResolvedName';
+import { Spawner } from './Spawner';
 
 export enum DeployMode {
   ALWAYS = 1,
@@ -80,13 +81,20 @@ export class Packager {
       fs.writeFileSync(p, curr.content, 'UTF-8')
     })
 
-    const filesToCompile = startingPoints.map(curr => (`"${curr}"`)).join(' ')
-    logger.silly(`Compiling ${filesToCompile}`);
-    const command = `tsc --outDir "${outDir}" --preserveConstEnums --strictNullChecks --sourceMap --target es2015 --module commonjs --allowJs --checkJs false --lib es2015,dom --rootDir "${this.rootDir}" ${filesToCompile}`
-    logger.silly(`Executing: ${command}`);
+    // const filesToCompile = startingPoints.map(curr => (`"${curr}"`)).join(' ')
+    // logger.silly(`Compiling ${st}`);
 
-    // TODO(imaman): better output on error.
-    await util.promisify(child_process.exec)(command, {encoding: 'utf-8'});
+    let args: string[] = ['--outDir', outDir, '--preserveConstEnums', '--strictNullChecks', '--sourceMap', 
+        '--target', 'es2015', '--module', 'commonjs', '--allowJs', '--checkJs', 'false', '--lib', 'es2015,dom', 
+        '--rootDir', this.rootDir]
+    args = args.concat(startingPoints)
+
+    const execution = await Spawner.exec('tsc', args, this.rootDir)
+    if (execution.exitCode !== 0) {
+      logger.info(`Compilation of ${startingPoints} failed:\n${execution.stderr}\n${execution.stdout}`)
+      process.exit(-1)
+    }
+
     return outDir;
   }
   
