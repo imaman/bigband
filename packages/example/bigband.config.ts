@@ -16,11 +16,15 @@ const staging = new Section('eu-west-2', 'staging');
 //     Timeout: 15   
 // });
 
-const placeFinder = new LambdaInstrument('geography', 'site-finder1', 'src/geography/placeFinder', {
+const placeFinder = new LambdaInstrument('geography', 'site-finder4', 'src/geography/placeFinder', {
     Description: 'returns names of places that best match the given query',
     MemorySize: 512,
-    Timeout: 28      
+    Timeout: 29
 });
+
+const distanceTable = new DynamoDbInstrument('geography', 'distances4', {name: 'dist', type: DynamoDbAttributeType.NUMBER});
+
+
 
 // const healthChecker = new LambdaInstrument('geography', 'health-checker', 'src/geography/healthChecker', {
 //     Description: 'is everything working correctly',
@@ -35,7 +39,6 @@ const placeFinder = new LambdaInstrument('geography', 'site-finder1', 'src/geogr
 //         writeCapacityUnits: 1
 //     }
 // });
-const distanceTable = new DynamoDbInstrument('geography', 'distances1', {name: 'dist', type: DynamoDbAttributeType.NUMBER});
 
 // const queryStream = new KinesisStreamInstrument('geography', 'query-stream', 1);
 
