@@ -28,18 +28,25 @@ export class DeployableFragment {
     }
 
     forEach(f: (_: DeployableAtom) => void) {
-        this.atoms.sort((lhs, rhs) => lhs.path.localeCompare(rhs.path));
-        this.atoms.forEach(f);
+        this.all.forEach(f)
     }
 
-    scan(pathInFragment: string, absolutePath: string) {
+    get all(): DeployableAtom[] {
+        this.atoms.sort((lhs, rhs) => lhs.path.localeCompare(rhs.path));
+        return [...this.atoms]
+    }
+
+    scan(pathInFragment: string, absolutePath: string, approver: (path: string) => boolean = () => true) {
         if (!path.isAbsolute(absolutePath)) {
             throw new Error(`path is not absolute (${absolutePath}).`)
         }
+        if (!approver(absolutePath)) {
+            return
+        }
         if (fs.statSync(absolutePath).isDirectory()) {
-            fs.readdirSync(absolutePath).forEach((f: string) => {
-                this.scan(path.join(pathInFragment, f), path.join(absolutePath, f));
-            });
+            for (const f of fs.readdirSync(absolutePath)) {
+                this.scan(path.join(pathInFragment, f), path.join(absolutePath, f), approver);
+            }
         } else {
             const content = fs.readFileSync(absolutePath, 'utf-8');
             const atom = new DeployableAtom(pathInFragment, content);
