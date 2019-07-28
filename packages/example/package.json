@@ -1,7 +1,7 @@
 {
   "name": "demo",
   "private": true,
-  "version": "1.0.59",
+  "version": "1.0.60",
   "description": "Bigband's demo app",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.354.0",
-    "bigband-lambda": "^0.1.49",
+    "bigband-lambda": "^0.1.50",
     "byline": "^5.0.0",
     "ellipsize": "^0.1.0",
     "fast-levenshtein": "^2.0.6",
@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^11.9.4",
-    "bigband-core": "^0.1.49",
+    "bigband-core": "^0.1.50",
     "ts-node": "^8.0.2",
     "typescript": "^3.5.2"
   }
