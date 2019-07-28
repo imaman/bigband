@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.354.0",
+    "bigband-lambda": "^0.1.45",
     "byline": "^5.0.0",
     "ellipsize": "^0.1.0",
     "fast-levenshtein": "^2.0.6",

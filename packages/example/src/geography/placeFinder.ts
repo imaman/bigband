@@ -2,7 +2,7 @@ import {lookup} from './model';
 import AWS = require('aws-sdk');
 import * as byline from 'byline';
 import * as ellipsize from 'ellipsize'
-import { AbstractController } from 'bigband-core';
+import { AbstractController } from 'bigband-lambda';
 
 
 
