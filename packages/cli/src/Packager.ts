@@ -117,8 +117,10 @@ export class Packager {
       npmPackageResolver.recordUsage(npmPackageName);
     } else {
       const deps = DepsCollector.scanFrom(absoluteTsFile);
-      deps.npmDeps.forEach(d => npmPackageResolver.recordUsage(d));  
-    } 
+      for (const d of deps.npmDeps) {
+        npmPackageResolver.recordUsage(d)
+      }
+    }
     const usageByPackageName = npmPackageResolver.compute();  
     const zipBuilder = new ZipBuilder();
     const nodeModulesFragment = zipBuilder.newFragment();
@@ -214,6 +216,8 @@ export class Packager {
     if (!exists) {
       logger.silly(`Previous deployment of ${name.physicalName} was not found`)
     }
+
+    // fs.writeFileSync('/tmp/out.zip', await zipBuilder.toBuffer())
 
     logger.silly(`Comparing fingerprints for ${name.fullyQualifiedName}:\n  ${c}\n  ${fingeprint}`);
     if (deployMode === DeployMode.IF_CHANGED) {
