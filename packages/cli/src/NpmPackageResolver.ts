@@ -75,7 +75,7 @@ export class NpmPackageResolver {
     async prepopulate() {
         const command = 'npm ls --long --json';
         for (const r of this.roots) {
-            // TODO(imaman): better output on errors
+            // TODO(imaman): generate friendlier output on errors
 
             const execution = await Spawner.exec('npm', ['ls', '--long', '--json'], r)
             const npmLsPojo = JSON.parse(execution.stdout);
