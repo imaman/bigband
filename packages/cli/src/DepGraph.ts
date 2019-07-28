@@ -1,3 +1,5 @@
+import { logger } from "./logger";
+
 export class DepGraph<T> {
 
     private readonly nodeByName = new Map<string, DepNode<T>>();
@@ -53,7 +55,7 @@ export class DepNode<T> {
     dfs(approver: (n: DepNode<T>) => boolean = () => true) {
         const visited = new Set<DepNode<T>>();
         
-        function run(node: DepNode<T>) {
+        function run(node: DepNode<T>, depth) {
             if (!approver(node)) {
                 return
             }
@@ -63,12 +65,15 @@ export class DepNode<T> {
             }
 
             visited.add(node);
+
+            logger.silly('|' + new Array(depth).fill('  ').join('') + node.name)
             for (const curr of node.edges) {
-                run(curr.to);
+                run(curr.to, depth + 1);
             }
         }
 
-        run(this);
+        logger.silly('Starting DFS from ' + (this.name))
+        run(this, 0);
         return [...visited];
     }
 }
