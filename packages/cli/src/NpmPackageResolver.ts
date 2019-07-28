@@ -38,7 +38,7 @@ export class NpmPackageResolver {
         
         const existing: NodeData|null = node.data;
         const record: NodeData = {dir: pojo.path, version: pojo.version };
-        // logger.silly(`#dep_record# ${name} (dep of "${parent.name}"): ${JSON.stringify(record)}`);
+        logger.silly(`#dep_record# ${name} (dep of "${parent.name}"): ${JSON.stringify(record)}`);
         if (existing) {
             record.dir = record.dir || existing.dir;
         }
@@ -67,6 +67,10 @@ export class NpmPackageResolver {
             const curr = prodDependencies[depName];
             if (!curr) {
                 throw new Error(`Null entry for ${depName}`);
+            }
+
+            if (depName === 'execa') {
+                debugger
             }
 
             this.scanDeps(curr, node);

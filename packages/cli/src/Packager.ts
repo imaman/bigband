@@ -9,6 +9,7 @@ import * as mkdirp from 'mkdirp'
 
 import { logger } from './logger';
 import { AwsFactory, DeployableFragment } from 'bigband-core'
+import { BigbandLambdaInstallation } from 'bigband-lambda'
 import { DepsCollector } from './DepsCollector'
 import { NpmPackageResolver } from './NpmPackageResolver'
 import { BigbandInstallation } from 'bigband-core';
@@ -103,7 +104,7 @@ export class Packager {
     logger.silly('Packing dependencies of ' + absoluteTsFile);
 
     const npmPackageResolver = new NpmPackageResolver(
-        [this.npmPackageDir, BigbandInstallation.bigbandCorePackageDir(), Misc.bigbandPackageDir()],
+        [this.npmPackageDir, BigbandLambdaInstallation.bigbandLambdaPackageDir(), Misc.bigbandPackageDir()],
         shouldBeIncluded);
     await npmPackageResolver.prepopulate();
 
