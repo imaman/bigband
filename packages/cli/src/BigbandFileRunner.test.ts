@@ -159,7 +159,7 @@ describe('BigbandFileRunner', () => {
 
             expect(templateBody).to.eql({
                 "AWSTemplateFormatVersion": "2010-09-09",
-                "Description": "description goes here",
+                "Description": "An unspecified bigband description",
                 "Resources": {
                     "P1F1": {
                         "Properties": {
@@ -197,7 +197,7 @@ describe('BigbandFileRunner', () => {
 
             expect(templateBody).to.eql({
                 "AWSTemplateFormatVersion": "2010-09-09",
-                "Description": "description goes here",
+                "Description": "An unspecified bigband description",
                 "Resources": {
                     "AbcDefThisIsTheName": {
                         "Properties": {
@@ -238,7 +238,7 @@ describe('BigbandFileRunner', () => {
                 expect(templateBody).to.eql({
                     "AWSTemplateFormatVersion": "2010-09-09",
                     "Transform": "AWS::Serverless-2016-10-31",
-                    "Description": "description goes here",
+                    "Description": "An unspecified bigband description",
                     "Resources": {
                         "P1F1": {
                             "Type": "AWS::Serverless::Function",
@@ -308,7 +308,7 @@ describe('BigbandFileRunner', () => {
             expect(templateBody).to.eql({
                 "AWSTemplateFormatVersion": "2010-09-09",
                 "Transform": "AWS::Serverless-2016-10-31",
-                "Description": "description goes here",
+                "Description": "An unspecified bigband description",
                 "Resources": {
                     "P1F1": {
                         "Type": "AWS::Serverless::Function",
