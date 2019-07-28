@@ -50,18 +50,21 @@ export class DepNode<T> {
         this.edges.push({to: child, label});
     }
 
-    dfs(edgeLabelFilter: (string?) => boolean = () => true) {
+    dfs(approver: (n: DepNode<T>) => boolean = () => true) {
         const visited = new Set<DepNode<T>>();
         
         function run(node: DepNode<T>) {
+            if (!approver(node)) {
+                return
+            }
+
             if (visited.has(node)) {
-                return;
+                return
             }
 
             visited.add(node);
             for (const curr of node.edges) {
-                if (edgeLabelFilter(curr.label))
-                    run(curr.to);
+                run(curr.to);
             }
         }
 

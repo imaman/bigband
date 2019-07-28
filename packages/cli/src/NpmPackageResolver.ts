@@ -21,7 +21,7 @@ export class NpmPackageResolver {
     private readonly graph = new DepGraph<NodeData>();
     private readonly usages: Usage[] = [];
 
-    constructor(private readonly roots: string[], private readonly filter: (string) => boolean) {
+    constructor(private readonly roots: string[], private readonly filter: (s: string) => boolean) {
         const relatives = roots.filter(r => !path.isAbsolute(r));        
         if (relatives.length) {
             throw new Error(`Roots must be absolute but found some which are not:\n${relatives.join('\n')}`);
@@ -101,12 +101,8 @@ export class NpmPackageResolver {
         }
 
         const startNode = this.graph.getNode(packageName);
-        const nodes = startNode.dfs();
+        const nodes = startNode.dfs(n => this.filter(n.name))
         for (const curr of nodes) {
-            if (!this.filter(curr.name)) {
-                return;
-            }
-
             const depRecord: NodeData|null = curr.data;
             if (!depRecord) {
                 throw new Error(`Arrived at a node with no data: "${curr.name}".`);
@@ -121,18 +117,18 @@ export class NpmPackageResolver {
 
     compute(): {[s: string]: Usage} {
         const usageByPackageName: {[s: string]: Usage} = {};
-        this.usages.forEach(u => {
+        for (const u of this.usages) {
             const preexisting = usageByPackageName[u.packageName];
             if (!preexisting) {
                 usageByPackageName[u.packageName] = u;
-                return;
+                continue;
             }
 
             logger.silly(`Comparing ${u.packageName}: ${u.version} with ${preexisting.version}`);
             if (semver.gt(u.version, preexisting.version)) {
                 usageByPackageName[u.packageName] = u;
             }
-        })
+        }
 
         return usageByPackageName;
     }
