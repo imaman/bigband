@@ -52,7 +52,8 @@ export class NpmPackageResolver {
             return
         }
         
-        if (pojo.missing) {
+        if (pojo.missing && pojo.name !== 'bigband-lambda') {
+            debugger;
             return;
         }          
 
