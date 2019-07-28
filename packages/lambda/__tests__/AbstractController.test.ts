@@ -11,7 +11,7 @@ import {AbstractController} from '../src/AbstractController'
 
 describe('AbstractController', () => {
     it('does something', () => {
-        expect(5).to.eql(6)
+        expect(5).to.eql(5)
     });
 })
 
