@@ -114,22 +114,22 @@ export class NpmPackageResolver {
         }
     }
 
-    compute(): {[s: string]: Usage} {
-        const usageByPackageName: {[s: string]: Usage} = {};
+    compute(): Map<string, Usage> {
+        const ret = new Map<string, Usage>()
         for (const u of this.usages) {
-            const preexisting = usageByPackageName[u.packageName];
+            const preexisting = ret.get(u.packageName)
             if (!preexisting) {
-                usageByPackageName[u.packageName] = u;
+                ret.set(u.packageName, u)
                 continue;
             }
 
             logger.silly(`Comparing ${u.packageName}: ${u.version} with ${preexisting.version}`);
             if (semver.gt(u.version, preexisting.version)) {
-                usageByPackageName[u.packageName] = u;
+                ret.set(u.packageName, u)
             }
         }
 
-        return usageByPackageName;
+        return ret;
     }
 }
 
