@@ -37,7 +37,7 @@ class PlaceFinderController extends AbstractController<any, any> {
             headers: { 
               "content-type": 'application/json', 
             },
-            body: {query: q, elipsized: ellipsize(q), timePassed, bylineKeys: Object.keys(byline), inputLength: "_11___" + q.length, answers: answers.map(curr => curr.answer)}
+            body: {query: q, elipsized: ellipsize(q), timePassed, bylineKeys: Object.keys(byline), inputLength: "_12___" + q.length, answers: answers.map(curr => curr.answer)}
         };
     }
 }
