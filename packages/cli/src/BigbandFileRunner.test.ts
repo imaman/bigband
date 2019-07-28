@@ -93,7 +93,7 @@ describe('BigbandFileRunner', () => {
             return stdout.join('\n').trim()
         }
 
-        it("compiles", async () => {
+        xit("compiles", async () => {
             const f1 = new LambdaInstrument("p1", "f1", "file_1")
             
             const spec: BigbandSpec = {
@@ -106,10 +106,22 @@ describe('BigbandFileRunner', () => {
             }
 
             const content = `
-                export async function runLambda(context, event, mapping, fp) {
-                    return "context.a=" + context.a + ", event.b=" + event.b
+                class MyController {
+                    executeScheduledEvent(): void {}
+                    
+                    async runLambda(event: any, context: any): Promise<any> {                
+                        return "context.a=" + context.a + ", event.b=" + event.b
+                    }
+
+                    initialize(a, b) {}
                 }
-            `
+                
+                export const controller = new MyController()
+                `
+            //     export async function runLambda(context, event, mapping, fp) {
+            //         return "context.a=" + context.a + ", event.b=" + event.b
+            //     }
+            // `
             const output = await compileAndRun(spec, "r1/s1/p1/f1", content, {context: {a: 1}, event: {b: 2}})
             expect(JSON.parse(output)).to.eql("context.a=1, event.b=2")
         })
