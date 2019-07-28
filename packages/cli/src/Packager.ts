@@ -125,9 +125,11 @@ export class Packager {
     const usageByPackageName = npmPackageResolver.compute();  
     const zipBuilder = new ZipBuilder();
     const nodeModulesFragment = zipBuilder.newFragment();
-    for (const k in usageByPackageName) {
-      const usage = usageByPackageName[k];
+
+    console.log('QQQQQQQQQQQQQQQ')
+    for (const usage of usageByPackageName.values()) {
       logger.silly('scanning: ' + usage.dir)
+      console.log('from ' + usage.packageName + ' take only ' + JSON.stringify(npmPackageResolver.getChildren(usage)))
       nodeModulesFragment.scan(`node_modules/${usage.packageName}`, usage.dir);
     }
 
