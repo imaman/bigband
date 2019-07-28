@@ -21,11 +21,15 @@ export class DepGraph<T> {
         return toNode;
     }
 
-    getNode(name: string): DepNode<T> {
+    lookup(name: string): DepNode<T>|undefined {
         if (!name) {
             throw new Error('Name cannot be falsy');
         }
-        let ret = this.nodeByName.get(name);
+        return this.nodeByName.get(name);
+    }
+
+    getNode(name: string): DepNode<T> {
+        let ret = this.lookup(name)
         if (ret) {
             return ret;
         }

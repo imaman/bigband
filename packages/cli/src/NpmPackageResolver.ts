@@ -77,7 +77,6 @@ export class NpmPackageResolver {
     }
 
     async prepopulate() {
-        const command = 'npm ls --long --json';
         for (const r of this.roots) {
             // TODO(imaman): generate friendlier output on errors
 
