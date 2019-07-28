@@ -305,6 +305,7 @@ describe('BigbandFileRunner', () => {
             const templateBody = bigbandFileRunner.buildCloudFormationTemplate(
                 computePushedInstruments(bigbandModel, ["r1/s1/p1/f1"]))
 
+                
             expect(templateBody).to.eql({
                 "AWSTemplateFormatVersion": "2010-09-09",
                 "Transform": "AWS::Serverless-2016-10-31",
