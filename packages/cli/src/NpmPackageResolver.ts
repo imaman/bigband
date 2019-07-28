@@ -48,7 +48,11 @@ export class NpmPackageResolver {
     }
 
     private scanDeps(pojo, parent: DepNode<NodeData>) {
-        if (!pojo || pojo.missing) {
+        if (!pojo) {
+            return
+        }
+        
+        if (pojo.missing) {
             return;
         }          
 
