@@ -126,11 +126,9 @@ export class Packager {
     const zipBuilder = new ZipBuilder();
     const nodeModulesFragment = zipBuilder.newFragment();
 
-    console.log('QQQQQQQQQQQQQQQ')
     for (const usage of usageByPackageName.values()) {
       logger.silly('scanning: ' + usage.dir)
-      console.log('from ' + usage.packageName + ' take only ' + JSON.stringify(npmPackageResolver.getChildren(usage)))
-      nodeModulesFragment.scan(`node_modules/${usage.packageName}`, usage.dir);
+      nodeModulesFragment.scan(`node_modules/${usage.packageName}`, usage.dir, p => !p.endsWith("node_modules"))
     }
 
 
@@ -220,12 +218,6 @@ export class Packager {
     if (!exists) {
       logger.silly(`Previous deployment of ${name.physicalName} was not found`)
     }
-
-//    const b = await zipBuilder.toBuffer()
-//    fs.writeFileSync('/tmp/out.zip', b)
-//    if (b.length > 5 * 1000 * 1000) {
-//      throw new Error('Size exceeded: ' + ((b.length / (1000 * 1000)).toFixed(1)) + ' MB')
-//    }
 
     logger.silly(`Comparing fingerprints for ${name.fullyQualifiedName}:\n  ${c}\n  ${fingeprint}`);
     if (deployMode === DeployMode.IF_CHANGED) {
