@@ -37,8 +37,8 @@ export class NpmPackageResolver {
         const node = this.graph.addDepToNode(parent, name);
         
         const existing: NodeData|null = node.data;
-        const record: NodeData = {dir: pojo.path, version: pojo.version };
-        logger.silly(`#dep_record# ${name} (dep of "${parent.name}"): ${JSON.stringify(record)}`);
+        const record: NodeData = { dir: pojo.path, version: pojo.version };
+        logger.silly(`#dep_record#\n${parent.name} -||-> ${name} -- ${JSON.stringify(record)}`);
         if (existing) {
             record.dir = record.dir || existing.dir;
         }
@@ -53,7 +53,6 @@ export class NpmPackageResolver {
         }
         
         if (pojo.missing && pojo.name !== 'bigband-lambda') {
-            debugger;
             return;
         }          
 
@@ -69,8 +68,8 @@ export class NpmPackageResolver {
                 throw new Error(`Null entry for ${depName}`);
             }
 
-            if (depName === 'execa') {
-                debugger
+            if (curr._development) {
+                continue
             }
 
             this.scanDeps(curr, node);
