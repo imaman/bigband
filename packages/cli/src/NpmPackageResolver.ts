@@ -61,7 +61,7 @@ export class NpmPackageResolver {
 
         // pojo.dependencies - prod dependencies.
         // pojo.devDependencies - dev dependencies. 
-        // We scan only the former.
+        // We scan only the former (unless its a bigband dep).
         const prodDependencies = pojo.dependencies || {};
         for (const depName in prodDependencies) {
             const curr = prodDependencies[depName];
