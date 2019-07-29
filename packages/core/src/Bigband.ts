@@ -45,6 +45,10 @@ export class Bigband {
         this.s3BucketPrefix = init.s3BucketPrefix || 'npm-bigband'
         this.description = init.description || 'An unspecified bigband description'
 
+        if (this.s3BucketGuid.startsWith("<")) {
+            throw new Error(`Bad value for s3BucketGuid: "${this.s3BucketGuid}"`)
+        }
+
         // TODO(imaman): check validity of the s3BucketGuid and s3BucketPrefix
         // TODO(imaman): check length of description
     }
