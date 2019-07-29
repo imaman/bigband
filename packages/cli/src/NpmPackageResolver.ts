@@ -38,7 +38,7 @@ export class NpmPackageResolver {
         
         const existing: NodeData|null = node.data;
         const record: NodeData = { dir: pojo.path, version: pojo.version };
-        logger.silly(`#dep_record#\n$"{parent.name}" =-=> "${name}" -- ${JSON.stringify(record)}`);
+        logger.silly(`#dep_record#\n"${parent.name}" =-=> "${name}" -- ${JSON.stringify(record)}`);
         if (existing) {
             record.dir = record.dir || existing.dir;
         }
@@ -69,7 +69,7 @@ export class NpmPackageResolver {
                 throw new Error(`Null entry for ${depName}`);
             }
 
-            if (curr._development) {
+            if (depName !== 'bigband' && curr._development) {
                 logger.silly(`dropping dev dep: "${depName}"`)
                 continue
             }
