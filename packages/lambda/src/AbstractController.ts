@@ -10,7 +10,7 @@ export abstract class AbstractController<T, R> {
     }
 
     abstract executeScheduledEvent(): void;
-    abstract executeInputEvent(input: T): R;
+    abstract async executeInputEvent(input: T): Promise<R>;
 
     protected async onError(e: Error) {}
 
