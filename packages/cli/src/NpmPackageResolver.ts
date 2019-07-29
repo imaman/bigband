@@ -53,6 +53,7 @@ export class NpmPackageResolver {
         }
         
         if (pojo.missing && pojo.name !== 'bigband-lambda') {
+            logger.silly(`dropping missing: "${pojo.name}"`)
             return;
         }          
 
@@ -69,6 +70,7 @@ export class NpmPackageResolver {
             }
 
             if (curr._development) {
+                logger.silly(`dropping dev dep: "${depName}"`)
                 continue
             }
 
