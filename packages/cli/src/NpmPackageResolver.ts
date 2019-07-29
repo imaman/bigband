@@ -69,7 +69,7 @@ export class NpmPackageResolver {
                 throw new Error(`Null entry for ${depName}`);
             }
 
-            if (depName !== 'bigband' && curr._development) {
+            if (pojo.name !== 'bigband' && curr._development) {
                 logger.silly(`dropping dev dep: "${depName}"`)
                 continue
             }
