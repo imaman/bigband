@@ -85,11 +85,28 @@ export function run() {
 Add an `src/greeter.ts` file, as follows:
 
 ```typescript
-export async function runLambda(context, event, mapping) {
-    return {
-        greeting: `The name is ${event.lastName}, ${event.firstName} ${event.lastName}`
-    };
+import { AbstractController } from 'bigband-lambda';
+
+interface GreeterRequest {
+    firstName?: string
+    lastName?: string
 }
+
+interface GreeterResponse {
+    greeting: string
+}
+
+class GreeterController extends AbstractController<GreeterRequest, GreeterResponse> {
+    executeScheduledEvent(): void {}
+    
+    async executeInputEvent(event: GreeterRequest): Promise<GreeterResponse> {
+        return {
+            greeting: `The name is ${event.lastName}, ${event.firstName} ${event.lastName}`
+        }
+    }
+}
+
+export const controller = new GreeterController()
 ```
 
 This function expects to receive an input with two string fields `lastName`, `firstName`. It generates an output which is an object with a single field, `greeting`.
