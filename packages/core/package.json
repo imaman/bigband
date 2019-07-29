@@ -38,7 +38,7 @@
   "files": [
     "lib/**/*"
   ],
-  "gitHead": "7da788faec1220a92c36c48a90afbc10f93218d6",
+  "gitHead": "fc6307756a702a392511bd6f9e9e59e5faddf33f",
   "dependencies": {
     "bigband-lambda": "^0.1.56"
   }
