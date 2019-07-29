@@ -231,6 +231,7 @@ export class Packager {
     if (!this.blobPool) {
       throw new Error('a blob pool was not specified');
     }
+    
     const teleporter = new Teleporter(this.blobPool);
     const handlePojos = (await teleporter.teleport(zipBuilder)).map(curr => curr.toPojo()); 
 
