@@ -70,7 +70,7 @@ export class NpmPackageResolver {
             }
 
             if (pojo.name !== 'bigband' && curr._development) {
-                logger.silly(`dropping dev dep: "${depName}"`)
+                logger.silly(`dropping dev dep: "${depName}" (of "${pojo.name}")`)
                 continue
             }
 
