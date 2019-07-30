@@ -121,7 +121,9 @@ We deploy via Bigband's `ship` command. This will setup everything in the AWS cl
 npx bigband ship eu-west-2/prod
 ```
 
-First-time deployments usually take on the order of 60-90s to complete (as all necessary AWS resources need to be created via `cloudformation`). Subsequent deployments should be much faster. Here is a full transcript of the `ship` command:
+First-time deployments usually take on the order of 60-90s to complete (as all necessary AWS resources need to be created via `cloudformation`). Subsequent deployments should be much faster thanks to bigband's fast-shipping (further details)[shipping]. 
+
+Here is a full transcript of the `ship` command:
 
 ```
 $ npx bigband ship eu-west-2/prod
@@ -140,10 +142,6 @@ Enacting Change set
 Stack status: CREATE_COMPLETE
 Section "prod" shipped in 75.5s
 ```
-
-Further reading: [shipping](shipping)
-
-
 
 ### Let's greet
 Use Bigband's `exec` command to send a payload of your choice to the `greeter` lambda instrument. 
