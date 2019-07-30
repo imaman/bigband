@@ -45,12 +45,10 @@ mkdir src
 ```
 
 ### Define your bigband
-Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. 
+Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. Do not forget to *replace the placeholder values* (`<YOUR-AWS-PROFILE-NAME>`, `<A-GUID>`) with your own values.
 
-Do not forget to *replace the placeholder values* (`<YOUR-AWS-PROFILE-NAME>`, `<A-GUID>`) with your own values.
-
-- :information_source: you can a GUID value from (say) [here](https://www.uuidgenerator.net/guid)
-- :information_source: Your [AWS profile names](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) are defined in `~/.aws/credentials` (Linux & Mac) or `%USERPROFILE%\.aws\credentials` (Windows).
+- You can a GUID value from (say) [here](https://www.uuidgenerator.net/guid)
+- Your [AWS profile names](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) are defined in `~/.aws/credentials` (Linux & Mac) or `%USERPROFILE%\.aws\credentials` (Windows).
 
 
 ```typescript
