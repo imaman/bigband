@@ -1,6 +1,6 @@
 {
   "name": "bigband-lambda",
-  "version": "0.1.56",
+  "version": "0.1.59",
   "description": "Bigband's runtime support for lambda instruments.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -36,5 +36,5 @@
   "files": [
     "lib/**/*"
   ],
-  "gitHead": "7da788faec1220a92c36c48a90afbc10f93218d6"
+  "gitHead": "d39d617593eb495e92aaa9b89cdbbadd70462eca"
 }

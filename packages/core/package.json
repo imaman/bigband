@@ -1,6 +1,6 @@
 {
   "name": "bigband-core",
-  "version": "0.1.57",
+  "version": "0.1.60",
   "description": "Bigband's core.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -38,8 +38,8 @@
   "files": [
     "lib/**/*"
   ],
-  "gitHead": "fc6307756a702a392511bd6f9e9e59e5faddf33f",
+  "gitHead": "d39d617593eb495e92aaa9b89cdbbadd70462eca",
   "dependencies": {
-    "bigband-lambda": "^0.1.56"
+    "bigband-lambda": "^0.1.59"
   }
 }

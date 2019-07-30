@@ -45,9 +45,11 @@ mkdir src
 ```
 
 ### Define your bigband
-Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. Do not forget to *replace the placeholder values* (`<YOUR-AWS-PROFILE-NAME>`, `<A-GUID>`) with your own values.
+Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. *Do not forget to replace the placeholder values* (`<YOUR-AWS-PROFILE-NAME>`, `<A-GUID>`) with your own values.
 
-> :information_source: Your [AWS profile names](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) are defined in `~/.aws/credentials` (Linux & Mac) or `%USERPROFILE%\.aws\credentials` (Windows).
+- Your [AWS profile names](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) are defined in `~/.aws/credentials` (Linux & Mac) or `%USERPROFILE%\.aws\credentials` (Windows).
+- You can a GUID value from (say) [here](https://www.uuidgenerator.net/guid)
+
 
 ```typescript
 import { Bigband, LambdaInstrument, Section } from 'bigband-core';
@@ -81,7 +83,7 @@ export function run() {
 }
 ```
 
-### Implement a greeter function
+### Implement a greeter 
 Add an `src/greeter.ts` file, as follows:
 
 ```typescript
@@ -109,8 +111,7 @@ class GreeterController extends AbstractController<GreeterRequest, GreeterRespon
 export const controller = new GreeterController()
 ```
 
-This function expects to receive an input with two string fields `lastName`, `firstName`. It generates an output which is an object with a single field, `greeting`.
-
+This lambda function expects to receive an input with two string fields `lastName`, `firstName`. It generates an output which is an object with a single field, `greeting`.
 
 
 ### Time to ship
@@ -120,7 +121,9 @@ We deploy via Bigband's `ship` command. This will setup everything in the AWS cl
 npx bigband ship eu-west-2/prod
 ```
 
-Once you run it, deployment will begin. First-time deployments usually take on the order of 60-90s to complete (as all necessary AWS resources need to be created via `cloudformation`). Subsequent deployments should be much faster. Here is a full transcript of the `ship` command:
+First-time deployments usually take on the order of 60-90s to complete (as all necessary AWS resources need to be created via `cloudformation`). Subsequent deployments should be much faster thanks to bigband's fast-shipping ([further details](shipping.md)). 
+
+Here is a full transcript of the `ship` command:
 
 ```
 $ npx bigband ship eu-west-2/prod
@@ -140,15 +143,14 @@ Stack status: CREATE_COMPLETE
 Section "prod" shipped in 75.5s
 ```
 
-
-Important: `bigband ship` is the one-and-only command used for deplyoing bigbands. You use it for first-time deployments (as you just did) as well as for every subsequent update. It ships code changes (e.g., changes to `src/greeter.ts`) as well as architecutral changes (e.g., changes to `bigband.config.ts` file). Behind the scenes, Bigband makes sure that the deployment is minimal: only things that were actully changed will be redeployed. Specifically, if you have multiple lambda instruments defined in your bigband and you have changed just a few them, then running `bigband ship` will only *update the lambdas that were changed*.
-
-Bottom line: freely run `bigband ship` whenever you need to deploy.
-
-
-
 ### Let's greet
-Use Bigband's `exec` command to send a payload of your choice to a lambda instrument. In our case the function name is `greeter` and the input JSON is an object with two fields (`firstName`, `lastName`):
+Use Bigband's `exec` command to send a payload of your choice to the `greeter` lambda instrument. 
+
+```bash
+npx bigband exec eu-west-2/prod/myapp/greeter --input '{"firstName": "James", "lastName": "Bond"}'
+```
+
+You should see an output such as this:
 
 ```
 $ npx bigband exec eu-west-2/prod/myapp/greeter --input '{"firstName": "James", "lastName": "Bond"}'
