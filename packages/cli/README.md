@@ -121,7 +121,7 @@ We deploy via Bigband's `ship` command. This will setup everything in the AWS cl
 npx bigband ship eu-west-2/prod
 ```
 
-First-time deployments usually take on the order of 60-90s to complete (as all necessary AWS resources need to be created via `cloudformation`). Subsequent deployments should be much faster thanks to bigband's fast-shipping (further details)[shipping]. 
+First-time deployments usually take on the order of 60-90s to complete (as all necessary AWS resources need to be created via `cloudformation`). Subsequent deployments should be much faster thanks to bigband's fast-shipping [further details](shipping). 
 
 Here is a full transcript of the `ship` command:
 
