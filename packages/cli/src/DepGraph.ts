@@ -80,8 +80,4 @@ export class DepNode<T> {
         run(this, 0);
         return [...visited];
     }
-
-    get neigbhbors(): DepNode<T>[] {
-        return this.edges.map(e => e.to)
-    }
 }

@@ -133,20 +133,6 @@ export class NpmPackageResolver {
 
         return ret;
     }
-
-    getChildren(u: Usage): string[] {
-        const node = this.graph.lookup(u.packageName)
-        if (!node) {
-            throw new Error(`Bad usage name ("${u.packageName}")`)
-        }
-
-        const ret: string[] = []
-        for (const curr of node.neigbhbors) {
-            ret.push(curr.name)
-        }
-
-        return ret
-    }
 }
 
 
