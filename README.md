@@ -1,5 +1,5 @@
 # Bigband!
 
-## [Documentation](packages/cli/README.md)
-## [Development](DEV.md)
+### [Documentation](packages/cli/README.md)
+### [Development](DEV.md)
 
