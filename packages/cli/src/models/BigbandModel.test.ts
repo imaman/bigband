@@ -8,13 +8,14 @@ import 'mocha';
 
 import { BigbandSpec, Role, LambdaInstrument, Section, wire, Bigband } from 'bigband-core';
 import { BigbandModel } from './BigbandModel'
+import { CloudProvider } from '../CloudProvider';
 
 
 describe('BigbandModel', () => {
     const bigbandInit = {
         awsAccount: "a",
         name: "b",
-        profileName: "p",
+        profileName: CloudProvider.UNIT_TESTING_PROFILE_NAME,
         s3Prefix: "my_prefix",
         s3BucketGuid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     }

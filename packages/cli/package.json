@@ -1,6 +1,6 @@
 {
   "name": "bigband",
-  "version": "0.1.158",
+  "version": "0.1.177",
   "description": "Build production grade serverless systems.",
   "keywords": [
     "serverless",
@@ -35,9 +35,10 @@
   "dependencies": {
     "@types/node": "^10.12.5",
     "aws-sdk": "^2.409.0",
-    "bigband-core": "^0.1.45",
+    "bigband-core": "^0.1.57",
+    "bigband-lambda": "^0.1.56",
     "del": "^3.0.0",
-    "detective-typescript": "^4.1.1",
+    "detective-typescript": "^5.4.0",
     "hash.js": "^1.1.5",
     "jszip": "^3.1.5",
     "mkdirp": "^0.5.1",
@@ -60,5 +61,5 @@
     "npm-run-all": "^4.1.5",
     "tmp": "^0.1.0"
   },
-  "gitHead": "e332da497919fa4149373b409416232029e8608a"
+  "gitHead": "1bce5469f5c0ed986a6059cd87d5fad340bc4e8c"
 }

@@ -1,13 +1,19 @@
 import { AwsFactory } from 'bigband-core'
 
-import { CreateChangeSetInput, ExecuteChangeSetInput, DescribeChangeSetInput, DescribeChangeSetOutput, DescribeStacksInput, DescribeStacksOutput } from 'aws-sdk/clients/cloudformation';
-import {Section} from 'bigband-core';
+import { CreateChangeSetInput, ExecuteChangeSetInput, DescribeChangeSetOutput, DescribeStacksInput, DescribeStacksOutput, Stack } from 'aws-sdk/clients/cloudformation';
 import * as uuid from 'uuid/v1';
 import * as hash from 'hash.js';
 import {logger} from './logger';
+import { WaiterConfiguration } from 'aws-sdk/lib/service';
 
-const CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS = 5 * 60;
+const NO_FINGERPRINT = ''
 
+// TODO(imaman): make it possible to control these with a flag 
+//   (in case some huge CF stack needs more than 10m)
+const WAITER: WaiterConfiguration = {
+    delay: 5, 
+    maxAttempts: 120 
+}
 
 function computeFingerprint(spec, name): string {
     const str = JSON.stringify({spec, name});
@@ -20,15 +26,17 @@ export class CloudFormationPusher {
 
     private readonly cloudFormation: AWS.CloudFormation;
     private readonly stackName: string;
-    private readonly existingFingerprint;
-    private resolver;
+    private resolve: (s: Stack|undefined) => void;
+    private reject: (e: Error) => void;
+    private stackDescription: Promise<Stack|null>
 
     constructor(awsFactory: AwsFactory) {
         this.cloudFormation = awsFactory.newCloudFormation();
         this.stackName = awsFactory.stackName
 
-        this.existingFingerprint = new Promise<string>(resolver => {
-            this.resolver = resolver;
+        this.stackDescription = new Promise<Stack>((resolve, reject) => {
+            this.resolve = resolve
+            this.reject = reject
         });
     }
 
@@ -41,40 +49,80 @@ export class CloudFormationPusher {
             resp  = await this.cloudFormation.describeStacks(req).promise();
         } catch (e) {
             logger.silly(`Could not get the details of the stack (${this.stackName}`, e);
-            this.resolver('');
+            this.resolve(undefined);
             return;    
         }
 
-        if (!resp.Stacks || resp.Stacks.length !== 1) {
-            this.resolver('');
+        logger.silly('describeStacks response=\n' + JSON.stringify(resp, null, 2))
+
+        if (!resp.Stacks) {
+            this.resolve(undefined);
             return;
         }
-
-        const stack = resp.Stacks[0];
-        if (!stack.Tags) {
-            this.resolver('');
-            return;
+        
+        if (resp.Stacks.length !== 1) {
+            this.reject(new Error(`More than one stacks matched this name ${req.StackName}`))
+            return
         }
 
-        const t = stack.Tags.find(t => t.Key === FINGERPRINT_KEY);
-        if (!t || !t.Value) {
-            this.resolver('');
-            return;
-        }
-
-        this.resolver(t.Value);
+        const stack: Stack = resp.Stacks[0];
+        this.resolve(stack)
     }
 
-    async deploy(templateBody, deployablesLocation: string) {
-        const newFingerprint = computeFingerprint(templateBody, this.stackName);
-        const existingFingerprint = await this.existingFingerprint;
-        logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
-        if (newFingerprint === existingFingerprint) {
-            logger.info(`No stack changes`);
-            return;
+    private async locatePreexistingStack() {
+        const stackDescription: Stack|null = await this.stackDescription
+
+        if (!stackDescription) {
+            return NO_FINGERPRINT
         }
 
+        if (stackDescription.StackStatus === 'ROLLBACK_COMPLETE') {
+            await this.purgeStack()            
+            return NO_FINGERPRINT
+        }
+        return extractFingerprint(stackDescription)
+    }
+
+    // TODO(imaman): if we somehow call this from the wrong place we will destroy a stack
+    // and data will be lost. need to add safe guards:
+    //   (i) better testing (despite the difficulty of testing AWS-intenstive code)
+    //   (ii) hace this method check description of the stack on its own. delete the stack only if the status is
+    //        ROLLBACK_COMPLETE + other conditions are met (no resources exist)
+    private async purgeStack() {
+        logger.info(`Cleaning up a rolledback Cloudformation stack`)
+        await this.cloudFormation.deleteStack({StackName: this.stackName}).promise()
+
+        const req = {StackName: this.stackName, $waiter: WAITER}
+        await this.waitFor('removal of rolledback stack',
+            () => this.cloudFormation.waitFor('stackDeleteComplete', req).promise())
+    }
+
+    async deploy(templateBody) {
+        const existingFingerprint = await this.locatePreexistingStack()
+        const newFingerprint = computeFingerprint(templateBody, this.stackName);
+
+        logger.silly(`Fingerprint comparsion:\n  ${newFingerprint}\n  ${existingFingerprint}`);
+        let identical = areFingrprintsIdentical(existingFingerprint, newFingerprint)
+        if (identical) {
+            logger.info(`No stack changes`);
+            return;
+        }    
+
         const changeSetName = `cs-${uuid()}`;
+        const hasChanges: boolean = await this.createChangeSet(templateBody, changeSetName, newFingerprint)
+        if (!hasChanges) {
+            return
+        }
+
+        // TODO(imaman): we need to verify here that we do not accidentally delete resource that maintain persistent
+        // data (to prevent accidental loss of data). allow such deletion only if the instrument has
+        // been marked for deletion.
+
+        await this.enactChangeset(changeSetName)
+    }
+
+
+    async createChangeSet(templateBody, changeSetName: string, newFingerprint: string): Promise<boolean> {
         const createChangeSetReq: CreateChangeSetInput = {
             StackName: this.stackName,            
             ChangeSetName: changeSetName,
@@ -90,10 +138,11 @@ export class CloudFormationPusher {
         logger.silly('StackSpec: ' + JSON.stringify(templateBody, null, 2));
         logger.silly('stack size in bytes: ' + JSON.stringify(templateBody).length);
         logger.silly('createChangeSetReq=\n' + JSON.stringify(createChangeSetReq, null, 2));
-        logger.info(`Creating change set`);
+        logger.info(`Preparing a change set`);
         try {
             await this.cloudFormation.createChangeSet(createChangeSetReq).promise();
         } catch (e) {
+            logger.silly(`createChangeSet() failed: ${e.code} -- "${e.message}"`)
             if (e.code !== 'ValidationError' || !e.message.startsWith('Stack') || !e.message.endsWith('does not exist')) {
                 throw e;
             }
@@ -103,115 +152,103 @@ export class CloudFormationPusher {
             await this.cloudFormation.createChangeSet(createChangeSetReq).promise();
         }
 
-        const describeReq: DescribeChangeSetInput = {
-            StackName: this.stackName,
-            ChangeSetName: changeSetName
-        };
-        let description: DescribeChangeSetOutput;
-        let iteration = 0;
-        let t0 = Date.now();
-        while (true) {
-            showProgress(iteration);
-            description = await this.cloudFormation.describeChangeSet(describeReq).promise();
-            logger.silly('ChangeSet description=\n' + JSON.stringify(description, null, 2));
-            if (description.Status !== "CREATE_IN_PROGRESS" && description.Status !== 'CREATE_PENDING') {
-                break;
-            }
-            
-            const timeInSeconds = Math.trunc((Date.now() - t0) / 1000);
-            if (timeInSeconds > CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS) {
-                throw new Error(`change set creation did not complete in ${timeInSeconds}s. Bailing out.`)
-            }
-            ++iteration;
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
+        const req = {ChangeSetName: changeSetName, StackName: this.stackName, $waiter: WAITER}
+        let description: DescribeChangeSetOutput|null = await this.waitFor('changeset creation',
+                () => this.cloudFormation.waitFor('changeSetCreateComplete', req).promise())
+
+        if (!description) {
+            description = await this.cloudFormation.describeChangeSet(req).promise()
+            logger.silly('got an explicit description')
         }
 
+        logger.silly('description=' + JSON.stringify(description, null, 2))
         const isFailed = description.Status === 'FAILED';
-        if (isFailed && description.StatusReason === 'No updates are to be performed.')  {
-            logger.info('Change set is empty');
-            return;
+        if (isFailed && (description.Changes || []).length === 0) {
+            logger.silly('Change set is empty');
+            return false
         }
 
         if (isFailed) {
             throw new Error(`Bad changeset (${changeSetName}):\n${description.StatusReason}`);
         }
+
+        return true
+    }
+
+    private async enactChangeset(changeSetName: string) {
         const executeChangeSetReq: ExecuteChangeSetInput = {
             StackName: this.stackName,
             ChangeSetName: changeSetName,
         };
 
-        logger.info('Enacting Change set');
+        logger.info('Enacting the change set');
         try {
             await this.cloudFormation.executeChangeSet(executeChangeSetReq).promise();
-            await this.waitForStack(description.StackId);
+
+            const req = {StackName: this.stackName, $waiter: WAITER}
+            await this.waitFor('changeset enactment',
+                () => this.cloudFormation.waitFor('stackUpdateComplete', req).promise())
         } catch (e) {
-            throw new Error(`Changeset enactment failed: ${e.message}\nChangeset description:\n${JSON.stringify(description, null, 2)}`);
+            logger.silly(`Changeset enactment error`);
+            throw new Error(`Changeset enactment failed: ${e.message}`)
         }
     }
 
-    private async waitForStack(stackId?: string) {
-        if (!stackId) {
-            throw new Error('StackId should not be falsy');
-        }
+    private async waitFor<T>(whatAreWeDoing: string, call: () => Promise<T>): Promise<T|null> {
+        // TODO(imaman): this functionality is duplicated in this file
+        
+        return new Promise<T|null>(async (resolve, reject) => {
+            let isWaiting = true
 
-        let iteration = 0;
-        const t0 = Date.now();
-        let stackDescription: DescribeStacksOutput;
-        let status: string;
-        logger.silly(`Waiting for stack (${stackId}) to be updated`);
-        while (true) {
-            showProgress(iteration);
-            const describeReq: DescribeStacksInput = {
-                StackName: stackId,
-            };
-            stackDescription = await this.cloudFormation.describeStacks(describeReq).promise();
-            if (!stackDescription.Stacks) {
-                throw new Error('Missing list of stacks in DescribeStacksOutput');
-            }
-            if (stackDescription.Stacks.length !== 1) {
-                throw new Error(`Expected length to be exactly 1 but got ${stackDescription.Stacks.length}`);
-            }
+            call()
+                .then((t: T) => {
+                    isWaiting = false
+                    logger.silly('waitfor succeeded')
+                    resolve(t)
+                })
+                .catch(e => {
+                    logger.silly('waitfor errored ', e)
+                    isWaiting = false
+                    // We intentially do not report an error here. Rationale: waiting for change-set-creation fails
+                    // when the change set is empty which is not the behavior that we need. instead callers of 
+                    // the CloudFormationPusher.waitFor() need to inspect the situation and determine  
+                    resolve(null)
+                })
 
-            status = stackDescription.Stacks[0].StackStatus;
-            if (status.endsWith('_COMPLETE')) {
-                break;
+            let iteration = 0;
+            logger.silly(`Waiting for operation "${whatAreWeDoing}" to take place (stack name: "${this.stackName}")`);
+            while (isWaiting) {
+                showProgress(iteration);
+        
+                ++iteration;
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
             }
-            
-            const timeInSeconds = Math.trunc((Date.now() - t0) / 1000);
-            if (timeInSeconds > CHANGE_SET_CREATION_TIMEOUT_IN_SECONDS) {
-                throw new Error(`change set execution did not complete in ${timeInSeconds}s. Bailing out.`)
-            }
-            ++iteration;
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, iteration) * 5000));
-        }
-
-        logger.info(`Stack status: ${status}`);
-        logger.silly(`stack ID: ${stackId}`);
-        if (status !== 'CREATE_COMPLETE' && status !== 'UPDATE_COMPLETE') {
-            throw new Error(`Stack alarm for stack ID ${stackId}. Current status: ${status}`);
-        }
+        })
     }
 }
 
-function showProgress(n) {
+function showProgress(n: number) {
     logger.info(new Array(n + 1).fill('.').join(''));
 }
 
-// Errors found while running example/bigband.config.ts { InvalidChangeSetStatus: ChangeSet [arn:aws:cloudformation:eu-west-2:274788167589:stack/bb-example-prod-major/4361c080-e6bc-11e8-bca5-504dcd6bf9fe] cannot be executed in its current status of [FAILED]
-//     at Request.extractError (/home/imaman/code/bigband/node_modules/aws-sdk/lib/protocol/query.js:47:29)
-//     at Request.callListeners (/home/imaman/code/bigband/node_modules/aws-sdk/lib/sequential_executor.js:106:20)
-//     at Request.emit (/home/imaman/code/bigband/node_modules/aws-sdk/lib/sequential_executor.js:78:10)
-//     at Request.emit (/home/imaman/code/bigband/node_modules/aws-sdk/lib/request.js:683:14)
-//     at Request.transition (/home/imaman/code/bigband/node_modules/aws-sdk/lib/request.js:22:10)
-//     at AcceptorStateMachine.runTo (/home/imaman/code/bigband/node_modules/aws-sdk/lib/state_machine.js:14:12)
-//     at /home/imaman/code/bigband/node_modules/aws-sdk/lib/state_machine.js:26:10
-//     at Request.<anonymous> (/home/imaman/code/bigband/node_modules/aws-sdk/lib/request.js:38:9)
-//     at Request.<anonymous> (/home/imaman/code/bigband/node_modules/aws-sdk/lib/request.js:685:12)
-//     at Request.callListeners (/home/imaman/code/bigband/node_modules/aws-sdk/lib/sequential_executor.js:116:18)
-//   message: 'ChangeSet [arn:aws:cloudformation:eu-west-2:274788167589:stack/bb-example-prod-major/4361c080-e6bc-11e8-bca5-504dcd6bf9fe] cannot be executed in its current status of [FAILED]',
-//   code: 'InvalidChangeSetStatus',
-//   time: 2019-02-18T17:09:10.902Z,
-//   requestId: 'e8db3f9a-339f-11e9-b41a-ad391c940b6c',
-//   statusCode: 400,
-//   retryable: false,
-//   retryDelay: 74.17778732792387 }
+
+function areFingrprintsIdentical(existingFingerprint: string, newFingerprint: string) {
+    if (existingFingerprint === NO_FINGERPRINT) {
+        return false
+    }
+
+    return existingFingerprint === newFingerprint
+}
+
+function extractFingerprint(stackDescription: Stack): string {
+    if (!stackDescription || !stackDescription.Tags) {
+        return NO_FINGERPRINT
+    }
+
+    const t = stackDescription.Tags.find(t => t.Key === FINGERPRINT_KEY);
+    if (!t || !t.Value) {
+        return NO_FINGERPRINT
+    }
+
+    return t.Value
+}

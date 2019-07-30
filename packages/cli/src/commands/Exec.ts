@@ -9,7 +9,7 @@ async function invokeFunction(bigbandFile: string, path: string, input: string) 
 
     const lookupResult: LookupResult = await model.searchInspect(path)
     
-    var lambda: AWS.Lambda = CloudProvider.newAwsFactory(lookupResult.sectionModel).newLambda();
+    var lambda: AWS.Lambda = CloudProvider.get(lookupResult.sectionModel).newLambda();
     const params: InvocationRequest = {
         FunctionName: lookupResult.physicalName,
         InvocationType: 'RequestResponse', 

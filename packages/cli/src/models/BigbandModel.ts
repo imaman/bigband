@@ -43,7 +43,7 @@ export class BigbandModel {
     private readonly instrumentModelByPath = new Map<string, InstrumentModel>()
 
     public readonly dir: string
-    constructor(private readonly spec: BigbandSpec, defaultDir: string) {
+    constructor(private readonly spec: BigbandSpec, defaultDir: string, public readonly accountId: string = '<unspecfieid>') {
         if (!defaultDir) {
             throw new Error('defaultDir cannot be falsy')
         }
@@ -56,7 +56,7 @@ export class BigbandModel {
             // package-visibility in typescript, this trick allow us to create mututally-dependent object without having
             // them exposed state-mutating methods.
             const acc: InstrumentModel[] = []
-            const sm = new SectionModel(this.spec.bigband, s.section, acc)
+            const sm = new SectionModel(this, s.section, acc)
             if (this.sectionByPath.has(sm.path)) {
                 throw new Error(`Section path collision. two (or more) sections share the same path: "${sm.path}"`)
             }
@@ -123,6 +123,10 @@ export class BigbandModel {
 
     get bigband(): Bigband {
         return this.spec.bigband
+    }
+
+    get profileName(): string {
+        return this.spec.bigband.profileName
     }
 
     /**

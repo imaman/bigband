@@ -1,16 +1,16 @@
 
 export abstract class AbstractController<T, R> {
-    protected readonly mapping: any;
-    protected readonly buildFingerprint: string;
+    protected mapping: any;
+    protected buildFingerprint: string;
     protected context: any = {};
      
-    constructor(mapping, buildFingerprint) {
-        this.mapping = mapping;
-        this.buildFingerprint = buildFingerprint;
+    initialize(mapping: any, buildFingerprint: string) {
+        this.mapping = mapping
+        this.buildFingerprint = buildFingerprint
     }
 
     abstract executeScheduledEvent(): void;
-    abstract executeInputEvent(input: T): R;
+    abstract async executeInputEvent(input: T): Promise<R>;
 
     protected async onError(e: Error) {}
 

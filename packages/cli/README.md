@@ -32,7 +32,7 @@ The Bigband system has three main parts:
 ### Prerequisites
 
 - Have an AWS profile setup on your local machine ([instructions](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html))
-- Optional: have [npx](https://www.npmjs.com/package/npx) installed (if you do not want to use `npx` you can run `bigband` directly via `node_modules/.bin/bigband`)
+- Optional: have [npx](https://www.npmjs.com/package/npx) installed. If you do not want to use `npx` you can run `bigband` directly via `node_modules/.bin/bigband`.
 
 ### Create a folder and Install
 
@@ -45,14 +45,15 @@ mkdir src
 ```
 
 ### Define your bigband
-Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. Don't forget to *replace the placeholder values* (`<YOUR-AWS-ACCOUNT-ID>`, `<YOUR-AWS-PROFILE-NAME>`, and `<A-GUID>`) with your own values.
+Create a `bigband.config.ts` file, as shown below. Place it at the same directory as your `package.json` file. Do not forget to *replace the placeholder values* (`<YOUR-AWS-PROFILE-NAME>`, `<A-GUID>`) with your own values.
+
+> :information_source: Your [AWS profile names](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) are defined in `~/.aws/credentials` (Linux & Mac) or `%USERPROFILE%\.aws\credentials` (Windows).
 
 ```typescript
 import { Bigband, LambdaInstrument, Section } from 'bigband-core';
 
 const bigband = new Bigband({
         name: 'hello-bigband',
-        awsAccount: '<YOUR-AWS-ACCOUNT-ID>',
         profileName: '<YOUR-AWS-PROFILE-NAME>',
         s3BucketGuid: '<A-GUID>'
     });
@@ -84,11 +85,28 @@ export function run() {
 Add an `src/greeter.ts` file, as follows:
 
 ```typescript
-export async function runLambda(context, event, mapping) {
-    return {
-        greeting: `The name is ${event.lastName}, ${event.firstName} ${event.lastName}`
-    };
+import { AbstractController } from 'bigband-lambda';
+
+interface GreeterRequest {
+    firstName?: string
+    lastName?: string
 }
+
+interface GreeterResponse {
+    greeting: string
+}
+
+class GreeterController extends AbstractController<GreeterRequest, GreeterResponse> {
+    executeScheduledEvent(): void {}
+    
+    async executeInputEvent(event: GreeterRequest): Promise<GreeterResponse> {
+        return {
+            greeting: `The name is ${event.lastName}, ${event.firstName} ${event.lastName}`
+        }
+    }
+}
+
+export const controller = new GreeterController()
 ```
 
 This function expects to receive an input with two string fields `lastName`, `firstName`. It generates an output which is an object with a single field, `greeting`.
@@ -107,10 +125,10 @@ Once you run it, deployment will begin. First-time deployments usually take on t
 ```
 $ npx bigband ship eu-west-2/prod
 Shipping section "prod" to eu-west-2
-Compiling misc-greeter
+Compiling myapp-greeter
 Compiling bigband-system-teleport
 Non-teleporting deployment (0.541MB) of bigband-system-teleport
-Non-teleporting deployment (0.002MB) of misc-greeter
+Non-teleporting deployment (0.002MB) of myapp-greeter
 Creating change set
 .
 ..

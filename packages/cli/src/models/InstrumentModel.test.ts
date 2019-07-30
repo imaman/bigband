@@ -14,7 +14,6 @@ import { BigbandModel } from './BigbandModel';
 
 describe('InstrumentModel', () => {
     const b = new Bigband({
-        awsAccount: "a",
         name: "b",
         profileName: "p",
         s3Prefix: "my_prefix",
@@ -22,59 +21,59 @@ describe('InstrumentModel', () => {
     })
 
     describe("validation", () => {
+        function createModel(instrument: LambdaInstrument, section: Section) {
+            const spec: BigbandSpec = {
+                bigband: b,
+                sections: [
+                    {section, instruments: [instrument], wiring: []}
+                ]
+            }
+
+            return new BigbandModel(spec, "_")
+        }
+
         describe("the 'bigband' top level package", () => {
             it("is locked for a non system instrument", () => {
-                const s = new SectionModel(b, new Section("r1", "s1"))
+                const s = new Section("r1", "s1")
                 const instrument = new LambdaInstrument("bigband", "f1", "")
-                const model = new InstrumentModel(b, s, instrument, [], false)
     
-                expect(() => model.validate()).to.throw(
+                expect(() => createModel(instrument, s)).to.throw(
                     'Instrument "bigband-f1" has a bad name: the fully qualified name of an instrument is not allowed to start with "bigband"')
             })
-            it("is locked for a non system instrument also when using the array notation", () => {
-                const s = new SectionModel(b, new Section("r1", "s1"))
+            it("is locked also when using the array notation", () => {
+                const s = new Section("r1", "s1")
                 const instrument = new LambdaInstrument(["bigband"], "f1", "")
-                const model = new InstrumentModel(b, s, instrument, [], false)
-    
-                expect(() => model.validate()).to.throw(
+                // const model = new InstrumentModel(b, s, instrument, [], false)
+
+                expect(() => createModel(instrument, s)).to.throw(
                     'Instrument "bigband-f1" has a bad name: the fully qualified name of an instrument is not allowed to start with "bigband"')
             })    
-            it("is not locked for system instruments", () => {
-                const s = new SectionModel(b, new Section("r1", "s1"))
-                const instrument = new LambdaInstrument(["bigband"], "f1", "")
-                const model = new InstrumentModel(b, s, instrument, [], true)
-    
-                expect(() => model.validate()).not.to.throw()
-            })    
             it("top level package name which starts with 'bigband' is not locked", () => {
-                const s = new SectionModel(b, new Section("r1", "s1"))
+                const s = new Section("r1", "s1")
                 const instrument = new LambdaInstrument(["bigband1111"], "f1", "")
-                const model = new InstrumentModel(b, s, instrument, [], false)
-    
-                expect(() => model.validate()).not.to.throw()
+                const model = createModel(instrument, s)
+                const im = model.getInstrument("r1/s1/bigband1111/f1")
+                expect(() => im.validate()).not.to.throw()
             })    
             it("'bigband' is not locked as a non top-level package name", () => {
-                const s = new SectionModel(b, new Section("r1", "s1"))
-                const instrument = new LambdaInstrument(["abc", "bigband"], "f1", "")
-                const model = new InstrumentModel(b, s, instrument, [], false)
-    
-                expect(() => model.validate()).not.to.throw()
+                const model = createModel(new LambdaInstrument(["abc", "bigband"], "f1", ""),  new Section("r1", "s1"))
+                const im = model.getInstrument("r1/s1/abc/bigband/f1")
+                expect(() => im.validate()).not.to.throw()
             })    
         })
         describe("name", () => {
-            const s = new SectionModel(b, new Section("r1", "s1"))
             function newInstrumentModel(packageName: string[], name: string) {
-                return new InstrumentModel(b, s, new LambdaInstrument(packageName, name, ""), [], false)
+                const s = new Section("r1", "s1")
+                const m = createModel(new LambdaInstrument(packageName, name, ""), s)
+                return m.getInstrument(`r1/s1/${packageName}/${name}`)
             }
 
             it("allows dash-separated sequences of lower-case letters and digits", () => {
-                const model = newInstrumentModel(["p1"], "pqr-st")
-                expect(() => model.validate()).not.to.throw()
+                expect(() => newInstrumentModel(["p1"], "pqr-st").validate()).not.to.throw()
             });
 
             it("rejects upper-case letters", () => {
-                const model = newInstrumentModel(["p1"], "pQr")
-                expect(() => model.validate()).to.throw('Bad instrument name: "p1-pQr')
+                expect(() => newInstrumentModel(["p1"], "pQr")).to.throw('Bad instrument name: "p1-pQr')
             });
         })
     })

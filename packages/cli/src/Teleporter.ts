@@ -30,7 +30,8 @@ export class S3BlobPool {
         const handle: string = toS3FriendlyName(base64);
 
         const s3Ref = new S3Ref(this.s3Bucket, `${this.s3Prefix}/${handle}`);
-        if (await S3Ref.exists(this.factory, s3Ref)) {
+        const exists = await S3Ref.exists(this.factory, s3Ref)
+        if (exists) {
             return {handle, bytesSent: 0};
         }
 

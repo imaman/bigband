@@ -18,14 +18,6 @@ export class Bigband {
     readonly name: string
 
     /**
-     * The AWS account to use for the bigband
-     *
-     * @type {string}
-     * @memberof Bigband
-     */
-    readonly awsAccount: string
-
-    /**
      * The name of an AWS named profile defined on the local machine
      *
      * @type {string}
@@ -43,16 +35,22 @@ export class Bigband {
 
     readonly s3BucketGuid: string
     readonly s3BucketPrefix: string
+    readonly description: string
 
     constructor(init: BigbandInit) {
         this.name = init.name
-        this.awsAccount = init.awsAccount
         this.profileName = init.profileName
         this.s3Prefix = init.s3Prefix || 'bigband-root'
         this.s3BucketGuid = init.s3BucketGuid
         this.s3BucketPrefix = init.s3BucketPrefix || 'npm-bigband'
+        this.description = init.description || 'An unspecified bigband description'
+
+        if (this.s3BucketGuid.startsWith("<")) {
+            throw new Error(`Bad value for s3BucketGuid: "${this.s3BucketGuid}"`)
+        }
 
         // TODO(imaman): check validity of the s3BucketGuid and s3BucketPrefix
+        // TODO(imaman): check length of description
     }
 }
 
@@ -64,13 +62,6 @@ export interface BigbandInit {
      * @memberof BigbandInit
      */
     name: string
-    /**
-     * The AWS account to use for the bigband
-     *
-     * @type {string}
-     * @memberof BigbandInit
-     */
-    awsAccount: string
     /**
      * The name of an AWS named profile defined on the local machine
      *
@@ -88,4 +79,9 @@ export interface BigbandInit {
 
     s3BucketGuid: string
     s3BucketPrefix?: string
+
+    /**
+     * A human-readable text explaining what this bigband is about.
+     */
+    description?: string
 }

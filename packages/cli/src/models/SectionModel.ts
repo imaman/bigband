@@ -3,9 +3,10 @@ import { InstrumentModel } from "./InstrumentModel";
 import { NameValidator } from "../NameValidator";
 import { NavigationNode } from "../NavigationNode";
 import { Role } from "bigband-core";
+import { BigbandModel } from "./BigbandModel";
 
 export class SectionModel {
-    constructor(readonly bigband: Bigband, public readonly section: Section,
+    constructor(readonly bigband: BigbandModel, public readonly section: Section,
             private readonly instruments_: InstrumentModel[] = []) {}
 
     get path(): string {
@@ -17,7 +18,7 @@ export class SectionModel {
     }
 
     get physicalName(): string {
-        return `${this.bigband.name}-${this.section.name}`;
+        return `${this.bigband.bigband.name}-${this.section.name}`;
     }
 
     getInstrumentModel(instrument: Instrument): InstrumentModel {

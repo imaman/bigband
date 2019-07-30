@@ -2,11 +2,10 @@ import { LambdaInstrument, DynamoDbAttributeType, Bigband, DynamoDbInstrument, S
 
 
 const bigband = new Bigband({
-        name: 'bb-example-d30',
-        awsAccount: '196625562809',
+        name: 'bb-example-d38',
         profileName: 'imaman',
         s3Prefix: 'root',
-        s3BucketGuid: '3afcf26f-31a9-4dcb-97ad-d573b2410c33'
+        s3BucketGuid: '070b8d05-2404-4af0-b3a9-98c39592fd40'
     });
 
 const prod = new Section('eu-west-2', 'prod');
@@ -17,11 +16,15 @@ const staging = new Section('eu-west-2', 'staging');
 //     Timeout: 15   
 // });
 
-const placeFinder = new LambdaInstrument('geography', 'place-finder', 'src/geography/placeFinder', {
+const placeFinder = new LambdaInstrument('geography', 'site-finder4', 'src/geography/placeFinder', {
     Description: 'returns names of places that best match the given query',
-    MemorySize: 1024,
-    Timeout: 30      
+    MemorySize: 512,
+    Timeout: 29
 });
+
+const distanceTable = new DynamoDbInstrument('geography', 'distances4', {name: 'dist', type: DynamoDbAttributeType.NUMBER});
+
+
 
 // const healthChecker = new LambdaInstrument('geography', 'health-checker', 'src/geography/healthChecker', {
 //     Description: 'is everything working correctly',
@@ -36,7 +39,6 @@ const placeFinder = new LambdaInstrument('geography', 'place-finder', 'src/geogr
 //         writeCapacityUnits: 1
 //     }
 // });
-const distanceTable = new DynamoDbInstrument('geography', 'distance', {name: 'dist', type: DynamoDbAttributeType.NUMBER});
 
 // const queryStream = new KinesisStreamInstrument('geography', 'query-stream', 1);
 

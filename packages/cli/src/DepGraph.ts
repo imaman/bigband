@@ -1,3 +1,5 @@
+import { logger } from "./logger";
+
 export class DepGraph<T> {
 
     private readonly nodeByName = new Map<string, DepNode<T>>();
@@ -19,11 +21,15 @@ export class DepGraph<T> {
         return toNode;
     }
 
-    getNode(name: string): DepNode<T> {
+    lookup(name: string): DepNode<T>|undefined {
         if (!name) {
             throw new Error('Name cannot be falsy');
         }
-        let ret = this.nodeByName.get(name);
+        return this.nodeByName.get(name);
+    }
+
+    getNode(name: string): DepNode<T> {
+        let ret = this.lookup(name)
         if (ret) {
             return ret;
         }
@@ -50,22 +56,32 @@ export class DepNode<T> {
         this.edges.push({to: child, label});
     }
 
-    dfs(edgeLabelFilter: (string?) => boolean = () => true) {
+    dfs(approver: (n: DepNode<T>) => boolean = () => true) {
         const visited = new Set<DepNode<T>>();
         
-        function run(node: DepNode<T>) {
+        function run(node: DepNode<T>, depth) {
+            if (!approver(node)) {
+                return
+            }
+
             if (visited.has(node)) {
-                return;
+                return
             }
 
             visited.add(node);
+
+            logger.silly('|' + new Array(depth).fill('  ').join('') + node.name)
             for (const curr of node.edges) {
-                if (edgeLabelFilter(curr.label))
-                    run(curr.to);
+                run(curr.to, depth + 1);
             }
         }
 
-        run(this);
+        logger.silly('Starting DFS from ' + (this.name))
+        run(this, 0);
         return [...visited];
+    }
+
+    get neigbhbors(): DepNode<T>[] {
+        return this.edges.map(e => e.to)
     }
 }

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as hash from 'hash.js'
 require('ts-node').register({})
 
-import { AwsFactory } from 'bigband-core'
+import { AwsFactory, DeployableFragment } from 'bigband-core'
 import { BigbandSpec, NameStyle, Instrument, LambdaInstrument } from 'bigband-core';
 import { Packager, PushResult, DeployMode } from './Packager'
 import { DeployableAtom } from 'bigband-core'
@@ -43,6 +43,7 @@ function grantPermission(instrument: Instrument, action: string, arn: string) {
 export interface PushedInstrument {
     s3Ref: S3Ref
     wasPushed: boolean
+    existed: boolean
     physicalName: string
     model: InstrumentModel
 }
@@ -60,7 +61,7 @@ export class BigbandFileRunner {
         private readonly sectionModel: SectionModel, 
         private readonly teleportingEnabled: boolean, 
         private readonly deployMode: DeployMode) {
-            this.awsFactory = CloudProvider.newAwsFactory(this.sectionModel)
+            this.awsFactory = CloudProvider.get(this.sectionModel)
             this.poolPrefix = `${this.ttlPrefix()}/fragments`;
             this.blobPool = new S3BlobPool(this.awsFactory, this.s3Bucket, this.poolPrefix);
             this.teleportInstrument = new LambdaInstrument(['bigband', 'system'], 'teleport', CONTRIVED_IN_FILE_NAME, {
@@ -69,7 +70,7 @@ export class BigbandFileRunner {
                 Timeout: 30
             }).fromNpmPackage(CONTRIVED_NPM_PACAKGE_NAME);
         
-            this.namer = new Namer(bigbandModel.bigband, sectionModel.section)
+            this.namer = new Namer(bigbandModel.bigband, sectionModel.section, bigbandModel.accountId)
     
         }
 
@@ -129,29 +130,31 @@ export class BigbandFileRunner {
         const pushedInstruments = await Promise.all(ps);
     
         const templateBody = this.buildCloudFormationTemplate(pushedInstruments)
-        await cfp.deploy(templateBody, deployablesLocation)
-        const lambda = this.awsFactory.newLambda();
+        await cfp.deploy(templateBody)
     
-        await Promise.all(pushedInstruments.filter(curr => curr.s3Ref.isOk() && curr.wasPushed).map(async curr => {
-            const req: UpdateFunctionCodeRequest = {
-                FunctionName: curr.physicalName,
-                S3Bucket: curr.s3Ref.s3Bucket,
-                S3Key: curr.s3Ref.s3Key
-            };    
-            try {
-                return await lambda.updateFunctionCode(req).promise();
-            } catch (e) {
-                logger.error(`lambda.updateFunctionCode failure (${JSON.stringify(req)})`, e);
-                throw new Error(`Failed to update code of ${curr.physicalName}`);
-            }
-        }));
+        const promises = pushedInstruments
+            .filter(curr => curr.s3Ref.isOk() && curr.wasPushed && curr.existed)
+            .map(async curr => {
+                const req: UpdateFunctionCodeRequest = {
+                    FunctionName: curr.physicalName,
+                    S3Bucket: curr.s3Ref.s3Bucket,
+                    S3Key: curr.s3Ref.s3Key
+                };    
+                try {
+                    return await this.awsFactory.newLambda().updateFunctionCode(req).promise();
+                } catch (e) {
+                    logger.error(`lambda.updateFunctionCode failure (${JSON.stringify(req)})`, e);
+                    throw new Error(`Failed to update code of ${curr.physicalName}`);
+                }
+            })
+        await Promise.all(promises)
     }        
 
     buildCloudFormationTemplate(pushedInstruments: PushedInstrument[]) {
         const ret = {
             AWSTemplateFormatVersion: '2010-09-09',
             Transform: 'AWS::Serverless-2016-10-31',
-            Description: "description goes here",
+            Description: this.bigbandModel.bigband.description,
             Resources: {}
         };
     
@@ -188,6 +191,7 @@ export class BigbandFileRunner {
             return {
                 s3Ref: S3Ref.EMPTY,
                 wasPushed: false,
+                existed: false,
                 physicalName,
                 model: instrumentModel
             }
@@ -199,13 +203,15 @@ export class BigbandFileRunner {
             `${this.bigbandModel.bigband.s3Prefix}/${DEPLOYABLES_FOLDER}/${physicalName}.zip`)
 
         const pushResult: PushResult = await packager.pushToS3(this.namer.resolve(instrument), s3Ref, zb, 
-            this.namer.physicalName(this.teleportInstrument), this.teleportingEnabled, this.deployMode);
+            this.namer.physicalName(this.teleportInstrument), this.teleportingEnabled, this.deployMode,
+            !instrumentModel.isSystemInstrument);
         const resource = def.get();
         resource.Properties.CodeUri = pushResult.deployableLocation.toUri();
     
         return {
             s3Ref: pushResult.deployableLocation,
             wasPushed: pushResult.wasPushed,
+            existed: pushResult.existed,
             physicalName,
             model: instrumentModel
         }
@@ -216,38 +222,39 @@ export class BigbandFileRunner {
         const section = model.section
         const instrument = instrumentModel.instrument
         try {
-            const packager = new Packager(d, npmPackageDir, this.awsFactory, this.blobPool);
             const pathPrefix = 'build';
             logger.info(`Compiling ${instrument.fullyQualifiedName()}`);
-            const frag = instrument.createFragment(pathPrefix);
+            const handlerFragment = instrument.createFragment(`../..`);
+            const packager = new Packager(d, npmPackageDir, this.awsFactory, this.blobPool, handlerFragment);
     
+            const zb: ZipBuilder = await packager.run(instrument.getEntryPointFile(), pathPrefix,
+                    (instrument as LambdaInstrument).getNpmPackage(),
+                    instrumentModel.instrument.fullyQualifiedName());
+    
+            const sha256 = hash.sha256();
+            const fingerprintCalculator = (a: DeployableAtom) => {
+                sha256.update(a.path);
+                sha256.update(a.content);
+            };
+            zb.forEach(fingerprintCalculator);
+
             const mapping = {};
             // TODO(imaman): coverage
             for (const wireModel of instrumentModel.wirings) {
                 mapping[wireModel.name] = {name: wireModel.supplier.physicalName, region: section.region};
             }
-            frag.add(new DeployableAtom('bigband/deps.js', 
+
+            const bigbandFolderFragment = new DeployableFragment()
+            bigbandFolderFragment.add(new DeployableAtom('bigband/deps.js', 
                 `module.exports = ${JSON.stringify(mapping)}`));
-    
-            const sha256 = hash.sha256();
-            const atomConsumer = (a: DeployableAtom) => {
-                sha256.update(a.path);
-                sha256.update(a.content);
-            };
-    
-    
-            const zb: ZipBuilder = await packager.run(
-                instrument.getEntryPointFile(), 
-                pathPrefix, 
-                (instrument as LambdaInstrument).getNpmPackage()) as ZipBuilder;
-            zb.forEach(atomConsumer);
-            frag.forEach(atomConsumer);
+        
+            bigbandFolderFragment.forEach(fingerprintCalculator);
     
             const fp = Buffer.from(sha256.digest()).toString('base64');
-            frag.add(new DeployableAtom('bigband/build_manifest.js',
+            bigbandFolderFragment.add(new DeployableAtom('bigband/build_manifest.js',
                 `module.exports = "${fp}";`));
     
-            zb.importFragment(frag);
+            zb.importFragment(bigbandFolderFragment);
     
             return {zb, packager}
         } catch (e) {
@@ -263,18 +270,19 @@ export class BigbandFileRunner {
     }     
     
     private async createBucketIfNeeded() {
-        const s3Ref = new S3Ref(this.s3Bucket, "")
-        const exists = await S3Ref.exists(this.awsFactory, s3Ref)
-        const s3 = this.awsFactory.newS3();
-        logger.silly("exists=" + exists + ", s3ref=" + s3Ref)
-        if (exists) {
+        const regionA = await S3Ref.getRegion(this.awsFactory, this.s3Bucket)
+        logger.silly(`region of ${this.s3Bucket} is "${regionA}"`)
+
+        const sectionRegion = this.sectionModel.section.region
+        if (regionA === sectionRegion) {
             return
         }
-
+        
+        const s3 = this.awsFactory.newS3();
         const cbr: CreateBucketRequest = {
             Bucket: this.s3Bucket,
             CreateBucketConfiguration: {
-                LocationConstraint: this.sectionModel.section.region
+                LocationConstraint: sectionRegion
             }
         }
         try {
@@ -283,10 +291,10 @@ export class BigbandFileRunner {
         } catch (e) {
             logger.silly("createBucket() failed", e)
             // check existence (again) in case the bucket was just created by someone else
-            const existsNow = await S3Ref.exists(this.awsFactory, s3Ref)
-            logger.silly("existsnow?=" + existsNow)
-            if (!existsNow) {
-                throw new Error(`Failed to create an S3 Bucket (${s3Ref})`)
+            const regionB = await S3Ref.getRegion(this.awsFactory, this.s3Bucket)
+            logger.silly("regionNow=" + regionB)
+            if (regionB !== sectionRegion) {
+                throw new Error(`Failed to create an S3 Bucket ("${this.s3Bucket}" at "${sectionRegion}"`)
             }
         }
     }
@@ -340,8 +348,9 @@ export class BigbandFileRunner {
         } finally {
             // uninstall();
         }
-    
-        return new BigbandModel(bigbandSpec, path.dirname(pathToRequire))
+
+        const accountId = await CloudProvider.getAccountId(bigbandSpec.bigband.profileName)
+        return new BigbandModel(bigbandSpec, path.dirname(pathToRequire), accountId)
     }    
 }
 

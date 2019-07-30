@@ -7,10 +7,9 @@
     "target": "es2015",
     "module": "commonjs",
     "lib": [
-      "es2017",
+      "es2015",
       "dom"
     ],
-    "incremental": true,
     "checkJs": false,
     "outDir": "lib",
   },
