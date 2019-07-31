@@ -44,6 +44,10 @@ describe('BigbandFileRunner', () => {
                 bigbandModel.findSectionModel(instrument.section.path), true, DeployMode.IF_CHANGED)            
             const dir = tmp.dirSync().name
 
+            const nodeModules = path.resolve(dir, 'node_modules')
+            fs.mkdirSync(nodeModules)
+            fs.symlinkSync(path.resolve(__dirname, '../node_modules/@types'), path.resolve(nodeModules, '@types'), 
+                'dir')
             const srcFile = path.resolve(dir, (instrument.instrument as LambdaInstrument).getEntryPointFile() + '.ts')
 
             fs.writeFileSync(srcFile, content)
