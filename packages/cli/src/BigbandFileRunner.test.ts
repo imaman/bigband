@@ -118,10 +118,6 @@ describe('BigbandFileRunner', () => {
                 
                 export const controller = new MyController()
                 `
-            //     export async function runLambda(context, event, mapping, fp) {
-            //         return "context.a=" + context.a + ", event.b=" + event.b
-            //     }
-            // `
             const output = await compileAndRun(spec, "r1/s1/p1/f1", content, {context: {a: 1}, event: {b: 2}})
             expect(JSON.parse(output)).to.eql("context.a=1, event.b=2")
         })
