@@ -44,6 +44,10 @@ describe('BigbandFileRunner', () => {
                 bigbandModel.findSectionModel(instrument.section.path), true, DeployMode.IF_CHANGED)            
             const dir = tmp.dirSync().name
 
+            const nodeModules = path.resolve(dir, 'node_modules')
+            fs.mkdirSync(nodeModules)
+            fs.symlinkSync(path.resolve(__dirname, '../node_modules/@types'), path.resolve(nodeModules, '@types'), 
+                'dir')
             const srcFile = path.resolve(dir, (instrument.instrument as LambdaInstrument).getEntryPointFile() + '.ts')
 
             fs.writeFileSync(srcFile, content)
@@ -93,8 +97,7 @@ describe('BigbandFileRunner', () => {
             return stdout.join('\n').trim()
         }
 
-        // TODO(imaman): unxit
-        xit("compiles", async () => {
+        it.only("compiles", async () => {
             const f1 = new LambdaInstrument("p1", "f1", "file_1")
             
             const spec: BigbandSpec = {
@@ -119,10 +122,6 @@ describe('BigbandFileRunner', () => {
                 
                 export const controller = new MyController()
                 `
-            //     export async function runLambda(context, event, mapping, fp) {
-            //         return "context.a=" + context.a + ", event.b=" + event.b
-            //     }
-            // `
             const output = await compileAndRun(spec, "r1/s1/p1/f1", content, {context: {a: 1}, event: {b: 2}})
             expect(JSON.parse(output)).to.eql("context.a=1, event.b=2")
         })
