@@ -8,7 +8,7 @@ interface LambdaProperties {
   ephemeralStorage?: number
   memorySize?: number
   timeout?: number
-  maxConcurrency?: number
+  maxConcurrency?: number | 'REGIONAL_ACCOUNT_LIMIT'
 }
 
 export class Lambda extends AbstractInstrument {
@@ -55,7 +55,9 @@ export class Lambda extends AbstractInstrument {
         MemorySize: this.properties.memorySize ?? 128,
         Timeout: this.properties.timeout ?? 3,
         EphemeralStorage: { Size: this.properties.ephemeralStorage ?? 512 },
-        // ReservedConcurrentExecutions: this.properties.maxConcurrency ?? 2,
+        ...(this.properties.maxConcurrency === 'REGIONAL_ACCOUNT_LIMIT'
+          ? {}
+          : { ReservedConcurrentExecutions: this.properties.maxConcurrency }),
       },
     }
   }
