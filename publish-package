@@ -1,0 +1,14 @@
+#!/bin/bash
+
+
+set -e
+
+if (( $# != 1 ))
+then
+  echo "Usage: `basename $0` <path-to-module>"
+  exit 1
+fi
+
+cd $1
+yarn publish-package
+
