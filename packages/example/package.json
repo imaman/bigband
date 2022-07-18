@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.354.0",
+    "aws-sdk": "^2.814.0",
     "bigband-lambda": "^0.1.59",
     "byline": "^5.0.0",
     "ellipsize": "^0.1.0",
