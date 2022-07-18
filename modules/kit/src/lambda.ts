@@ -1,21 +1,87 @@
+import { z } from 'zod'
+
 import { AbstractInstrument } from './abstract-instrument'
 import { Resolution } from './instrument'
 import { Role } from './role'
 import { Section } from './section'
 
-interface LambdaProperties {
-  description?: string
-  ephemeralStorage?: number
-  memorySize?: number
-  timeout?: number
-  maxConcurrency?: number | 'REGIONAL_ACCOUNT_LIMIT'
-}
+const LambdaProperties = z.object({
+  description: z.string().optional(),
+  ephemeralStorage: z.number().optional(),
+  memorySize: z.number().optional(),
+  timeout: z.number().optional(),
+  maxConcurrency: z.number().or(z.literal('REGIONAL_ACCOUNT_LIMIT')).optional(),
+})
+type LambdaProperties = z.infer<typeof LambdaProperties>
+
+const LambdaCloudformation = z.object({
+  Architectures: z.string().array().optional(),
+  Code: z.object({
+    ImageUri: z.string().optional(),
+    S3Bucket: z.string().optional(),
+    S3Key: z.string().optional(),
+    S3ObjectVersion: z.string().optional(),
+    ZipFile: z.string().optional(),
+  }),
+  CodeSigningConfigArn: z.string().optional(),
+  DeadLetterConfig: z.object({ TargetArn: z.string() }).optional(),
+  Description: z.string().optional(),
+  Environment: z
+    .object({
+      Variables: z.record(z.string()),
+    })
+    .optional(),
+  EphemeralStorage: z
+    .object({
+      Size: z.number().int().min(512).max(10240),
+    })
+    .optional(),
+  FileSystemConfigs: z
+    .object({
+      Arn: z.string(),
+      LocalMountPath: z.string(),
+    })
+    .array()
+    .optional(),
+  FunctionName: z.string().optional(),
+  Handler: z.string(),
+  ImageConfig: z
+    .object({
+      Command: z.string().array(),
+      EntryPoint: z.string().array(),
+      WorkingDirectory: z.string(),
+    })
+    .optional(),
+  KmsKeyArn: z.string().optional(),
+  Layers: z.string().array().optional(),
+  MemorySize: z.number().int().min(128).max(10240).optional(),
+  PackageType: z.literal('Image').or(z.literal('Zip')).optional(),
+  ReservedConcurrentExecutions: z.number().optional(),
+  Role: z.string(),
+  Runtime: z.string(),
+  Tags: z.string().array().optional(),
+  Timeout: z.number().int().min(0),
+  TracingConfig: z
+    .object({
+      Mode: z.literal('Active').or(z.literal('PassThrough')),
+    })
+    .optional(),
+  VpcConfig: z
+    .object({
+      SecurityGroupIds: z.string().array(),
+      SubnetIds: z.string().array(),
+    })
+    .optional(),
+})
+type LambdaCloudformation = z.infer<typeof LambdaCloudformation>
 
 export class Lambda extends AbstractInstrument {
   readonly role: Role
+  readonly props
 
-  constructor(name: string, private readonly properties: LambdaProperties) {
+  constructor(name: string, props: LambdaProperties) {
     super(name)
+    this.props = LambdaProperties.parse(props)
     this.role = new Role(`${name}-role`, {
       ManagedPolicyArns: ['iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
       AssumeRolePolicyDocument: {
@@ -39,26 +105,28 @@ export class Lambda extends AbstractInstrument {
   }
 
   resolve(section: Section): Resolution {
+    const properties: LambdaCloudformation = {
+      Description: this.props.description,
+      Code: {
+        ZipFile: `exports.handler = function(event, context) { return {} }`,
+      },
+      Role: this.role.arn(section),
+      FunctionName: this.name.qualifiedName(section),
+      Handler: 'index.handler',
+      Runtime: 'nodejs16.x',
+      MemorySize: this.props.memorySize ?? 128,
+      Timeout: this.props.timeout ?? 3,
+      EphemeralStorage: { Size: this.props.ephemeralStorage ?? 512 },
+      ...(this.props.maxConcurrency === 'REGIONAL_ACCOUNT_LIMIT'
+        ? {}
+        : { ReservedConcurrentExecutions: this.props.maxConcurrency }),
+    }
+
     return {
       name: this.name,
       type: 'AWS::Lambda::Function',
       children: [this.role],
-      properties: {
-        Description: this.properties.description,
-        Code: {
-          ZipFile: `exports.handler = function(event, context) { return {} }`,
-        },
-        Role: this.role.arn(section),
-        FunctionName: this.name.qualifiedName(section),
-        Handler: 'index.handler',
-        Runtime: 'nodejs16.x',
-        MemorySize: this.properties.memorySize ?? 128,
-        Timeout: this.properties.timeout ?? 3,
-        EphemeralStorage: { Size: this.properties.ephemeralStorage ?? 512 },
-        ...(this.properties.maxConcurrency === 'REGIONAL_ACCOUNT_LIMIT'
-          ? {}
-          : { ReservedConcurrentExecutions: this.properties.maxConcurrency }),
-      },
+      properties: LambdaCloudformation.parse(properties),
     }
   }
 }
