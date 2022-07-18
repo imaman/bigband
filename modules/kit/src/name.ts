@@ -1,4 +1,4 @@
-import { Section } from './section'
+import { ResolvedSection } from './section'
 
 export class Name {
   constructor(private readonly value: string) {
@@ -13,8 +13,8 @@ export class Name {
     return Name.camelCase(this.value)
   }
 
-  qualifiedName(section: Section) {
-    return `${Name.camelCase(section.sectionName)}-${Name.camelCase(this.value)}`
+  qualifiedName(section: ResolvedSection) {
+    return `${Name.camelCase(section.bigbandName)}-${Name.camelCase(section.sectionName)}-${Name.camelCase(this.value)}`
   }
 
   static camelCase(s: string) {

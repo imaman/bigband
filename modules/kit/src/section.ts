@@ -4,3 +4,7 @@ export interface Section {
   account: string
   sectionName: string
 }
+
+export interface ResolvedSection extends Section {
+  bigbandName: string
+}
