@@ -1,2 +1,6 @@
-node_modules/
-lerna-debug.log
+build-raptor.log
+.build-raptor
+dist
+jest-output.json
+node_modules
+tsconfig.json

@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "inlineSourceMap": true,
+    "newLine": "LF",
+    "declaration": true,
+    "target": "ES2021",
+    "lib": ["ES2021", "DOM"],
+    "strict": true,
+    "noImplicitAny": true,
+    "moduleResolution": "Node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  }
+}
