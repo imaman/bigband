@@ -4,7 +4,6 @@ import * as fs from 'fs'
 import { Bigband } from './bigband'
 import { Lambda } from './lambda'
 import { S3Bucket } from './s3-bucket'
-import { Section } from './section'
 
 function print(...args: unknown[]) {
   console.log(...args) // eslint-disable-line no-console
@@ -18,8 +17,12 @@ async function main() {
   )
   const b = new Bigband([lambda])
 
-  const section: Section = { account: '091530143433', partition: 'aws', region: 'eu-west-1', sectionName: 'green' }
-
+  const section = b.resolveSection({
+    account: '091530143433',
+    partition: 'aws',
+    region: 'eu-west-1',
+    sectionName: 'green',
+  })
   const t = b.resolve(section)
   print(`t=${JSON.stringify(t, null, 2)}`)
 

@@ -5,7 +5,13 @@ import { Role } from '../src/role'
 describe('role', () => {
   test('computes an ARN', async () => {
     const r = new Role('my-role', {})
-    const arn = r.arn({ account: '222244448888', partition: 'aws', region: 'ca-central-4', sectionName: 'red' })
+    const s = new Bigband([]).resolveSection({
+      account: '222244448888',
+      partition: 'aws',
+      region: 'ca-central-4',
+      sectionName: 'red',
+    })
+    const arn = r.arn(s)
     expect(arn).toEqual('arn:aws:iam::222244448888:role/red-myRole')
   })
   describe('resolve', () => {
@@ -43,7 +49,8 @@ describe('role', () => {
 
       const b = new Bigband([r])
 
-      const template = b.resolve({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const template = b.resolve(s)
       expect(template).toEqual({
         Resources: {
           myRole: {
@@ -90,7 +97,8 @@ describe('role', () => {
 
       const b = new Bigband([r])
 
-      const template = b.resolve({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const template = b.resolve(s)
       expect(template).toEqual({
         Resources: {
           myRole: {

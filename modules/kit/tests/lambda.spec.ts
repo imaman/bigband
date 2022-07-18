@@ -7,7 +7,13 @@ describe('lambda', () => {
 
   test('computes an ARN', async () => {
     const l = new Lambda('my-function')
-    const arn = l.arn({ account: '222244448888', partition: 'aws', region: 'ca-central-4', sectionName: 'red' })
+    const s = new Bigband([]).resolveSection({
+      account: '222244448888',
+      partition: 'aws',
+      region: 'ca-central-4',
+      sectionName: 'red',
+    })
+    const arn = l.arn(s)
     expect(arn).toEqual('arn:aws:lambda:ca-central-4:222244448888:function:red-myFunction')
   })
   test('yells if the memory size is below 128', () => {
@@ -20,7 +26,8 @@ describe('lambda', () => {
     test('returns a cloudformation template for a default lambda instrument', async () => {
       const b = new Bigband([new Lambda('my-lambda')])
 
-      const template = b.resolve({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const template = b.resolve(s)
       expect(template).toEqual({
         Resources: {
           myLambda: {
@@ -73,7 +80,8 @@ describe('lambda', () => {
         }),
       ])
 
-      const template = b.resolve({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const template = b.resolve(s)
       expect(template.Resources.myLambda.Properties).toMatchObject({
         Description: 'blah blah',
         EphemeralStorage: {
@@ -86,7 +94,8 @@ describe('lambda', () => {
     test.skip('respects the max concurrency value', async () => {
       const b = new Bigband([new Lambda('my-lambda', loc, { maxConcurrency: 987 })])
 
-      const template = b.resolve({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const template = b.resolve(s)
       expect(template.Resources.myLambda.Properties).toMatchObject({
         ReservedConcurrentExecutions: 987,
       })
@@ -96,12 +105,13 @@ describe('lambda', () => {
         const lambda = new Lambda('my-lambda')
         const b = new Bigband([lambda])
 
-        const template = b.resolve({
+        const s = b.resolveSection({
           account: '22224444',
           region: 'ca-central-3',
           partition: 'aws',
           sectionName: 'foo',
         })
+        const template = b.resolve(s)
         expect(template.Resources.myLambda.Properties).toMatchObject({
           Code: {
             ZipFile: 'exports.handler = function(event, context) { return {} }',
@@ -109,11 +119,16 @@ describe('lambda', () => {
         })
       })
       test('uses the given s3Bucket', () => {
-        const s = { account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' }
         const bucket = new S3Bucket('my-bucket', {})
         const lambda = new Lambda('my-lambda', { bucket, path: 'goo/hoo' })
         const b = new Bigband([lambda])
 
+        const s = b.resolveSection({
+          account: '22224444',
+          region: 'ca-central-3',
+          partition: 'aws',
+          sectionName: 'foo',
+        })
         const template = b.resolve(s)
         expect(template.Resources.myLambda.Properties).toMatchObject({
           Code: {
@@ -129,7 +144,8 @@ describe('lambda', () => {
       const b = new Bigband([lambda, bucket])
       lambda.role.allowedTo(bucket, 's3:PutObject')
 
-      const template = b.resolve({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const template = b.resolve(s)
       expect(template.Resources.myLambda.Properties).toMatchObject({
         // ReservedConcurrentExecutions: 987,
       })
