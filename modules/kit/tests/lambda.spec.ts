@@ -77,7 +77,44 @@ describe('lambda', () => {
         ReservedConcurrentExecutions: 987,
       })
     })
-    test('permissions', async () => {
+    describe('code location', () => {
+      test('defaults to an empty hanlder implementation that is inlined into the template', () => {
+        const lambda = new Lambda('my-lambda', {})
+        const b = new Bigband([lambda])
+
+        const template = b.resolve({
+          account: '22224444',
+          region: 'ca-central-3',
+          partition: 'aws',
+          sectionName: 'foo',
+        })
+        expect(template.Resources.myLambda.Properties).toMatchObject({
+          Code: {
+            ZipFile: 'exports.handler = function(event, context) { return {} }',
+          },
+        })
+      })
+      test('uses the given s3Bucket', () => {
+        const s = { account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' }
+        const bucket = new S3Bucket('my-bucket', {})
+        const lambda = new Lambda('my-lambda', {
+          codeLocation: {
+            S3Bucket: bucket.bucketName(s),
+            S3Key: 'goo/hoo',
+          },
+        })
+        const b = new Bigband([lambda])
+
+        const template = b.resolve(s)
+        expect(template.Resources.myLambda.Properties).toMatchObject({
+          Code: {
+            S3Bucket: 'foo-my-bucket',
+            S3Key: 'goo/hoo',
+          },
+        })
+      })
+    })
+    test.skip('permissions', async () => {
       const bucket = new S3Bucket('my-bucket', {})
       const lambda = new Lambda('my-lambda', { maxConcurrency: 987 })
       const b = new Bigband([lambda, bucket])
