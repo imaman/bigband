@@ -3,17 +3,8 @@ import { z } from 'zod'
 import { AbstractInstrument } from './abstract-instrument'
 import { Resolution } from './instrument'
 import { Role } from './role'
+import { S3Bucket } from './s3-bucket'
 import { Section } from './section'
-
-const s3CodeLocation = z.object({
-  S3Bucket: z
-    .string()
-    .min(3)
-    .max(63)
-    .regex(/^[0-9A-Za-z\.\-_]*(?<!\.)$/),
-  S3Key: z.string().min(1).max(1024),
-  S3ObjectVersion: z.string().optional(),
-})
 
 const Description = z.string().max(256).optional()
 const EphemeralStorageSize = z.number().int().min(512).max(10240)
@@ -26,7 +17,6 @@ const LambdaProperties = z.object({
   memorySize: MemorySize,
   timeout: Timeout,
   maxConcurrency: z.number().or(z.literal('REGIONAL_ACCOUNT_LIMIT')).optional(),
-  codeLocation: s3CodeLocation.optional(),
 })
 type LambdaProperties = z.infer<typeof LambdaProperties>
 
@@ -36,7 +26,17 @@ const CloudformationProperties = z.object({
     .object({
       ImageUri: z.string(),
     })
-    .or(s3CodeLocation)
+    .or(
+      z.object({
+        S3Bucket: z
+          .string()
+          .min(3)
+          .max(63)
+          .regex(/^[0-9A-Za-z\.\-_]*(?<!\.)$/),
+        S3Key: z.string().min(1).max(1024),
+        S3ObjectVersion: z.string().optional(),
+      }),
+    )
     .or(
       z.object({
         ZipFile: z.string(),
@@ -98,13 +98,18 @@ const CloudformationProperties = z.object({
 })
 type CloudformationProperties = z.infer<typeof CloudformationProperties>
 
+interface CodeLocation {
+  readonly bucket: S3Bucket
+  readonly path: string
+}
+
 export class Lambda extends AbstractInstrument {
   readonly role: Role
   readonly props
 
-  constructor(name: string, props: LambdaProperties) {
+  constructor(name: string, private readonly codeLocation?: CodeLocation, props?: LambdaProperties) {
     super(name)
-    this.props = LambdaProperties.parse(props)
+    this.props = LambdaProperties.parse(props ?? {})
     this.role = new Role(`${name}-role`, {
       ManagedPolicyArns: ['iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
       AssumeRolePolicyDocument: {
@@ -130,9 +135,14 @@ export class Lambda extends AbstractInstrument {
   resolve(section: Section): Resolution {
     const properties: CloudformationProperties = {
       Description: this.props.description,
-      Code: this.props.codeLocation ?? {
-        ZipFile: `exports.handler = function(event, context) { return {} }`,
-      },
+      Code: this.codeLocation
+        ? {
+            S3Bucket: this.codeLocation.bucket.bucketName(section),
+            S3Key: this.codeLocation.path,
+          }
+        : {
+            ZipFile: `exports.handler = function(event, context) { return {} }`,
+          },
       Role: this.role.arn(section),
       FunctionName: this.name.qualifiedName(section),
       Handler: 'index.handler',

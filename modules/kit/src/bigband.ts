@@ -1,7 +1,7 @@
 import { Instrument, Resolution } from './instrument'
 import { Section } from './section'
 
-// TODO(imaman): timestream, qldb, ddb, s3-folder(?)
+// TODO(imaman): timestream, qldb, ddb, s3-folder(?), s3-location
 export class Bigband {
   constructor(private readonly instruments: Instrument[]) {}
 

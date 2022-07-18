@@ -85,7 +85,7 @@ describe('role', () => {
     })
     test('permissions', () => {
       const r = new Role('my-role', {})
-      const l = new Lambda('my-lambda', {})
+      const l = new Lambda('my-lambda')
       r.allowedTo(l, 'lambda:invoke')
 
       const b = new Bigband([r])
