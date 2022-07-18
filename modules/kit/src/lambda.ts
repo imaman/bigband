@@ -4,7 +4,7 @@ import { AbstractInstrument } from './abstract-instrument'
 import { Resolution } from './instrument'
 import { Role } from './role'
 import { S3Bucket } from './s3-bucket'
-import { Section } from './section'
+import { ResolvedSection, Section } from './section'
 
 const Description = z.string().max(256).optional()
 const EphemeralStorageSize = z.number().int().min(512).max(10240)
@@ -132,7 +132,7 @@ export class Lambda extends AbstractInstrument {
     return { serviceName: 'lambda', resourceType: 'function', resourceId: `:${this.name.qualifiedName(s)}` }
   }
 
-  resolve(section: Section): Resolution {
+  resolve(section: ResolvedSection): Resolution {
     const properties: CloudformationProperties = {
       Description: this.props.description,
       Code: this.codeLocation

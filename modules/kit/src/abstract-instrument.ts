@@ -1,6 +1,6 @@
 import { Instrument, Resolution } from './instrument'
 import { Name } from './name'
-import { Section } from './section'
+import { ResolvedSection } from './section'
 
 export interface ArnDetails {
   serviceName: string
@@ -17,15 +17,15 @@ export abstract class AbstractInstrument implements Instrument {
   constructor(name: string) {
     this.name = new Name(name)
   }
-  abstract resolve(section: Section): Resolution
+  abstract resolve(section: ResolvedSection): Resolution
 
-  abstract getArnDetails(s: Section): ArnDetails
+  abstract getArnDetails(s: ResolvedSection): ArnDetails
 
   get resourceName() {
     return this.name.resourceName
   }
 
-  arn(s: Section): string {
+  arn(s: ResolvedSection): string {
     const d = this.getArnDetails(s)
     const suffix = d.resourceId ? `${d.resourceId}` : ''
     return `arn:${s.partition}:${d.serviceName}:${d.region ?? s.region}:${d.account ?? s.account}:${

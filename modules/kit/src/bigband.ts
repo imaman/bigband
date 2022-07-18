@@ -1,11 +1,11 @@
 import { Instrument, Resolution } from './instrument'
-import { Section } from './section'
+import { ResolvedSection, Section } from './section'
 
 // TODO(imaman): timestream, qldb, ddb, s3-folder(?), s3-location
 export class Bigband {
   constructor(private readonly instruments: Instrument[]) {}
 
-  resolve(section: Section) {
+  resolve(section: ResolvedSection) {
     const resolutions: Resolution[] = []
     for (const at of this.instruments) {
       this.resolveInstrument(section, at, resolutions)
@@ -28,11 +28,18 @@ export class Bigband {
     }
   }
 
-  private resolveInstrument(section: Section, instrument: Instrument, resolutions: Resolution[]) {
+  private resolveInstrument(section: ResolvedSection, instrument: Instrument, resolutions: Resolution[]) {
     const r = instrument.resolve(section)
     resolutions.push(r)
     for (const at of r.children ?? []) {
       this.resolveInstrument(section, at, resolutions)
+    }
+  }
+
+  resolveSection(s: Section): ResolvedSection {
+    return {
+      ...s,
+      bigbandName: 'TBD',
     }
   }
 }

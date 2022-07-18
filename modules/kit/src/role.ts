@@ -1,6 +1,6 @@
 import { AbstractInstrument } from './abstract-instrument'
 import { Instrument, Resolution } from './instrument'
-import { Section } from './section'
+import { ResolvedSection, Section } from './section'
 
 interface RoleProperties {
   ManagedPolicyArns?: string[]
@@ -52,7 +52,7 @@ export class Role extends AbstractInstrument {
     this.permissions.push([instrument, action])
   }
 
-  private computePolicy(section: Section): Policy | undefined {
+  private computePolicy(section: ResolvedSection): Policy | undefined {
     if (!this.permissions.length) {
       return undefined
     }
@@ -72,7 +72,7 @@ export class Role extends AbstractInstrument {
     }
   }
 
-  resolve(section: Section): Resolution {
+  resolve(section: ResolvedSection): Resolution {
     const d = this.properties.AssumeRolePolicyDocument
     const p = this.computePolicy(section)
     const mpas = this.properties.ManagedPolicyArns?.map(x => `arn:${section.partition}:${x}`) ?? []
