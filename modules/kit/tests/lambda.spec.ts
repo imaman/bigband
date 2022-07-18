@@ -7,7 +7,7 @@ describe('lambda', () => {
 
   test('computes an ARN', async () => {
     const l = new Lambda('my-function')
-    const s = new Bigband([]).resolveSection({
+    const s = new Bigband('b', []).resolveSection({
       account: '222244448888',
       partition: 'aws',
       region: 'ca-central-4',
@@ -24,7 +24,7 @@ describe('lambda', () => {
   })
   describe('resolve', () => {
     test('returns a cloudformation template for a default lambda instrument', async () => {
-      const b = new Bigband([new Lambda('my-lambda')])
+      const b = new Bigband('b', [new Lambda('my-lambda')])
 
       const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
       const template = b.resolve(s)
@@ -71,7 +71,7 @@ describe('lambda', () => {
       })
     })
     test('respects properties', async () => {
-      const b = new Bigband([
+      const b = new Bigband('b', [
         new Lambda('my-lambda', loc, {
           description: 'blah blah',
           ephemeralStorage: 2048,
@@ -92,7 +92,7 @@ describe('lambda', () => {
       })
     })
     test.skip('respects the max concurrency value', async () => {
-      const b = new Bigband([new Lambda('my-lambda', loc, { maxConcurrency: 987 })])
+      const b = new Bigband('b', [new Lambda('my-lambda', loc, { maxConcurrency: 987 })])
 
       const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
       const template = b.resolve(s)
@@ -103,7 +103,7 @@ describe('lambda', () => {
     describe('code location', () => {
       test('defaults to an empty hanlder implementation that is inlined into the template', () => {
         const lambda = new Lambda('my-lambda')
-        const b = new Bigband([lambda])
+        const b = new Bigband('b', [lambda])
 
         const s = b.resolveSection({
           account: '22224444',
@@ -121,7 +121,7 @@ describe('lambda', () => {
       test('uses the given s3Bucket', () => {
         const bucket = new S3Bucket('my-bucket', {})
         const lambda = new Lambda('my-lambda', { bucket, path: 'goo/hoo' })
-        const b = new Bigband([lambda])
+        const b = new Bigband('b', [lambda])
 
         const s = b.resolveSection({
           account: '22224444',
@@ -141,7 +141,7 @@ describe('lambda', () => {
     test.skip('permissions', async () => {
       const bucket = new S3Bucket('my-bucket', {})
       const lambda = new Lambda('my-lambda')
-      const b = new Bigband([lambda, bucket])
+      const b = new Bigband('b', [lambda, bucket])
       lambda.role.allowedTo(bucket, 's3:PutObject')
 
       const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })

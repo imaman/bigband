@@ -15,7 +15,7 @@ async function main() {
     { bucket: new S3Bucket('aaaa', {}), path: 'bbbb' },
     { maxConcurrency: 'REGIONAL_ACCOUNT_LIMIT' },
   )
-  const b = new Bigband([lambda])
+  const b = new Bigband('b', [lambda])
 
   const section = b.resolveSection({
     account: '091530143433',

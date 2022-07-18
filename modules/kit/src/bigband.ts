@@ -3,7 +3,7 @@ import { ResolvedSection, Section } from './section'
 
 // TODO(imaman): timestream, qldb, ddb, s3-folder(?), s3-location
 export class Bigband {
-  constructor(private readonly instruments: Instrument[]) {}
+  constructor(private readonly name: string, private readonly instruments: Instrument[]) {}
 
   resolve(section: ResolvedSection) {
     const resolutions: Resolution[] = []

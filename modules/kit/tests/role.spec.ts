@@ -5,7 +5,7 @@ import { Role } from '../src/role'
 describe('role', () => {
   test('computes an ARN', async () => {
     const r = new Role('my-role', {})
-    const s = new Bigband([]).resolveSection({
+    const s = new Bigband('boo', []).resolveSection({
       account: '222244448888',
       partition: 'aws',
       region: 'ca-central-4',
@@ -47,7 +47,7 @@ describe('role', () => {
         ],
       })
 
-      const b = new Bigband([r])
+      const b = new Bigband('boo', [r])
 
       const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
       const template = b.resolve(s)
@@ -95,7 +95,7 @@ describe('role', () => {
       const l = new Lambda('my-lambda')
       r.allowedTo(l, 'lambda:invoke')
 
-      const b = new Bigband([r])
+      const b = new Bigband('boo', [r])
 
       const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
       const template = b.resolve(s)
