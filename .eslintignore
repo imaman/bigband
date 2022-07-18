@@ -1,0 +1,4 @@
+!.eslintrc.js
+!.huskyrc.js
+**/node_modules/*
+**/dist/*

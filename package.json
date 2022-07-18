@@ -1,7 +1,47 @@
 {
-  "name": "root",
+  "name": "bigband-root",
+  "version": "1.0.0",
   "private": true,
+  "description": "bigband monorepo",
+  "keywords": [],
+  "license": "ISC",
+  "author": "imaman",
+  "workspaces": [
+    "modules/*"
+  ],
+  "scripts": {
+    "build": "build-raptor build --compact",
+    "lint": "eslint --max-warnings 0 'modules/*/**/*.{ts,js,json,d.ts}'",
+    "sort-package-json": "sort-package-json 'modules/*/package.json' 'package.json'",
+    "test": "build-raptor test --compact"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn lint-staged && yarn pretty-quick --staged",
+      "pre-push": "syncpack list-mismatches && npm run build"
+    }
+  },
   "devDependencies": {
-    "lerna": "^3.15.0"
+    "@types/jest": "^26.0.14",
+    "@typescript-eslint/eslint-plugin": "^5.7.0",
+    "@typescript-eslint/parser": "^5.7.0",
+    "build-raptor": "0.8.0",
+    "eslint": "^8.4.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-jest": "^25.3.0",
+    "eslint-plugin-json": "^3.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "eslint-plugin-unused-imports": "^2.0.0",
+    "globby": "^11.0.0",
+    "husky": "^4.2.1",
+    "jest": "26.4.2",
+    "lint-staged": "^12.1.2",
+    "prettier": "^2.5.1",
+    "pretty-quick": "^1.11.0",
+    "sort-package-json": "^1.53.1",
+    "source-map-support": "^0.5.16",
+    "syncpack": "^5.0.1",
+    "typescript": "^4.5.2"
   }
 }
