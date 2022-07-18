@@ -5,8 +5,14 @@ import { Role } from '../src/role'
 describe('role', () => {
   test('computes an ARN', async () => {
     const r = new Role('my-role', {})
-    const arn = r.arn({ account: '222244448888', partition: 'aws', region: 'ca-central-4', sectionName: 'red' })
-    expect(arn).toEqual('arn:aws:iam::222244448888:role/red-myRole')
+    const s = new Bigband('boo', []).resolveSection({
+      account: '222244448888',
+      partition: 'aws',
+      region: 'ca-central-4',
+      sectionName: 'red',
+    })
+    const arn = r.arn(s)
+    expect(arn).toEqual('arn:aws:iam::222244448888:role/boo-red-myRole')
   })
   describe('resolve', () => {
     test('returns a cloudformation template', () => {
@@ -41,15 +47,16 @@ describe('role', () => {
         ],
       })
 
-      const b = new Bigband([r])
+      const b = new Bigband('boo', [r])
 
-      const template = b.resolve({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const template = b.resolve(s)
       expect(template).toEqual({
         Resources: {
           myRole: {
             Type: 'AWS::IAM::Role',
             Properties: {
-              RoleName: 'foo-myRole',
+              RoleName: 'boo-foo-myRole',
               AssumeRolePolicyDocument: {
                 Statement: [
                   {
@@ -85,18 +92,19 @@ describe('role', () => {
     })
     test('permissions', () => {
       const r = new Role('my-role', {})
-      const l = new Lambda('my-lambda', {})
+      const l = new Lambda('my-lambda')
       r.allowedTo(l, 'lambda:invoke')
 
-      const b = new Bigband([r])
+      const b = new Bigband('boo', [r])
 
-      const template = b.resolve({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const s = b.resolveSection({ account: '22224444', region: 'ca-central-3', partition: 'aws', sectionName: 'foo' })
+      const template = b.resolve(s)
       expect(template).toEqual({
         Resources: {
           myRole: {
             Type: 'AWS::IAM::Role',
             Properties: {
-              RoleName: 'foo-myRole',
+              RoleName: 'boo-foo-myRole',
               Policies: [
                 {
                   PolicyDocument: {
@@ -104,7 +112,7 @@ describe('role', () => {
                       {
                         Action: 'lambda:invoke',
                         Effect: 'Allow',
-                        Resource: 'arn:aws:lambda:ca-central-3:22224444:function:foo-myLambda',
+                        Resource: 'arn:aws:lambda:ca-central-3:22224444:function:boo-foo-myLambda',
                       },
                     ],
                     Version: '2012-10-17',

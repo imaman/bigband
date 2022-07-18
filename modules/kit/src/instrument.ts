@@ -1,5 +1,5 @@
 import { Name } from './name'
-import { Section } from './section'
+import { ResolvedSection } from './section'
 
 export interface Resolution {
   name: Name
@@ -10,7 +10,7 @@ export interface Resolution {
 }
 
 export interface Instrument {
-  resolve(section: Section): Resolution
-  arn(section: Section): string
+  resolve(section: ResolvedSection): Resolution
+  arn(section: ResolvedSection): string
   get resourceName(): string
 }
