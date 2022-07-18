@@ -14,7 +14,7 @@ const LambdaProperties = z.object({
 })
 type LambdaProperties = z.infer<typeof LambdaProperties>
 
-const LambdaCloudformation = z.object({
+const CloudformationProperties = z.object({
   Architectures: z.string().array().optional(),
   Code: z
     .object({
@@ -90,7 +90,7 @@ const LambdaCloudformation = z.object({
     })
     .optional(),
 })
-type LambdaCloudformation = z.infer<typeof LambdaCloudformation>
+type CloudformationProperties = z.infer<typeof CloudformationProperties>
 
 export class Lambda extends AbstractInstrument {
   readonly role: Role
@@ -122,7 +122,7 @@ export class Lambda extends AbstractInstrument {
   }
 
   resolve(section: Section): Resolution {
-    const properties: LambdaCloudformation = {
+    const properties: CloudformationProperties = {
       Description: this.props.description,
       Code: {
         ZipFile: `exports.handler = function(event, context) { return {} }`,
@@ -143,7 +143,7 @@ export class Lambda extends AbstractInstrument {
       name: this.name,
       type: 'AWS::Lambda::Function',
       children: [this.role],
-      properties: LambdaCloudformation.parse(properties),
+      properties: CloudformationProperties.parse(properties),
     }
   }
 }
