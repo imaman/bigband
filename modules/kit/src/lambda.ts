@@ -4,7 +4,7 @@ import { AbstractInstrument } from './abstract-instrument'
 import { Resolution } from './instrument'
 import { Role } from './role'
 import { S3Bucket } from './s3-bucket'
-import { ResolvedSection, Section } from './section'
+import { ResolvedSection } from './section'
 
 const Description = z.string().max(256).optional()
 const EphemeralStorageSize = z.number().int().min(512).max(10240)
@@ -128,7 +128,7 @@ export class Lambda extends AbstractInstrument {
   }
 
   // "arn:aws:lambda:eu-central-1:222244448888:function:my-function",
-  getArnDetails(s: Section) {
+  getArnDetails(s: ResolvedSection) {
     return { serviceName: 'lambda', resourceType: 'function', resourceId: `:${this.name.qualifiedName(s)}` }
   }
 

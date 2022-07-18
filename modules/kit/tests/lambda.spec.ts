@@ -7,14 +7,14 @@ describe('lambda', () => {
 
   test('computes an ARN', async () => {
     const l = new Lambda('my-function')
-    const s = new Bigband('b', []).resolveSection({
+    const s = new Bigband('yellow-submarine', []).resolveSection({
       account: '222244448888',
       partition: 'aws',
       region: 'ca-central-4',
       sectionName: 'red',
     })
     const arn = l.arn(s)
-    expect(arn).toEqual('arn:aws:lambda:ca-central-4:222244448888:function:red-myFunction')
+    expect(arn).toEqual('arn:aws:lambda:ca-central-4:222244448888:function:yellowSubmarine-red-myFunction')
   })
   test('yells if the memory size is below 128', () => {
     expect(() => new Lambda('my-lambda', loc, { memorySize: 127 })).toThrowError(
@@ -37,8 +37,8 @@ describe('lambda', () => {
               Code: {
                 ZipFile: 'exports.handler = function(event, context) { return {} }',
               },
-              Role: 'arn:aws:iam::22224444:role/foo-myLambdaRole',
-              FunctionName: 'foo-myLambda',
+              Role: 'arn:aws:iam::22224444:role/b-foo-myLambdaRole',
+              FunctionName: 'b-foo-myLambda',
               Handler: 'index.handler',
               Runtime: 'nodejs16.x',
               Timeout: 3,
@@ -51,7 +51,7 @@ describe('lambda', () => {
           myLambdaRole: {
             Type: 'AWS::IAM::Role',
             Properties: {
-              RoleName: 'foo-myLambdaRole',
+              RoleName: 'b-foo-myLambdaRole',
               AssumeRolePolicyDocument: {
                 Statement: [
                   {

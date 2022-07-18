@@ -1,6 +1,6 @@
 import { AbstractInstrument } from './abstract-instrument'
 import { Instrument, Resolution } from './instrument'
-import { ResolvedSection, Section } from './section'
+import { ResolvedSection } from './section'
 
 interface RoleProperties {
   ManagedPolicyArns?: string[]
@@ -90,7 +90,7 @@ export class Role extends AbstractInstrument {
   }
 
   // "arn:aws:iam::222244448888:role/foo-goo-hoo",
-  getArnDetails(s: Section) {
+  getArnDetails(s: ResolvedSection) {
     return { serviceName: 'iam', region: '', resourceType: 'role', resourceId: `/${this.name.qualifiedName(s)}` }
   }
 }
