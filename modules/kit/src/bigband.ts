@@ -39,7 +39,7 @@ export class Bigband {
   resolveSection(s: Section): ResolvedSection {
     return {
       ...s,
-      bigbandName: 'TBD',
+      bigbandName: this.name,
     }
   }
 }
