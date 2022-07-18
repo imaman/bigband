@@ -1,0 +1,62 @@
+#!/bin/bash
+
+
+set -e
+
+if (( $# != 1 ))
+then
+  echo "Usage: `basename $0` <package-name>"
+  exit 1
+fi
+
+
+
+module_name=$1
+
+d0=`dirname $0`
+resolved=`readlink -f "$d0"`
+cd $resolved
+
+mkdir "modules/$module_name"
+cd "modules/$module_name"
+mkdir src tests
+cat > package.json <<EOF
+{
+  "name": "$module_name",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "author": "",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "jest"
+  },
+  "jest": {
+    "preset": "../../jest.preset.js"
+  },
+  "dependencies": {
+  }
+}
+EOF
+
+
+cat > src/index.ts <<EOF
+export * from './$module_name'
+EOF
+
+cat > src/$1.ts <<EOF
+export function foo() {
+
+}
+EOF
+
+cat > tests/$1.spec.ts <<EOF
+describe("$1", () => {
+  test('foo', async () => {
+    expect(5).toEqual(5)
+  })
+})
+EOF
+
+yarn
