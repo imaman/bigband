@@ -8,6 +8,12 @@ describe('lambda', () => {
     const arn = l.arn({ account: '222244448888', partition: 'aws', region: 'ca-central-4', sectionName: 'red' })
     expect(arn).toEqual('arn:aws:lambda:ca-central-4:222244448888:function:red-myFunction')
   })
+  test('yells if the memory size is below 128', () => {
+    expect(() => new Lambda('my-lambda', { memorySize: 127 })).toThrowError(
+      'Number must be greater than or equal to 128',
+    )
+    expect(() => new Lambda('my-lambda', { memorySize: 128 })).not.toThrow()
+  })
   describe('resolve', () => {
     test('returns a cloudformation template', async () => {
       const b = new Bigband([

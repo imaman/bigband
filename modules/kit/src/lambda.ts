@@ -15,11 +15,16 @@ const s3CodeLocation = z.object({
   S3ObjectVersion: z.string().optional(),
 })
 
+const Description = z.string().max(256).optional()
+const EphemeralStorageSize = z.number().int().min(512).max(10240)
+const MemorySize = z.number().int().min(128).max(10240).optional()
+const Timeout = z.number().int().min(0).optional()
+
 const LambdaProperties = z.object({
-  description: z.string().optional(),
-  ephemeralStorage: z.number().optional(),
-  memorySize: z.number().optional(),
-  timeout: z.number().optional(),
+  description: Description,
+  ephemeralStorage: EphemeralStorageSize.optional(),
+  memorySize: MemorySize,
+  timeout: Timeout,
   maxConcurrency: z.number().or(z.literal('REGIONAL_ACCOUNT_LIMIT')).optional(),
   codeLocation: s3CodeLocation.optional(),
 })
@@ -39,7 +44,7 @@ const CloudformationProperties = z.object({
     ),
   CodeSigningConfigArn: z.string().max(200).optional(),
   DeadLetterConfig: z.object({ TargetArn: z.string() }).optional(),
-  Description: z.string().max(256).optional(),
+  Description,
   Environment: z
     .object({
       Variables: z.record(z.string()),
@@ -47,7 +52,7 @@ const CloudformationProperties = z.object({
     .optional(),
   EphemeralStorage: z
     .object({
-      Size: z.number().int().min(512).max(10240),
+      Size: EphemeralStorageSize,
     })
     .optional(),
   FileSystemConfigs: z
@@ -69,7 +74,7 @@ const CloudformationProperties = z.object({
     .optional(),
   KmsKeyArn: z.string().optional(),
   Layers: z.string().array().optional(),
-  MemorySize: z.number().int().min(128).max(10240).optional(),
+  MemorySize,
   PackageType: z.literal('Image').or(z.literal('Zip')).optional(),
   ReservedConcurrentExecutions: z.number().optional(),
   Role: z.string(),
@@ -78,7 +83,7 @@ const CloudformationProperties = z.object({
     .object({ Key: z.string().max(128), Value: z.string().max(256) })
     .array()
     .optional(),
-  Timeout: z.number().int().min(0),
+  Timeout,
   TracingConfig: z
     .object({
       Mode: z.literal('Active').or(z.literal('PassThrough')),
