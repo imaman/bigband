@@ -16,16 +16,29 @@ type LambdaProperties = z.infer<typeof LambdaProperties>
 
 const LambdaCloudformation = z.object({
   Architectures: z.string().array().optional(),
-  Code: z.object({
-    ImageUri: z.string().optional(),
-    S3Bucket: z.string().optional(),
-    S3Key: z.string().optional(),
-    S3ObjectVersion: z.string().optional(),
-    ZipFile: z.string().optional(),
-  }),
-  CodeSigningConfigArn: z.string().optional(),
+  Code: z
+    .object({
+      ImageUri: z.string(),
+    })
+    .or(
+      z.object({
+        S3Bucket: z
+          .string()
+          .min(3)
+          .max(63)
+          .regex(/^[0-9A-Za-z\.\-_]*(?<!\.)$/),
+        S3Key: z.string().min(1).max(1024),
+        S3ObjectVersion: z.string().optional(),
+      }),
+    )
+    .or(
+      z.object({
+        ZipFile: z.string(),
+      }),
+    ),
+  CodeSigningConfigArn: z.string().max(200).optional(),
   DeadLetterConfig: z.object({ TargetArn: z.string() }).optional(),
-  Description: z.string().optional(),
+  Description: z.string().max(256).optional(),
   Environment: z
     .object({
       Variables: z.record(z.string()),
@@ -42,9 +55,10 @@ const LambdaCloudformation = z.object({
       LocalMountPath: z.string(),
     })
     .array()
+    .max(1)
     .optional(),
   FunctionName: z.string().optional(),
-  Handler: z.string(),
+  Handler: z.string().max(128),
   ImageConfig: z
     .object({
       Command: z.string().array(),
@@ -59,7 +73,10 @@ const LambdaCloudformation = z.object({
   ReservedConcurrentExecutions: z.number().optional(),
   Role: z.string(),
   Runtime: z.string(),
-  Tags: z.string().array().optional(),
+  Tags: z
+    .object({ Key: z.string().max(128), Value: z.string().max(256) })
+    .array()
+    .optional(),
   Timeout: z.number().int().min(0),
   TracingConfig: z
     .object({
