@@ -7,10 +7,14 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc -b",
+    "publish-package": "yarn build && pack.sh",
     "test": "jest"
   },
   "jest": {
     "preset": "../../jest.preset.js"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  }
 }
