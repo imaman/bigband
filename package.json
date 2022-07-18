@@ -1,8 +1,8 @@
 {
-  "name": "antelope-root",
+  "name": "bigband-root",
   "version": "1.0.0",
   "private": true,
-  "description": "monorepo a of moojo-tech",
+  "description": "bigband monorepo",
   "keywords": [],
   "license": "ISC",
   "author": "imaman",
