@@ -5,12 +5,23 @@ import { Resolution } from './instrument'
 import { Role } from './role'
 import { Section } from './section'
 
+const s3CodeLocation = z.object({
+  S3Bucket: z
+    .string()
+    .min(3)
+    .max(63)
+    .regex(/^[0-9A-Za-z\.\-_]*(?<!\.)$/),
+  S3Key: z.string().min(1).max(1024),
+  S3ObjectVersion: z.string().optional(),
+})
+
 const LambdaProperties = z.object({
   description: z.string().optional(),
   ephemeralStorage: z.number().optional(),
   memorySize: z.number().optional(),
   timeout: z.number().optional(),
   maxConcurrency: z.number().or(z.literal('REGIONAL_ACCOUNT_LIMIT')).optional(),
+  codeLocation: s3CodeLocation.optional(),
 })
 type LambdaProperties = z.infer<typeof LambdaProperties>
 
@@ -20,17 +31,7 @@ const CloudformationProperties = z.object({
     .object({
       ImageUri: z.string(),
     })
-    .or(
-      z.object({
-        S3Bucket: z
-          .string()
-          .min(3)
-          .max(63)
-          .regex(/^[0-9A-Za-z\.\-_]*(?<!\.)$/),
-        S3Key: z.string().min(1).max(1024),
-        S3ObjectVersion: z.string().optional(),
-      }),
-    )
+    .or(s3CodeLocation)
     .or(
       z.object({
         ZipFile: z.string(),
@@ -124,7 +125,7 @@ export class Lambda extends AbstractInstrument {
   resolve(section: Section): Resolution {
     const properties: CloudformationProperties = {
       Description: this.props.description,
-      Code: {
+      Code: this.props.codeLocation ?? {
         ZipFile: `exports.handler = function(event, context) { return {} }`,
       },
       Role: this.role.arn(section),
