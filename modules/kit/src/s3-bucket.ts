@@ -2,7 +2,9 @@ import { AbstractInstrument, ArnDetails } from './abstract-instrument'
 import { Resolution } from './instrument'
 import { Section } from './section'
 
-interface S3BucketProperties {}
+interface S3BucketProperties {
+  isExactName?: boolean
+}
 
 export class S3Bucket extends AbstractInstrument {
   constructor(name: string, private readonly properties: S3BucketProperties) {
@@ -18,6 +20,9 @@ export class S3Bucket extends AbstractInstrument {
   }
 
   bucketName(s: Section) {
+    if (this.properties.isExactName) {
+      return this.name.parts.join('-')
+    }
     return `${s.sectionName}-${this.name.parts.join('-')}`
   }
 

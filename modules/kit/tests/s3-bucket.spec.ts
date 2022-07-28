@@ -3,15 +3,25 @@ import { S3Bucket } from '../src/s3-bucket'
 
 describe('s3-bucket', () => {
   test('computes an ARN', async () => {
-    const l = new S3Bucket('my-bucket', {})
+    const bucket = new S3Bucket('my-bucket', {})
     const s = new Bigband('boo', []).resolveSection({
       account: '222244448888',
       partition: 'aws',
       region: 'ca-central-4',
       sectionName: 'red',
     })
-    const arn = l.arn(s)
+    const arn = bucket.arn(s)
     expect(arn).toEqual('arn:aws:s3:::red-my-bucket')
+  })
+  test('exact name', async () => {
+    const s = new Bigband('boo', []).resolveSection({
+      account: '222244448888',
+      partition: 'aws',
+      region: 'ca-central-4',
+      sectionName: 'red',
+    })
+    expect(new S3Bucket('my-bucket', {}).bucketName(s)).toEqual('red-my-bucket')
+    expect(new S3Bucket('my-bucket', { isExactName: true }).bucketName(s)).toEqual('my-bucket')
   })
   describe('resolve', () => {
     test('returns a cloudformation template', async () => {
