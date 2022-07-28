@@ -18,9 +18,9 @@ describe('s3-bucket', () => {
       account: '222244448888',
       partition: 'aws',
       region: 'ca-central-4',
-      sectionName: 'red',
+      sectionName: 'RED',
     })
-    expect(new S3Bucket('my-bucket', {}).bucketName(s)).toEqual('red-my-bucket')
+    expect(new S3Bucket('my-bucket', {}).bucketName(s)).toEqual('RED-my-bucket')
     expect(new S3Bucket('my-bucket', { isExactName: true }).bucketName(s)).toEqual('my-bucket')
   })
   describe('resolve', () => {
