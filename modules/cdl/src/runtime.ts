@@ -36,9 +36,9 @@ export class Runtime {
     return this.lambda()
   }
 
-  lamba(): Value {
+  lambda(): Value {
     if (this.parser.consumeIf('fun')) {
-      
+      //
     }
 
     return this.or()
