@@ -26,9 +26,20 @@ export class Runtime {
   }
 
   and(): Value {
-    const lhs = this.addition()
+    const lhs = this.equality()
     if (this.parser.consumeIf('&&')) {
       return lhs.and(this.and())
+    }
+    return lhs
+  }
+
+  equality(): Value {
+    const lhs = this.addition()
+    if (this.parser.consumeIf('==')) {
+      return lhs.equalsTo(this.equality())
+    }
+    if (this.parser.consumeIf('!=')) {
+      return lhs.equalsTo(this.equality()).negate()
     }
     return lhs
   }

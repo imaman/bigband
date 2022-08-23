@@ -42,6 +42,15 @@ export class Value {
     throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
   }
 
+  equalsTo(that: Value) {
+    if (this.inner.tag !== that.inner.tag) {
+      return new Value(false)
+    }
+
+    const b = JSON.stringify(this.inner.val) === JSON.stringify(that.inner.val)
+    return new Value(b)
+  }
+
   not() {
     if (this.inner.tag === 'bool') {
       return new Value(!this.inner.val)
