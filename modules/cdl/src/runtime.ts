@@ -33,6 +33,14 @@ export class Runtime {
 
   expression(): Value {
     this.definitions()
+    return this.lambda()
+  }
+
+  lamba(): Value {
+    if (this.parser.consumeIf('fun')) {
+      
+    }
+
     return this.or()
   }
 
