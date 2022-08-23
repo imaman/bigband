@@ -3,12 +3,12 @@ import * as cdl from '../src/cdl'
 describe('cdl', () => {
   test('basics', () => {
     expect(cdl.parse(`5`)).toEqual(5)
+    expect(cdl.parse(`3.14`)).toEqual(3.14)
   })
 
   test.skip('basics plus', () => {
     expect(cdl.parse(`{}`)).toEqual({})
     expect(cdl.parse(`'ab'`)).toEqual('ab')
-    expect(cdl.parse(`3.14`)).toEqual(3.14)
   })
   test.skip('expressions', () => {
     expect(cdl.parse(`3+1`)).toEqual(4)
@@ -25,6 +25,8 @@ describe('cdl', () => {
   test.skip('variables', () => {
     expect(cdl.parse(`let x = 2; x+5`)).toEqual(7)
   })
+  test.todo('number in scientific notation')
+  test.todo('negative number')
   test.todo('lambda expressions')
   test.todo('lambda expressions accessing outer scope variables')
   test.todo('if')
