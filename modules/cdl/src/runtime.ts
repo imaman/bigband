@@ -81,7 +81,7 @@ export class Runtime {
       return lhs.over(this.multiplication())
     }
     if (this.parser.consumeIf('%')) {
-      return lhs.rem(this.multiplication())
+      return lhs.modulo(this.multiplication())
     }
     return lhs
   }
