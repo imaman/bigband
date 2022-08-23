@@ -13,44 +13,31 @@ class Runtime {
     const ret = this.expression()
     if (!this.parser.eof()) {
       const s = this.parser.synopsis()
-      throw new Error(`Unparsed input at position ${s.position}: <${s.lookingAt}>`)
+      throw new Error(`Loitering input at position ${s.position}: <${s.lookingAt}>`)
     }
     return ret
   }
 
   expression(): Value {
     const lhs = this.multiplication()
-    if (this.parser.eof()) {
-      return lhs
+    if (this.parser.consumeIf('+')) {
+      return lhs.plus(this.expression())
     }
-    const x = this.parser.consumeAny('+', '-')
-    const rhs = this.expression()
-    if (x === '+') {
-      return lhs.plus(rhs)
+    if (this.parser.consumeIf('-')) {
+      return lhs.minus(this.expression())
     }
-
-    if (x === '-') {
-      return lhs.minus(rhs)
-    }
-    throw new Error(`Should never happen (x=${x})`)
+    return lhs
   }
 
   multiplication(): Value {
     const lhs = this.unary()
-    if (this.parser.eof()) {
-      return lhs
+    if (this.parser.consumeIf('*')) {
+      return lhs.times(this.multiplication())
     }
-    const x = this.parser.consumeAny('*', '/')
-    const rhs = this.multiplication()
-    if (x === '*') {
-      return lhs.times(rhs)
+    if (this.parser.consumeIf('/')) {
+      return lhs.over(this.multiplication())
     }
-
-    if (x === '/') {
-      return lhs.over(rhs)
-    }
-
-    throw new Error(`Should never happen (x=${x})`)
+    return lhs
   }
 
   unary(): Value {
@@ -61,7 +48,7 @@ class Runtime {
     }
 
     if (this.parser.consumeIf('!')) {
-      const e = this.expression()
+      const e = this.unary()
       return e.not()
     }
 
