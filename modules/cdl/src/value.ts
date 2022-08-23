@@ -18,6 +18,19 @@ export class Value {
     return new Value(this.nat / that.nat)
   }
 
+  compare(that: Value) {
+    const d = this.minus(that).nat
+    if (d < 0) {
+      return new Value(-1)
+    }
+
+    if (d > 0) {
+      return new Value(1)
+    }
+
+    return new Value(0)
+  }
+
   export() {
     return this.nat
   }
