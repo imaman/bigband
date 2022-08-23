@@ -10,7 +10,12 @@ class Runtime {
   constructor(private readonly parser: Parser) {}
 
   evaluate() {
-    return this.expression()
+    const ret = this.expression()
+    if (!this.parser.eof()) {
+      const s = this.parser.synopsis()
+      throw new Error(`Unparsed input at position ${s.position}: <${s.lookingAt}>`)
+    }
+    return ret
   }
 
   expression(): Value {
@@ -66,7 +71,12 @@ class Runtime {
   literal(): Value {
     const n = this.parser.consumeIf(/[0-9]+/)
     if (n !== undefined) {
-      return new Value(Number(n))
+      if (!this.parser.consumeIf('.')) {
+        return new Value(Number(n))
+      }
+
+      const fracture = this.parser.consumeIf(/[0-9]+/)
+      return new Value(Number(`${n}.${fracture}`))
     }
 
     const s = this.parser.synopsis()

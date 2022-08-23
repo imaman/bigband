@@ -3,6 +3,7 @@ import * as cdl from '../src/cdl'
 describe('cdl', () => {
   test('basics', () => {
     expect(cdl.parse(`5`)).toEqual(5)
+    expect(() => cdl.parse(`6 6`)).toThrowError(`Expected one of *, / at position 1 but found:  6`)
     expect(cdl.parse(`3.14`)).toEqual(3.14)
   })
 
