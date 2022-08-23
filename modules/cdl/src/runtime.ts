@@ -104,6 +104,10 @@ export class Runtime {
       return this.unary().negate()
     }
 
+    return this.functionCall()
+  }
+
+  functionCall() {
     return this.literal()
   }
 
