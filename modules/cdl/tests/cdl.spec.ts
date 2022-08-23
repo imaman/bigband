@@ -93,8 +93,47 @@ describe('cdl', () => {
     expect(cdl.parse(`-3 * -7`)).toEqual(21)
   })
 
-  test('let', () => {
-    expect(cdl.parse(`let x = 5; x+3`)).toEqual(8)
+  describe('let', () => {
+    test('binds values to variables', () => {
+      expect(cdl.parse(`let x = 5; x+3`)).toEqual(8)
+      expect(cdl.parse(`let x = 5; let y = 20; x*y+4`)).toEqual(104)
+    })
+
+    test('parenthsized expression can have let defintions', () => {
+      expect(
+        cdl.parse(`
+        let x = 5; 
+        let y = 20; 
+        
+        x*y+(let n = 4; n*7)`),
+      ).toEqual(128)
+      expect(
+        cdl.parse(`
+        let x = 5; 
+        let y = 20; 
+        
+        x*y+(let n = 4; let o = 7; o*n)`),
+      ).toEqual(128)
+    })
+
+    test('inner expressions can access variables from other scopes (dynamically bounded)', () => {
+      expect(
+        cdl.parse(`
+        let x = 5; 
+        let y = 20; 
+        
+        x*y+(let n = 4; n+x)`),
+      ).toEqual(109)
+    })
+    test('inner let expressions overshadow earlier ones', () => {
+      expect(
+        cdl.parse(`
+        let x = 5; 
+        let y = 20; 
+        
+        x*y+(let n = 4; let x = 200; n+x)`),
+      ).toEqual(304)
+    })
   })
 
   test.todo('comparisons')
