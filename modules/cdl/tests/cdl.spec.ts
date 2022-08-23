@@ -98,6 +98,9 @@ describe('cdl', () => {
       expect(cdl.parse(`let x = 5; x+3`)).toEqual(8)
       expect(cdl.parse(`let x = 5; let y = 20; x*y+4`)).toEqual(104)
     })
+    test('fails if the variable was not defined', () => {
+      expect(() => cdl.parse(`let x = 5; x+y`)).toThrowError('Symbol not found: y')
+    })
 
     test('parenthsized expression can have let defintions', () => {
       expect(
@@ -133,6 +136,12 @@ describe('cdl', () => {
         
         x*y+(let n = 4; let x = 200; n+x)`),
       ).toEqual(304)
+    })
+  })
+
+  describe('lambda expressions', () => {
+    test('simplest', () => {
+      expect(cdl.parse(`((a) => 2*a)(3)`)).toEqual(6)
     })
   })
 

@@ -179,6 +179,6 @@ export class Runtime {
       }
     }
 
-    throw new Error(`Smybol not found: ${ident} (at position ${position})`)
+    throw new Error(`Symbol not found: ${ident} (at position ${position})`)
   }
 }
