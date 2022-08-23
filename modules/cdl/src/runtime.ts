@@ -87,12 +87,6 @@ export class Runtime {
   }
 
   unary(): Value {
-    if (this.parser.consumeIf('(')) {
-      const ret = this.expression()
-      this.parser.consume(')')
-      return ret
-    }
-
     if (this.parser.consumeIf('!')) {
       const e = this.unary()
       return e.not()
@@ -108,6 +102,16 @@ export class Runtime {
   }
 
   functionCall() {
+    return this.parenthesized()
+  }
+
+  parenthesized() {
+    if (this.parser.consumeIf('(')) {
+      const ret = this.expression()
+      this.parser.consume(')')
+      return ret
+    }
+
     return this.literal()
   }
 
