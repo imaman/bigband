@@ -8,6 +8,8 @@ describe('value', () => {
     expect(new Value(14).over(new Value(4)).export()).toEqual(3.5)
     expect(new Value(5).negate().export()).toEqual(-5)
     expect(new Value(-12).negate().export()).toEqual(12)
+    expect(new Value(3).power(new Value(4)).export()).toEqual(81)
+    expect(new Value(2).power(new Value(8)).export()).toEqual(256)
   })
   test('comparisons', () => {
     expect(new Value(5).compare(new Value(3))).toEqual(1)

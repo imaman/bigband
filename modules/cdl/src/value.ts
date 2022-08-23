@@ -90,6 +90,14 @@ export class Value {
     that.requireType('num')
     throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
   }
+  power(that: Value) {
+    if (this.inner.tag === 'num' && that.inner.tag === 'num') {
+      return new Value(this.inner.val ** that.inner.val)
+    }
+    this.requireType('num')
+    that.requireType('num')
+    throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
+  }
   over(that: Value) {
     if (this.inner.tag === 'num' && that.inner.tag === 'num') {
       return new Value(this.inner.val / that.inner.val)

@@ -63,6 +63,8 @@ describe('cdl', () => {
     expect(cdl.parse(`20%6`)).toEqual(2)
     expect(cdl.parse(`20%8`)).toEqual(4)
     expect(cdl.parse(`40%15`)).toEqual(10)
+    expect(cdl.parse(`6**3`)).toEqual(216)
+    expect(cdl.parse(`6**4`)).toEqual(1296)
     expect(() => cdl.parse(`!5`)).toThrowError(`Cannot negate a value of type num: 5`)
     expect(() => cdl.parse(`!0`)).toThrowError(`Cannot negate a value of type num: 0`)
     expect(() => cdl.parse(`!!0`)).toThrowError(`Cannot negate a value of type num: 0`)

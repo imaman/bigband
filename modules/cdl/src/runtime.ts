@@ -73,7 +73,7 @@ export class Runtime {
   }
 
   multiplication(): Value {
-    const lhs = this.unary()
+    const lhs = this.power()
     if (this.parser.consumeIf('*')) {
       return lhs.times(this.multiplication())
     }
@@ -82,6 +82,14 @@ export class Runtime {
     }
     if (this.parser.consumeIf('%')) {
       return lhs.modulo(this.multiplication())
+    }
+    return lhs
+  }
+
+  power(): Value {
+    const lhs = this.unary()
+    if (this.parser.consumeIf('**')) {
+      return lhs.power(this.power())
     }
     return lhs
   }
@@ -101,11 +109,11 @@ export class Runtime {
     return this.functionCall()
   }
 
-  functionCall() {
+  functionCall(): Value {
     return this.parenthesized()
   }
 
-  parenthesized() {
+  parenthesized(): Value {
     if (this.parser.consumeIf('(')) {
       const ret = this.expression()
       this.parser.consume(')')
