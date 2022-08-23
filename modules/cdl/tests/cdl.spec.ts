@@ -7,6 +7,8 @@ describe('cdl', () => {
     expect(cdl.parse(`3.14`)).toEqual(3.14)
   })
 
+  test.todo('lazy eval of || expressions')
+
   test('booleans', () => {
     expect(cdl.parse(`true`)).toEqual(true)
     expect(cdl.parse(`false`)).toEqual(false)
@@ -14,6 +16,16 @@ describe('cdl', () => {
     expect(cdl.parse(`!false`)).toEqual(true)
     expect(cdl.parse(`!!true`)).toEqual(true)
     expect(cdl.parse(`!!false`)).toEqual(false)
+
+    expect(cdl.parse(`true||true`)).toEqual(true)
+    expect(cdl.parse(`true||false`)).toEqual(true)
+    expect(cdl.parse(`false||true`)).toEqual(true)
+    expect(cdl.parse(`false||false`)).toEqual(false)
+
+    expect(cdl.parse(`true&&true`)).toEqual(true)
+    expect(cdl.parse(`true&&false`)).toEqual(false)
+    expect(cdl.parse(`false&&true`)).toEqual(false)
+    expect(cdl.parse(`false&&false`)).toEqual(false)
   })
 
   test('expressions', () => {
@@ -29,12 +41,8 @@ describe('cdl', () => {
     expect(() => cdl.parse(`!!4`)).toThrowError(`Cannot negate a value of type num: 4`)
   })
 
-  test('comparisons', () => {
-
-  })
-  test('boolean expressions', () => {
-
-  })
+  test.todo('comparisons')
+  test.todo('boolean expressions')
 
   test.skip('basics plus', () => {
     expect(cdl.parse(`'ab'`)).toEqual('ab')
