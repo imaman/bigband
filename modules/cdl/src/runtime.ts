@@ -14,12 +14,16 @@ export class Runtime {
   }
 
   expression(): Value {
+    return this.addition()
+  }
+
+  addition(): Value {
     const lhs = this.multiplication()
     if (this.parser.consumeIf('+')) {
-      return lhs.plus(this.expression())
+      return lhs.plus(this.addition())
     }
     if (this.parser.consumeIf('-')) {
-      return lhs.minus(this.expression())
+      return lhs.minus(this.addition())
     }
     return lhs
   }
@@ -51,7 +55,6 @@ export class Runtime {
   }
 
   literal(): Value {
-
     if (this.parser.consumeIf('true')) {
       return new Value(true)
     }
