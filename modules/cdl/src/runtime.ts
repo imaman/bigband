@@ -14,7 +14,15 @@ export class Runtime {
   }
 
   expression(): Value {
-    return this.addition()
+    return this.or()
+  }
+
+  or(): Value {
+    const lhs = this.addition()
+    if (this.parser.consumeIf('||')) {
+      return lhs.or(this.or())
+    }
+    return lhs
   }
 
   addition(): Value {
