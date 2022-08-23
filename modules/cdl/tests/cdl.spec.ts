@@ -136,18 +136,18 @@ describe('cdl', () => {
     })
   })
 
-  test.todo('comparisons')
-  test.todo('boolean expressions')
+  test.todo('lexically scoped binding of variables')
 
-  test.skip('basics plus', () => {
+  test.skip('strings', () => {
     expect(cdl.parse(`'ab'`)).toEqual('ab')
-    expect(cdl.parse(`{}`)).toEqual({})
+    expect(cdl.parse(`'ab' + 'cd'`)).toEqual('abcd')
+    expect(cdl.parse(`'abcd'.indexOf('c')`)).toEqual(2)
   })
   test.skip('objects', () => {
+    expect(cdl.parse(`{}`)).toEqual({})
     expect(cdl.parse(`{a: 1}`)).toEqual({ a: 1 })
-  })
-  test.skip('variables', () => {
-    expect(cdl.parse(`let x = 2; x+5`)).toEqual(7)
+    expect(cdl.parse(`let x = {a: 3, b: 4}; x.a`)).toEqual(3)
+    expect(cdl.parse(`let x = {a: 3, b: 4}; x.a * x.b`)).toEqual(12)
   })
   test.todo('quoting of a ticks inside a string')
   test.todo('number in scientific notation')
