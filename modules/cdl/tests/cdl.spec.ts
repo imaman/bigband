@@ -87,6 +87,10 @@ describe('cdl', () => {
     expect(cdl.parse(`3*+7`)).toEqual(21)
     expect(cdl.parse(`3*-7`)).toEqual(-21)
     expect(cdl.parse(`-3*-7`)).toEqual(21)
+    expect(cdl.parse(`3 + -7`)).toEqual(-4)
+    expect(cdl.parse(`3 * +7`)).toEqual(21)
+    expect(cdl.parse(`3 * -7`)).toEqual(-21)
+    expect(cdl.parse(`-3 * -7`)).toEqual(21)
   })
 
   test.todo('comparisons')
@@ -102,10 +106,8 @@ describe('cdl', () => {
   test.skip('variables', () => {
     expect(cdl.parse(`let x = 2; x+5`)).toEqual(7)
   })
-  test.todo('auto-consume whitespace')
   test.todo('quoting of a ticks inside a string')
   test.todo('number in scientific notation')
-  test.todo('negative number')
   test.todo('lambda expressions')
   test.todo('lambda expressions accessing outer scope variables')
   test.todo('if')
