@@ -34,12 +34,29 @@ export class Runtime {
   }
 
   equality(): Value {
-    const lhs = this.addition()
+    const lhs = this.comparison()
     if (this.parser.consumeIf('==')) {
       return lhs.equalsTo(this.equality())
     }
     if (this.parser.consumeIf('!=')) {
       return lhs.equalsTo(this.equality()).negate()
+    }
+    return lhs
+  }
+
+  comparison(): Value {
+    const lhs = this.addition()
+    if (this.parser.consumeIf('>=')) {
+      return new Value(lhs.compare(this.comparison()) >= 0)
+    }
+    if (this.parser.consumeIf('<=')) {
+      return new Value(lhs.compare(this.comparison()) <= 0)
+    }
+    if (this.parser.consumeIf('>')) {
+      return new Value(lhs.compare(this.comparison()) > 0)
+    }
+    if (this.parser.consumeIf('<')) {
+      return new Value(lhs.compare(this.comparison()) < 0)
     }
     return lhs
   }

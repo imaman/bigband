@@ -110,14 +110,14 @@ export class Value {
   compare(that: Value) {
     const d = this.minus(that)?.inner.val
     if (d < 0) {
-      return new Value(-1)
+      return -1
     }
 
     if (d > 0) {
-      return new Value(1)
+      return 1
     }
 
-    return new Value(0)
+    return 0
   }
 
   export() {

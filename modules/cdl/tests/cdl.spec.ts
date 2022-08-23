@@ -35,6 +35,24 @@ describe('cdl', () => {
     expect(cdl.parse(`3!=3`)).toEqual(false)
   })
 
+  test('comparison', () => {
+    expect(cdl.parse(`3>2`)).toEqual(true)
+    expect(cdl.parse(`3>3`)).toEqual(false)
+    expect(cdl.parse(`3>4`)).toEqual(false)
+
+    expect(cdl.parse(`3>=2`)).toEqual(true)
+    expect(cdl.parse(`3>=3`)).toEqual(true)
+    expect(cdl.parse(`3>=4`)).toEqual(false)
+
+    expect(cdl.parse(`3<=2`)).toEqual(false)
+    expect(cdl.parse(`3<=3`)).toEqual(true)
+    expect(cdl.parse(`3<=4`)).toEqual(true)
+
+    expect(cdl.parse(`3<2`)).toEqual(false)
+    expect(cdl.parse(`3<3`)).toEqual(false)
+    expect(cdl.parse(`3<4`)).toEqual(true)
+  })
+
   test('expressions', () => {
     expect(cdl.parse(`8*2`)).toEqual(16)
     expect(cdl.parse(`3+1`)).toEqual(4)
