@@ -108,10 +108,10 @@ export class Value {
   }
 
   negate() {
-    if (this.inner.tag === 'bool') {
-      return new Value(!this.inner.val)
+    if (this.inner.tag === 'num') {
+      return new Value(-this.inner.val)
     }
-    this.requireType('bool')
+    this.requireType('num')
     throw new Error(`Inconsistent types: ${this.inner.tag}`)
   }
 

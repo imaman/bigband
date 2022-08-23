@@ -6,6 +6,8 @@ describe('value', () => {
     expect(new Value(5).minus(new Value(3)).export()).toEqual(2)
     expect(new Value(5).times(new Value(3)).export()).toEqual(15)
     expect(new Value(14).over(new Value(4)).export()).toEqual(3.5)
+    expect(new Value(5).negate().export()).toEqual(-5)
+    expect(new Value(-12).negate().export()).toEqual(12)
   })
   test('comparisons', () => {
     expect(new Value(5).compare(new Value(3))).toEqual(1)
@@ -17,7 +19,7 @@ describe('value', () => {
   test('booleans', () => {
     expect(new Value(true).export()).toEqual(true)
     expect(new Value(false).export()).toEqual(false)
-    expect(new Value(false).negate().export()).toEqual(true)
-    expect(new Value(true).negate().export()).toEqual(false)
+    expect(new Value(false).not().export()).toEqual(true)
+    expect(new Value(true).not().export()).toEqual(false)
   })
 })

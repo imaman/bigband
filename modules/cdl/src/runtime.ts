@@ -39,7 +39,7 @@ export class Runtime {
       return lhs.equalsTo(this.equality())
     }
     if (this.parser.consumeIf('!=')) {
-      return lhs.equalsTo(this.equality()).negate()
+      return lhs.equalsTo(this.equality()).not()
     }
     return lhs
   }
@@ -96,6 +96,12 @@ export class Runtime {
     if (this.parser.consumeIf('!')) {
       const e = this.unary()
       return e.not()
+    }
+    if (this.parser.consumeIf('+')) {
+      return this.unary()
+    }
+    if (this.parser.consumeIf('-')) {
+      return this.unary().negate()
     }
 
     return this.literal()

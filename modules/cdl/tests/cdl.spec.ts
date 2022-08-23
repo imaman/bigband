@@ -69,6 +69,14 @@ describe('cdl', () => {
     expect(() => cdl.parse(`!!4`)).toThrowError(`Cannot negate a value of type num: 4`)
   })
 
+  test('unary expressions', () => {
+    expect(cdl.parse(`-7`)).toEqual(-7)
+    expect(cdl.parse(`3+-7`)).toEqual(-4)
+    expect(cdl.parse(`3*+7`)).toEqual(21)
+    expect(cdl.parse(`3*-7`)).toEqual(-21)
+    expect(cdl.parse(`-3*-7`)).toEqual(21)
+  })
+
   test.todo('comparisons')
   test.todo('boolean expressions')
 
