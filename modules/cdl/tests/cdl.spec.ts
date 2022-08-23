@@ -73,6 +73,14 @@ describe('cdl', () => {
     expect(() => cdl.parse(`!!4`)).toThrowError(`Cannot negate a value of type num: 4`)
   })
 
+  test('eats whitespace', () => {
+    expect(cdl.parse(`    8 * 2  `)).toEqual(16)
+    expect(cdl.parse(`3 + 1`)).toEqual(4)
+    expect(cdl.parse(`20 - 3`)).toEqual(17)
+    expect(cdl.parse(`48 /     6`)).toEqual(8)
+    expect(cdl.parse(`(1 + 4 ) *7`)).toEqual(35)
+  })
+
   test('unary expressions', () => {
     expect(cdl.parse(`-7`)).toEqual(-7)
     expect(cdl.parse(`3+-7`)).toEqual(-4)
