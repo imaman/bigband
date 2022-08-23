@@ -18,9 +18,17 @@ export class Runtime {
   }
 
   or(): Value {
-    const lhs = this.addition()
+    const lhs = this.and()
     if (this.parser.consumeIf('||')) {
       return lhs.or(this.or())
+    }
+    return lhs
+  }
+
+  and(): Value {
+    const lhs = this.addition()
+    if (this.parser.consumeIf('&&')) {
+      return lhs.and(this.and())
     }
     return lhs
   }

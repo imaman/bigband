@@ -32,6 +32,16 @@ export class Value {
     throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
   }
 
+  and(that: Value) {
+    if (this.inner.tag === 'bool' && that.inner.tag === 'bool') {
+      return new Value(this.inner.val && that.inner.val)
+    }
+
+    this.requireType('num')
+    that.requireType('num')
+    throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
+  }
+
   not() {
     if (this.inner.tag === 'bool') {
       return new Value(!this.inner.val)
