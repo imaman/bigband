@@ -80,6 +80,9 @@ export class Runtime {
     if (this.parser.consumeIf('/')) {
       return lhs.over(this.multiplication())
     }
+    if (this.parser.consumeIf('%')) {
+      return lhs.rem(this.multiplication())
+    }
     return lhs
   }
 

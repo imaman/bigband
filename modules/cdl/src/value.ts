@@ -98,6 +98,14 @@ export class Value {
     that.requireType('num')
     throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
   }
+  rem(that: Value) {
+    if (this.inner.tag === 'num' && that.inner.tag === 'num') {
+      return new Value(this.inner.val % that.inner.val)
+    }
+    this.requireType('num')
+    that.requireType('num')
+    throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
+  }
 
   negate() {
     if (this.inner.tag === 'bool') {
