@@ -51,6 +51,13 @@ export class Runtime {
   }
 
   literal(): Value {
+
+    if (this.parser.consumeIf('true')) {
+      return new Value(true)
+    }
+    if (this.parser.consumeIf('false')) {
+      return new Value(false)
+    }
     const n = this.parser.consumeIf(/[0-9]+/)
     if (n !== undefined) {
       if (!this.parser.consumeIf('.')) {

@@ -14,4 +14,10 @@ describe('value', () => {
     expect(new Value(5).compare(new Value(6)).export()).toEqual(-1)
     expect(new Value(5).compare(new Value(7)).export()).toEqual(-1)
   })
+  test('booleans', () => {
+    expect(new Value(true).export()).toEqual(true)
+    expect(new Value(false).export()).toEqual(false)
+    expect(new Value(false).negate().export()).toEqual(true)
+    expect(new Value(true).negate().export()).toEqual(false)
+  })
 })

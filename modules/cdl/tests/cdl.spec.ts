@@ -7,6 +7,15 @@ describe('cdl', () => {
     expect(cdl.parse(`3.14`)).toEqual(3.14)
   })
 
+  test('booleans', () => {
+    expect(cdl.parse(`true`)).toEqual(true)
+    expect(cdl.parse(`false`)).toEqual(false)
+    expect(cdl.parse(`!true`)).toEqual(false)
+    expect(cdl.parse(`!false`)).toEqual(true)
+    expect(cdl.parse(`!!true`)).toEqual(true)
+    expect(cdl.parse(`!!false`)).toEqual(false)
+  })
+
   test('expressions', () => {
     expect(cdl.parse(`8*2`)).toEqual(16)
     expect(cdl.parse(`3+1`)).toEqual(4)
@@ -14,10 +23,10 @@ describe('cdl', () => {
     expect(cdl.parse(`48/6`)).toEqual(8)
     expect(cdl.parse(`(1+4)*6`)).toEqual(30)
     expect(cdl.parse(`1+4*6`)).toEqual(25)
-    expect(cdl.parse(`!5`)).toEqual(0)
-    expect(cdl.parse(`!0`)).toEqual(1)
-    expect(cdl.parse(`!!0`)).toEqual(0)
-    expect(cdl.parse(`!!4`)).toEqual(1)
+    expect(() => cdl.parse(`!5`)).toThrowError(`Cannot negate a value of type num: 5`)
+    expect(() => cdl.parse(`!0`)).toThrowError(`Cannot negate a value of type num: 0`)
+    expect(() => cdl.parse(`!!0`)).toThrowError(`Cannot negate a value of type num: 0`)
+    expect(() => cdl.parse(`!!4`)).toThrowError(`Cannot negate a value of type num: 4`)
   })
 
   test('comparisons', () => {
