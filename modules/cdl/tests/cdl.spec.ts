@@ -93,6 +93,10 @@ describe('cdl', () => {
     expect(cdl.parse(`-3 * -7`)).toEqual(21)
   })
 
+  test('let', () => {
+    expect(cdl.parse(`let x = 5; x+3`)).toEqual(8)
+  })
+
   test.todo('comparisons')
   test.todo('boolean expressions')
 

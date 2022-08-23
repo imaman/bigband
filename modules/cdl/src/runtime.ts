@@ -1,7 +1,11 @@
 import { Parser } from './parser'
 import { Value } from './value'
 
+const IDENT = /[a-zA-Z][0-9A-Za-z_]*/
+
 export class Runtime {
+  private readonly envs = [new Map<string, Value>()]
+
   constructor(private readonly parser: Parser) {}
 
   evaluate() {
@@ -13,7 +17,22 @@ export class Runtime {
     return ret
   }
 
+  definitions() {
+    const table = new Map<string, Value>()
+    while (this.parser.consumeIf('let ')) {
+      const ident = this.parser.consume(IDENT)
+      this.parser.consume('=')
+      const v = this.or()
+      this.parser.consume(';')
+
+      table.set(ident, v)
+    }
+
+    this.envs.push(table)
+  }
+
   expression(): Value {
+    this.definitions()
     return this.or()
   }
 
@@ -120,16 +139,17 @@ export class Runtime {
       return ret
     }
 
-    return this.literal()
+    return this.literalOrIdent()
   }
 
-  literal(): Value {
+  literalOrIdent(): Value {
     if (this.parser.consumeIf('true')) {
       return new Value(true)
     }
     if (this.parser.consumeIf('false')) {
       return new Value(false)
     }
+
     const n = this.parser.consumeIf(/[0-9]+/)
     if (n !== undefined) {
       if (!this.parser.consumeIf('.')) {
@@ -140,7 +160,25 @@ export class Runtime {
       return new Value(Number(`${n}.${fracture}`))
     }
 
+    const syn = this.parser.synopsis()
+    const ident = this.parser.consumeIf(IDENT)
+    if (ident) {
+      return this.lookup(ident, syn.position)
+    }
+
     const s = this.parser.synopsis()
     throw new Error(`Unparsable input at position ${s.position}: ${s.lookingAt}`)
+  }
+
+  lookup(ident: string, position: number) {
+    for (let i = this.envs.length - 1; i >= 0; --i) {
+      const table = this.envs[i]
+      const val = table.get(ident)
+      if (val) {
+        return val
+      }
+    }
+
+    throw new Error(`Smybol not found: ${ident} (at position ${position})`)
   }
 }
