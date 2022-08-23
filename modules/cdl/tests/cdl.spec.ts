@@ -3,7 +3,7 @@ import * as cdl from '../src/cdl'
 describe('cdl', () => {
   test('basics', () => {
     expect(cdl.parse(`5`)).toEqual(5)
-    expect(() => cdl.parse(`6 6`)).toThrowError(`Loitering input at position 1: < 6>`)
+    expect(() => cdl.parse(`6 6`)).toThrowError(`Loitering input at position 2: <6>`)
     expect(cdl.parse(`3.14`)).toEqual(3.14)
   })
 

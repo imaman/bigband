@@ -1,9 +1,15 @@
 export class Parser {
   private offset = 0
-  constructor(private input: string) {}
+  constructor(private input: string) {
+    this.eatWhitespace()
+  }
 
   private curr() {
     return this.input.substring(this.offset)
+  }
+
+  private eatWhitespace() {
+    this.consumeIf(/\s*/)
   }
 
   eof() {
@@ -43,6 +49,8 @@ export class Parser {
     }
 
     this.offset += ret.length
+
+    this.eatWhitespace()
     return ret
   }
 
