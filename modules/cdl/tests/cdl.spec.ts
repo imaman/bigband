@@ -14,6 +14,17 @@ describe('cdl', () => {
     expect(cdl.parse(`48/6`)).toEqual(8)
     expect(cdl.parse(`(1+4)*6`)).toEqual(30)
     expect(cdl.parse(`1+4*6`)).toEqual(25)
+    expect(cdl.parse(`!5`)).toEqual(0)
+    expect(cdl.parse(`!0`)).toEqual(1)
+    expect(cdl.parse(`!!0`)).toEqual(0)
+    expect(cdl.parse(`!!4`)).toEqual(1)
+  })
+
+  test('comparisons', () => {
+
+  })
+  test('boolean expressions', () => {
+
   })
 
   test.skip('basics plus', () => {
