@@ -176,6 +176,7 @@ describe('cdl', () => {
     })
     test('can be stored in a variable', () => {
       expect(cdl.parse(`let triple = (fun(a) 3*a); triple(100) - triple(90)`)).toEqual(30)
+      expect(cdl.parse(`let triple = fun(a) 3*a; triple(100) - triple(90)`)).toEqual(30)
     })
     test.todo('error on arg list mismatch')
   })

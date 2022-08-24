@@ -18,7 +18,7 @@ export class Parser {
     while (this.scanner.consumeIf('let ')) {
       const ident = this.identifier()
       this.scanner.consume('=')
-      const value = this.or()
+      const value = this.lambda()
       this.scanner.consume(';')
 
       ret.push({ ident, value })
