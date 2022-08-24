@@ -191,7 +191,9 @@ describe('cdl', () => {
       )
       expect(cdl.parse(`let sumFour = fun(a,b,c,d) a+b+c+d; sumFour(4,8,2,6)`)).toEqual(20)
     })
-    test.todo('supports recursion')
+    test('supports recursion', () => {
+      expect(cdl.parse(`let factorial = fun(n) if (n > 0) n*factorial(n-1) else 1; factorial(6)`)).toEqual(720)
+    })
   })
 
   describe('if', () => {
