@@ -23,6 +23,14 @@ export class Value {
     throw new Error(`Not a boolean: ${JSON.stringify(this.inner.val)}`)
   }
 
+  assertLambda(): Lambda {
+    if (this.inner.tag === 'lambda') {
+      return this.inner.val
+    }
+
+    throw new Error(`Not a lambda: ${JSON.stringify(this.inner.val)}`)
+  }
+
   or(that: Value) {
     if (this.inner.tag === 'bool' && that.inner.tag === 'bool') {
       return Value.fromBool(this.inner.val || that.inner.val)
