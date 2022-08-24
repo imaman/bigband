@@ -1,3 +1,8 @@
+interface Token {
+  readonly text: string
+  readonly offset: number
+}
+
 export class Scanner {
   private offset = 0
   constructor(private input: string) {
@@ -29,32 +34,20 @@ export class Scanner {
     }
   }
 
-  consumeAny(...r: string[]) {
-    for (const curr of r) {
-      const m = this.isMatching(curr)
-      if (m) {
-        return m
-      }
-    }
-
-    throw new Error(
-      `Expected one of ${r.join(', ')} at position ${this.offset} but found: ${this.synopsis().lookingAt}`,
-    )
-  }
-
-  consume(r: RegExp | string) {
-    const ret = this.isMatching(r)
-    if (!ret) {
+  consume(r: RegExp | string): Token {
+    const text = this.isMatching(r)
+    if (!text) {
       throw new Error(`Expected ${r} at position ${this.offset} but found: ${this.synopsis().lookingAt}`)
     }
 
-    this.offset += ret.length
+    const offset = this.offset
+    this.offset += text.length
 
     this.eatWhitespace()
-    return ret
+    return { offset, text }
   }
 
-  consumeIf(r: RegExp | string) {
+  consumeIf(r: RegExp | string): Token | undefined {
     const ret = this.isMatching(r)
     if (!ret) {
       return undefined
