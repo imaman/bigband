@@ -1,6 +1,10 @@
 import { Lambda } from './ast-node'
+import { SymbolTable } from './symbol-table'
 
-type Inner = { tag: 'num'; val: number } | { tag: 'bool'; val: boolean } | { tag: 'lambda'; val: Lambda }
+type Inner =
+  | { tag: 'num'; val: number }
+  | { tag: 'bool'; val: boolean }
+  | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
 
 export class Value {
   private constructor(private readonly inner: Inner) {}
@@ -11,8 +15,8 @@ export class Value {
   static fromNum(val: number): Value {
     return new Value({ val, tag: 'num' })
   }
-  static fromLambda(val: Lambda): Value {
-    return new Value({ val, tag: 'lambda' })
+  static fromLambda(ast: Lambda, table: SymbolTable): Value {
+    return new Value({ val: { ast, table }, tag: 'lambda' })
   }
 
   assertBool(): boolean {
@@ -23,7 +27,7 @@ export class Value {
     throw new Error(`Not a boolean: ${JSON.stringify(this.inner.val)}`)
   }
 
-  assertLambda(): Lambda {
+  assertLambda() {
     if (this.inner.tag === 'lambda') {
       return this.inner.val
     }

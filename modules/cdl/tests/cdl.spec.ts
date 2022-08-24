@@ -194,6 +194,12 @@ describe('cdl', () => {
     test('can be recursive', () => {
       expect(cdl.parse(`let factorial = fun(n) if (n > 0) n*factorial(n-1) else 1; factorial(6)`)).toEqual(720)
     })
+    test('can access definitions from the enclosing scope', () => {
+      expect(cdl.parse(`let a = 1; (let inc = fun(n) n+a; inc(2))`)).toEqual(3)
+    })
+    test('only the enclosing lexical scope is considered when looking up a definition', () => {
+      expect(cdl.parse(`let a = 1; let inc = fun(n) n+a; (let a = 100; inc(2))`)).toEqual(3)
+    })
   })
 
   describe('if', () => {

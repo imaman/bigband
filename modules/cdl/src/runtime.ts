@@ -1,17 +1,22 @@
 import { AstNode } from './ast-node'
 import { shouldNeverHappen } from './should-never-happen'
+import { SymbolTable } from './symbol-table'
 import { Value } from './value'
 
-interface SymbolTable {
-  lookup(sym: string): Value
+interface Placeholder {
+  destination: undefined | Value
 }
 
 class SymbolFrame implements SymbolTable {
-  constructor(readonly symbol: string, readonly value: Value, private readonly earlier: SymbolTable) {}
+  constructor(readonly symbol: string, readonly placeholder: Placeholder, private readonly earlier: SymbolTable) {}
 
   lookup(sym: string): Value {
     if (this.symbol === sym) {
-      return this.value
+      const ret = this.placeholder.destination
+      if (ret === undefined) {
+        throw new Error(`Unresolved definition: ${this.symbol}`)
+      }
+      return ret
     }
 
     return this.earlier.lookup(sym)
@@ -131,15 +136,17 @@ export class Runtime {
       let newTable = table
       for (const def of ast.definitions) {
         const name = def.ident.t.text
+        const placeholder: Placeholder = { destination: undefined }
+        newTable = new SymbolFrame(name, placeholder, newTable)
         const v = this.evalNode(def.value, newTable)
-        newTable = new SymbolFrame(name, v, newTable)
+        placeholder.destination = v
       }
 
       return this.evalNode(ast.computation, newTable)
     }
 
     if (ast.tag === 'lambda') {
-      return Value.fromLambda(ast)
+      return Value.fromLambda(ast, table)
     }
 
     if (ast.tag === 'functionCall') {
@@ -148,16 +155,16 @@ export class Runtime {
 
       const l = callee.assertLambda()
 
-      if (l.formalArgs.length !== argValues.length) {
-        throw new Error(`Arg list length mismatch: expected ${l.formalArgs.length} but got ${argValues.length}`)
+      if (l.ast.formalArgs.length !== argValues.length) {
+        throw new Error(`Arg list length mismatch: expected ${l.ast.formalArgs.length} but got ${argValues.length}`)
       }
-      let newTable = table
-      for (let i = 0; i < l.formalArgs.length; ++i) {
-        const name = l.formalArgs[i].t.text
-        newTable = new SymbolFrame(name, argValues[i], newTable)
+      let newTable = l.table
+      for (let i = 0; i < l.ast.formalArgs.length; ++i) {
+        const name = l.ast.formalArgs[i].t.text
+        newTable = new SymbolFrame(name, { destination: argValues[i] }, newTable)
       }
 
-      return this.evalNode(l.body, newTable)
+      return this.evalNode(l.ast.body, newTable)
     }
 
     if (ast.tag === 'if') {
