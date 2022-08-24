@@ -1,39 +1,5 @@
-import { Scanner, Token } from './scanner'
-
-type Let = { ident: Ident; value: AstNode }
-
-type Ident = {
-  tag: 'ident'
-  t: Token
-}
-
-export type AstNode =
-  | Ident
-  | {
-      tag: 'literal'
-      t: Token
-    }
-  | {
-      tag: 'binaryOperator'
-      operator: '+' | '-' | '*' | '/' | '**' | '%' | '&&' | '||' | '>' | '<' | '>=' | '<=' | '==' | '!='
-      lhs: AstNode
-      rhs: AstNode
-    }
-  | {
-      tag: 'unaryOperator'
-      operator: '+' | '-' | '!'
-      operand: AstNode
-    }
-  | {
-      tag: 'topLevelExpression'
-      definitions: Let[]
-      computation: AstNode
-    }
-  | {
-      tag: 'lambda'
-      formalArgs: Ident[]
-      body: AstNode
-    }
+import { AstNode, Ident, Let } from './ast-node'
+import { Scanner } from './scanner'
 
 export class Parser {
   constructor(private readonly scanner: Scanner) {}

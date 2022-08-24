@@ -1,4 +1,4 @@
-import { AstNode } from './parser'
+import { AstNode } from './ast-node'
 import { shouldNeverHappen } from './should-never-happen'
 import { Value } from './value'
 
@@ -36,7 +36,7 @@ export class Runtime {
       const lhs = this.evalNode(ast.lhs, table)
       if (ast.operator === '||') {
         if (lhs.assertBool()) {
-          return new Value(true)
+          return Value.fromBool(true)
         }
 
         const rhs = this.evalNode(ast.rhs, table)
@@ -45,7 +45,7 @@ export class Runtime {
       }
       if (ast.operator === '&&') {
         if (!lhs.assertBool()) {
-          return new Value(false)
+          return Value.fromBool(false)
         }
         const rhs = this.evalNode(ast.rhs, table)
         rhs.assertBool()
@@ -55,28 +55,28 @@ export class Runtime {
       const rhs = this.evalNode(ast.rhs, table)
       if (ast.operator === '!=') {
         const comp = lhs.compare(rhs)
-        return new Value(comp !== 0)
+        return Value.fromBool(comp !== 0)
       }
       if (ast.operator === '==') {
         const comp = lhs.compare(rhs)
-        return new Value(comp === 0)
+        return Value.fromBool(comp === 0)
       }
 
       if (ast.operator === '<=') {
         const comp = lhs.compare(rhs)
-        return new Value(comp <= 0)
+        return Value.fromBool(comp <= 0)
       }
       if (ast.operator === '<') {
         const comp = lhs.compare(rhs)
-        return new Value(comp < 0)
+        return Value.fromBool(comp < 0)
       }
       if (ast.operator === '>=') {
         const comp = lhs.compare(rhs)
-        return new Value(comp >= 0)
+        return Value.fromBool(comp >= 0)
       }
       if (ast.operator === '>') {
         const comp = lhs.compare(rhs)
-        return new Value(comp > 0)
+        return Value.fromBool(comp > 0)
       }
       if (ast.operator === '%') {
         return lhs.modulo(rhs)
@@ -120,21 +120,26 @@ export class Runtime {
     if (ast.tag === 'literal') {
       const parsed = JSON.parse(ast.t.text)
       if (typeof parsed === 'boolean') {
-        return new Value(parsed)
+        return Value.fromBool(parsed)
       } else if (typeof parsed === 'number') {
-        return new Value(parsed)
+        return Value.fromNum(parsed)
       }
       throw new Error(`Unsupported literal: <${ast.t.text}> at ${ast.t.offset}`)
     }
 
     if (ast.tag === 'topLevelExpression') {
       let newTable = table
-      for (const curr of ast.definitions) {
-        const v = this.evalNode(curr.value, newTable)
-        newTable = new SymbolFrame(curr.ident.text, v, newTable)
+      for (const def of ast.definitions) {
+        const name = def.ident.t.text
+        const v = this.evalNode(def.value, newTable)
+        newTable = new SymbolFrame(name, v, newTable)
       }
 
       return this.evalNode(ast.computation, newTable)
+    }
+
+    if (ast.tag === 'lambda') {
+      return Value.fromLambda(ast)
     }
 
     shouldNeverHappen(ast)
