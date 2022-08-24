@@ -119,7 +119,7 @@ describe('cdl', () => {
       ).toEqual(128)
     })
 
-    test('inner expressions can access variables from other scopes (dynamically bounded)', () => {
+    test('inner expressions can access variables from enclosing scopes', () => {
       expect(
         cdl.parse(`
         let x = 5; 
@@ -128,7 +128,7 @@ describe('cdl', () => {
         x*y+(let n = 4; n+x)`),
       ).toEqual(109)
     })
-    test('inner let expressions overshadow earlier ones', () => {
+    test('definitions from inner scopes overshadow definitions from outer scopes', () => {
       expect(
         cdl.parse(`
         let x = 5; 
@@ -137,8 +137,11 @@ describe('cdl', () => {
         x*y+(let n = 4; let x = 200; n+x)`),
       ).toEqual(304)
     })
-    test('a let expression can use an earlier definition', () => {
+    test('the body of a definition can reference an earlier definition from the same scope', () => {
       expect(cdl.parse(`let x = 10;  let y = x*2;  y*2`)).toEqual(40)
+    })
+    test('the body of a definition cannot reference a latter definition from the same scope', () => {
+      expect(() => cdl.parse(`let y = x*2; let x = 10;  y*2`)).toThrowError(`Symbol x was not found`)
     })
     test('uses lexical scoping (and not dynamic scoping)', () => {
       const actual = cdl.parse(`let x = (let a = 1; a+1);  let y = (let a=100; x+1); y`)
