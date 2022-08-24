@@ -17,7 +17,7 @@ export class Scanner {
     this.consumeIf(/\s*/)
   }
 
-  eof() {
+  eof(): boolean {
     return this.offset >= this.input.length
   }
 
@@ -35,7 +35,7 @@ export class Scanner {
   }
 
   consume(r: RegExp | string): Token {
-    const text = this.isMatching(r)
+    const text = this.match(r)
     if (!text) {
       throw new Error(`Expected ${r} at position ${this.offset} but found: ${this.synopsis().lookingAt}`)
     }
@@ -48,7 +48,7 @@ export class Scanner {
   }
 
   consumeIf(r: RegExp | string): Token | undefined {
-    const ret = this.isMatching(r)
+    const ret = this.match(r)
     if (!ret) {
       return undefined
     }
@@ -56,7 +56,7 @@ export class Scanner {
     return this.consume(r)
   }
 
-  isMatching(r: RegExp | string) {
+  private match(r: RegExp | string): string | undefined {
     if (typeof r === 'string') {
       if (this.curr().startsWith(r)) {
         return r
