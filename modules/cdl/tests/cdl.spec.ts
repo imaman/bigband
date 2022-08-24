@@ -182,7 +182,16 @@ describe('cdl', () => {
       expect(cdl.parse(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)
       expect(cdl.parse(`(fun() 3.14)()*2`)).toEqual(6.28)
     })
-    test.todo('error on arg list mismatch')
+    test('error on arg list mismatch', () => {
+      expect(() => cdl.parse(`let sumFour = fun(a,b,c,d) a+b+c+d; sumFour(4,8,2)`)).toThrowError(
+        'Arg list length mismatch: expected 4 but got 3',
+      )
+      expect(() => cdl.parse(`let sumFour = fun(a,b,c,d) a+b+c+d; sumFour(4,8,2,6,1)`)).toThrowError(
+        'Arg list length mismatch: expected 4 but got 5',
+      )
+      expect(cdl.parse(`let sumFour = fun(a,b,c,d) a+b+c+d; sumFour(4,8,2,6)`)).toEqual(20)
+    })
+    test.todo('supports recursion')
   })
 
   test.skip('strings', () => {
