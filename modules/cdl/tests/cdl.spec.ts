@@ -99,7 +99,7 @@ describe('cdl', () => {
       expect(cdl.parse(`let x = 5; let y = 20; x*y+4`)).toEqual(104)
     })
     test('fails if the variable was not defined', () => {
-      expect(() => cdl.parse(`let x = 5; x+y`)).toThrowError('Symbol not found: y')
+      expect(() => cdl.parse(`let x = 5; x+y`)).toThrowError('Symbol y was not found')
     })
 
     test('parenthsized expression can have let defintions', () => {

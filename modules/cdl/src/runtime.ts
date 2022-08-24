@@ -4,36 +4,21 @@ import { Value } from './value'
 
 interface SymbolTable {
   lookup(sym: string): Value
-  earlier: SymbolTable
 }
 
 class SymbolFrame implements SymbolTable {
-  constructor(readonly symbol: string, readonly value: Value, readonly earlier: SymbolTable) {}
+  constructor(readonly symbol: string, readonly value: Value, private readonly earlier: SymbolTable) {}
 
   lookup(sym: string): Value {
-    let curr: SymbolTable = this
-    while (curr) {
-      if (this.symbol === sym) {
-        return this.value
-      }
-
-      const e = curr.earlier
-      if (e === curr) {
-        break
-      }
-
-      curr = e
+    if (this.symbol === sym) {
+      return this.value
     }
 
-    throw new Error(`Symbol ${sym} was not found`)
+    return this.earlier.lookup(sym)
   }
 }
 
 class EmptySymbolTable implements SymbolTable {
-  get earlier() {
-    return this
-  }
-
   lookup(sym: string): Value {
     throw new Error(`Symbol ${sym} was not found`)
   }
