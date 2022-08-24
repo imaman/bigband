@@ -169,9 +169,15 @@ describe('cdl', () => {
   })
 
   describe('lambda expressions', () => {
-    test('simplest', () => {
+    test('binds the value of the actual arg to the formal arg', () => {
       expect(cdl.parse(`(fun(a) 2*a)(3)`)).toEqual(6)
+      expect(cdl.parse(`(fun(a, b) a*a-b*b)(3,4)`)).toEqual(-7)
+      expect(cdl.parse(`(fun(a, b) a*a-b*b)(4,3)`)).toEqual(7)
     })
+    test('can be stored in a variable', () => {
+      expect(cdl.parse(`let triple = (fun(a) 3*a); triple(100) - triple(90)`)).toEqual(30)
+    })
+    test.todo('error on arg list mismatch')
   })
 
   test.skip('strings', () => {
