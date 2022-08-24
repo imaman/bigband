@@ -137,9 +137,19 @@ describe('cdl', () => {
         x*y+(let n = 4; let x = 200; n+x)`),
       ).toEqual(304)
     })
+    test('a let expression can use an earlier definition', () => {
+      expect(cdl.parse(`let x = 10;  let y = x*2;  y*2`)).toEqual(40)
+    })
+    test('uses lexical scoping (and not dynamic scoping)', () => {
+      const actual = cdl.parse(`let x = (let a = 1; a+1);  let y = (let a=100; x+1); y`)
+      expect(actual).toEqual(3)
+    })
+    test.skip('definitions go out of scope', () => {
+      expect(() => cdl.parse(`let x = (let a = 1; a+1); a+100`)).toThrowError('not found a')
+    })
   })
 
-  describe('lambda expressions', () => {
+  describe.skip('lambda expressions', () => {
     test('simplest', () => {
       expect(cdl.parse(`(fun(a) => 2*a)(3)`)).toEqual(6)
     })

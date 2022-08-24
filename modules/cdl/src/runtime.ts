@@ -19,6 +19,7 @@ export class Runtime {
 
   definitions() {
     const table = new Map<string, Value>()
+    this.envs.push(table)
     while (this.parser.consumeIf('let ')) {
       const ident = this.parser.consume(IDENT)
       this.parser.consume('=')
@@ -27,8 +28,6 @@ export class Runtime {
 
       table.set(ident, v)
     }
-
-    this.envs.push(table)
   }
 
   expression(): Value {
