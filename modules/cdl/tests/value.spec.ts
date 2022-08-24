@@ -25,7 +25,11 @@ describe('value', () => {
     expect(Value.bool(true).not().export()).toEqual(false)
   })
   test('emits erros when numeric operations are applied to a boolean (either lhs or rhs)', () => {
-    expect(5).toEqual(5)
+    expect(() => Value.bool(true).plus(Value.num(2))).toThrowError('value type error: expected num but found: true')
+    expect(() => Value.num(5).plus(Value.bool(false))).toThrowError('value type error: expected num but found: false')
   })
-  test.todo('emits erros when boolean operations are applied to a number (either lhs or rhs)')
+  test('emits erros when boolean operations are applied to a number (either lhs or rhs)', () => {
+    expect(() => Value.bool(true).or(Value.num(2))).toThrowError('value type error: expected bool but found: 2')
+    expect(() => Value.num(5).and(Value.bool(false))).toThrowError('value type error: expected bool but found: 5')
+  })
 })

@@ -40,8 +40,8 @@ export class Value {
       return Value.bool(this.inner.val || that.inner.val)
     }
 
-    this.requireType('num')
-    that.requireType('num')
+    this.requireType('bool')
+    that.requireType('bool')
     throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
   }
 
@@ -50,8 +50,8 @@ export class Value {
       return Value.bool(this.inner.val && that.inner.val)
     }
 
-    this.requireType('num')
-    that.requireType('num')
+    this.requireType('bool')
+    that.requireType('bool')
     throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
   }
 
