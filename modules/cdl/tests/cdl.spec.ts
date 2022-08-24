@@ -178,6 +178,10 @@ describe('cdl', () => {
       expect(cdl.parse(`let triple = (fun(a) 3*a); triple(100) - triple(90)`)).toEqual(30)
       expect(cdl.parse(`let triple = fun(a) 3*a; triple(100) - triple(90)`)).toEqual(30)
     })
+    test('can have no args', () => {
+      expect(cdl.parse(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)
+      expect(cdl.parse(`(fun() 3.14)()*2`)).toEqual(6.28)
+    })
     test.todo('error on arg list mismatch')
   })
 
