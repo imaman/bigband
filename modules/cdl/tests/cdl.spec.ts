@@ -22,10 +22,10 @@ describe('cdl', () => {
     expect(cdl.parse(`false||true`)).toEqual(true)
     expect(cdl.parse(`false||false`)).toEqual(false)
 
-    expect(cdl.parse(`true&&true`)).toEqual(true)
-    expect(cdl.parse(`true&&false`)).toEqual(false)
-    expect(cdl.parse(`false&&true`)).toEqual(false)
-    expect(cdl.parse(`false&&false`)).toEqual(false)
+    expect(cdl.parse(`true && true`)).toEqual(true)
+    expect(cdl.parse(`true && false`)).toEqual(false)
+    expect(cdl.parse(`false && true`)).toEqual(false)
+    expect(cdl.parse(`false && false`)).toEqual(false)
   })
 
   test('equality', () => {
@@ -144,8 +144,8 @@ describe('cdl', () => {
       const actual = cdl.parse(`let x = (let a = 1; a+1);  let y = (let a=100; x+1); y`)
       expect(actual).toEqual(3)
     })
-    test.skip('definitions go out of scope', () => {
-      expect(() => cdl.parse(`let x = (let a = 1; a+1); a+100`)).toThrowError('not found a')
+    test('definitions go out of scope', () => {
+      expect(() => cdl.parse(`let x = (let a = 1; a+1); a+100`)).toThrowError('Symbol a was not found')
     })
   })
 
@@ -154,8 +154,6 @@ describe('cdl', () => {
       expect(cdl.parse(`(fun(a) => 2*a)(3)`)).toEqual(6)
     })
   })
-
-  test.todo('lexically scoped binding of variables')
 
   test.skip('strings', () => {
     expect(cdl.parse(`'ab'`)).toEqual('ab')
