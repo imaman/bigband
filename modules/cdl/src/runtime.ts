@@ -1,4 +1,4 @@
-import { Scanner } from './parser'
+import { Scanner } from './scanner'
 import { Value } from './value'
 
 const IDENT = /[a-zA-Z][0-9A-Za-z_]*/

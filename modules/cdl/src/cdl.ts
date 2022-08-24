@@ -1,5 +1,5 @@
-import { Scanner } from './parser'
 import { Runtime } from './runtime'
+import { Scanner } from './scanner'
 
 export function foo() {}
 
