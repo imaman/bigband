@@ -54,7 +54,15 @@ export class Parser {
       return { tag: 'lambda', formalArgs: args, body }
     }
 
-    return this.or()
+    return this.ifExpression()
+  }
+
+  ifExpression(): AstNode {
+    if (!this.scanner.consumeIf('if')) {
+      return this.or()
+    }
+
+    return { tag: 'if', condition: this.expression(), positive: this.expression(), negative: this.expression() }
   }
 
   or(): AstNode {

@@ -41,3 +41,9 @@ export type AstNode =
       actualArgs: AstNode[]
       callee: AstNode
     }
+  | {
+      tag: 'if'
+      condition: AstNode
+      positive: AstNode
+      negative: AstNode
+    }
