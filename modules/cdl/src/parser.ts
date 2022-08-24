@@ -1,4 +1,4 @@
-export class Parser {
+export class Scanner {
   private offset = 0
   constructor(private input: string) {
     this.eatWhitespace()

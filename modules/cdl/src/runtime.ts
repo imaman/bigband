@@ -1,4 +1,4 @@
-import { Parser } from './parser'
+import { Scanner } from './parser'
 import { Value } from './value'
 
 const IDENT = /[a-zA-Z][0-9A-Za-z_]*/
@@ -6,7 +6,7 @@ const IDENT = /[a-zA-Z][0-9A-Za-z_]*/
 export class Runtime {
   private readonly envs = [new Map<string, Value>()]
 
-  constructor(private readonly parser: Parser) {}
+  constructor(private readonly parser: Scanner) {}
 
   evaluate() {
     const ret = this.expression()
