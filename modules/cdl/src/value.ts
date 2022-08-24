@@ -5,11 +5,6 @@ type Inner =
     }
   | { tag: 'bool'; val: boolean }
 
-export function shouldNeverHappen(n: never): never {
-  // This following line never gets executed. It is here just to make the compiler happy.
-  throw new Error(`This should never happen ${n}`)
-}
-
 export class Value {
   private readonly inner: Inner
   constructor(nat: number | boolean) {
@@ -20,6 +15,14 @@ export class Value {
     } else {
       throw new Error(`Unsupported native value: ${nat}`)
     }
+  }
+
+  assertBool(): boolean {
+    if (this.inner.tag === 'bool') {
+      return this.inner.val
+    }
+
+    throw new Error(`Not a boolean: ${JSON.stringify(this.inner.val)}`)
   }
 
   or(that: Value) {

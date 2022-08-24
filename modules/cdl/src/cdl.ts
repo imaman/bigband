@@ -1,9 +1,12 @@
+import { Parser } from './parser'
 import { Runtime } from './runtime'
 import { Scanner } from './scanner'
 
 export function foo() {}
 
 export function parse(s: string) {
-  const runtime = new Runtime(new Scanner(s))
-  return runtime.parse().export()
+  const parser = new Parser(new Scanner(s))
+  const ast = parser.parse()
+  const runtime = new Runtime(ast)
+  return runtime.run().export()
 }

@@ -4,7 +4,7 @@ const IDENT = /[a-zA-Z][0-9A-Za-z_]*/
 
 type Let = { ident: Token; value: AstNode }
 
-type AstNode =
+export type AstNode =
   | {
       tag: 'literal'
       t: Token
@@ -25,8 +25,9 @@ type AstNode =
       operand: AstNode
     }
   | {
-      tag: 'definitions'
-      kids: Let[]
+      tag: 'topLevelExpression'
+      definitions: Let[]
+      computation: AstNode
     }
 
 export class Parser {
@@ -41,23 +42,22 @@ export class Parser {
     return ret
   }
 
-  definitions(): AstNode {
-    const kids: Let[] = []
+  definitions(): Let[] {
+    const ret: Let[] = []
     while (this.scanner.consumeIf('let ')) {
       const ident = this.scanner.consume(IDENT)
       this.scanner.consume('=')
       const value = this.or()
       this.scanner.consume(';')
 
-      kids.push({ ident, value })
+      ret.push({ ident, value })
     }
 
-    return { tag: 'definitions', kids }
+    return ret
   }
 
   expression(): AstNode {
-    this.definitions()
-    return this.lambda()
+    return { tag: 'topLevelExpression', definitions: this.definitions(), computation: this.lambda() }
   }
 
   lambda(): AstNode {
