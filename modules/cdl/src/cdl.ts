@@ -5,5 +5,5 @@ export function foo() {}
 
 export function parse(s: string) {
   const runtime = new Runtime(new Scanner(s))
-  return runtime.evaluate().export()
+  return runtime.parse().export()
 }

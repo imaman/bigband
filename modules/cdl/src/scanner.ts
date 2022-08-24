@@ -1,4 +1,4 @@
-interface Token {
+export interface Token {
   readonly text: string
   readonly offset: number
 }

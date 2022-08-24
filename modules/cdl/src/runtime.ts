@@ -1,14 +1,38 @@
-import { Scanner } from './scanner'
-import { Value } from './value'
+import { Scanner, Token } from './scanner'
 
 const IDENT = /[a-zA-Z][0-9A-Za-z_]*/
 
-export class Runtime {
-  private readonly envs = [new Map<string, Value>()]
+type Let = { ident: Token; value: AstNode }
 
+type AstNode =
+  | {
+      tag: 'literal'
+      t: Token
+    }
+  | {
+      tag: 'ident'
+      t: Token
+    }
+  | {
+      tag: 'binaryOperator'
+      operator: '+' | '-' | '*' | '/' | '**' | '%' | '&&' | '||' | '>' | '<' | '>=' | '<=' | '==' | '!='
+      lhs: AstNode
+      rhs: AstNode
+    }
+  | {
+      tag: 'unaryOperator'
+      operator: '+' | '-' | '!'
+      operand: AstNode
+    }
+  | {
+      tag: 'definitions'
+      kids: Let[]
+    }
+
+export class Parser {
   constructor(private readonly scanner: Scanner) {}
 
-  evaluate() {
+  parse() {
     const ret = this.expression()
     if (!this.scanner.eof()) {
       const s = this.scanner.synopsis()
@@ -17,25 +41,26 @@ export class Runtime {
     return ret
   }
 
-  definitions() {
-    const table = new Map<string, Value>()
-    this.envs.push(table)
+  definitions(): AstNode {
+    const kids: Let[] = []
     while (this.scanner.consumeIf('let ')) {
       const ident = this.scanner.consume(IDENT)
       this.scanner.consume('=')
-      const v = this.or()
+      const value = this.or()
       this.scanner.consume(';')
 
-      table.set(ident.text, v)
+      kids.push({ ident, value })
     }
+
+    return { tag: 'definitions', kids }
   }
 
-  expression(): Value {
+  expression(): AstNode {
     this.definitions()
     return this.lambda()
   }
 
-  lambda(): Value {
+  lambda(): AstNode {
     if (this.scanner.consumeIf('fun')) {
       //
     }
@@ -43,103 +68,102 @@ export class Runtime {
     return this.or()
   }
 
-  or(): Value {
+  or(): AstNode {
     const lhs = this.and()
     if (this.scanner.consumeIf('||')) {
-      return lhs.or(this.or())
+      return { tag: 'binaryOperator', operator: '||', lhs, rhs: this.or() }
     }
     return lhs
   }
 
-  and(): Value {
+  and(): AstNode {
     const lhs = this.equality()
     if (this.scanner.consumeIf('&&')) {
-      return lhs.and(this.and())
+      return { tag: 'binaryOperator', operator: '&&', lhs, rhs: this.and() }
     }
     return lhs
   }
 
-  equality(): Value {
+  equality(): AstNode {
     const lhs = this.comparison()
     if (this.scanner.consumeIf('==')) {
-      return lhs.equalsTo(this.equality())
+      return { tag: 'binaryOperator', operator: '==', lhs, rhs: this.equality() }
     }
     if (this.scanner.consumeIf('!=')) {
-      return lhs.equalsTo(this.equality()).not()
+      return { tag: 'binaryOperator', operator: '!=', lhs, rhs: this.equality() }
     }
     return lhs
   }
 
-  comparison(): Value {
+  comparison(): AstNode {
     const lhs = this.addition()
     if (this.scanner.consumeIf('>=')) {
-      return new Value(lhs.compare(this.comparison()) >= 0)
+      return { tag: 'binaryOperator', operator: '>=', lhs, rhs: this.comparison() }
     }
     if (this.scanner.consumeIf('<=')) {
-      return new Value(lhs.compare(this.comparison()) <= 0)
+      return { tag: 'binaryOperator', operator: '<=', lhs, rhs: this.comparison() }
     }
     if (this.scanner.consumeIf('>')) {
-      return new Value(lhs.compare(this.comparison()) > 0)
+      return { tag: 'binaryOperator', operator: '>', lhs, rhs: this.comparison() }
     }
     if (this.scanner.consumeIf('<')) {
-      return new Value(lhs.compare(this.comparison()) < 0)
+      return { tag: 'binaryOperator', operator: '<', lhs, rhs: this.comparison() }
     }
     return lhs
   }
 
-  addition(): Value {
+  addition(): AstNode {
     const lhs = this.multiplication()
     if (this.scanner.consumeIf('+')) {
-      return lhs.plus(this.addition())
+      return { tag: 'binaryOperator', operator: '+', lhs, rhs: this.addition() }
     }
     if (this.scanner.consumeIf('-')) {
-      return lhs.minus(this.addition())
+      return { tag: 'binaryOperator', operator: '-', lhs, rhs: this.addition() }
     }
     return lhs
   }
 
-  multiplication(): Value {
+  multiplication(): AstNode {
     const lhs = this.power()
     if (this.scanner.consumeIf('*')) {
-      return lhs.times(this.multiplication())
+      return { tag: 'binaryOperator', operator: '*', lhs, rhs: this.multiplication() }
     }
     if (this.scanner.consumeIf('/')) {
-      return lhs.over(this.multiplication())
+      return { tag: 'binaryOperator', operator: '/', lhs, rhs: this.multiplication() }
     }
     if (this.scanner.consumeIf('%')) {
-      return lhs.modulo(this.multiplication())
+      return { tag: 'binaryOperator', operator: '%', lhs, rhs: this.multiplication() }
     }
     return lhs
   }
 
-  power(): Value {
+  power(): AstNode {
     const lhs = this.unary()
     if (this.scanner.consumeIf('**')) {
-      return lhs.power(this.power())
+      return { tag: 'binaryOperator', operator: '**', lhs, rhs: this.power() }
     }
     return lhs
   }
 
-  unary(): Value {
+  unary(): AstNode {
     if (this.scanner.consumeIf('!')) {
-      const e = this.unary()
-      return e.not()
+      return { tag: 'unaryOperator', operand: this.unary(), operator: '!' }
     }
     if (this.scanner.consumeIf('+')) {
-      return this.unary()
+      return { tag: 'unaryOperator', operand: this.unary(), operator: '+' }
     }
     if (this.scanner.consumeIf('-')) {
-      return this.unary().negate()
+      return { tag: 'unaryOperator', operand: this.unary(), operator: '-' }
     }
 
     return this.functionCall()
   }
 
-  functionCall(): Value {
+  functionCall(): AstNode {
     return this.parenthesized()
   }
 
-  parenthesized(): Value {
+  parenthesized(): AstNode {
     if (this.scanner.consumeIf('(')) {
       const ret = this.expression()
       this.scanner.consume(')')
@@ -149,38 +173,27 @@ export class Runtime {
     return this.literalOrIdent()
   }
 
-  literalOrIdent(): Value {
-    if (this.scanner.consumeIf('true')) {
-      return new Value(true)
+  literalOrIdent(): AstNode {
+    let t = this.scanner.consumeIf('true')
+    if (t) {
+      return { tag: 'literal', t }
     }
-    if (this.scanner.consumeIf('false')) {
-      return new Value(false)
-    }
-
-    const n = this.scanner.consumeIf(/([0-9]*[.])?[0-9]+/)
-    if (n) {
-      return new Value(Number(n.text))
+    t = this.scanner.consumeIf('false')
+    if (t) {
+      return { tag: 'literal', t }
     }
 
-    const syn = this.scanner.synopsis()
-    const ident = this.scanner.consumeIf(IDENT)
-    if (ident) {
-      return this.lookup(ident.text, syn.position)
+    t = this.scanner.consumeIf(/([0-9]*[.])?[0-9]+/)
+    if (t) {
+      return { tag: 'literal', t }
+    }
+
+    t = this.scanner.consumeIf(IDENT)
+    if (t) {
+      return { tag: 'ident', t }
     }
 
     const s = this.scanner.synopsis()
     throw new Error(`Unparsable input at position ${s.position}: ${s.lookingAt}`)
-  }
-
-  lookup(ident: string, position: number) {
-    for (let i = this.envs.length - 1; i >= 0; --i) {
-      const table = this.envs[i]
-      const val = table.get(ident)
-      if (val) {
-        return val
-      }
-    }
-
-    throw new Error(`Symbol not found: ${ident} (at position ${position})`)
   }
 }
