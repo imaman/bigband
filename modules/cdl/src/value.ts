@@ -58,7 +58,7 @@ export class Value {
     if (this.inner.tag === 'bool') {
       return new Value(!this.inner.val)
     } else {
-      throw new Error(`Cannot negate a value of type ${this.inner.tag}: ${this.inner.val}`)
+      throw new Error(`Cannot compute the logical not of a value of type ${this.inner.tag}: ${this.inner.val}`)
     }
   }
 

@@ -28,6 +28,26 @@ describe('cdl', () => {
     expect(cdl.parse(`false && false`)).toEqual(false)
   })
 
+  test('arithmetics', () => {
+    expect(cdl.parse(`8*2`)).toEqual(16)
+    expect(cdl.parse(`3+1`)).toEqual(4)
+    expect(cdl.parse(`20-3`)).toEqual(17)
+    expect(cdl.parse(`48/6`)).toEqual(8)
+    expect(cdl.parse(`(1+4)*6`)).toEqual(30)
+    expect(cdl.parse(`1+4*6`)).toEqual(25)
+    expect(cdl.parse(`20%6`)).toEqual(2)
+    expect(cdl.parse(`20%8`)).toEqual(4)
+    expect(cdl.parse(`40%15`)).toEqual(10)
+    expect(cdl.parse(`6**3`)).toEqual(216)
+    expect(cdl.parse(`6**4`)).toEqual(1296)
+    expect(cdl.parse(`2*3**4`)).toEqual(162)
+    expect(cdl.parse(`(2*3)**4`)).toEqual(1296)
+    expect(() => cdl.parse(`!5`)).toThrowError(`Cannot compute the logical not of a value of type num: 5`)
+    expect(() => cdl.parse(`!0`)).toThrowError(`Cannot compute the logical not of a value of type num: 0`)
+    expect(() => cdl.parse(`!!0`)).toThrowError(`Cannot compute the logical not of a value of type num: 0`)
+    expect(() => cdl.parse(`!!4`)).toThrowError(`Cannot compute the logical not of a value of type num: 4`)
+  })
+
   test('equality', () => {
     expect(cdl.parse(`3==4`)).toEqual(false)
     expect(cdl.parse(`3==3`)).toEqual(true)
@@ -51,26 +71,6 @@ describe('cdl', () => {
     expect(cdl.parse(`3<2`)).toEqual(false)
     expect(cdl.parse(`3<3`)).toEqual(false)
     expect(cdl.parse(`3<4`)).toEqual(true)
-  })
-
-  test('expressions', () => {
-    expect(cdl.parse(`8*2`)).toEqual(16)
-    expect(cdl.parse(`3+1`)).toEqual(4)
-    expect(cdl.parse(`20-3`)).toEqual(17)
-    expect(cdl.parse(`48/6`)).toEqual(8)
-    expect(cdl.parse(`(1+4)*6`)).toEqual(30)
-    expect(cdl.parse(`1+4*6`)).toEqual(25)
-    expect(cdl.parse(`20%6`)).toEqual(2)
-    expect(cdl.parse(`20%8`)).toEqual(4)
-    expect(cdl.parse(`40%15`)).toEqual(10)
-    expect(cdl.parse(`6**3`)).toEqual(216)
-    expect(cdl.parse(`6**4`)).toEqual(1296)
-    expect(cdl.parse(`2*3**4`)).toEqual(162)
-    expect(cdl.parse(`(2*3)**4`)).toEqual(1296)
-    expect(() => cdl.parse(`!5`)).toThrowError(`Cannot negate a value of type num: 5`)
-    expect(() => cdl.parse(`!0`)).toThrowError(`Cannot negate a value of type num: 0`)
-    expect(() => cdl.parse(`!!0`)).toThrowError(`Cannot negate a value of type num: 0`)
-    expect(() => cdl.parse(`!!4`)).toThrowError(`Cannot negate a value of type num: 4`)
   })
 
   test('eats whitespace', () => {
