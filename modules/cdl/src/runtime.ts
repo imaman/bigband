@@ -6,12 +6,12 @@ const IDENT = /[a-zA-Z][0-9A-Za-z_]*/
 export class Runtime {
   private readonly envs = [new Map<string, Value>()]
 
-  constructor(private readonly parser: Scanner) {}
+  constructor(private readonly scanner: Scanner) {}
 
   evaluate() {
     const ret = this.expression()
-    if (!this.parser.eof()) {
-      const s = this.parser.synopsis()
+    if (!this.scanner.eof()) {
+      const s = this.scanner.synopsis()
       throw new Error(`Loitering input at position ${s.position}: <${s.lookingAt}>`)
     }
     return ret
@@ -20,11 +20,11 @@ export class Runtime {
   definitions() {
     const table = new Map<string, Value>()
     this.envs.push(table)
-    while (this.parser.consumeIf('let ')) {
-      const ident = this.parser.consume(IDENT)
-      this.parser.consume('=')
+    while (this.scanner.consumeIf('let ')) {
+      const ident = this.scanner.consume(IDENT)
+      this.scanner.consume('=')
       const v = this.or()
-      this.parser.consume(';')
+      this.scanner.consume(';')
 
       table.set(ident, v)
     }
@@ -36,7 +36,7 @@ export class Runtime {
   }
 
   lambda(): Value {
-    if (this.parser.consumeIf('fun')) {
+    if (this.scanner.consumeIf('fun')) {
       //
     }
 
@@ -45,7 +45,7 @@ export class Runtime {
 
   or(): Value {
     const lhs = this.and()
-    if (this.parser.consumeIf('||')) {
+    if (this.scanner.consumeIf('||')) {
       return lhs.or(this.or())
     }
     return lhs
@@ -53,7 +53,7 @@ export class Runtime {
 
   and(): Value {
     const lhs = this.equality()
-    if (this.parser.consumeIf('&&')) {
+    if (this.scanner.consumeIf('&&')) {
       return lhs.and(this.and())
     }
     return lhs
@@ -61,10 +61,10 @@ export class Runtime {
 
   equality(): Value {
     const lhs = this.comparison()
-    if (this.parser.consumeIf('==')) {
+    if (this.scanner.consumeIf('==')) {
       return lhs.equalsTo(this.equality())
     }
-    if (this.parser.consumeIf('!=')) {
+    if (this.scanner.consumeIf('!=')) {
       return lhs.equalsTo(this.equality()).not()
     }
     return lhs
@@ -72,16 +72,16 @@ export class Runtime {
 
   comparison(): Value {
     const lhs = this.addition()
-    if (this.parser.consumeIf('>=')) {
+    if (this.scanner.consumeIf('>=')) {
       return new Value(lhs.compare(this.comparison()) >= 0)
     }
-    if (this.parser.consumeIf('<=')) {
+    if (this.scanner.consumeIf('<=')) {
       return new Value(lhs.compare(this.comparison()) <= 0)
     }
-    if (this.parser.consumeIf('>')) {
+    if (this.scanner.consumeIf('>')) {
       return new Value(lhs.compare(this.comparison()) > 0)
     }
-    if (this.parser.consumeIf('<')) {
+    if (this.scanner.consumeIf('<')) {
       return new Value(lhs.compare(this.comparison()) < 0)
     }
     return lhs
@@ -89,10 +89,10 @@ export class Runtime {
 
   addition(): Value {
     const lhs = this.multiplication()
-    if (this.parser.consumeIf('+')) {
+    if (this.scanner.consumeIf('+')) {
       return lhs.plus(this.addition())
     }
-    if (this.parser.consumeIf('-')) {
+    if (this.scanner.consumeIf('-')) {
       return lhs.minus(this.addition())
     }
     return lhs
@@ -100,13 +100,13 @@ export class Runtime {
 
   multiplication(): Value {
     const lhs = this.power()
-    if (this.parser.consumeIf('*')) {
+    if (this.scanner.consumeIf('*')) {
       return lhs.times(this.multiplication())
     }
-    if (this.parser.consumeIf('/')) {
+    if (this.scanner.consumeIf('/')) {
       return lhs.over(this.multiplication())
     }
-    if (this.parser.consumeIf('%')) {
+    if (this.scanner.consumeIf('%')) {
       return lhs.modulo(this.multiplication())
     }
     return lhs
@@ -114,21 +114,21 @@ export class Runtime {
 
   power(): Value {
     const lhs = this.unary()
-    if (this.parser.consumeIf('**')) {
+    if (this.scanner.consumeIf('**')) {
       return lhs.power(this.power())
     }
     return lhs
   }
 
   unary(): Value {
-    if (this.parser.consumeIf('!')) {
+    if (this.scanner.consumeIf('!')) {
       const e = this.unary()
       return e.not()
     }
-    if (this.parser.consumeIf('+')) {
+    if (this.scanner.consumeIf('+')) {
       return this.unary()
     }
-    if (this.parser.consumeIf('-')) {
+    if (this.scanner.consumeIf('-')) {
       return this.unary().negate()
     }
 
@@ -140,9 +140,9 @@ export class Runtime {
   }
 
   parenthesized(): Value {
-    if (this.parser.consumeIf('(')) {
+    if (this.scanner.consumeIf('(')) {
       const ret = this.expression()
-      this.parser.consume(')')
+      this.scanner.consume(')')
       return ret
     }
 
@@ -150,30 +150,30 @@ export class Runtime {
   }
 
   literalOrIdent(): Value {
-    if (this.parser.consumeIf('true')) {
+    if (this.scanner.consumeIf('true')) {
       return new Value(true)
     }
-    if (this.parser.consumeIf('false')) {
+    if (this.scanner.consumeIf('false')) {
       return new Value(false)
     }
 
-    const n = this.parser.consumeIf(/[0-9]+/)
+    const n = this.scanner.consumeIf(/[0-9]+/)
     if (n !== undefined) {
-      if (!this.parser.consumeIf('.')) {
+      if (!this.scanner.consumeIf('.')) {
         return new Value(Number(n))
       }
 
-      const fracture = this.parser.consumeIf(/[0-9]+/)
+      const fracture = this.scanner.consumeIf(/[0-9]+/)
       return new Value(Number(`${n}.${fracture}`))
     }
 
-    const syn = this.parser.synopsis()
-    const ident = this.parser.consumeIf(IDENT)
+    const syn = this.scanner.synopsis()
+    const ident = this.scanner.consumeIf(IDENT)
     if (ident) {
       return this.lookup(ident, syn.position)
     }
 
-    const s = this.parser.synopsis()
+    const s = this.scanner.synopsis()
     throw new Error(`Unparsable input at position ${s.position}: ${s.lookingAt}`)
   }
 
