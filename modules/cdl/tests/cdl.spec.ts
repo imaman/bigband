@@ -168,9 +168,9 @@ describe('cdl', () => {
     })
   })
 
-  describe.skip('lambda expressions', () => {
+  describe('lambda expressions', () => {
     test('simplest', () => {
-      expect(cdl.parse(`(fun(a) => 2*a)(3)`)).toEqual(6)
+      expect(cdl.parse(`(fun(a) 2*a)(3)`)).toEqual(6)
     })
   })
 
