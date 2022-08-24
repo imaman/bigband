@@ -194,6 +194,16 @@ describe('cdl', () => {
     test.todo('supports recursion')
   })
 
+  describe('if', () => {
+    test('returns the value of the first positive branch if the condition is true', () => {
+      expect(cdl.parse(`if (4 > 3) 200 else -100`)).toEqual(200)
+    })
+    test('returns the value of the first positive branch if the condition is false', () => {
+      expect(cdl.parse(`if (4 < 3) 200 else -100`)).toEqual(-100)
+    })
+    test.todo('yells if conditions is not boolean')
+  })
+
   test.skip('strings', () => {
     expect(cdl.parse(`'ab'`)).toEqual('ab')
     expect(cdl.parse(`'ab' + 'cd'`)).toEqual('abcd')
