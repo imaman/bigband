@@ -159,6 +159,9 @@ describe('cdl', () => {
     test('the body of a definition cannot reference a latter definition from the same scope', () => {
       expect(() => cdl.parse(`let y = x*2; let x = 10;  y*2`)).toThrowError(`Symbol x was not found`)
     })
+    test('the body of a definition cannot reference itself', () => {
+      expect(() => cdl.parse(`let x = 10;  let y = if (x > 0) y else x; y*2`)).toThrowError(`Unresolved definition: y`)
+    })
     test('uses lexical scoping (and not dynamic scoping)', () => {
       const actual = cdl.parse(`let x = (let a = 1; a+1);  let y = (let a=100; x+1); y`)
       expect(actual).toEqual(3)
@@ -197,7 +200,7 @@ describe('cdl', () => {
     test('can access definitions from the enclosing scope', () => {
       expect(cdl.parse(`let a = 1; (let inc = fun(n) n+a; inc(2))`)).toEqual(3)
     })
-    test('only the enclosing lexical scope is considered when looking up a definition', () => {
+    test('only lexical scope is considered when looking up a definition', () => {
       expect(cdl.parse(`let a = 1; let inc = fun(n) n+a; (let a = 100; inc(2))`)).toEqual(3)
     })
   })
