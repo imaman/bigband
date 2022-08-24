@@ -142,6 +142,24 @@ export class Runtime {
       return Value.fromLambda(ast)
     }
 
+    if (ast.tag === 'functionCall') {
+      const argValues = ast.actualArgs.map(a => this.evalNode(a, table))
+      const callee = this.evalNode(ast.callee, table)
+
+      const l = callee.assertLambda()
+
+      if (l.formalArgs.length !== argValues.length) {
+        throw new Error(`Arg list length mismatch: expected ${l.formalArgs.length} but got ${argValues.length}`)
+      }
+      let newTable = table
+      for (let i = 0; i < l.formalArgs.length; ++i) {
+        const name = l.formalArgs[i].t.text
+        newTable = new SymbolFrame(name, argValues[i], newTable)
+      }
+
+      return this.evalNode(l.body, newTable)
+    }
+
     shouldNeverHappen(ast)
   }
 }

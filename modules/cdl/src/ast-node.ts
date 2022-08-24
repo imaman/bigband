@@ -36,3 +36,8 @@ export type AstNode =
       computation: AstNode
     }
   | Lambda
+  | {
+      tag: 'functionCall'
+      actualArgs: AstNode[]
+      callee: AstNode
+    }

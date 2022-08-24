@@ -149,7 +149,26 @@ export class Parser {
   }
 
   functionCall(): AstNode {
-    return this.parenthesized()
+    const callee = this.parenthesized()
+    if (this.scanner.consumeIf('(')) {
+      const actualArgs: AstNode[] = []
+      if (this.scanner.consumeIf(')')) {
+        // no actual args
+      } else {
+        while (true) {
+          const arg = this.expression()
+          actualArgs.push(arg)
+          if (this.scanner.consumeIf(')')) {
+            break
+          }
+          this.scanner.consume(',')
+        }
+      }
+
+      return { tag: 'functionCall', actualArgs, callee }
+    }
+
+    return callee
   }
 
   parenthesized(): AstNode {
