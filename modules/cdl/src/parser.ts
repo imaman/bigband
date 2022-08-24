@@ -1,16 +1,16 @@
 import { Scanner, Token } from './scanner'
 
-const IDENT = /[a-zA-Z][0-9A-Za-z_]*/
+type Let = { ident: Ident; value: AstNode }
 
-type Let = { ident: Token; value: AstNode }
+type Ident = {
+  tag: 'ident'
+  t: Token
+}
 
 export type AstNode =
+  | Ident
   | {
       tag: 'literal'
-      t: Token
-    }
-  | {
-      tag: 'ident'
       t: Token
     }
   | {
@@ -29,6 +29,11 @@ export type AstNode =
       definitions: Let[]
       computation: AstNode
     }
+  | {
+      tag: 'lambda'
+      formalArgs: Ident[]
+      body: AstNode
+    }
 
 export class Parser {
   constructor(private readonly scanner: Scanner) {}
@@ -45,7 +50,7 @@ export class Parser {
   definitions(): Let[] {
     const ret: Let[] = []
     while (this.scanner.consumeIf('let ')) {
-      const ident = this.scanner.consume(IDENT)
+      const ident = this.identifier()
       this.scanner.consume('=')
       const value = this.or()
       this.scanner.consume(';')
@@ -62,7 +67,25 @@ export class Parser {
 
   lambda(): AstNode {
     if (this.scanner.consumeIf('fun')) {
-      //
+      this.scanner.consume('(')
+      const args: Ident[] = []
+
+      if (this.scanner.consumeIf(')')) {
+        // no formal args
+      } else {
+        while (true) {
+          const arg = this.identifier()
+          args.push(arg)
+          if (this.scanner.consumeIf(')')) {
+            break
+          }
+
+          this.scanner.consume(',')
+        }
+      }
+
+      const body = this.expression()
+      return { tag: 'lambda', formalArgs: args, body }
     }
 
     return this.or()
@@ -188,12 +211,31 @@ export class Parser {
       return { tag: 'literal', t }
     }
 
-    t = this.scanner.consumeIf(IDENT)
-    if (t) {
-      return { tag: 'ident', t }
+    const ident = this.maybeIdentifier()
+    if (ident) {
+      return ident
     }
 
     const s = this.scanner.synopsis()
     throw new Error(`Unparsable input at position ${s.position}: ${s.lookingAt}`)
+  }
+
+  private identifier(): Ident {
+    const ret = this.maybeIdentifier()
+    if (!ret) {
+      const s = this.scanner.synopsis()
+      throw new Error(`Expected an identifier at position ${s.position} but found: ${s.lookingAt}`)
+    }
+
+    return ret
+  }
+
+  private maybeIdentifier(): Ident | undefined {
+    const t = this.scanner.consumeIf(/[a-zA-Z][0-9A-Za-z_]*/)
+    if (t) {
+      return { tag: 'ident', t }
+    }
+
+    return undefined
   }
 }
