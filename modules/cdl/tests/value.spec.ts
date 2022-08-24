@@ -24,4 +24,6 @@ describe('value', () => {
     expect(Value.fromBool(false).not().export()).toEqual(true)
     expect(Value.fromBool(true).not().export()).toEqual(false)
   })
+  test.todo('emits erros when numeric operations are applied to a boolean (either lhs or rhs)')
+  test.todo('emits erros when boolean operations are applied to a number (either lhs or rhs)')
 })
