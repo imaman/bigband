@@ -26,7 +26,7 @@ export class Runtime {
       const v = this.or()
       this.scanner.consume(';')
 
-      table.set(ident, v)
+      table.set(ident.text, v)
     }
   }
 
@@ -157,20 +157,15 @@ export class Runtime {
       return new Value(false)
     }
 
-    const n = this.scanner.consumeIf(/[0-9]+/)
-    if (n !== undefined) {
-      if (!this.scanner.consumeIf('.')) {
-        return new Value(Number(n))
-      }
-
-      const fracture = this.scanner.consumeIf(/[0-9]+/)
-      return new Value(Number(`${n}.${fracture}`))
+    const n = this.scanner.consumeIf(/([0-9]*[.])?[0-9]+/)
+    if (n) {
+      return new Value(Number(n.text))
     }
 
     const syn = this.scanner.synopsis()
     const ident = this.scanner.consumeIf(IDENT)
     if (ident) {
-      return this.lookup(ident, syn.position)
+      return this.lookup(ident.text, syn.position)
     }
 
     const s = this.scanner.synopsis()
