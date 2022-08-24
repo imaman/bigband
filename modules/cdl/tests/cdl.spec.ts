@@ -73,6 +73,22 @@ describe('cdl', () => {
     expect(cdl.parse(`3<4`)).toEqual(true)
   })
 
+  test('combined arithmetics and logical expressions', () => {
+    expect(cdl.parse(`(5 + 3 > 6) && (10*20 > 150)`)).toEqual(true)
+    expect(cdl.parse(`(5 + 3 > 9) && (10*20 > 150)`)).toEqual(false)
+    expect(cdl.parse(`(5 + 3 > 6) && (10*20 > 201)`)).toEqual(false)
+    expect(cdl.parse(`(5 + 3 > 9) && (10*20 > 201)`)).toEqual(false)
+  })
+
+  test('the rhs of a logical-or expression is evaluated only if lhs is false', () => {
+    expect(cdl.parse(`true || x`)).toEqual(true)
+    expect(() => cdl.parse(`false || x`)).toThrowError('ymbol x was not found')
+  })
+  test('the rhs of a logical-and expression is evaluated only if lhs is true', () => {
+    expect(cdl.parse(`false && x`)).toEqual(false)
+    expect(() => cdl.parse(`true && x`)).toThrowError('ymbol x was not found')
+  })
+
   test('eats whitespace', () => {
     expect(cdl.parse(`    8 * 2  `)).toEqual(16)
     expect(cdl.parse(`3 + 1`)).toEqual(4)
