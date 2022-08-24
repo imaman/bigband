@@ -160,6 +160,15 @@ export class Runtime {
       return this.evalNode(l.body, newTable)
     }
 
+    if (ast.tag === 'if') {
+      const c = this.evalNode(ast.condition, table)
+      if (c.assertBool()) {
+        return this.evalNode(ast.positive, table)
+      } else {
+        return this.evalNode(ast.negative, table)
+      }
+    }
+
     shouldNeverHappen(ast)
   }
 }

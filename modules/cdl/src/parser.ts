@@ -62,7 +62,17 @@ export class Parser {
       return this.or()
     }
 
-    return { tag: 'if', condition: this.expression(), positive: this.expression(), negative: this.expression() }
+    this.scanner.consume('(')
+    const condition = this.expression()
+    this.scanner.consume(')')
+
+    const positive = this.expression()
+
+    this.scanner.consume('else')
+
+    const negative = this.expression()
+
+    return { tag: 'if', condition, positive, negative }
   }
 
   or(): AstNode {
