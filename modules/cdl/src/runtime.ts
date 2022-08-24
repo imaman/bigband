@@ -41,7 +41,7 @@ export class Runtime {
       const lhs = this.evalNode(ast.lhs, table)
       if (ast.operator === '||') {
         if (lhs.assertBool()) {
-          return Value.fromBool(true)
+          return Value.bool(true)
         }
 
         const rhs = this.evalNode(ast.rhs, table)
@@ -50,7 +50,7 @@ export class Runtime {
       }
       if (ast.operator === '&&') {
         if (!lhs.assertBool()) {
-          return Value.fromBool(false)
+          return Value.bool(false)
         }
         const rhs = this.evalNode(ast.rhs, table)
         rhs.assertBool()
@@ -60,28 +60,28 @@ export class Runtime {
       const rhs = this.evalNode(ast.rhs, table)
       if (ast.operator === '!=') {
         const comp = lhs.compare(rhs)
-        return Value.fromBool(comp !== 0)
+        return Value.bool(comp !== 0)
       }
       if (ast.operator === '==') {
         const comp = lhs.compare(rhs)
-        return Value.fromBool(comp === 0)
+        return Value.bool(comp === 0)
       }
 
       if (ast.operator === '<=') {
         const comp = lhs.compare(rhs)
-        return Value.fromBool(comp <= 0)
+        return Value.bool(comp <= 0)
       }
       if (ast.operator === '<') {
         const comp = lhs.compare(rhs)
-        return Value.fromBool(comp < 0)
+        return Value.bool(comp < 0)
       }
       if (ast.operator === '>=') {
         const comp = lhs.compare(rhs)
-        return Value.fromBool(comp >= 0)
+        return Value.bool(comp >= 0)
       }
       if (ast.operator === '>') {
         const comp = lhs.compare(rhs)
-        return Value.fromBool(comp > 0)
+        return Value.bool(comp > 0)
       }
       if (ast.operator === '%') {
         return lhs.modulo(rhs)
@@ -125,9 +125,9 @@ export class Runtime {
     if (ast.tag === 'literal') {
       const parsed = JSON.parse(ast.t.text)
       if (typeof parsed === 'boolean') {
-        return Value.fromBool(parsed)
+        return Value.bool(parsed)
       } else if (typeof parsed === 'number') {
-        return Value.fromNum(parsed)
+        return Value.num(parsed)
       }
       throw new Error(`Unsupported literal: <${ast.t.text}> at ${ast.t.offset}`)
     }
@@ -146,7 +146,7 @@ export class Runtime {
     }
 
     if (ast.tag === 'lambda') {
-      return Value.fromLambda(ast, table)
+      return Value.lambda(ast, table)
     }
 
     if (ast.tag === 'functionCall') {

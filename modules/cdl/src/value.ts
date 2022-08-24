@@ -9,13 +9,13 @@ type Inner =
 export class Value {
   private constructor(private readonly inner: Inner) {}
 
-  static fromBool(val: boolean): Value {
+  static bool(val: boolean): Value {
     return new Value({ val, tag: 'bool' })
   }
-  static fromNum(val: number): Value {
+  static num(val: number): Value {
     return new Value({ val, tag: 'num' })
   }
-  static fromLambda(ast: Lambda, table: SymbolTable): Value {
+  static lambda(ast: Lambda, table: SymbolTable): Value {
     return new Value({ val: { ast, table }, tag: 'lambda' })
   }
 
@@ -37,7 +37,7 @@ export class Value {
 
   or(that: Value) {
     if (this.inner.tag === 'bool' && that.inner.tag === 'bool') {
-      return Value.fromBool(this.inner.val || that.inner.val)
+      return Value.bool(this.inner.val || that.inner.val)
     }
 
     this.requireType('num')
@@ -47,7 +47,7 @@ export class Value {
 
   and(that: Value) {
     if (this.inner.tag === 'bool' && that.inner.tag === 'bool') {
-      return Value.fromBool(this.inner.val && that.inner.val)
+      return Value.bool(this.inner.val && that.inner.val)
     }
 
     this.requireType('num')
@@ -57,17 +57,17 @@ export class Value {
 
   equalsTo(that: Value) {
     if (this.inner.tag !== that.inner.tag) {
-      return Value.fromBool(false)
+      return Value.bool(false)
     }
 
     // TODO(imaman): much better comparison is needed here
     const b = JSON.stringify(this.inner.val) === JSON.stringify(that.inner.val)
-    return Value.fromBool(b)
+    return Value.bool(b)
   }
 
   not() {
     if (this.inner.tag === 'bool') {
-      return Value.fromBool(!this.inner.val)
+      return Value.bool(!this.inner.val)
     } else {
       throw new Error(`Cannot compute the logical not of a value of type ${this.inner.tag}: ${this.inner.val}`)
     }
@@ -81,7 +81,7 @@ export class Value {
 
   plus(that: Value) {
     if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.fromNum(this.inner.val + that.inner.val)
+      return Value.num(this.inner.val + that.inner.val)
     }
 
     this.requireType('num')
@@ -90,7 +90,7 @@ export class Value {
   }
   minus(that: Value) {
     if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.fromNum(this.inner.val - that.inner.val)
+      return Value.num(this.inner.val - that.inner.val)
     }
     this.requireType('num')
     that.requireType('num')
@@ -98,7 +98,7 @@ export class Value {
   }
   times(that: Value) {
     if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.fromNum(this.inner.val * that.inner.val)
+      return Value.num(this.inner.val * that.inner.val)
     }
     this.requireType('num')
     that.requireType('num')
@@ -106,7 +106,7 @@ export class Value {
   }
   power(that: Value) {
     if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.fromNum(this.inner.val ** that.inner.val)
+      return Value.num(this.inner.val ** that.inner.val)
     }
     this.requireType('num')
     that.requireType('num')
@@ -114,7 +114,7 @@ export class Value {
   }
   over(that: Value) {
     if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.fromNum(this.inner.val / that.inner.val)
+      return Value.num(this.inner.val / that.inner.val)
     }
     this.requireType('num')
     that.requireType('num')
@@ -122,7 +122,7 @@ export class Value {
   }
   modulo(that: Value) {
     if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.fromNum(this.inner.val % that.inner.val)
+      return Value.num(this.inner.val % that.inner.val)
     }
     this.requireType('num')
     that.requireType('num')
@@ -131,7 +131,7 @@ export class Value {
 
   negate() {
     if (this.inner.tag === 'num') {
-      return Value.fromNum(-this.inner.val)
+      return Value.num(-this.inner.val)
     }
     this.requireType('num')
     throw new Error(`Inconsistent types: ${this.inner.tag}`)
