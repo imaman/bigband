@@ -196,19 +196,19 @@ export class Parser {
   memberAccess(): AstNode {
     let ret = this.parenthesized()
 
-    if (this.scanner.consumeIf('[')) {
-      const index = this.expression()
-      this.scanner.consume(']')
-      return { tag: 'indexAccess', receiver: ret, index }
-    }
-
     while (true) {
-      if (!this.scanner.consumeIf('.')) {
-        return ret
+      if (this.scanner.consumeIf('.')) {
+        ret = { tag: 'dot', receiver: ret, ident: this.identifier() }
+        continue
       }
 
-      const ident = this.identifier()
-      ret = { tag: 'dot', receiver: ret, ident }
+      if (this.scanner.consumeIf('[')) {
+        ret = { tag: 'indexAccess', receiver: ret, index: this.expression() }
+        this.scanner.consume(']')
+        continue
+      }
+
+      return ret
     }
   }
 

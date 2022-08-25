@@ -269,7 +269,7 @@ describe('cdl', () => {
     test('attributes can be accessed via the [expression] notation', () => {
       expect(cdl.parse(`let x = {a: 3, b: 4}; x["a"]`)).toEqual(3)
       expect(cdl.parse(`let x = {a: 3, b: 4}; [x["a"], x["b"]]`)).toEqual([3, 4])
-      expect(cdl.parse(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; x["b"]["x"]["May"]`)).toEqual([5])
+      expect(cdl.parse(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; x["b"]["x"]["May"]`)).toEqual(5)
     })
   })
 
