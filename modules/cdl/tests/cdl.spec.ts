@@ -276,7 +276,6 @@ describe('cdl', () => {
     })
   })
 
-  test.todo('mixed chains of dot/index access')
   test.todo('comparison of arrays')
   test.todo('comparison of lambdas?')
   test.todo('quoting of a ticks inside a string')
