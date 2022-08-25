@@ -33,7 +33,8 @@ export class Runtime {
   constructor(private readonly root: AstNode) {}
 
   run(): Value {
-    return this.evalNode(this.root, new EmptySymbolTable())
+    const empty = new EmptySymbolTable()
+    return this.evalNode(this.root, empty)
   }
 
   private evalNode(ast: AstNode, table: SymbolTable): Value {
