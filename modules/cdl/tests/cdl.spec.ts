@@ -216,6 +216,8 @@ describe('cdl', () => {
     })
     test('can be recursive', () => {
       expect(cdl.parse(`let factorial = fun(n) if (n > 0) n*factorial(n-1) else 1; factorial(6)`)).toEqual(720)
+      expect(cdl.parse(`let gcd = fun(a, b) if (b == 0) a else gcd(b, a % b); gcd(24, 60)`)).toEqual(12)
+      expect(cdl.parse(`let gcd = fun(a, b) if (b == 0) a else gcd(b, a % b); gcd(1071, 462)`)).toEqual(21)
     })
     test('can access definitions from the enclosing scope', () => {
       expect(cdl.parse(`let a = 1; (let inc = fun(n) n+a; inc(2))`)).toEqual(3)
