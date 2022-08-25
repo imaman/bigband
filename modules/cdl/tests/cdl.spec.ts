@@ -261,7 +261,7 @@ describe('cdl', () => {
       ).toEqual([1, 5, 300])
       expect(
         cdl.parse(
-          `let x = {a: 3, calendar: {months: { Jan: 1, Feb: 2, May: 5}, days: 100 } }; [x.calendar.months, x.calendar.days]`,
+          `let x = {a: 3, calendar: {months: { Jan: 1, Feb: 2, May: 5}, days: ['Mon', 'Tue', 'Wed' ] } }; [x.calendar.months, x.calendar.days]`,
         ),
       ).toEqual([{ Jan: 1, Feb: 2, May: 5 }, 100])
     })
