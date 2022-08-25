@@ -163,12 +163,18 @@ export class Parser {
       return { tag: 'unaryOperator', operand: this.unary(), operator: '-' }
     }
 
-    return this.functionCall()
+    return this.call()
   }
 
-  functionCall(): AstNode {
+  call(): AstNode {
     const callee = this.parenthesized()
-    if (this.scanner.consumeIf('(')) {
+
+    let ret = callee
+    while (true) {
+      if (!this.scanner.consumeIf('(')) {
+        return ret
+      }
+
       const actualArgs: AstNode[] = []
       if (this.scanner.consumeIf(')')) {
         // no actual args
@@ -183,10 +189,8 @@ export class Parser {
         }
       }
 
-      return { tag: 'functionCall', actualArgs, callee }
+      ret = { tag: 'functionCall', actualArgs, callee: ret }
     }
-
-    return callee
   }
 
   parenthesized(): AstNode {
