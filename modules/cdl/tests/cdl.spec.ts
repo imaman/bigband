@@ -242,6 +242,10 @@ describe('cdl', () => {
     expect(cdl.parse(`"ab" + "cd"`)).toEqual('abcd')
     // expect(cdl.parse(`'abcd'.indexOf('c')`)).toEqual(2)
   })
+  test('arrays', () => {
+    expect(cdl.parse(`["ab", 5]`)).toEqual(['ab', 5])
+    expect(cdl.parse(`[]`)).toEqual([])
+  })
   test.skip('objects', () => {
     expect(cdl.parse(`{}`)).toEqual({})
     expect(cdl.parse(`{a: 1}`)).toEqual({ a: 1 })
