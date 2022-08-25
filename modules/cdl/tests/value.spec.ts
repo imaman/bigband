@@ -32,9 +32,12 @@ describe('value', () => {
     const five = Value.num(1)
     const t = Value.bool(true)
 
-    const check = (a: Value, b: Value, f: (lhs: Value, rhs: Value) => void) => {
-      expect(() => f(a, b)).toThrowError('value type error: expected')
-      expect(() => f(b, a)).toThrowError('value type error: expected')
+    const check = (a: Value, b: Value | Value[], f: (lhs: Value, rhs: Value) => void) => {
+      const arr = Array.isArray(b) ? b : [b]
+      for (const curr of arr) {
+        expect(() => f(a, curr)).toThrowError('value type error: expected')
+        expect(() => f(curr, a)).toThrowError('value type error: expected')
+      }
     }
 
     test('emits erros when numeric operations are applied to a boolean (either lhs or rhs)', () => {
