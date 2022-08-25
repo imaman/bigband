@@ -27,6 +27,7 @@ describe('value', () => {
   test('strings', () => {
     expect(Value.str('abc').export()).toEqual('abc')
     expect(Value.str('').export()).toEqual('')
+    expect(Value.str('a').plus(Value.str('b')).export()).toEqual('ab')
   })
   describe('type erros', () => {
     const five = Value.num(1)
