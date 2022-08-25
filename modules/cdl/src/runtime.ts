@@ -1,4 +1,5 @@
 import { AstNode } from './ast-node'
+import { Token } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
 import { SymbolTable } from './symbol-table'
 import { Value } from './value'
@@ -123,15 +124,7 @@ export class Runtime {
       return table.lookup(ast.t.text)
     }
     if (ast.tag === 'literal') {
-      const parsed = JSON.parse(ast.t.text)
-      if (typeof parsed === 'boolean') {
-        return Value.bool(parsed)
-      } else if (typeof parsed === 'number') {
-        return Value.num(parsed)
-      } else if (typeof parsed === 'string') {
-        return Value.str(parsed)
-      }
-      throw new Error(`Unsupported literal: <${ast.t.text}> at ${ast.t.offset}`)
+      return this.toValue(JSON.parse(ast.t.text), ast.t)
     }
 
     if (ast.tag === 'arrayLiteral') {
@@ -187,6 +180,35 @@ export class Runtime {
       }
     }
 
+    if (ast.tag === 'dot') {
+      const rec = this.evalNode(ast.receiver, table)
+      return rec.access(ast.ident.t.text)
+    }
+
     shouldNeverHappen(ast)
+  }
+
+  toValue(parsed: unknown, token: Token) {
+    if (typeof parsed === 'boolean') {
+      return Value.bool(parsed)
+    } else if (typeof parsed === 'number') {
+      return Value.num(parsed)
+    } else if (typeof parsed === 'string') {
+      return Value.str(parsed)
+    } else if (Array.isArray(parsed)) {
+      return Value.arr(parsed)
+    } else if (typeof parsed === 'object' && parsed) {
+      for (const [k,v] of Object.entries(parsed)) {
+        if (typeof k !== 'string') {
+          throw new Error(`Invalid attribute name: ${k}`)
+        }
+        
+        if (!(v instanceof Value)) {
+          throw new Error(`Invalid attribute value: attribute ${k} has value ${v}`)
+        }
+      }
+      return Value.obj(parsed as Record<string, Value>)
+    }
+    throw new Error(`Unsupported literal: <${token.text}> at ${token.offset}`)
   }
 }
