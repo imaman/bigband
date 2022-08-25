@@ -187,6 +187,11 @@ export class Runtime {
       }
     }
 
+    if (ast.tag === 'dot') {
+      const rec = this.evalNode(ast.receiver, table)
+      return rec.access(ast.ident.t.text)
+    }
+
     shouldNeverHappen(ast)
   }
 }
