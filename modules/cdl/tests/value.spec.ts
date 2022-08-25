@@ -35,6 +35,8 @@ describe('value', () => {
   })
   test('arrays', () => {
     expect(Value.arr([Value.num(10), Value.num(20)]).export()).toEqual([10, 20])
+    expect(Value.arr([]).export()).toEqual([])
+    expect(Value.arr([Value.str('ab'), Value.num(500), Value.bool(true)]).export()).toEqual(['ab', 500, true])
   })
   describe('type erros', () => {
     const five = Value.num(1)
