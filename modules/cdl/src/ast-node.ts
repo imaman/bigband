@@ -55,3 +55,8 @@ export type AstNode =
       positive: AstNode
       negative: AstNode
     }
+  | {
+      tag: 'dot'
+      receiver: AstNode
+      ident: Ident
+    }
