@@ -253,7 +253,7 @@ describe('cdl', () => {
       expect(cdl.parse(`{}`)).toEqual({})
       expect(cdl.parse(`{a: 1}`)).toEqual({ a: 1 })
     })
-    test.skip('access to attributes', () => {
+    test('access to attributes', () => {
       expect(cdl.parse(`let x = {a: 3, b: 4}; x.a`)).toEqual(3)
       expect(cdl.parse(`let x = {a: 3, b: 4}; x.a * x.b`)).toEqual(12)
     })
