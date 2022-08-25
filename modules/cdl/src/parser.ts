@@ -167,7 +167,7 @@ export class Parser {
   }
 
   call(): AstNode {
-    const callee = this.parenthesized()
+    const callee = this.memberAccess()
 
     let ret = callee
     while (true) {
@@ -190,6 +190,19 @@ export class Parser {
       }
 
       ret = { tag: 'functionCall', actualArgs, callee: ret }
+    }
+  }
+
+  memberAccess(): AstNode {
+    let ret = this.parenthesized()
+
+    while (true) {
+      if (!this.scanner.consumeIf('.')) {
+        return ret
+      }
+
+      const ident = this.identifier()
+      ret = { tag: 'dot', receiver: ret, ident }
     }
   }
 
