@@ -6,6 +6,7 @@ type Inner =
   | { tag: 'bool'; val: boolean }
   | { tag: 'str'; val: string }
   | { tag: 'arr'; val: Value[] }
+  | { tag: 'obj'; val: Record<string, Value> }
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
 
 export class Value {
@@ -22,6 +23,9 @@ export class Value {
   }
   static arr(val: Value[]): Value {
     return new Value({ val, tag: 'arr' })
+  }
+  static obj(val: Record<string, Value>): Value {
+    return new Value({ val, tag: 'obj' })
   }
   static lambda(ast: Lambda, table: SymbolTable): Value {
     return new Value({ val: { ast, table }, tag: 'lambda' })
