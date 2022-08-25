@@ -40,6 +40,14 @@ export class Value {
     throw new Error(`Not a boolean: ${JSON.stringify(this.inner.val)}`)
   }
 
+  assertNum(): number {
+    if (this.inner.tag === 'num') {
+      return this.inner.val
+    }
+
+    throw new Error(`Not a number: ${JSON.stringify(this.inner.val)}`)
+  }
+
   assertStr(): string {
     if (this.inner.tag === 'str') {
       return this.inner.val
@@ -212,9 +220,25 @@ export class Value {
 
       return this.inner.val[index]
     }
+    if (this.inner.tag === 'arr') {
+      if (typeof indexValue === 'string') {
+        throw new Error(`Access to arrays requires a numerical index value (got: ${indexValue})`)
+      }
 
-    this.assertObj()
-    throw new Error(`Cannot access an object of type ${this.inner.tag}`)
+      const i: number = indexValue.assertNum()
+      return this.inner.val[i]
+    }
+
+    if (
+      this.inner.tag === 'bool' ||
+      this.inner.tag === 'lambda' ||
+      this.inner.tag === 'num' ||
+      this.inner.tag === 'str'
+    ) {
+      throw new Error(`Cannot access an object of type ${this.inner.tag}`)
+    }
+
+    shouldNeverHappen(this.inner)
   }
 
   toJSON() {

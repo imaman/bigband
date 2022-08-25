@@ -119,9 +119,14 @@ describe('cdl', () => {
       expect(cdl.parse(`'ab' + 'cd'`)).toEqual('abcd')
     })
   })
-  test('arrays', () => {
-    expect(cdl.parse(`["ab", 5]`)).toEqual(['ab', 5])
-    expect(cdl.parse(`[]`)).toEqual([])
+  describe('arrays', () => {
+    test('array literals are specified via the enclosing brackets notation ([])', () => {
+      expect(cdl.parse(`["ab", 5]`)).toEqual(['ab', 5])
+      expect(cdl.parse(`[]`)).toEqual([])
+    })
+    test('individual elements of an array can be accessed via the [index] notation', () => {
+      expect(cdl.parse(`let a = ['sun', 'mon', 'tue', 'wed']; a[1]`)).toEqual('mon')
+    })
   })
 
   describe('let', () => {
