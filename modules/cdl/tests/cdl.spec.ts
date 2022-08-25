@@ -248,11 +248,15 @@ describe('cdl', () => {
       ).toThrowError('Arg list length mismatch: expected 1 but got 2')
     })
   })
-  test.skip('objects', () => {
-    expect(cdl.parse(`{}`)).toEqual({})
-    expect(cdl.parse(`{a: 1}`)).toEqual({ a: 1 })
-    expect(cdl.parse(`let x = {a: 3, b: 4}; x.a`)).toEqual(3)
-    expect(cdl.parse(`let x = {a: 3, b: 4}; x.a * x.b`)).toEqual(12)
+  describe('objects', () => {
+    test('are specified via JSON format', () => {
+      expect(cdl.parse(`{}`)).toEqual({})
+      expect(cdl.parse(`{a: 1}`)).toEqual({ a: 1 })
+    })
+    test.skip('access to attributes', () => {
+      expect(cdl.parse(`let x = {a: 3, b: 4}; x.a`)).toEqual(3)
+      expect(cdl.parse(`let x = {a: 3, b: 4}; x.a * x.b`)).toEqual(12)
+    })
   })
   test.todo('comparison of arrays')
   test.todo('comparison of lambdas?')
