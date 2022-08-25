@@ -237,7 +237,6 @@ describe('cdl', () => {
       ).toThrowError('Arg list length mismatch: expected 1 but got 2')
     })
   })
-
   test.skip('strings', () => {
     expect(cdl.parse(`'ab'`)).toEqual('ab')
     expect(cdl.parse(`'ab' + 'cd'`)).toEqual('abcd')
@@ -251,8 +250,6 @@ describe('cdl', () => {
   })
   test.todo('quoting of a ticks inside a string')
   test.todo('number in scientific notation')
-  test.todo('lambda expressions accessing outer scope variables')
-  test.todo('accessing uninitalized variable')
   test.todo('syntax errors')
   test.todo('error messages to include line number and column')
   test.todo('deep equality of objects')
