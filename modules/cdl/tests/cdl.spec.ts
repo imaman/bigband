@@ -271,6 +271,9 @@ describe('cdl', () => {
       expect(cdl.parse(`let x = {a: 3, b: 4}; [x["a"], x["b"]]`)).toEqual([3, 4])
       expect(cdl.parse(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; x["b"]["x"]["May"]`)).toEqual(5)
     })
+    test('supports chains of attribute accesses mixing the .<ident> and the [expression] notations', () => {
+      expect(cdl.parse(`let o = {b: {x: {M: 5}}}; [o["b"].x["M"], o.b["x"].M, o.b.x["M"]]`)).toEqual([5, 5, 5])
+    })
   })
 
   test.todo('mixed chains of dot/index access')
