@@ -33,6 +33,9 @@ describe('value', () => {
     expect(Value.str('pqr').plus(Value.str('')).export()).toEqual('pqr')
     expect(Value.str('zxcvb').plus(Value.str('nm')).export()).toEqual('zxcvbnm')
   })
+  test('arrays', () => {
+    expect(Value.arr([Value.num(10), Value.num(20)]).export()).toEqual([10, 20])
+  })
   describe('type erros', () => {
     const five = Value.num(1)
     const t = Value.bool(true)

@@ -5,6 +5,7 @@ type Inner =
   | { tag: 'num'; val: number }
   | { tag: 'bool'; val: boolean }
   | { tag: 'str'; val: string }
+  | { tag: 'arr'; val: Value[] }
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
 
 export class Value {
@@ -18,6 +19,9 @@ export class Value {
   }
   static str(val: string): Value {
     return new Value({ val, tag: 'str' })
+  }
+  static arr(val: Value[]): Value {
+    return new Value({ val, tag: 'arr' })
   }
   static lambda(ast: Lambda, table: SymbolTable): Value {
     return new Value({ val: { ast, table }, tag: 'lambda' })
@@ -157,7 +161,11 @@ export class Value {
     return 0
   }
 
-  export() {
+  toJSON() {
     return this.inner.val
+  }
+
+  export() {
+    return JSON.parse(JSON.stringify(this))
   }
 }
