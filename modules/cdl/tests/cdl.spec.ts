@@ -256,6 +256,9 @@ describe('cdl', () => {
     test('access to attributes', () => {
       expect(cdl.parse(`let x = {a: 3, b: 4}; x.a`)).toEqual(3)
       expect(cdl.parse(`let x = {a: 3, b: 4}; x.a * x.b`)).toEqual(12)
+      expect(
+        cdl.parse(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; [x.b.x.Jan, x.b.x.May, x.b.y]`),
+      ).toEqual([1, 5, 300])
     })
   })
   test.todo('comparison of arrays')
