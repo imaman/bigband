@@ -89,9 +89,11 @@ export class Value {
       return Value.num(this.inner.val + that.inner.val)
     }
 
-    this.requireType('num')
-    that.requireType('num')
-    throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
+    if (this.inner.tag === 'str') {
+      return Value.str(this.inner.val + that.inner.val)
+    }
+
+    throw new Error(`Type error: operator cannot be applied to operands of type ${this.inner.tag}, ${that.inner.tag}`)
   }
   minus(that: Value) {
     if (this.inner.tag === 'num' && that.inner.tag === 'num') {

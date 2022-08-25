@@ -35,9 +35,10 @@ describe('value', () => {
 
     const check = (a: Value, b: Value | Value[], f: (lhs: Value, rhs: Value) => void) => {
       const arr = Array.isArray(b) ? b : [b]
+      const r = /(^value type error: expected)|(^Type error: operator cannot be applied to operands of type)/
       for (const curr of arr) {
-        expect(() => f(a, curr)).toThrowError('value type error: expected')
-        expect(() => f(curr, a)).toThrowError('value type error: expected')
+        expect(() => f(a, curr)).toThrowError(r)
+        expect(() => f(curr, a)).toThrowError(r)
       }
     }
 
