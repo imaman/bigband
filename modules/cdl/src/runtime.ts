@@ -134,6 +134,10 @@ export class Runtime {
       throw new Error(`Unsupported literal: <${ast.t.text}> at ${ast.t.offset}`)
     }
 
+    if (ast.tag === 'arrayLiteral') {
+      return Value.arr(ast.elements.map(at => this.evalNode(at, table)))
+    }
+
     if (ast.tag === 'topLevelExpression') {
       let newTable = table
       for (const def of ast.definitions) {
