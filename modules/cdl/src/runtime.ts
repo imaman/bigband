@@ -128,6 +128,8 @@ export class Runtime {
         return Value.bool(parsed)
       } else if (typeof parsed === 'number') {
         return Value.num(parsed)
+      } else if (typeof parsed === 'string') {
+        return Value.str(parsed)
       }
       throw new Error(`Unsupported literal: <${ast.t.text}> at ${ast.t.offset}`)
     }

@@ -237,10 +237,10 @@ describe('cdl', () => {
       ).toThrowError('Arg list length mismatch: expected 1 but got 2')
     })
   })
-  test.skip('strings', () => {
-    expect(cdl.parse(`'ab'`)).toEqual('ab')
-    expect(cdl.parse(`'ab' + 'cd'`)).toEqual('abcd')
-    expect(cdl.parse(`'abcd'.indexOf('c')`)).toEqual(2)
+  test('strings', () => {
+    expect(cdl.parse(`"ab"`)).toEqual('ab')
+    expect(cdl.parse(`"ab" + "cd"`)).toEqual('abcd')
+    // expect(cdl.parse(`'abcd'.indexOf('c')`)).toEqual(2)
   })
   test.skip('objects', () => {
     expect(cdl.parse(`{}`)).toEqual({})
