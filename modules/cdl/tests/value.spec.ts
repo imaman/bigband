@@ -24,6 +24,10 @@ describe('value', () => {
     expect(Value.bool(false).not().export()).toEqual(true)
     expect(Value.bool(true).not().export()).toEqual(false)
   })
+  test('strings', () => {
+    expect(Value.str('abc').export()).toEqual('abc')
+    expect(Value.str('').export()).toEqual('')
+  })
   describe('type erros', () => {
     const five = Value.num(1)
     const t = Value.bool(true)

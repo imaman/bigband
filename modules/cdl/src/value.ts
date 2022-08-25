@@ -4,6 +4,7 @@ import { SymbolTable } from './symbol-table'
 type Inner =
   | { tag: 'num'; val: number }
   | { tag: 'bool'; val: boolean }
+  | { tag: 'str'; val: string }
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
 
 export class Value {
@@ -14,6 +15,9 @@ export class Value {
   }
   static num(val: number): Value {
     return new Value({ val, tag: 'num' })
+  }
+  static str(val: string): Value {
+    return new Value({ val, tag: 'str' })
   }
   static lambda(ast: Lambda, table: SymbolTable): Value {
     return new Value({ val: { ast, table }, tag: 'lambda' })
