@@ -225,6 +225,11 @@ describe('cdl', () => {
     })
     test('can return another lambda expression (a-la currying)', () => {
       expect(cdl.parse(`let sum = fun(a) fun(b,c) a+b+c; (sum(1))(600,20)`)).toEqual(621)
+      expect(cdl.parse(`let sum = fun(a) fun(b,c) a+b+c; let plusOne = sum(1); plusOne(600,20)`)).toEqual(621)
+      expect(() =>
+        cdl.parse(`let sum = fun(a) fun(b) fun(c) a+b+c; let plusOne = sum(1); plusOne(600,20)`),
+      ).toThrowError('Arg list length mismatch: expected 1 but got 2')
+      expect(cdl.parse(`let sum = fun(a) fun(b) fun(c) a+b+c; ((sum(1))(600))(20)`)).toEqual(621)
     })
   })
 
