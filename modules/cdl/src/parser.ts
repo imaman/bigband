@@ -237,9 +237,17 @@ export class Parser {
       return { tag: 'literal', type: 'num', t }
     }
 
-    if (this.scanner.consumeIf('"')) {
+    // double-quotes-enclosd string
+    if (this.scanner.consumeIf(`"`)) {
       t = this.scanner.consume(/[^"]*/)
-      this.scanner.consume('"')
+      this.scanner.consume(`"`)
+      return { tag: 'literal', type: 'str', t }
+    }
+
+    // single-quotes-enclosd string
+    if (this.scanner.consumeIf(`'`)) {
+      t = this.scanner.consume(/[^']*/)
+      this.scanner.consume(`'`)
       return { tag: 'literal', type: 'str', t }
     }
 

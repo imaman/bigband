@@ -109,10 +109,15 @@ describe('cdl', () => {
     expect(cdl.parse(`-3 * -7`)).toEqual(21)
   })
 
-  test('strings', () => {
-    expect(cdl.parse(`"ab"`)).toEqual('ab')
-    expect(cdl.parse(`"ab" + "cd"`)).toEqual('abcd')
-    // expect(cdl.parse(`'abcd'.indexOf('c')`)).toEqual(2)
+  describe('strings', () => {
+    test('can be specified via the double-quotes notation', () => {
+      expect(cdl.parse(`"ab"`)).toEqual('ab')
+      expect(cdl.parse(`"ab" + "cd"`)).toEqual('abcd')
+    })
+    test('can be specified via the single-quotes notation', () => {
+      expect(cdl.parse(`'ab'`)).toEqual('ab')
+      expect(cdl.parse(`'ab' + 'cd'`)).toEqual('abcd')
+    })
   })
   test('arrays', () => {
     expect(cdl.parse(`["ab", 5]`)).toEqual(['ab', 5])
