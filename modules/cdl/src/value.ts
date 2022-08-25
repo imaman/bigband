@@ -35,6 +35,14 @@ export class Value {
     throw new Error(`Not a boolean: ${JSON.stringify(this.inner.val)}`)
   }
 
+  assertStr(): string {
+    if (this.inner.tag === 'str') {
+      return this.inner.val
+    }
+
+    throw new Error(`Not a string: ${JSON.stringify(this.inner.val)}`)
+  }
+
   assertLambda() {
     if (this.inner.tag === 'lambda') {
       return this.inner.val
@@ -149,16 +157,19 @@ export class Value {
   }
 
   compare(that: Value) {
-    const d = this.minus(that)?.inner.val
-    if (d < 0) {
-      return -1
+    if (this.inner.tag === 'num') {
+      const d = this.minus(that)?.inner.val
+      return d < 0 ? -1 : d > 0 ? 1 : 0
     }
 
-    if (d > 0) {
-      return 1
+    if (this.inner.tag === 'str') {
+      const rhs = that.assertStr()
+
+      const d = this.inner.val.localeCompare(rhs)
+      return d < 0 ? -1 : d > 0 ? 1 : 0
     }
 
-    return 0
+    throw new Error(`Cannot compare when the left-hand-side value is of type ${this.inner.tag}`)
   }
 
   toJSON() {

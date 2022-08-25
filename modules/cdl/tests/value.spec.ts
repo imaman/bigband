@@ -11,7 +11,7 @@ describe('value', () => {
     expect(Value.num(3).power(Value.num(4)).export()).toEqual(81)
     expect(Value.num(2).power(Value.num(8)).export()).toEqual(256)
   })
-  test('comparisons', () => {
+  test('comparisons of numbers', () => {
     expect(Value.num(5).compare(Value.num(3))).toEqual(1)
     expect(Value.num(5).compare(Value.num(4))).toEqual(1)
     expect(Value.num(5).compare(Value.num(5))).toEqual(0)
@@ -33,6 +33,13 @@ describe('value', () => {
     expect(Value.str('pqr').plus(Value.str('')).export()).toEqual('pqr')
     expect(Value.str('zxcvb').plus(Value.str('nm')).export()).toEqual('zxcvbnm')
   })
+  test('comparisons of strings', () => {
+    expect(Value.str('e').compare(Value.str('c'))).toEqual(1)
+    expect(Value.str('e').compare(Value.str('d'))).toEqual(1)
+    expect(Value.str('e').compare(Value.str('e'))).toEqual(0)
+    expect(Value.str('e').compare(Value.str('f'))).toEqual(-1)
+    expect(Value.str('e').compare(Value.str('g'))).toEqual(-1)
+  })
   test('arrays', () => {
     expect(Value.arr([Value.num(10), Value.num(20)]).export()).toEqual([10, 20])
     expect(Value.arr([]).export()).toEqual([])
@@ -44,7 +51,8 @@ describe('value', () => {
 
     const check = (a: Value, b: Value | Value[], f: (lhs: Value, rhs: Value) => void) => {
       const arr = Array.isArray(b) ? b : [b]
-      const r = /(^value type error: expected)|(^Type error: operator cannot be applied to operands of type)/
+      const r =
+        /(^value type error: expected)|(^Type error: operator cannot be applied to operands of type)|(^Cannot compare when the left-hand-side value is of type)/
       for (const curr of arr) {
         expect(() => f(a, curr)).toThrowError(r)
         expect(() => f(curr, a)).toThrowError(r)
