@@ -225,21 +225,22 @@ export class Parser {
   literalOrIdent(): AstNode {
     let t = this.scanner.consumeIf('true')
     if (t) {
-      return { tag: 'literal', t }
+      return { tag: 'literal', type: 'bool', t }
     }
     t = this.scanner.consumeIf('false')
     if (t) {
-      return { tag: 'literal', t }
+      return { tag: 'literal', type: 'bool', t }
     }
 
     t = this.scanner.consumeIf(/([0-9]*[.])?[0-9]+/)
     if (t) {
-      return { tag: 'literal', t }
+      return { tag: 'literal', type: 'num', t }
     }
 
-    t = this.scanner.consumeIf(/"[^"]*"/)
-    if (t) {
-      return { tag: 'literal', t }
+    if (this.scanner.consumeIf('"')) {
+      t = this.scanner.consume(/[^"]*/)
+      this.scanner.consume('"')
+      return { tag: 'literal', type: 'str', t }
     }
 
     if (this.scanner.consumeIf('[')) {

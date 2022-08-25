@@ -25,6 +25,7 @@ export type AstNode =
     }
   | {
       tag: 'literal'
+      type: 'str' | 'bool' | 'num'
       t: Token
     }
   | {

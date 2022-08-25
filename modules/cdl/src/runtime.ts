@@ -123,15 +123,17 @@ export class Runtime {
       return table.lookup(ast.t.text)
     }
     if (ast.tag === 'literal') {
-      const parsed = JSON.parse(ast.t.text)
-      if (typeof parsed === 'boolean') {
-        return Value.bool(parsed)
-      } else if (typeof parsed === 'number') {
-        return Value.num(parsed)
-      } else if (typeof parsed === 'string') {
-        return Value.str(parsed)
+      if (ast.type === 'bool') {
+        // TODO(imaman): stricter checking of 'false'
+        return Value.bool(ast.t.text === 'true' ? true : false)
       }
-      throw new Error(`Unsupported literal: <${ast.t.text}> at ${ast.t.offset}`)
+      if (ast.type === 'num') {
+        return Value.num(Number(ast.t.text))
+      }
+      if (ast.type === 'str') {
+        return Value.str(ast.t.text)
+      }
+      shouldNeverHappen(ast.type)
     }
 
     if (ast.tag === 'arrayLiteral') {
@@ -189,6 +191,9 @@ export class Runtime {
 
     if (ast.tag === 'dot') {
       const rec = this.evalNode(ast.receiver, table)
+      if (rec === undefined || rec === null) {
+        throw new Error(`Cannot access attribute .${ast.ident.t.text} of ${rec}`)
+      }
       return rec.access(ast.ident.t.text)
     }
 
