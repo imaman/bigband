@@ -47,6 +47,14 @@ export class Value {
     throw new Error(`Not a string: ${JSON.stringify(this.inner.val)}`)
   }
 
+  assertObj(): unknown {
+    if (this.inner.tag === 'obj') {
+      return this.inner.val
+    }
+
+    throw new Error(`Not an object: ${JSON.stringify(this.inner.val)}`)
+  }
+
   assertLambda() {
     if (this.inner.tag === 'lambda') {
       return this.inner.val
@@ -180,6 +188,15 @@ export class Value {
     }
 
     throw new Error(`Cannot compare when the left-hand-side value is of type ${this.inner.tag}`)
+  }
+
+  access(attribureName: string): Value {
+    if (this.inner.tag === 'obj') {
+      return this.inner.val[attribureName]
+    }
+
+    this.assertObj()
+    throw new Error(`Impossible`)
   }
 
   toJSON() {

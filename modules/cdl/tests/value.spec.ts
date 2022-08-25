@@ -59,6 +59,10 @@ describe('value', () => {
       quick: 500,
       brown: true,
     })
+    const o = Value.obj({ the: Value.str('ab'), quick: Value.num(500), brown: Value.bool(true) })
+    expect(o.access('the').export()).toEqual('ab')
+    expect(o.access('quick').export()).toEqual(500)
+    expect(o.access('brown').export()).toEqual(true)
   })
   describe('type erros', () => {
     const five = Value.num(1)
