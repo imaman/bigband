@@ -223,6 +223,9 @@ describe('cdl', () => {
     test('only lexical scope is considered when looking up a definition', () => {
       expect(cdl.parse(`let a = 1; let inc = fun(n) n+a; (let a = 100; inc(2))`)).toEqual(3)
     })
+    test('can return another lambda expression (a-la currying)', () => {
+      expect(cdl.parse(`let sum = fun(a) fun(b,c) a+b+c; (sum(1))(600,20)`)).toEqual(621)
+    })
   })
 
   test.skip('strings', () => {
@@ -239,8 +242,6 @@ describe('cdl', () => {
   test.todo('quoting of a ticks inside a string')
   test.todo('number in scientific notation')
   test.todo('lambda expressions accessing outer scope variables')
-  test.todo('if')
-  test.todo('recursion')
   test.todo('accessing uninitalized variable')
   test.todo('syntax errors')
   test.todo('error messages to include line number and column')
