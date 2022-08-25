@@ -168,6 +168,12 @@ export class Value {
       const d = this.inner.val.localeCompare(rhs)
       return d < 0 ? -1 : d > 0 ? 1 : 0
     }
+    if (this.inner.tag === 'bool') {
+      const lhs = this.assertBool()
+      const rhs = that.assertBool()
+
+      return lhs && !rhs ? 1 : !lhs && rhs ? -1 : 0
+    }
 
     throw new Error(`Cannot compare when the left-hand-side value is of type ${this.inner.tag}`)
   }

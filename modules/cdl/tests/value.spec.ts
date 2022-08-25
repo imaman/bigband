@@ -24,6 +24,12 @@ describe('value', () => {
     expect(Value.bool(false).not().export()).toEqual(true)
     expect(Value.bool(true).not().export()).toEqual(false)
   })
+  test('comparisons of booleans', () => {
+    expect(Value.bool(false).compare(Value.bool(false))).toEqual(0)
+    expect(Value.bool(false).compare(Value.bool(true))).toEqual(-1)
+    expect(Value.bool(true).compare(Value.bool(false))).toEqual(1)
+    expect(Value.bool(true).compare(Value.bool(true))).toEqual(0)
+  })
   test('strings', () => {
     expect(Value.str('abc').export()).toEqual('abc')
     expect(Value.str('').export()).toEqual('')
@@ -52,7 +58,7 @@ describe('value', () => {
     const check = (a: Value, b: Value | Value[], f: (lhs: Value, rhs: Value) => void) => {
       const arr = Array.isArray(b) ? b : [b]
       const r =
-        /(^value type error: expected)|(^Type error: operator cannot be applied to operands of type)|(^Cannot compare when the left-hand-side value is of type)/
+        /(^value type error: expected)|(^Type error: operator cannot be applied to operands of type)|(^Cannot compare when the left-hand-side value is of type)|(^Not a)/
       for (const curr of arr) {
         expect(() => f(a, curr)).toThrowError(r)
         expect(() => f(curr, a)).toThrowError(r)
