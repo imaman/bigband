@@ -218,6 +218,11 @@ export class Parser {
       return { tag: 'literal', t }
     }
 
+    t = this.scanner.consumeIf(/'[^']*'/)
+    if (t) {
+      return { tag: 'literal', t }
+    }
+
     const ident = this.maybeIdentifier()
     if (ident) {
       return ident
