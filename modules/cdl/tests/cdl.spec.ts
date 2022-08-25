@@ -7,7 +7,7 @@ describe('cdl', () => {
     expect(cdl.parse(`3.14`)).toEqual(3.14)
   })
 
-  test.todo('lazy eval of || expressions')
+  test.todo('error value/exception')
 
   test('booleans', () => {
     expect(cdl.parse(`true`)).toEqual(true)
@@ -42,10 +42,10 @@ describe('cdl', () => {
     expect(cdl.parse(`6**4`)).toEqual(1296)
     expect(cdl.parse(`2*3**4`)).toEqual(162)
     expect(cdl.parse(`(2*3)**4`)).toEqual(1296)
-    expect(() => cdl.parse(`!5`)).toThrowError(`Cannot compute the logical not of a value of type num: 5`)
-    expect(() => cdl.parse(`!0`)).toThrowError(`Cannot compute the logical not of a value of type num: 0`)
-    expect(() => cdl.parse(`!!0`)).toThrowError(`Cannot compute the logical not of a value of type num: 0`)
-    expect(() => cdl.parse(`!!4`)).toThrowError(`Cannot compute the logical not of a value of type num: 4`)
+    expect(() => cdl.parse(`!5`)).toThrowError(`value type error: expected bool but found: 5`)
+    expect(() => cdl.parse(`!0`)).toThrowError(`value type error: expected bool but found: 0`)
+    expect(() => cdl.parse(`!!0`)).toThrowError(`value type error: expected bool but found: 0`)
+    expect(() => cdl.parse(`!!4`)).toThrowError(`value type error: expected bool but found: 4`)
   })
 
   test('equality', () => {
@@ -82,11 +82,11 @@ describe('cdl', () => {
 
   test('the rhs of a logical-or expression is evaluated only if lhs is false', () => {
     expect(cdl.parse(`true || x`)).toEqual(true)
-    expect(() => cdl.parse(`false || x`)).toThrowError('ymbol x was not found')
+    expect(() => cdl.parse(`false || x`)).toThrowError('Symbol x was not found')
   })
   test('the rhs of a logical-and expression is evaluated only if lhs is true', () => {
     expect(cdl.parse(`false && x`)).toEqual(false)
-    expect(() => cdl.parse(`true && x`)).toThrowError('ymbol x was not found')
+    expect(() => cdl.parse(`true && x`)).toThrowError('Symbol x was not found')
   })
 
   test('eats whitespace', () => {
@@ -171,6 +171,26 @@ describe('cdl', () => {
     })
   })
 
+  describe('if', () => {
+    test('returns the value of the first branch if the condition is true', () => {
+      expect(cdl.parse(`if (4 > 3) 200 else -100`)).toEqual(200)
+    })
+    test('evaluates the first branch only if the condition is true', () => {
+      expect(() => cdl.parse(`if (true) x else -100`)).toThrowError('Symbol x was not found')
+      expect(cdl.parse(`if (false) x else -100`)).toEqual(-100)
+    })
+    test('returns the value of the second branch if the condition is false', () => {
+      expect(cdl.parse(`if (4 < 3) 200 else -100`)).toEqual(-100)
+    })
+    test('evaluates the second branch only if the condition is false', () => {
+      expect(() => cdl.parse(`if (false) 200 else x`)).toThrowError('Symbol x was not found')
+      expect(cdl.parse(`if (true) 200 else x`)).toEqual(200)
+    })
+    test('yells if conditions is not boolean', () => {
+      expect(() => cdl.parse(`if (5+8) 200 else -100`)).toThrowError('Not a boolean: 13')
+    })
+  })
+
   describe('lambda expressions', () => {
     test('binds the value of the actual arg to the formal arg', () => {
       expect(cdl.parse(`(fun(a) 2*a)(3)`)).toEqual(6)
@@ -205,16 +225,6 @@ describe('cdl', () => {
     })
   })
 
-  describe('if', () => {
-    test('returns the value of the first positive branch if the condition is true', () => {
-      expect(cdl.parse(`if (4 > 3) 200 else -100`)).toEqual(200)
-    })
-    test('returns the value of the first positive branch if the condition is false', () => {
-      expect(cdl.parse(`if (4 < 3) 200 else -100`)).toEqual(-100)
-    })
-    test.todo('yells if conditions is not boolean')
-  })
-
   test.skip('strings', () => {
     expect(cdl.parse(`'ab'`)).toEqual('ab')
     expect(cdl.parse(`'ab' + 'cd'`)).toEqual('abcd')
@@ -228,7 +238,6 @@ describe('cdl', () => {
   })
   test.todo('quoting of a ticks inside a string')
   test.todo('number in scientific notation')
-  test.todo('lambda expressions')
   test.todo('lambda expressions accessing outer scope variables')
   test.todo('if')
   test.todo('recursion')

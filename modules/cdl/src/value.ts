@@ -68,9 +68,10 @@ export class Value {
   not() {
     if (this.inner.tag === 'bool') {
       return Value.bool(!this.inner.val)
-    } else {
-      throw new Error(`Cannot compute the logical not of a value of type ${this.inner.tag}: ${this.inner.val}`)
     }
+
+    this.requireType('bool')
+    throw new Error(`Inconsistent types: ${this.inner.tag}`)
   }
 
   requireType(t: string) {

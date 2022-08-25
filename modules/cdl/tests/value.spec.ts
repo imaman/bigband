@@ -24,12 +24,31 @@ describe('value', () => {
     expect(Value.bool(false).not().export()).toEqual(true)
     expect(Value.bool(true).not().export()).toEqual(false)
   })
-  test('emits erros when numeric operations are applied to a boolean (either lhs or rhs)', () => {
-    expect(() => Value.bool(true).plus(Value.num(2))).toThrowError('value type error: expected num but found: true')
-    expect(() => Value.num(5).plus(Value.bool(false))).toThrowError('value type error: expected num but found: false')
-  })
-  test('emits erros when boolean operations are applied to a number (either lhs or rhs)', () => {
-    expect(() => Value.bool(true).or(Value.num(2))).toThrowError('value type error: expected bool but found: 2')
-    expect(() => Value.num(5).and(Value.bool(false))).toThrowError('value type error: expected bool but found: 5')
+  describe('type erros', () => {
+    const five = Value.num(1)
+    const t = Value.bool(true)
+
+    const check = (a: Value, b: Value, f: (lhs: Value, rhs: Value) => void) => {
+      expect(() => f(a, b)).toThrowError('value type error: expected')
+      expect(() => f(b, a)).toThrowError('value type error: expected')
+    }
+
+    test('emits erros when numeric operations are applied to a boolean (either lhs or rhs)', () => {
+      check(five, t, (x, y) => x.plus(y))
+      check(five, t, (x, y) => x.minus(y))
+      check(five, t, (x, y) => x.times(y))
+      check(five, t, (x, y) => x.over(y))
+      check(five, t, (x, y) => x.power(y))
+      check(five, t, (x, y) => x.modulo(y))
+      check(five, t, (x, y) => x.compare(y))
+      check(t, t, x => x.negate())
+      expect(1).toEqual(1) // make the linter happy
+    })
+    test('emits erros when boolean operations are applied to a number (either lhs or rhs)', () => {
+      check(five, t, (x, y) => x.or(y))
+      check(five, t, (x, y) => x.and(y))
+      check(five, five, x => x.not())
+      expect(1).toEqual(1) // make the linter happy
+    })
   })
 })
