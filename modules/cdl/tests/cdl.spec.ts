@@ -219,6 +219,9 @@ describe('cdl', () => {
     })
     test('can access definitions from the enclosing scope', () => {
       expect(cdl.parse(`let a = 1; (let inc = fun(n) n+a; inc(2))`)).toEqual(3)
+      expect(
+        cdl.parse(`let by2 = fun(x) x*2; (let by10 = (let by5 = fun(x) x*5; fun(x) by2(by5(x))); by10(20))`),
+      ).toEqual(200)
     })
     test('only lexical scope is considered when looking up a definition', () => {
       expect(cdl.parse(`let a = 1; let inc = fun(n) n+a; (let a = 100; inc(2))`)).toEqual(3)
