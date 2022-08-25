@@ -109,6 +109,16 @@ describe('cdl', () => {
     expect(cdl.parse(`-3 * -7`)).toEqual(21)
   })
 
+  test('strings', () => {
+    expect(cdl.parse(`"ab"`)).toEqual('ab')
+    expect(cdl.parse(`"ab" + "cd"`)).toEqual('abcd')
+    // expect(cdl.parse(`'abcd'.indexOf('c')`)).toEqual(2)
+  })
+  test('arrays', () => {
+    expect(cdl.parse(`["ab", 5]`)).toEqual(['ab', 5])
+    expect(cdl.parse(`[]`)).toEqual([])
+  })
+
   describe('let', () => {
     test('binds values to variables', () => {
       expect(cdl.parse(`let x = 5; x+3`)).toEqual(8)
@@ -236,15 +246,6 @@ describe('cdl', () => {
         cdl.parse(`let sum = fun(a) fun(b) fun(c) a+b+c; let plusOne = sum(1); plusOne(600,20)`),
       ).toThrowError('Arg list length mismatch: expected 1 but got 2')
     })
-  })
-  test('strings', () => {
-    expect(cdl.parse(`"ab"`)).toEqual('ab')
-    expect(cdl.parse(`"ab" + "cd"`)).toEqual('abcd')
-    // expect(cdl.parse(`'abcd'.indexOf('c')`)).toEqual(2)
-  })
-  test('arrays', () => {
-    expect(cdl.parse(`["ab", 5]`)).toEqual(['ab', 5])
-    expect(cdl.parse(`[]`)).toEqual([])
   })
   test.skip('objects', () => {
     expect(cdl.parse(`{}`)).toEqual({})
