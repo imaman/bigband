@@ -20,6 +20,10 @@ export type AstNode =
       elements: AstNode[]
     }
   | {
+      tag: 'objectLiteral'
+      pairs: { k: Ident; v: AstNode }[]
+    }
+  | {
       tag: 'literal'
       t: Token
     }

@@ -138,6 +138,11 @@ export class Runtime {
       return Value.arr(ast.elements.map(at => this.evalNode(at, table)))
     }
 
+    if (ast.tag === 'objectLiteral') {
+      const entries: [string, Value][] = ast.pairs.map(at => [at.k.t.text, this.evalNode(at.v, table)])
+      return Value.obj(Object.fromEntries(entries))
+    }
+
     if (ast.tag === 'topLevelExpression') {
       let newTable = table
       for (const def of ast.definitions) {

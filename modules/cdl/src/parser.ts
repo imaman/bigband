@@ -227,6 +227,10 @@ export class Parser {
       return this.arrayBody()
     }
 
+    if (this.scanner.consumeIf('{')) {
+      return this.objectBody()
+    }
+
     const ident = this.maybeIdentifier()
     if (ident) {
       return ident
@@ -252,6 +256,30 @@ export class Parser {
       elements.push(exp)
       if (this.scanner.consumeIf(']')) {
         return { tag: 'arrayLiteral', elements }
+      }
+
+      this.scanner.consume(',')
+    }
+  }
+
+  /**
+   * This method assumes that the caller consumed the opening '{' token. It consumes the object's attributes
+   * (comma-separated list of key:value parirs) as well as the closing '}' token.
+   */
+  objectBody(): AstNode {
+    if (this.scanner.consumeIf('}')) {
+      // an empty array literal
+      return { tag: 'objectLiteral', pairs: [] }
+    }
+
+    const pairs: { k: Ident; v: AstNode }[] = []
+    while (true) {
+      const k = this.identifier()
+      this.scanner.consume(':')
+      const v = this.expression()
+      pairs.push({ k, v })
+      if (this.scanner.consumeIf('}')) {
+        return { tag: 'objectLiteral', pairs }
       }
 
       this.scanner.consume(',')
