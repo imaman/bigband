@@ -259,6 +259,11 @@ describe('cdl', () => {
       expect(
         cdl.parse(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; [x.b.x.Jan, x.b.x.May, x.b.y]`),
       ).toEqual([1, 5, 300])
+      expect(
+        cdl.parse(
+          `let x = {a: 3, calendar: {months: { Jan: 1, Feb: 2, May: 5}, days: 100 } }; [x.calendar.months, x.calendar.days]`,
+        ),
+      ).toEqual([{ Jan: 1, Feb: 2, May: 5 }, 100])
     })
   })
   test.todo('comparison of arrays')
