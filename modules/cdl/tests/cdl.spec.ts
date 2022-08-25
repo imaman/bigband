@@ -216,18 +216,19 @@ describe('cdl', () => {
       expect(cdl.parse(`(fun() 3.14)()*2`)).toEqual(6.28)
     })
     test('error on arg list mismatch', () => {
-      expect(() => cdl.parse(`let sumFour = fun(a,b,c,d) a+b+c+d; sumFour(4,8,2)`)).toThrowError(
+      expect(() => cdl.parse(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2)`)).toThrowError(
         'Arg list length mismatch: expected 4 but got 3',
       )
-      expect(() => cdl.parse(`let sumFour = fun(a,b,c,d) a+b+c+d; sumFour(4,8,2,6,1)`)).toThrowError(
+      expect(() => cdl.parse(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2,6,1)`)).toThrowError(
         'Arg list length mismatch: expected 4 but got 5',
       )
       expect(cdl.parse(`let sumFour = fun(a,b,c,d) a+b+c+d; sumFour(4,8,2,6)`)).toEqual(20)
     })
     test('can be recursive', () => {
       expect(cdl.parse(`let factorial = fun(n) if (n > 0) n*factorial(n-1) else 1; factorial(6)`)).toEqual(720)
-      expect(cdl.parse(`let gcd = fun(a, b) if (b == 0) a else gcd(b, a % b); gcd(24, 60)`)).toEqual(12)
-      expect(cdl.parse(`let gcd = fun(a, b) if (b == 0) a else gcd(b, a % b); gcd(1071, 462)`)).toEqual(21)
+      expect(cdl.parse(`let gcd = fun(a, b) if (b == 0) a else gcd(b, a % b); [gcd(24, 60), gcd(1071, 462)]`)).toEqual([
+        12, 21,
+      ])
     })
     test('can access definitions from the enclosing scope', () => {
       expect(cdl.parse(`let a = 1; (let inc = fun(n) n+a; inc(2))`)).toEqual(3)
