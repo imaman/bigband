@@ -28,6 +28,10 @@ describe('value', () => {
     expect(Value.str('abc').export()).toEqual('abc')
     expect(Value.str('').export()).toEqual('')
     expect(Value.str('a').plus(Value.str('b')).export()).toEqual('ab')
+    expect(Value.str('').plus(Value.str('')).export()).toEqual('')
+    expect(Value.str('').plus(Value.str('xyz')).export()).toEqual('xyz')
+    expect(Value.str('pqr').plus(Value.str('')).export()).toEqual('pqr')
+    expect(Value.str('zxcvb').plus(Value.str('nm')).export()).toEqual('zxcvbnm')
   })
   describe('type erros', () => {
     const five = Value.num(1)
