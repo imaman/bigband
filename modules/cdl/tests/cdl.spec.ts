@@ -127,6 +127,11 @@ describe('cdl', () => {
     test('individual elements of an array can be accessed via the [index] notation', () => {
       expect(cdl.parse(`let a = ['sun', 'mon', 'tue', 'wed']; a[1]`)).toEqual('mon')
     })
+    test('the index at the [index] notation can be a computed value', () => {
+      expect(cdl.parse(`let a = ['sun', 'mon', 'tue', 'wed']; let f = fun(n) n-5; [a[3-1], a[18/6], a[f(5)]]`)).toEqual(
+        ['tue', 'wed', 'sun'],
+      )
+    })
   })
 
   describe('let', () => {
@@ -286,6 +291,7 @@ describe('cdl', () => {
     })
   })
 
+  test.todo('access to object via [] with a computed string')
   test.todo('comparison of arrays')
   test.todo('comparison of lambdas?')
   test.todo('quoting of a ticks inside a string')
