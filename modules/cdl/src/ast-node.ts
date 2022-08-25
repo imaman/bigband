@@ -16,6 +16,10 @@ export type Lambda = {
 export type AstNode =
   | Ident
   | {
+      tag: 'arrayLiteral'
+      elements: AstNode[]
+    }
+  | {
       tag: 'literal'
       t: Token
     }

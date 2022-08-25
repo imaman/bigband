@@ -223,6 +223,10 @@ export class Parser {
       return { tag: 'literal', t }
     }
 
+    if (this.scanner.consumeIf('[')) {
+      return this.arrayBody()
+    }
+
     const ident = this.maybeIdentifier()
     if (ident) {
       return ident
@@ -230,6 +234,28 @@ export class Parser {
 
     const s = this.scanner.synopsis()
     throw new Error(`Unparsable input at position ${s.position}: ${s.lookingAt}`)
+  }
+
+  /**
+   * This method assumes that the caller consumed the opening '[' token. It consumes the array's elements
+   * (comma-separated list of expressions) as well as the closing ']' token.
+   */
+  arrayBody(): AstNode {
+    if (this.scanner.consumeIf(']')) {
+      // an empty array literal
+      return { tag: 'arrayLiteral', elements: [] }
+    }
+
+    const elements: AstNode[] = []
+    while (true) {
+      const exp = this.expression()
+      elements.push(exp)
+      if (this.scanner.consumeIf(']')) {
+        return { tag: 'arrayLiteral', elements }
+      }
+
+      this.scanner.consume(',')
+    }
   }
 
   private identifier(): Ident {
