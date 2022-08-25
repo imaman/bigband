@@ -38,6 +38,19 @@ export class Runtime {
   }
 
   private evalNode(ast: AstNode, table: SymbolTable): Value {
+    if (ast.tag === 'topLevelExpression') {
+      let newTable = table
+      for (const def of ast.definitions) {
+        const name = def.ident.t.text
+        const placeholder: Placeholder = { destination: undefined }
+        newTable = new SymbolFrame(name, placeholder, newTable)
+        const v = this.evalNode(def.value, newTable)
+        placeholder.destination = v
+      }
+
+      return this.evalNode(ast.computation, newTable)
+    }
+
     if (ast.tag === 'binaryOperator') {
       const lhs = this.evalNode(ast.lhs, table)
       if (ast.operator === '||') {
@@ -144,19 +157,6 @@ export class Runtime {
     if (ast.tag === 'objectLiteral') {
       const entries: [string, Value][] = ast.pairs.map(at => [at.k.t.text, this.evalNode(at.v, table)])
       return Value.obj(Object.fromEntries(entries))
-    }
-
-    if (ast.tag === 'topLevelExpression') {
-      let newTable = table
-      for (const def of ast.definitions) {
-        const name = def.ident.t.text
-        const placeholder: Placeholder = { destination: undefined }
-        newTable = new SymbolFrame(name, placeholder, newTable)
-        const v = this.evalNode(def.value, newTable)
-        placeholder.destination = v
-      }
-
-      return this.evalNode(ast.computation, newTable)
     }
 
     if (ast.tag === 'lambda') {
