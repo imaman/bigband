@@ -51,6 +51,15 @@ describe('value', () => {
     expect(Value.arr([]).export()).toEqual([])
     expect(Value.arr([Value.str('ab'), Value.num(500), Value.bool(true)]).export()).toEqual(['ab', 500, true])
   })
+  test('objects', () => {
+    expect(Value.obj({ x: Value.num(10), y: Value.num(20) }).export()).toEqual({ x: 10, y: 20 })
+    expect(Value.obj({}).export()).toEqual({})
+    expect(Value.obj({ the: Value.str('ab'), quick: Value.num(500), brown: Value.bool(true) }).export()).toEqual({
+      the: 'ab',
+      quick: 500,
+      brown: true,
+    })
+  })
   describe('type erros', () => {
     const five = Value.num(1)
     const t = Value.bool(true)
