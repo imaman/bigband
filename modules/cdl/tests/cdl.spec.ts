@@ -253,7 +253,7 @@ describe('cdl', () => {
       expect(cdl.parse(`{}`)).toEqual({})
       expect(cdl.parse(`{a: 1}`)).toEqual({ a: 1 })
     })
-    test('access to attributes', () => {
+    test('attributes can be accessed via the .<ident> notation', () => {
       expect(cdl.parse(`let x = {a: 3, b: 4}; x.a`)).toEqual(3)
       expect(cdl.parse(`let x = {a: 3, b: 4}; x.a * x.b`)).toEqual(12)
       expect(
@@ -266,7 +266,14 @@ describe('cdl', () => {
         ),
       ).toEqual([{ Jan: 1, Feb: 2, May: 5 }, ['Mon', 'Tue', 'Wed']])
     })
+    test('attributes can be accessed via the [expression] notation', () => {
+      expect(cdl.parse(`let x = {a: 3, b: 4}; x["a"]`)).toEqual(3)
+      expect(cdl.parse(`let x = {a: 3, b: 4}; [x["a"], x["b"]]`)).toEqual([3, 4])
+      expect(cdl.parse(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; x["b"]["x"]["May"]`)).toEqual([5])
+    })
   })
+
+  test.todo('mixed chains of dot/index access')
   test.todo('comparison of arrays')
   test.todo('comparison of lambdas?')
   test.todo('quoting of a ticks inside a string')
