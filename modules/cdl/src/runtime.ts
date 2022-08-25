@@ -192,6 +192,12 @@ export class Runtime {
       return rec.access(ast.ident.t.text)
     }
 
+    if (ast.tag === 'indexAccess') {
+      const rec = this.evalNode(ast.receiver, table)
+      const index = this.evalNode(ast.index, table)
+      return rec.access(index)
+    }
+
     shouldNeverHappen(ast)
   }
 }

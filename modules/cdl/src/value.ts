@@ -1,4 +1,5 @@
 import { Lambda } from './ast-node'
+import { shouldNeverHappen } from './should-never-happen'
 import { SymbolTable } from './symbol-table'
 
 type Inner =
@@ -190,13 +191,30 @@ export class Value {
     throw new Error(`Cannot compare when the left-hand-side value is of type ${this.inner.tag}`)
   }
 
-  access(attribureName: string): Value {
+  access(indexValue: string | Value): Value {
     if (this.inner.tag === 'obj') {
-      return this.inner.val[attribureName]
+      let index: string | number
+
+      if (typeof indexValue === 'string') {
+        index = indexValue
+      } else {
+        const i = indexValue.inner
+        if (i.tag == 'str') {
+          index = i.val
+        } else if (i.tag === 'num') {
+          index = i.val
+        } else if (i.tag === 'arr' || i.tag === 'bool' || i.tag == 'lambda' || i.tag === 'obj') {
+          throw new Error(`Invalid index value: ${indexValue}`)
+        } else {
+          shouldNeverHappen(i)
+        }
+      }
+
+      return this.inner.val[index]
     }
 
     this.assertObj()
-    throw new Error(`Impossible`)
+    throw new Error(`Cannot access an object of type ${this.inner.tag}`)
   }
 
   toJSON() {

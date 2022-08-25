@@ -60,3 +60,8 @@ export type AstNode =
       receiver: AstNode
       ident: Ident
     }
+  | {
+      tag: 'indexAccess'
+      receiver: AstNode
+      index: AstNode
+    }

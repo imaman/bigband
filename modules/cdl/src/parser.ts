@@ -196,6 +196,12 @@ export class Parser {
   memberAccess(): AstNode {
     let ret = this.parenthesized()
 
+    if (this.scanner.consumeIf('[')) {
+      const index = this.expression()
+      this.scanner.consume(']')
+      return { tag: 'indexAccess', receiver: ret, index }
+    }
+
     while (true) {
       if (!this.scanner.consumeIf('.')) {
         return ret
