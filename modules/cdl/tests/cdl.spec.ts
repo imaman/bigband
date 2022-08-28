@@ -333,7 +333,6 @@ describe('cdl', () => {
     })
   })
 
-  test.todo('access to object via [] with a computed string')
   test.todo('comparison of arrays')
   test.todo('comparison of lambdas?')
   test.todo('quoting of a ticks inside a string')
@@ -347,7 +346,6 @@ describe('cdl', () => {
   test.todo('array methods')
   test.todo('comments')
   test.todo('spread operator of arrays')
-  test.todo('a{[x]: 5}')
   test.todo('Object methods: Object.keys(), Object.entries()')
   test.todo('an object literal cannot have a repeated attribute name that')
 })
