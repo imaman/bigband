@@ -4,7 +4,7 @@ export type Let = { ident: Ident; value: AstNode }
 
 export type ObjectLiteralPart =
   | { tag: 'hardName'; k: Ident; v: AstNode }
-  // | { tag: 'computedName'; k: AstNode; v: AstNode }
+  | { tag: 'computedName'; k: AstNode; v: AstNode }
   | { tag: 'spread'; o: AstNode }
 
 export type Ident = {

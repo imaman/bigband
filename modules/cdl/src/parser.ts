@@ -304,6 +304,12 @@ export class Parser {
     while (true) {
       if (this.scanner.consumeIf('...')) {
         parts.push({ tag: 'spread', o: this.expression() })
+      } else if (this.scanner.consumeIf('[')) {
+        const k = this.expression()
+        this.scanner.consume(']')
+        this.scanner.consume(':')
+        const v = this.expression()
+        parts.push({ tag: 'computedName', k, v })
       } else {
         const k = this.identifier()
         this.scanner.consume(':')
