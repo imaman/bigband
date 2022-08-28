@@ -155,17 +155,19 @@ export class Runtime {
     }
 
     if (ast.tag === 'objectLiteral') {
-      const entries: [string, Value][] = ast.parts.map(at => {
+      const entries: [string, Value][] = ast.parts.flatMap(at => {
         if (at.tag === 'hardName') {
-          return [at.k.t.text, this.evalNode(at.v, table)]
+          return [[at.k.t.text, this.evalNode(at.v, table)]]
         }
         if (at.tag === 'spread') {
-          throw new Error(`not supported yet`)
+          const o = this.evalNode(at.o, table)
+          return Object.entries(o.assertObj())
         }
 
         shouldNeverHappen(at)
       })
 
+      // TODO(imaman): verify type of all keys (strings, maybe also numbers)
       return Value.obj(Object.fromEntries(entries))
     }
 

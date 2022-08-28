@@ -230,7 +230,7 @@ describe('cdl', () => {
   })
 
   describe('spread operator', () => {
-    test.skip('shallow copies an object into an object literal', () => {
+    test('shallow copies an object into an object literal', () => {
       expect(cdl.parse(`let o = {a: 1, b: 2}; {...o}`)).toEqual({ a: 1, b: 2 })
     })
   })

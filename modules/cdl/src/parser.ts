@@ -303,7 +303,7 @@ export class Parser {
     const parts: ObjectLiteralPart[] = []
     while (true) {
       if (this.scanner.consumeIf('...')) {
-        throw new Error(`Not supported yet`)
+        parts.push({ tag: 'spread', o: this.expression() })
       } else {
         const k = this.identifier()
         this.scanner.consume(':')
