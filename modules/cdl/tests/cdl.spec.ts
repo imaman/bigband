@@ -229,6 +229,12 @@ describe('cdl', () => {
     })
   })
 
+  describe('spread operator', () => {
+    test.skip('shallow copies an object into an object literal', () => {
+      expect(cdl.parse(`let o = {a: 1, b: 2}; {...o}`)).toEqual({ a: 1, b: 2 })
+    })
+  })
+
   describe('if', () => {
     test('returns the value of the first branch if the condition is true', () => {
       expect(cdl.parse(`if (4 > 3) 200 else -100`)).toEqual(200)
@@ -312,5 +318,6 @@ describe('cdl', () => {
   test.todo('comments')
   test.todo('spread operator of objects')
   test.todo('spread operator of arrays')
+  test.todo('a{[x]: 5}')
   test.todo('Object methods: Object.keys(), Object.entries()')
 })

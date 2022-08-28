@@ -302,10 +302,15 @@ export class Parser {
 
     const pairs: { k: Ident; v: AstNode }[] = []
     while (true) {
-      const k = this.identifier()
-      this.scanner.consume(':')
-      const v = this.expression()
-      pairs.push({ k, v })
+      if (this.scanner.consumeIf('...')) {
+        throw new Error(`Not supported yet`)
+      } else {
+        const k = this.identifier()
+        this.scanner.consume(':')
+        const v = this.expression()
+        pairs.push({ k, v })
+      }
+
       if (this.scanner.consumeIf('}')) {
         return { tag: 'objectLiteral', pairs }
       }
