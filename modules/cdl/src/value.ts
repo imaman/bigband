@@ -229,16 +229,12 @@ export class Value {
       return this.inner.val[i]
     }
 
-    if (this.inner.tag === 'str') {
-      const index = typeof indexValue === 'string' ? indexValue : indexValue.assertStr()
-      if (index === 'substring') {
-        return Value.lambda()
-      }
-
-      throw new Error(`aaa`)
-    }
-
-    if (this.inner.tag === 'bool' || this.inner.tag === 'lambda' || this.inner.tag === 'num') {
+    if (
+      this.inner.tag === 'bool' ||
+      this.inner.tag === 'lambda' ||
+      this.inner.tag === 'num' ||
+      this.inner.tag === 'str'
+    ) {
       throw new Error(`Cannot access an object of type ${this.inner.tag}`)
     }
 
