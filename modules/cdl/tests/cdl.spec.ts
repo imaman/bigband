@@ -197,35 +197,39 @@ describe('cdl', () => {
   })
 
   describe('objects', () => {
-    test('are specified via JSON format', () => {
-      expect(cdl.parse(`{}`)).toEqual({})
-      expect(cdl.parse(`{a: 1}`)).toEqual({ a: 1 })
+    describe('literals', () => {
+      test('are specified via JSON format', () => {
+        expect(cdl.parse(`{}`)).toEqual({})
+        expect(cdl.parse(`{a: 1}`)).toEqual({ a: 1 })
+      })
     })
-    test('attributes can be accessed via the .<ident> notation', () => {
-      expect(cdl.parse(`let x = {a: 3, b: 4}; x.a`)).toEqual(3)
-      expect(cdl.parse(`let x = {a: 3, b: 4}; x.a * x.b`)).toEqual(12)
-      expect(
-        cdl.parse(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; [x.b.x.Jan, x.b.x.May, x.b.y]`),
-      ).toEqual([1, 5, 300])
-      expect(cdl.parse(`let x = {a: 3, calendar: ["A"] }; x.calendar`)).toEqual(['A'])
-      expect(
-        cdl.parse(
-          `let x = {a: 3, calendar: {months: { Jan: 1, Feb: 2, May: 5}, days: ["Mon", "Tue", "Wed" ] } }; [x.calendar.months, x.calendar.days]`,
-        ),
-      ).toEqual([{ Jan: 1, Feb: 2, May: 5 }, ['Mon', 'Tue', 'Wed']])
-    })
-    test('attributes can be accessed via the [<name>] notation', () => {
-      expect(cdl.parse(`let x = {a: 3, b: 4}; x['a']`)).toEqual(3)
-      expect(cdl.parse(`let x = {a: 3, b: 4}; [x['a'], x["b"]]`)).toEqual([3, 4])
-      expect(cdl.parse(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; x["b"]['x']["May"]`)).toEqual(5)
-    })
-    test('supports chains of attribute accesses mixing the .<ident> and the [<name>] notations', () => {
-      expect(cdl.parse(`let o = {b: {x: {M: 5}}}; [o["b"].x["M"], o.b["x"].M, o.b.x["M"]]`)).toEqual([5, 5, 5])
-    })
-    test('the <name> value at the [<name>] notation can be a computed value', () => {
-      expect(
-        cdl.parse(`let q = fun (x) x + "eb"; let o = {Jan: 1, Feb: 2, May: 5}; [o["Ja" + 'n'], o[q('F')]]`),
-      ).toEqual([1, 2])
+    describe('attributes', () => {
+      test('can be accessed via the .<ident> notation', () => {
+        expect(cdl.parse(`let x = {a: 3, b: 4}; x.a`)).toEqual(3)
+        expect(cdl.parse(`let x = {a: 3, b: 4}; x.a * x.b`)).toEqual(12)
+        expect(
+          cdl.parse(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; [x.b.x.Jan, x.b.x.May, x.b.y]`),
+        ).toEqual([1, 5, 300])
+        expect(cdl.parse(`let x = {a: 3, calendar: ["A"] }; x.calendar`)).toEqual(['A'])
+        expect(
+          cdl.parse(
+            `let x = {a: 3, calendar: {months: { Jan: 1, Feb: 2, May: 5}, days: ["Mon", "Tue", "Wed" ] } }; [x.calendar.months, x.calendar.days]`,
+          ),
+        ).toEqual([{ Jan: 1, Feb: 2, May: 5 }, ['Mon', 'Tue', 'Wed']])
+      })
+      test('can be accessed via the [<name>] notation', () => {
+        expect(cdl.parse(`let x = {a: 3, b: 4}; x['a']`)).toEqual(3)
+        expect(cdl.parse(`let x = {a: 3, b: 4}; [x['a'], x["b"]]`)).toEqual([3, 4])
+        expect(cdl.parse(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; x["b"]['x']["May"]`)).toEqual(5)
+      })
+      test('supports chains of attribute accesses mixing the .<ident> and the [<name>] notations', () => {
+        expect(cdl.parse(`let o = {b: {x: {M: 5}}}; [o["b"].x["M"], o.b["x"].M, o.b.x["M"]]`)).toEqual([5, 5, 5])
+      })
+      test('the <name> value at the [<name>] notation can be a computed value', () => {
+        expect(
+          cdl.parse(`let q = fun (x) x + "eb"; let o = {Jan: 1, Feb: 2, May: 5}; [o["Ja" + 'n'], o[q('F')]]`),
+        ).toEqual([1, 2])
+      })
     })
   })
 
