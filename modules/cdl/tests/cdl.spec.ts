@@ -201,6 +201,11 @@ describe('cdl', () => {
       test('are specified via JSON format', () => {
         expect(cdl.parse(`{}`)).toEqual({})
         expect(cdl.parse(`{a: 1}`)).toEqual({ a: 1 })
+        expect(cdl.parse(`{a: 1, b: 2}`)).toEqual({ a: 1, b: 2 })
+        expect(cdl.parse(`{a: "A", b: "B", c: "CCC"}`)).toEqual({ a: 'A', b: 'B', c: 'CCC' })
+      })
+      test('supports computed attributes names via the [<expression>]: <value> notation', () => {
+        expect(cdl.parse(`{["a" + 'b']: 'a-and-b'}`)).toEqual({ ab: 'a-and-b' })
       })
     })
     describe('attributes', () => {
