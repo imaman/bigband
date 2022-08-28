@@ -155,7 +155,12 @@ export class Runtime {
     }
 
     if (ast.tag === 'objectLiteral') {
-      const entries: [string, Value][] = ast.pairs.map(at => [at.k.t.text, this.evalNode(at.v, table)])
+      const entries: [string, Value][] = ast.parts.map(at => {
+        if (at.tag === 'hardName') {
+          return [at.k.t.text, this.evalNode(at.v, table)]
+        }
+        throw new Error(`not supported yet`)
+      })
       return Value.obj(Object.fromEntries(entries))
     }
 

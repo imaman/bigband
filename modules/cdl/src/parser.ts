@@ -1,4 +1,4 @@
-import { AstNode, Ident, Let } from './ast-node'
+import { AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
 import { Scanner } from './scanner'
 
 export class Parser {
@@ -297,10 +297,10 @@ export class Parser {
   objectBody(): AstNode {
     if (this.scanner.consumeIf('}')) {
       // an empty array literal
-      return { tag: 'objectLiteral', pairs: [] }
+      return { tag: 'objectLiteral', parts: [] }
     }
 
-    const pairs: { k: Ident; v: AstNode }[] = []
+    const parts: ObjectLiteralPart[] = []
     while (true) {
       if (this.scanner.consumeIf('...')) {
         throw new Error(`Not supported yet`)
@@ -308,11 +308,11 @@ export class Parser {
         const k = this.identifier()
         this.scanner.consume(':')
         const v = this.expression()
-        pairs.push({ k, v })
+        parts.push({ tag: 'hardName', k, v })
       }
 
       if (this.scanner.consumeIf('}')) {
-        return { tag: 'objectLiteral', pairs }
+        return { tag: 'objectLiteral', parts }
       }
 
       this.scanner.consume(',')

@@ -2,6 +2,11 @@ import { Token } from './scanner'
 
 export type Let = { ident: Ident; value: AstNode }
 
+export type ObjectLiteralPart =
+  | { tag: 'hardName'; k: Ident; v: AstNode }
+  | { tag: 'computedName'; k: AstNode; v: AstNode }
+  | { tag: 'spread'; o: AstNode }
+
 export type Ident = {
   tag: 'ident'
   t: Token
@@ -21,7 +26,7 @@ export type AstNode =
     }
   | {
       tag: 'objectLiteral'
-      pairs: { k: Ident; v: AstNode }[]
+      parts: ObjectLiteralPart[]
     }
   | {
       tag: 'literal'
