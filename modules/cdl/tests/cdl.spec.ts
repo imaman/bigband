@@ -186,10 +186,10 @@ describe('cdl', () => {
       expect(cdl.parse(`["ab", 5]`)).toEqual(['ab', 5])
       expect(cdl.parse(`[]`)).toEqual([])
     })
-    test('individual elements of an array can be accessed via the [index] notation', () => {
+    test('individual elements of an array can be accessed via the [<index>] notation', () => {
       expect(cdl.parse(`let a = ['sun', 'mon', 'tue', 'wed']; a[1]`)).toEqual('mon')
     })
-    test('the index at the [index] notation can be a computed value', () => {
+    test('the <index> value at the [<index>] notation can be a computed value', () => {
       expect(cdl.parse(`let a = ['sun', 'mon', 'tue', 'wed']; let f = fun(n) n-5; [a[3-1], a[18/6], a[f(5)]]`)).toEqual(
         ['tue', 'wed', 'sun'],
       )
@@ -214,13 +214,18 @@ describe('cdl', () => {
         ),
       ).toEqual([{ Jan: 1, Feb: 2, May: 5 }, ['Mon', 'Tue', 'Wed']])
     })
-    test('attributes can be accessed via the [expression] notation', () => {
+    test('attributes can be accessed via the [<name>] notation', () => {
       expect(cdl.parse(`let x = {a: 3, b: 4}; x['a']`)).toEqual(3)
       expect(cdl.parse(`let x = {a: 3, b: 4}; [x['a'], x["b"]]`)).toEqual([3, 4])
       expect(cdl.parse(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; x["b"]['x']["May"]`)).toEqual(5)
     })
-    test('supports chains of attribute accesses mixing the .<ident> and the [expression] notations', () => {
+    test('supports chains of attribute accesses mixing the .<ident> and the [<name>] notations', () => {
       expect(cdl.parse(`let o = {b: {x: {M: 5}}}; [o["b"].x["M"], o.b["x"].M, o.b.x["M"]]`)).toEqual([5, 5, 5])
+    })
+    test('the <name> value at the [<name>] notation can be a computed value', () => {
+      expect(
+        cdl.parse(`let q = fun (x) x + "eb"; let o = {Jan: 1, Feb: 2, May: 5}; [o["Ja" + 'n'], o[q('F')]]`),
+      ).toEqual([1, 2])
     })
   })
 
@@ -304,4 +309,5 @@ describe('cdl', () => {
   test.todo('string methods')
   test.todo('number methods')
   test.todo('array methods')
+  test.todo('comments')
 })
