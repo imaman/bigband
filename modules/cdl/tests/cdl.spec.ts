@@ -233,6 +233,18 @@ describe('cdl', () => {
     test('shallow copies an object into an object literal', () => {
       expect(cdl.parse(`let o = {a: 1, b: 2}; {...o}`)).toEqual({ a: 1, b: 2 })
     })
+    test('can be combined with hard-coded (literal) attributes', () => {
+      expect(cdl.parse(`let o = {a: 1}; {...o, b: 2}`)).toEqual({ a: 1, b: 2 })
+      expect(cdl.parse(`let o = {b: 2}; {...o, a: 1, ...o}`)).toEqual({ a: 1, b: 2 })
+    })
+    test('can be used multiple times inside a single object literal', () => {
+      expect(cdl.parse(`let o1 = {b: 2}; let o2 = {c: 3}; {a: 1, ...o1, ...o2, d: 4}`)).toEqual({
+        a: 1,
+        b: 2,
+        c: 3,
+        d: 4,
+      })
+    })
   })
 
   describe('if', () => {
