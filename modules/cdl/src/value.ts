@@ -9,6 +9,7 @@ type Inner =
   | { tag: 'arr'; val: Value[] }
   | { tag: 'obj'; val: Record<string, Value> }
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
+  | { tag: 'foreign'; val: (args: Value[]) => unknown }
 
 export class Value {
   private constructor(private readonly inner: Inner) {}
@@ -30,6 +31,35 @@ export class Value {
   }
   static lambda(ast: Lambda, table: SymbolTable): Value {
     return new Value({ val: { ast, table }, tag: 'lambda' })
+  }
+
+  static foreign(f: (args: Value[]) => unknown) {
+    return new Value({ tag: 'foreign', val: f })
+  }
+
+  private static fromUnknown(u: unknown): Value {
+    if (typeof u === 'boolean') {
+      return Value.bool(u)
+    }
+    if (typeof u === 'number') {
+      return Value.num(u)
+    }
+    if (typeof u === 'string') {
+      return Value.str(u)
+    }
+    if (Array.isArray(u)) {
+      return Value.arr(u.map(curr => this.fromUnknown(curr)))
+    }
+
+    if (typeof u === 'undefined') {
+      throw new Error(`Cannot convert undefined to Value`)
+    }
+
+    if (u && typeof u === 'object') {
+      Value.obj(Object.fromEntries(Object.entries(u).map(([k, v]) => [k, Value.fromUnknown(v)])))
+    }
+
+    throw new Error(`cannot convert ${JSON.stringify(u)} to Value`)
   }
 
   assertBool(): boolean {
@@ -211,7 +241,7 @@ export class Value {
           index = i.val
         } else if (i.tag === 'num') {
           index = i.val
-        } else if (i.tag === 'arr' || i.tag === 'bool' || i.tag == 'lambda' || i.tag === 'obj') {
+        } else if (i.tag === 'arr' || i.tag === 'bool' || i.tag == 'lambda' || i.tag === 'obj' || i.tag === 'foreign') {
           throw new Error(`Invalid index value: ${indexValue}`)
         } else {
           shouldNeverHappen(i)
@@ -233,7 +263,28 @@ export class Value {
       this.inner.tag === 'bool' ||
       this.inner.tag === 'lambda' ||
       this.inner.tag === 'num' ||
-      this.inner.tag === 'str'
+      this.inner.tag === 'str' ||
+      this.inner.tag === 'foreign'
+    ) {
+      throw new Error(`Cannot access an object of type ${this.inner.tag}`)
+    }
+
+    shouldNeverHappen(this.inner)
+  }
+
+  callForegin(args: Value[]) {
+    if (this.inner.tag === 'foreign') {
+      const output = this.inner.val(args)
+      return Value.fromUnknown(output)
+    }
+
+    if (
+      this.inner.tag === 'bool' ||
+      this.inner.tag === 'lambda' ||
+      this.inner.tag === 'num' ||
+      this.inner.tag === 'str' ||
+      this.inner.tag === 'arr' ||
+      this.inner.tag === 'obj'
     ) {
       throw new Error(`Cannot access an object of type ${this.inner.tag}`)
     }
