@@ -159,8 +159,13 @@ export class Runtime {
         if (at.tag === 'hardName') {
           return [at.k.t.text, this.evalNode(at.v, table)]
         }
-        throw new Error(`not supported yet`)
+        if (at.tag === 'spread') {
+          throw new Error(`not supported yet`)
+        }
+
+        shouldNeverHappen(at)
       })
+
       return Value.obj(Object.fromEntries(entries))
     }
 
