@@ -260,6 +260,9 @@ describe('cdl', () => {
     test('overridden by attributes to its right', () => {
       expect(cdl.parse(`let o = {a: 1, b: 2, c: 3}; {...o, b: 200}`)).toEqual({ a: 1, b: 200, c: 3 })
     })
+    test('can be mixed with computed attribute names', () => {
+      expect(cdl.parse(`let o = {ab: 'anteater'}; {...o, ['c' + 'd']: 'cat'}`)).toEqual({ ab: 'anteater', cd: 'cat' })
+    })
   })
 
   describe('if', () => {
