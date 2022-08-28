@@ -310,4 +310,7 @@ describe('cdl', () => {
   test.todo('number methods')
   test.todo('array methods')
   test.todo('comments')
+  test.todo('spread operator of objects')
+  test.todo('spread operator of arrays')
+  test.todo('Object methods: Object.keys(), Object.entries()')
 })
