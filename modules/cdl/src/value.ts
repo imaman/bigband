@@ -56,7 +56,7 @@ export class Value {
     throw new Error(`Not a string: ${JSON.stringify(this.inner.val)}`)
   }
 
-  assertObj(): unknown {
+  assertObj(): Record<string, Value> {
     if (this.inner.tag === 'obj') {
       return this.inner.val
     }
