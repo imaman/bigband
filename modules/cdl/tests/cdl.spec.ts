@@ -245,6 +245,12 @@ describe('cdl', () => {
         d: 4,
       })
     })
+    test('overrides attributes to its left', () => {
+      expect(cdl.parse(`let o = {b: 2}; {a: 100, b: 200, c: 300, ...o}`)).toEqual({ a: 100, b: 2, c: 300 })
+    })
+    test('overridden by attributes to its right', () => {
+      expect(cdl.parse(`let o = {a: 1, b: 2, c: 3}; {...o, b: 200}`)).toEqual({ a: 1, b: 200, c: 3 })
+    })
   })
 
   describe('if', () => {
@@ -332,4 +338,5 @@ describe('cdl', () => {
   test.todo('spread operator of arrays')
   test.todo('a{[x]: 5}')
   test.todo('Object methods: Object.keys(), Object.entries()')
+  test.todo('an object literal cannot have a repeated attribute name that')
 })
