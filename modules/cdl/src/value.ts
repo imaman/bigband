@@ -9,7 +9,7 @@ type Inner =
   | { tag: 'arr'; val: Value[] }
   | { tag: 'obj'; val: Record<string, Value> }
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
-  | { tag: 'foreign'; val: (args: Value[]) => unknown }
+  | { tag: 'foreign'; val: (...args: Value[]) => unknown }
 
 export class Value {
   private constructor(private readonly inner: Inner) {}
@@ -33,7 +33,7 @@ export class Value {
     return new Value({ val: { ast, table }, tag: 'lambda' })
   }
 
-  static foreign(f: (args: Value[]) => unknown) {
+  static foreign(f: (...args: Value[]) => unknown) {
     return new Value({ tag: 'foreign', val: f })
   }
 
@@ -271,13 +271,13 @@ export class Value {
         throw new Error(`Index is of type number - not supported`)
       }
       if (index === 'indexOf') {
-        return Value.foreign(args => s.indexOf(args[0].assertStr()))
+        return Value.foreign(searchString => s.indexOf(searchString.assertStr()))
       }
       if (index === 'substring') {
-        return Value.foreign(args => s.substring(args[0].assertNum(), args[1].assertNum()))
+        return Value.foreign((start, end) => s.substring(start.assertNum(), end.assertNum()))
       }
       if (index === 'split') {
-        return Value.foreign(args => s.split(args[0].assertStr()))
+        return Value.foreign(splitter => s.split(splitter.assertStr()))
       }
 
       throw new Error(`Unrecognized string method: ${index}`)
@@ -297,7 +297,7 @@ export class Value {
 
   callForeign(args: Value[]) {
     if (this.inner.tag === 'foreign') {
-      const output = this.inner.val(args)
+      const output = this.inner.val(...args)
       return Value.fromUnknown(output)
     }
 
