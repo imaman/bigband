@@ -276,6 +276,9 @@ export class Value {
       if (index === 'substring') {
         return Value.foreign(args => s.substring(args[0].assertNum(), args[1].assertNum()))
       }
+      if (index === 'split') {
+        return Value.foreign(args => s.split(args[0].assertStr()))
+      }
 
       throw new Error(`Unrecognized string method: ${index}`)
     }

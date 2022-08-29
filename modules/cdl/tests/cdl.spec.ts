@@ -120,6 +120,8 @@ describe('cdl', () => {
     })
     test('supports string methods', () => {
       expect(cdl.parse(`'bigbird'.substring(3, 7)`)).toEqual('bird')
+      expect(cdl.parse(`'bigbird'.indexOf('g')`)).toEqual(2)
+      expect(cdl.parse(`'ab-cde-fghi-jkl'.split('-')`)).toEqual(['ab', 'cde', 'fghi', 'jkl'])
     })
   })
   describe('let', () => {
