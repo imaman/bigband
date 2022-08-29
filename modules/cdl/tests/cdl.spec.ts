@@ -123,6 +123,9 @@ describe('cdl', () => {
       expect(cdl.parse(`'bigbird'.indexOf('g')`)).toEqual(2)
       expect(cdl.parse(`'ab-cde-fghi-jkl'.split('-')`)).toEqual(['ab', 'cde', 'fghi', 'jkl'])
     })
+    test('supports optional arguments of string methods', () => {
+      expect(cdl.parse(`'bigbird'.substring(5)`)).toEqual('rd')
+    })
   })
   describe('let', () => {
     test('binds values to variables', () => {

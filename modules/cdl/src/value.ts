@@ -274,7 +274,7 @@ export class Value {
         return Value.foreign(searchString => s.indexOf(searchString.assertStr()))
       }
       if (index === 'substring') {
-        return Value.foreign((start, end) => s.substring(start.assertNum(), end.assertNum()))
+        return Value.foreign((start, end) => s.substring(start.assertNum(), end?.assertNum()))
       }
       if (index === 'split') {
         return Value.foreign(splitter => s.split(splitter.assertStr()))
