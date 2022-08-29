@@ -102,6 +102,10 @@ export class Value {
     throw new Error(`Not a lambda: ${JSON.stringify(this.inner.val)}`)
   }
 
+  isLambda() {
+    return this.inner.tag === 'lambda'
+  }
+
   or(that: Value) {
     if (this.inner.tag === 'bool' && that.inner.tag === 'bool') {
       return Value.bool(this.inner.val || that.inner.val)
@@ -229,25 +233,26 @@ export class Value {
     throw new Error(`Cannot compare when the left-hand-side value is of type ${this.inner.tag}`)
   }
 
+  private toStringOrNumber(indexValue: string | Value): string | number {
+    if (typeof indexValue === 'string') {
+      return indexValue
+    } else {
+      const i = indexValue.inner
+      if (i.tag == 'str') {
+        return i.val
+      } else if (i.tag === 'num') {
+        return i.val
+      } else if (i.tag === 'arr' || i.tag === 'bool' || i.tag == 'lambda' || i.tag === 'obj' || i.tag === 'foreign') {
+        throw new Error(`Invalid index value: ${indexValue}`)
+      } else {
+        shouldNeverHappen(i)
+      }
+    }
+  }
+
   access(indexValue: string | Value): Value {
     if (this.inner.tag === 'obj') {
-      let index: string | number
-
-      if (typeof indexValue === 'string') {
-        index = indexValue
-      } else {
-        const i = indexValue.inner
-        if (i.tag == 'str') {
-          index = i.val
-        } else if (i.tag === 'num') {
-          index = i.val
-        } else if (i.tag === 'arr' || i.tag === 'bool' || i.tag == 'lambda' || i.tag === 'obj' || i.tag === 'foreign') {
-          throw new Error(`Invalid index value: ${indexValue}`)
-        } else {
-          shouldNeverHappen(i)
-        }
-      }
-
+      const index = this.toStringOrNumber(indexValue)
       return this.inner.val[index]
     }
     if (this.inner.tag === 'arr') {
@@ -259,11 +264,26 @@ export class Value {
       return this.inner.val[i]
     }
 
+    if (this.inner.tag === 'str') {
+      const s = this.inner.val
+      const index = this.toStringOrNumber(indexValue)
+      if (typeof index === 'number') {
+        throw new Error(`Index is of type number - not supported`)
+      }
+      if (index === 'indexOf') {
+        return Value.foreign(args => s.indexOf(args[0].assertStr()))
+      }
+      if (index === 'substring') {
+        return Value.foreign(args => s.substring(args[0].assertNum(), args[1].assertNum()))
+      }
+
+      throw new Error(`Unrecognized string method: ${index}`)
+    }
+
     if (
       this.inner.tag === 'bool' ||
       this.inner.tag === 'lambda' ||
       this.inner.tag === 'num' ||
-      this.inner.tag === 'str' ||
       this.inner.tag === 'foreign'
     ) {
       throw new Error(`Cannot access an object of type ${this.inner.tag}`)
@@ -272,7 +292,7 @@ export class Value {
     shouldNeverHappen(this.inner)
   }
 
-  callForegin(args: Value[]) {
+  callForeign(args: Value[]) {
     if (this.inner.tag === 'foreign') {
       const output = this.inner.val(args)
       return Value.fromUnknown(output)
@@ -286,7 +306,7 @@ export class Value {
       this.inner.tag === 'arr' ||
       this.inner.tag === 'obj'
     ) {
-      throw new Error(`Cannot access an object of type ${this.inner.tag}`)
+      throw new Error(`Not a foreign function: ${this.inner.tag}`)
     }
 
     shouldNeverHappen(this.inner)

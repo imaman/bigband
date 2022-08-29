@@ -99,7 +99,7 @@ describe('value', () => {
   describe('foreign code calls', () => {
     test('invokes the given function', () => {
       const indexOf = Value.foreign(as => 'the quick brown fox jumps over the lazy dog'.indexOf(as[0].assertStr()))
-      expect(indexOf.callForegin([Value.str('quick')]).export()).toEqual(4)
+      expect(indexOf.callForeign([Value.str('quick')]).export()).toEqual(4)
     })
   })
 })

@@ -182,18 +182,24 @@ export class Runtime {
       const argValues = ast.actualArgs.map(a => this.evalNode(a, table))
       const callee = this.evalNode(ast.callee, table)
 
-      const l = callee.assertLambda()
+      if (callee.isLambda()) {
+        const l = callee.assertLambda()
 
-      if (l.ast.formalArgs.length !== argValues.length) {
-        throw new Error(`Arg list length mismatch: expected ${l.ast.formalArgs.length} but got ${argValues.length}`)
-      }
-      let newTable = l.table
-      for (let i = 0; i < l.ast.formalArgs.length; ++i) {
-        const name = l.ast.formalArgs[i].t.text
-        newTable = new SymbolFrame(name, { destination: argValues[i] }, newTable)
+        if (l.ast.formalArgs.length !== argValues.length) {
+          throw new Error(`Arg list length mismatch: expected ${l.ast.formalArgs.length} but got ${argValues.length}`)
+        }
+        let newTable = l.table
+        for (let i = 0; i < l.ast.formalArgs.length; ++i) {
+          const name = l.ast.formalArgs[i].t.text
+          newTable = new SymbolFrame(name, { destination: argValues[i] }, newTable)
+        }
+
+        return this.evalNode(l.ast.body, newTable)
       }
 
-      return this.evalNode(l.ast.body, newTable)
+      // Foregin call
+      const args = ast.actualArgs.map(curr => this.evalNode(curr, table))
+      return callee.callForeign(args)
     }
 
     if (ast.tag === 'if') {

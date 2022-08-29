@@ -118,7 +118,7 @@ describe('cdl', () => {
       expect(cdl.parse(`'ab'`)).toEqual('ab')
       expect(cdl.parse(`'ab' + 'cd'`)).toEqual('abcd')
     })
-    test.skip('supports string methods', () => {
+    test('supports string methods', () => {
       expect(cdl.parse(`'bigbird'.substring(3, 7)`)).toEqual('bird')
     })
   })
@@ -350,4 +350,5 @@ describe('cdl', () => {
   test.todo('an object literal cannot have a repeated attribute name that')
   test.todo('quoting of a ticks inside a string')
   test.todo('number in scientific notation')
+  test.todo('"abcdef"[1] == "b"')
 })
