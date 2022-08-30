@@ -144,41 +144,47 @@ describe('value', () => {
   })
   describe('array operations', () => {
     test.each([
-      ['at'],
-      ['concat'],
-      ['constructor'],
-      ['copyWithin'],
-      ['entries'],
-      ['every'],
-      ['fill'],
-      ['filter'],
-      ['find'],
-      ['findIndex'],
-      ['flat'],
-      ['flatMap'],
-      ['forEach'],
-      ['includes'],
-      ['indexOf'],
-      ['join'],
-      ['keys'],
-      ['lastIndexOf'],
-      ['map'],
-      ['pop'],
-      ['push'],
-      ['reduce'],
-      ['reduceRight'],
-      ['reverse'],
-      ['shift'],
-      ['slice'],
-      ['some'],
-      ['sort'],
-      ['splice'],
-      ['toLocaleString'],
-      ['toString'],
-      ['unshift'],
-      ['values'],
-    ])('provides the .%s() method', name => {
-      expect(name).toEqual(name)
+      ['at', [Value.num(-1)], 'goo'],
+      // ['concat', [], []],
+      // ['constructor', [], []],
+      // ['copyWithin', [], []],
+      // ['entries', [], []],
+      // ['every', [], []],
+      // ['fill', [], []],
+      // ['filter', [], []],
+      // ['find', [], []],
+      // ['findIndex', [], []],
+      // ['flat', [], []],
+      // ['flatMap', [], []],
+      // ['forEach', [], []],
+      // ['includes', [], []],
+      // ['indexOf', [], []],
+      // ['join', [], []],
+      // ['keys', [], []],
+      // ['lastIndexOf', [], []],
+      // ['map', [], []],
+      // ['pop', [], []],
+      // ['push', [], []],
+      // ['reduce', [], []],
+      // ['reduceRight', [], []],
+      // ['reverse', [], []],
+      // ['shift', [], []],
+      // ['slice', [], []],
+      // ['some', [], []],
+      // ['sort', [], []],
+      // ['splice', [], []],
+      // ['toLocaleString', [], []],
+      // ['toString', [], []],
+      // ['unshift', [], []],
+      // ['values', [], []],
+    ])('provides the .%s() method', (name, args, expected) => {
+      const callee = Value.arr([Value.str('foo'), Value.str('bar'), Value.str('goo')]).access(name)
+      const actual = callee.callForeign(args)
+      expect(actual.export()).toEqual(expected)
     })
   })
+
+  test.todo('what happens when we get an undefined from a foreign call (like Array.get())')
+  test.todo('access to non-existing string method (a sad path test)')
+  test.todo('access to non-existing array method (a sad path test)')
 })

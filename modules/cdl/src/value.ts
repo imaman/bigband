@@ -42,6 +42,9 @@ export class Value {
   }
 
   private static fromUnknown(u: unknown): Value {
+    if (u instanceof Value) {
+      return u
+    }
     if (typeof u === 'boolean') {
       return Value.bool(u)
     }
@@ -273,7 +276,7 @@ export class Value {
     }
     if (this.inner.tag === 'arr') {
       if (typeof indexValue === 'string') {
-        throw new Error(`Access to arrays requires a numerical index value (got: ${indexValue})`)
+        return this.arrayMethods(this.inner.val, indexValue)
       }
 
       const i: number = indexValue.assertNum()
@@ -296,6 +299,30 @@ export class Value {
     shouldNeverHappen(this.inner)
   }
 
+  private arrayMethods(s: unknown[], index: string) {
+    if (index === 'at') {
+      return Value.foreign(n => s.at(n.assertNum()))
+    }
+    if (index === 'concat') {
+      return Value.foreign(arg => s.concat(arg.assertStr()))
+    }
+    if (index === 'includes') {
+      return Value.foreign(arg => s.includes(arg.assertStr()))
+    }
+    if (index === 'indexOf') {
+      return Value.foreign(searchString => s.indexOf(searchString.assertStr()))
+    }
+    if (index === 'lastIndexOf') {
+      return Value.foreign(searchString => s.lastIndexOf(searchString.assertStr()))
+    }
+    if (index === 'length') {
+      return Value.num(s.length)
+    }
+    if (index === 'slice') {
+      return Value.foreign((start, end) => s.slice(start?.assertNum(), end?.assertNum()))
+    }
+    throw new Error(`Unrecognized array method: ${index}`)
+  }
   private stringMethods(s: string, indexValue: string | Value) {
     const index = this.toStringOrNumber(indexValue)
     if (typeof index === 'number') {
