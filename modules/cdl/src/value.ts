@@ -279,6 +279,15 @@ export class Value {
       if (index === 'split') {
         return Value.foreign(splitter => s.split(splitter.assertStr()))
       }
+      if (index === 'trim') {
+        return Value.foreign(() => s.trim())
+      }
+      if (index === 'trimStart') {
+        return Value.foreign(() => s.trimStart())
+      }
+      if (index === 'trimEnd') {
+        return Value.foreign(() => s.trimEnd())
+      }
 
       throw new Error(`Unrecognized string method: ${index}`)
     }
