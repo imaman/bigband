@@ -142,4 +142,43 @@ describe('value', () => {
       expect(actual.export()).toEqual(expected)
     })
   })
+  describe('array operations', () => {
+    test.each([
+      ['at'],
+      ['concat'],
+      ['constructor'],
+      ['copyWithin'],
+      ['entries'],
+      ['every'],
+      ['fill'],
+      ['filter'],
+      ['find'],
+      ['findIndex'],
+      ['flat'],
+      ['flatMap'],
+      ['forEach'],
+      ['includes'],
+      ['indexOf'],
+      ['join'],
+      ['keys'],
+      ['lastIndexOf'],
+      ['map'],
+      ['pop'],
+      ['push'],
+      ['reduce'],
+      ['reduceRight'],
+      ['reverse'],
+      ['shift'],
+      ['slice'],
+      ['some'],
+      ['sort'],
+      ['splice'],
+      ['toLocaleString'],
+      ['toString'],
+      ['unshift'],
+      ['values'],
+    ])('provides the .%s() method', name => {
+      expect(name).toEqual(name)
+    })
+  })
 })
