@@ -34,7 +34,7 @@ export class Scanner {
     }
   }
 
-  consume(r: RegExp | string): Token {
+  consume(r: RegExp | string, eatWhitespace = true): Token {
     const text = this.match(r)
     if (!text) {
       throw new Error(`Expected ${r} at position ${this.offset} but found: ${this.synopsis().lookingAt}`)
@@ -43,17 +43,19 @@ export class Scanner {
     const offset = this.offset
     this.offset += text.length
 
-    this.eatWhitespace()
+    if (eatWhitespace) {
+      this.eatWhitespace()
+    }
     return { offset, text }
   }
 
-  consumeIf(r: RegExp | string): Token | undefined {
+  consumeIf(r: RegExp | string, eatWhitespace = true): Token | undefined {
     const ret = this.match(r)
     if (!ret) {
       return undefined
     }
 
-    return this.consume(r)
+    return this.consume(r, eatWhitespace)
   }
 
   private match(r: RegExp | string): string | undefined {

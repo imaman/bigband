@@ -238,14 +238,14 @@ export class Parser {
     }
 
     // double-quotes-enclosd string
-    if (this.scanner.consumeIf(`"`)) {
+    if (this.scanner.consumeIf(`"`, false)) {
       t = this.scanner.consume(/[^"]*/)
       this.scanner.consume(`"`)
       return { tag: 'literal', type: 'str', t }
     }
 
     // single-quotes-enclosd string
-    if (this.scanner.consumeIf(`'`)) {
+    if (this.scanner.consumeIf(`'`, false)) {
       t = this.scanner.consume(/[^']*/)
       this.scanner.consume(`'`)
       return { tag: 'literal', type: 'str', t }
