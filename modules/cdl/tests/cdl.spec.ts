@@ -118,6 +118,16 @@ describe('cdl', () => {
       expect(cdl.parse(`'ab'`)).toEqual('ab')
       expect(cdl.parse(`'ab' + 'cd'`)).toEqual('abcd')
     })
+    test('does not trim leading/trailing whitespace', () => {
+      expect(cdl.parse(`' ab'`)).toEqual(' ab')
+      expect(cdl.parse(`'ab '`)).toEqual('ab ')
+      expect(cdl.parse(`'   '`)).toEqual('   ')
+      expect(cdl.parse(`'  ab  '`)).toEqual('  ab  ')
+      expect(cdl.parse(`" ab"`)).toEqual(' ab')
+      expect(cdl.parse(`"ab "`)).toEqual('ab ')
+      expect(cdl.parse(`"   "`)).toEqual('   ')
+      expect(cdl.parse(`"  ab  "`)).toEqual('  ab  ')
+    })
     test('supports string methods', () => {
       expect(cdl.parse(`'bigbird'.substring(3, 7)`)).toEqual('bird')
       expect(cdl.parse(`'bigbird'.indexOf('g')`)).toEqual(2)
