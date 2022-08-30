@@ -314,16 +314,16 @@ export class Value {
         return Value.foreign(r => s.match(r.assertStr()))
       }
       if (index === 'matchAll') {
-        return Value.foreign(r => s.matchAll(new RegExp(r.assertStr())))
+        return Value.foreign(r => [...s.matchAll(new RegExp(r.assertStr(), 'g'))])
       }
       if (index === 'padEnd') {
-        return Value.foreign((maxLength, fillString) => s.padEnd(maxLength.assertNum(), fillString.assertStr()))
+        return Value.foreign((maxLength, fillString) => s.padEnd(maxLength.assertNum(), fillString?.assertStr()))
       }
       if (index === 'padStart') {
-        return Value.foreign((maxLength, fillString) => s.padStart(maxLength.assertNum(), fillString.assertStr()))
+        return Value.foreign((maxLength, fillString) => s.padStart(maxLength.assertNum(), fillString?.assertStr()))
       }
-      if (index === 'padStart') {
-        return Value.foreign(n => s.repeat(n.assertNum()))
+      if (index === 'repeat') {
+        return Value.foreign(count => s.repeat(count.assertNum()))
       }
       if (index === 'replace') {
         return Value.foreign((searchValue, replacer) => s.replace(searchValue.assertStr(), replacer.assertStr()))
