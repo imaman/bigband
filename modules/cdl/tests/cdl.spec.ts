@@ -132,9 +132,11 @@ describe('cdl', () => {
       expect(cdl.parse(`'bigbird'.substring(3, 7)`)).toEqual('bird')
       expect(cdl.parse(`'bigbird'.indexOf('g')`)).toEqual(2)
       expect(cdl.parse(`'ab-cde-fghi-jkl'.split('-')`)).toEqual(['ab', 'cde', 'fghi', 'jkl'])
-      expect(cdl.parse(`'  ab   cd     '.trim()`)).toEqual('ab   cd')
-      expect(cdl.parse(`'  ab   cd     '.trimStart()`)).toEqual('ab   cd     ')
-      expect(cdl.parse(`'  ab   cd     '.trimEnd()`)).toEqual('  ab   cd')
+      expect(cdl.parse(`let s = '  ab   cd     '; [s.trimStart(), s.trimEnd(), s.trim()]`)).toEqual([
+        'ab   cd     ',
+        '  ab   cd',
+        'ab   cd',
+      ])
     })
     test('supports optional arguments of string methods', () => {
       expect(cdl.parse(`'bigbird'.substring(5)`)).toEqual('rd')
