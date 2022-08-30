@@ -105,6 +105,14 @@ export class Value {
     throw new Error(`Not a string: ${JSON.stringify(this.inner.val)}`)
   }
 
+  assertArr(): unknown[] {
+    if (this.inner.tag === 'arr') {
+      return this.inner.val
+    }
+
+    throw new Error(`Not an array: ${JSON.stringify(this.inner.val)}`)
+  }
+
   assertObj(): Record<string, Value> {
     if (this.inner.tag === 'obj') {
       return this.inner.val
@@ -304,7 +312,7 @@ export class Value {
       return Value.foreign(n => s.at(n.assertNum()))
     }
     if (index === 'concat') {
-      return Value.foreign(arg => s.concat(arg.assertStr()))
+      return Value.foreign(arg => s.concat(arg.assertArr()))
     }
     if (index === 'includes') {
       return Value.foreign(arg => s.includes(arg.assertStr()))
@@ -320,6 +328,13 @@ export class Value {
     }
     if (index === 'slice') {
       return Value.foreign((start, end) => s.slice(start?.assertNum(), end?.assertNum()))
+    }
+    if (index === 'unshift') {
+      return Value.foreign(item => {
+        const ret = [...s]
+        ret.unshift(item)
+        return ret
+      })
     }
     throw new Error(`Unrecognized array method: ${index}`)
   }

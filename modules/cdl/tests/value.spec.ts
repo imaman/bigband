@@ -145,8 +145,7 @@ describe('value', () => {
   describe('array operations', () => {
     test.each([
       ['at', [Value.num(-1)], 'goo'],
-      // ['concat', [], []],
-      // ['constructor', [], []],
+      ['concat', [Value.arr([Value.str('boo'), Value.str('poo')])], ['foo', 'bar', 'goo', 'boo', 'poo']],
       // ['copyWithin', [], []],
       // ['entries', [], []],
       // ['every', [], []],
@@ -170,13 +169,8 @@ describe('value', () => {
       // ['reverse', [], []],
       // ['shift', [], []],
       // ['slice', [], []],
-      // ['some', [], []],
-      // ['sort', [], []],
-      // ['splice', [], []],
-      // ['toLocaleString', [], []],
-      // ['toString', [], []],
-      // ['unshift', [], []],
-      // ['values', [], []],
+      // ['some', [Value.lambda() => v.endsWith('oo')], [true]],
+      ['unshift', [Value.str('zoo')], ['zoo', 'foo', 'bar', 'goo']],
     ])('provides the .%s() method', (name, args, expected) => {
       const callee = Value.arr([Value.str('foo'), Value.str('bar'), Value.str('goo')]).access(name)
       const actual = callee.callForeign(args)
@@ -184,6 +178,7 @@ describe('value', () => {
     })
   })
 
+  test.todo('array.sort()')
   test.todo('what happens when we get an undefined from a foreign call (like Array.get())')
   test.todo('access to non-existing string method (a sad path test)')
   test.todo('access to non-existing array method (a sad path test)')
