@@ -102,43 +102,39 @@ describe('value', () => {
       expect(indexOf.callForeign([Value.str('quick')]).export()).toEqual(4)
     })
   })
-  test('string methods', () => {
-    const calls: [string, Value[], unknown][] = [
-      ['at', [Value.num(10)], 'e'],
-      ['at', [Value.num(-4)], 'v'],
-      ['charAt', [Value.num(10)], 'e'],
-      ['concat', [Value.str('years')], ' four scores AND seven years'],
-      ['endsWith', [Value.str('seven')], true],
-      ['includes', [Value.str('scores')], true],
-      ['includes', [Value.str('years')], false],
-      ['indexOf', [Value.str('e')], 10],
-      ['lastIndexOf', [Value.str('e')], 20],
-      ['length', [], 23],
-      ['match', [Value.str('a|f')], ['f']],
-      ['matchAll', [Value.str('a|f')], [['f'], ['a']]],
-      // ['normalize', [], 'foo'],
-      ['padEnd', [Value.num(25), Value.str('#')], ' four scores AND seven ##'],
-      ['padStart', [Value.num(25), Value.str('#')], '## four scores AND seven '],
-      ['repeat', [Value.num(3)], ' four scores AND seven  four scores AND seven  four scores AND seven '],
-      ['replace', [Value.str('o'), Value.str('#')], ' f#ur scores AND seven '],
-      ['replaceAll', [Value.str('o'), Value.str('#')], ' f#ur sc#res AND seven '],
-      ['search', [Value.str('sco..s')], '6'],
-      ['slice', [], 'foo'],
-      ['split', [Value.str(' ')], ['', 'four', 'scores', 'and', 'seven', '']],
-      ['startsWith', [Value.str(' four')], true],
-      ['startsWith', [Value.str('seven')], false],
-      ['substring', [Value.num(6), Value.num(12)], 'scores'],
-      ['toLowerCase', [], ' four scores and seven '],
-      ['toUpperCase', [], ' FOUR SCORES AND SEVEN '],
-      ['trim', [], 'four scores AND seven'],
-      ['trimEnd', [], ' four scores AND seven'],
-      ['trimStart', [], 'four scores AND seven '],
-    ]
-
-    for (const [name, args, expected] of calls) {
-      const callee = Value.str(' four scores AND seven ').access(name)
-      const actual = callee.callForeign(args)
-      expect(actual.export()).toEqual(expected)
-    }
+  test.each([
+    ['at', [Value.num(10)], 'e'],
+    ['at', [Value.num(-4)], 'v'],
+    ['charAt', [Value.num(10)], 'e'],
+    ['concat', [Value.str('years')], ' four scores AND seven years'],
+    ['endsWith', [Value.str('seven')], true],
+    ['includes', [Value.str('scores')], true],
+    ['includes', [Value.str('years')], false],
+    ['indexOf', [Value.str('e')], 10],
+    ['lastIndexOf', [Value.str('e')], 20],
+    ['length', [], 23],
+    ['match', [Value.str('a|f')], ['f']],
+    ['matchAll', [Value.str('a|f')], [['f'], ['a']]],
+    // ['normalize', [], 'foo'],
+    ['padEnd', [Value.num(25), Value.str('#')], ' four scores AND seven ##'],
+    ['padStart', [Value.num(25), Value.str('#')], '## four scores AND seven '],
+    ['repeat', [Value.num(3)], ' four scores AND seven  four scores AND seven  four scores AND seven '],
+    ['replace', [Value.str('o'), Value.str('#')], ' f#ur scores AND seven '],
+    ['replaceAll', [Value.str('o'), Value.str('#')], ' f#ur sc#res AND seven '],
+    ['search', [Value.str('sco..s')], '6'],
+    ['slice', [], 'foo'],
+    ['split', [Value.str(' ')], ['', 'four', 'scores', 'and', 'seven', '']],
+    ['startsWith', [Value.str(' four')], true],
+    ['startsWith', [Value.str('seven')], false],
+    ['substring', [Value.num(6), Value.num(12)], 'scores'],
+    ['toLowerCase', [], ' four scores and seven '],
+    ['toUpperCase', [], ' FOUR SCORES AND SEVEN '],
+    ['trim', [], 'four scores AND seven'],
+    ['trimEnd', [], ' four scores AND seven'],
+    ['trimStart', [], 'four scores AND seven '],
+  ])('provides the .%s() method', (name, args, expected) => {
+    const callee = Value.str(' four scores AND seven ').access(name)
+    const actual = callee.callForeign(args)
+    expect(actual.export()).toEqual(expected)
   })
 })
