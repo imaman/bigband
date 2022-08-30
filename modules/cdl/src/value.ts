@@ -11,6 +11,10 @@ type Inner =
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
   | { tag: 'foreign'; val: (...args: Value[]) => unknown }
 
+type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
+
+type Tag = InferTag<Inner>
+
 export class Value {
   private constructor(private readonly inner: Inner) {}
 
@@ -60,6 +64,18 @@ export class Value {
     }
 
     throw new Error(`cannot convert ${JSON.stringify(u)} to Value`)
+  }
+
+  unwrap(t: Tag): unknown
+  unwrap(): unknown
+  unwrap(t?: Tag): unknown {
+    if (t !== undefined) {
+      if (t !== this.inner.tag) {
+        throw new Error(`Type mismatch: expected <${t}> but actual type is <${this.inner.tag}>`)
+      }
+    }
+
+    return this.inner.val
   }
 
   assertBool(): boolean {
