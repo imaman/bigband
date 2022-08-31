@@ -1,4 +1,5 @@
 import { Token } from './scanner'
+import { shouldNeverHappen } from './should-never-happen'
 
 export type Let = { ident: Ident; value: AstNode }
 
@@ -71,3 +72,66 @@ export type AstNode =
       receiver: AstNode
       index: AstNode
     }
+
+export function show(ast: AstNode | AstNode[]): string {
+  if (Array.isArray(ast)) {
+    return ast.map(curr => show(curr)).join(', ')
+  }
+  if (ast.tag === 'arrayLiteral') {
+    return `[${show(ast.elements)}]`
+  }
+
+  if (ast.tag === 'binaryOperator') {
+    return `${show(ast.lhs)} ${ast.operator} ${show(ast.rhs)}}`
+  }
+
+  if (ast.tag === 'dot') {
+    return `${show(ast.receiver)}.${show(ast.ident)}`
+  }
+
+  if (ast.tag === 'functionCall') {
+    return `${show(ast.callee)}(${show(ast.actualArgs)})`
+  }
+  if (ast.tag === 'ident') {
+    return ast.t.text
+  }
+  if (ast.tag === 'if') {
+    return `if (${show(ast.condition)}) ${show(ast.positive)} else ${show(ast.negative)}`
+  }
+  if (ast.tag === 'indexAccess') {
+    return `${show(ast.receiver)}[${show(ast.index)}]`
+  }
+  if (ast.tag === 'lambda') {
+    return `fun (${show(ast.formalArgs)}) ${show(ast.body)}`
+  }
+  if (ast.tag === 'literal') {
+    return JSON.stringify(ast.t.text)
+  }
+  if (ast.tag === 'objectLiteral') {
+    const pairs = ast.parts.map(p => {
+      if (p.tag === 'computedName') {
+        return `[${show(p.k)}]: ${show(p.v)}`
+      }
+
+      if (p.tag === 'hardName') {
+        return `${show(p.k)}: ${show(p.v)}`
+      }
+
+      if (p.tag === 'spread') {
+        return `...${show(p.o)}`
+      }
+
+      shouldNeverHappen(p)
+    })
+    return `{${pairs.join(', ')}}`
+  }
+  if (ast.tag === 'topLevelExpression') {
+    const defs = ast.definitions.map(d => `let ${show(d.ident)} = ${show(d.value)}`).join('; ')
+    return `${defs ? defs + '; ' : ''}${show(ast.computation)}`
+  }
+  if (ast.tag === 'unaryOperator') {
+    return `${ast.operator}${show(ast.operand)}`
+  }
+
+  shouldNeverHappen(ast)
+}
