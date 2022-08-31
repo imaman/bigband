@@ -1,5 +1,6 @@
 import { AstNode, show } from './ast-node'
 import { shouldNeverHappen } from './should-never-happen'
+import { switchOn } from './switch-on'
 import { SymbolTable } from './symbol-table'
 import { Value } from './value'
 
@@ -29,8 +30,10 @@ class EmptySymbolTable implements SymbolTable {
   }
 }
 
+export type Verbosity = 'quiet' | 'trace'
+
 export class Runtime {
-  constructor(private readonly root: AstNode) {}
+  constructor(private readonly root: AstNode, private readonly verbosity: Verbosity = 'quiet') {}
 
   run(): Value {
     const empty = new EmptySymbolTable()
@@ -39,9 +42,14 @@ export class Runtime {
 
   private evalNode(ast: AstNode, table: SymbolTable): Value {
     const ret= this.evalNodeImpl(ast, table)
-    if (ast.tag !== `topLevelExpression`) {
-      console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
-    }
+    switchOn(this.verbosity, {
+      'quiet': () => {},
+      'trace': () => {
+        if (ast.tag !== `topLevelExpression`) {
+          console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
+        }    
+      }
+    })
     return ret
   }
 
