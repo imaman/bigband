@@ -169,7 +169,7 @@ describe('value', () => {
       // ['reverse', [], []],
       // ['shift', [], []],
       // ['slice', [], []],
-      // ['some', [Value.lambda() => v.endsWith('oo')], [true]],
+      // ['some', [Value.lambda(v => v.assertStr().endsWith('oo'))], [true]],
       ['unshift', [Value.str('zoo')], ['zoo', 'foo', 'bar', 'goo']],
     ])('provides the .%s() method', (name, args, expected) => {
       const callee = Value.arr([Value.str('foo'), Value.str('bar'), Value.str('goo')]).access(name)

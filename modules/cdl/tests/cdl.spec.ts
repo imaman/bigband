@@ -358,7 +358,11 @@ describe('cdl', () => {
 
   test.todo('string methods')
   test.todo('number methods')
-  test.todo('array methods')
+  test('array methods', () => {
+    expect(cdl.parse(`['foo', 'bar', 'goo'].concat(['zoo', 'poo'])`)).toEqual(['foo', 'bar', 'goo', 'zoo', 'poo'])
+    expect(cdl.parse(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('oo'))`)).toEqual(true)
+    expect(cdl.parse(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('pp'))`)).toEqual(false)
+  })
   test.todo('Object methods: Object.keys(), Object.entries()')
   test.todo('error messages to include line number and column')
   test.todo('syntax errors')
