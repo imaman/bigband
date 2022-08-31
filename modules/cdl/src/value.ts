@@ -1,4 +1,5 @@
-import { Lambda } from './ast-node'
+import { Lambda, show } from './ast-node'
+import { Runtime } from './runtime';
 import { shouldNeverHappen } from './should-never-happen'
 import { SymbolTable } from './symbol-table'
 
@@ -277,14 +278,14 @@ export class Value {
     }
   }
 
-  access(indexValue: string | Value): Value {
+  access(indexValue: string | Value, runtime?: Runtime): Value {
     if (this.inner.tag === 'obj') {
       const index = this.toStringOrNumber(indexValue)
       return this.inner.val[index]
     }
     if (this.inner.tag === 'arr') {
       if (typeof indexValue === 'string') {
-        return this.arrayMethods(this.inner.val, indexValue)
+        return this.arrayMethods(this.inner.val, indexValue, runtime)
       }
 
       const i: number = indexValue.assertNum()
@@ -307,7 +308,7 @@ export class Value {
     shouldNeverHappen(this.inner)
   }
 
-  private arrayMethods(s: unknown[], index: string) {
+  private arrayMethods(s: unknown[], index: string, runtime?: Runtime) {
     if (index === 'at') {
       return Value.foreign(n => s.at(n.assertNum()))
     }
@@ -328,6 +329,9 @@ export class Value {
     }
     if (index === 'slice') {
       return Value.foreign((start, end) => s.slice(start?.assertNum(), end?.assertNum()))
+    }
+    if (index === 'some') {
+      return Value.foreign(predicate => s.some((item) => runtime!.call(predicate, [Value.fromUnknown(item)]).assertBool()))
     }
     if (index === 'unshift') {
       return Value.foreign(item => {
@@ -442,6 +446,13 @@ export class Value {
   }
 
   toJSON() {
+    if (this.inner.tag === 'lambda') {
+      return {_lambda: show(this.inner.val.ast)}
+    }
+    if (this.inner.tag === 'foreign') {
+      return {_foreign: this.inner.val.toString()}
+    }
+
     return this.inner.val
   }
 
