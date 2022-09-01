@@ -43,34 +43,6 @@ export class Value {
     return new Value({ tag: 'foreign', val: f })
   }
 
-  private static fromUnknown(u: unknown): Value {
-    if (u instanceof Value) {
-      return u
-    }
-    if (typeof u === 'boolean') {
-      return Value.bool(u)
-    }
-    if (typeof u === 'number') {
-      return Value.num(u)
-    }
-    if (typeof u === 'string') {
-      return Value.str(u)
-    }
-    if (Array.isArray(u)) {
-      return Value.arr(u.map(curr => this.fromUnknown(curr)))
-    }
-
-    if (typeof u === 'undefined') {
-      throw new Error(`Cannot convert undefined to Value`)
-    }
-
-    if (u && typeof u === 'object') {
-      Value.obj(Object.fromEntries(Object.entries(u).map(([k, v]) => [k, Value.fromUnknown(v)])))
-    }
-
-    throw new Error(`cannot convert ${JSON.stringify(u)} to Value`)
-  }
-
   unwrap(t: Tag): unknown
   unwrap(): unknown
   unwrap(t?: Tag): unknown {
@@ -340,7 +312,7 @@ export class Value {
       return Value.foreign(predicate =>
         s.every((item, i, a) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i), Value.fromUnknown(a)])
+            .call(predicate, [fromUnknown(item), fromUnknown(i), fromUnknown(a)])
             .assertBool(),
         ),
       )
@@ -349,7 +321,7 @@ export class Value {
       return Value.foreign(predicate =>
         s.filter((item, index, a) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item), Value.num(index), Value.fromUnknown(a)])
+            .call(predicate, [fromUnknown(item), Value.num(index), fromUnknown(a)])
             .assertBool(),
         ),
       )
@@ -358,7 +330,7 @@ export class Value {
       return Value.foreign(predicate =>
         s.find((item, i, a) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i), Value.fromUnknown(a)])
+            .call(predicate, [fromUnknown(item), fromUnknown(i), fromUnknown(a)])
             .assertBool(),
         ),
       )
@@ -367,16 +339,14 @@ export class Value {
       return Value.foreign(predicate =>
         s.findIndex((item, i, a) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i), Value.fromUnknown(a)])
+            .call(predicate, [fromUnknown(item), fromUnknown(i), fromUnknown(a)])
             .assertBool(),
         ),
       )
     }
     if (index === 'flatMap') {
       return Value.foreign(callback => {
-        const mapped = s.map((item, i, a) =>
-          rt().call(callback, [Value.fromUnknown(item), Value.fromUnknown(i), Value.fromUnknown(a)]),
-        )
+        const mapped = s.map((item, i, a) => rt().call(callback, [fromUnknown(item), fromUnknown(i), fromUnknown(a)]))
         return Value.flatten(mapped)
       })
     }
@@ -384,10 +354,10 @@ export class Value {
       return Value.foreign(() => Value.flatten(s))
     }
     if (index === 'includes') {
-      return Value.foreign((arg: Value) => s.some(curr => Value.fromUnknown(curr).compare(arg) === 0))
+      return Value.foreign((arg: Value) => s.some(curr => fromUnknown(curr).compare(arg) === 0))
     }
     if (index === 'indexOf') {
-      return Value.foreign(arg => s.findIndex(curr => Value.fromUnknown(curr).compare(arg) === 0))
+      return Value.foreign(arg => s.findIndex(curr => fromUnknown(curr).compare(arg) === 0))
     }
     if (index === 'join') {
       return Value.foreign(arg => s.join(arg.assertStr()))
@@ -395,7 +365,7 @@ export class Value {
     if (index === 'lastIndexOf') {
       return Value.foreign(arg => {
         for (let i = s.length - 1; i >= 0; --i) {
-          if (Value.fromUnknown(s[i]).compare(arg) === 0) {
+          if (fromUnknown(s[i]).compare(arg) === 0) {
             return i
           }
         }
@@ -407,9 +377,7 @@ export class Value {
     }
     if (index === 'map') {
       return Value.foreign(callback =>
-        s.map((item, i, a) =>
-          rt().call(callback, [Value.fromUnknown(item), Value.fromUnknown(i), Value.fromUnknown(a)]),
-        ),
+        s.map((item, i, a) => rt().call(callback, [fromUnknown(item), fromUnknown(i), fromUnknown(a)])),
       )
     }
     if (index === 'reverse') {
@@ -418,13 +386,7 @@ export class Value {
     if (index === 'reduce') {
       return Value.foreign((callback, initialValue) =>
         s.reduce(
-          (p, x, i, a) =>
-            rt().call(callback, [
-              Value.fromUnknown(p),
-              Value.fromUnknown(x),
-              Value.fromUnknown(i),
-              Value.fromUnknown(a),
-            ]),
+          (p, x, i, a) => rt().call(callback, [fromUnknown(p), fromUnknown(x), fromUnknown(i), fromUnknown(a)]),
           initialValue,
         ),
       )
@@ -432,13 +394,7 @@ export class Value {
     if (index === 'reduceRight') {
       return Value.foreign((callback, initialValue) =>
         s.reduceRight(
-          (p, x, i, a) =>
-            rt().call(callback, [
-              Value.fromUnknown(p),
-              Value.fromUnknown(x),
-              Value.fromUnknown(i),
-              Value.fromUnknown(a),
-            ]),
+          (p, x, i, a) => rt().call(callback, [fromUnknown(p), fromUnknown(x), fromUnknown(i), fromUnknown(a)]),
           initialValue,
         ),
       )
@@ -450,7 +406,7 @@ export class Value {
       return Value.foreign(predicate =>
         s.some((item, i) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i)])
+            .call(predicate, [fromUnknown(item), fromUnknown(i)])
             .assertBool(),
         ),
       )
@@ -543,7 +499,7 @@ export class Value {
   callForeign(args: Value[]) {
     if (this.inner.tag === 'foreign') {
       const output = this.inner.val(...args)
-      return Value.fromUnknown(output)
+      return fromUnknown(output)
     }
 
     if (
@@ -582,7 +538,7 @@ export class Value {
   static flatten(input: unknown[]) {
     const ret = []
     for (const curr of input) {
-      const v = Value.fromUnknown(curr)
+      const v = fromUnknown(curr)
       const unwrapped = v.unwrap()
       if (Array.isArray(unwrapped)) {
         ret.push(...unwrapped)
@@ -592,4 +548,32 @@ export class Value {
     }
     return ret
   }
+}
+
+function fromUnknown(u: unknown): Value {
+  if (u instanceof Value) {
+    return u
+  }
+  if (typeof u === 'boolean') {
+    return Value.bool(u)
+  }
+  if (typeof u === 'number') {
+    return Value.num(u)
+  }
+  if (typeof u === 'string') {
+    return Value.str(u)
+  }
+  if (Array.isArray(u)) {
+    return Value.arr(u.map(curr => fromUnknown(curr)))
+  }
+
+  if (typeof u === 'undefined') {
+    throw new Error(`Cannot convert undefined to Value`)
+  }
+
+  if (u && typeof u === 'object') {
+    Value.obj(Object.fromEntries(Object.entries(u).map(([k, v]) => [k, fromUnknown(v)])))
+  }
+
+  throw new Error(`cannot convert ${JSON.stringify(u)} to Value`)
 }
