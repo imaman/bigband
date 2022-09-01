@@ -357,6 +357,26 @@ export class Value {
         ),
       )
     }
+    if (index === 'flatMap') {
+      return Value.foreign(callback => {
+        const mapped = s.map(item => rt().call(callback, [Value.fromUnknown(item)]))
+
+        const ret = []
+        for (const curr of mapped) {
+          const v = Value.fromUnknown(curr)
+          const unwrapped = v.unwrap()
+          if (Array.isArray(unwrapped)) {
+            ret.push(...unwrapped)
+          } else {
+            ret.push(v)
+          }
+        }
+        return ret
+      })
+    }
+    if (index === 'flat') {
+      return Value.foreign(() => Value.flatten(s))
+    }
     if (index === 'includes') {
       return Value.foreign((arg: Value) => s.some(curr => Value.fromUnknown(curr).compare(arg) === 0))
     }
@@ -516,5 +536,19 @@ export class Value {
 
   export() {
     return JSON.parse(JSON.stringify(this))
+  }
+
+  static flatten(input: unknown[]) {
+    const ret = []
+    for (const curr of input) {
+      const v = Value.fromUnknown(curr)
+      const unwrapped = v.unwrap()
+      if (Array.isArray(unwrapped)) {
+        ret.push(...unwrapped)
+      } else {
+        ret.push(v)
+      }
+    }
+    return ret
   }
 }

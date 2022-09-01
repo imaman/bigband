@@ -172,8 +172,12 @@ describe('value', () => {
       ['find', [Value.foreign(v => v.assertStr() === 'bar')], 'bar'],
       // TODO(imaman): ['find', [Value.foreign(v => v.assertStr() === 'lorem ipsum')], ??]"",
       ['findIndex', [Value.foreign(v => v.assertStr() === 'goo')], 3],
-      // ['flat', [], []],
-      // ['flatMap', [], []],
+      ['flat', [], ['foo', 'bar', 'foo', 'goo']],
+      [
+        'flatMap',
+        [Value.foreign(v => v.assertStr().split(''))],
+        ['f', 'o', 'o', 'b', 'a', 'r', 'f', 'o', 'o', 'g', 'o', 'o'],
+      ],
       // X ['forEach', [], []],
       ['includes', [Value.str('bar')], true],
       ['includes', [Value.str('lorem-ipsum')], false],
@@ -201,6 +205,14 @@ describe('value', () => {
       const callee = input.access(name, r)
       const actual = callee.callForeign(args)
       expect(actual.export()).toEqual(expected)
+    })
+
+    test('Array.flat() flattens', () => {
+      const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
+      const input = Value.arr([Value.arr([Value.str('a'), Value.str('b')]), Value.str('c')])
+      const callee = input.access('flat', r)
+      const actual = callee.callForeign([])
+      expect(actual.export()).toEqual(['a', 'b', 'c'])
     })
   })
 
