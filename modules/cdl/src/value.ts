@@ -399,6 +399,11 @@ export class Value {
         s.reduce((a, b) => rt().call(callback, [Value.fromUnknown(a), Value.fromUnknown(b)]), initialValue),
       )
     }
+    if (index === 'reduceRight') {
+      return Value.foreign((callback, initialValue) =>
+        s.reduceRight((a, b) => rt().call(callback, [Value.fromUnknown(a), Value.fromUnknown(b)]), initialValue),
+      )
+    }
     if (index === 'slice') {
       return Value.foreign((start, end) => s.slice(start?.assertNum(), end?.assertNum()))
     }

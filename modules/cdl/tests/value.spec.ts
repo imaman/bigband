@@ -214,12 +214,31 @@ describe('value', () => {
       const actual = callee.callForeign([])
       expect(actual.export()).toEqual(['a', 'b', 'c'])
     })
-    test('.reduce() reduces', () => {
+    test('.reduce() reduces to the left', () => {
       const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
-      const input = Value.arr([Value.str('a'), Value.str('boom'), Value.str('cat')])
+
+      const input = Value.arr([
+        Value.arr([Value.num(0), Value.num(1)]),
+        Value.arr([Value.num(2), Value.num(3)]),
+        Value.arr([Value.num(4), Value.num(5)]),
+      ])
+
       const callee = input.access('reduce', r)
-      const actual = callee.callForeign([Value.foreign((x, y) => x.assertNum() + y.assertStr().length), Value.num(0)])
-      expect(actual.export()).toEqual(8)
+      const actual = callee.callForeign([Value.foreign((x, y) => [...x.assertArr(), ...y.assertArr()]), Value.arr([])])
+      expect(actual.export()).toEqual([0, 1, 2, 3, 4, 5])
+    })
+    test('.reduceRight() reduces to the right', () => {
+      const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
+
+      const input = Value.arr([
+        Value.arr([Value.num(0), Value.num(1)]),
+        Value.arr([Value.num(2), Value.num(3)]),
+        Value.arr([Value.num(4), Value.num(5)]),
+      ])
+
+      const callee = input.access('reduceRight', r)
+      const actual = callee.callForeign([Value.foreign((x, y) => [...x.assertArr(), ...y.assertArr()]), Value.arr([])])
+      expect(actual.export()).toEqual([4, 5, 2, 3, 0, 1])
     })
   })
 
