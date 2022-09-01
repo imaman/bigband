@@ -362,9 +362,9 @@ export class Value {
     }
     if (index === 'findIndex') {
       return Value.foreign(predicate =>
-        s.findIndex(item =>
+        s.findIndex((item, i) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item)])
+            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i)])
             .assertBool(),
         ),
       )
