@@ -409,6 +409,7 @@ describe('cdl', () => {
       expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('oo'))`)).toEqual(true)
       expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('pp'))`)).toEqual(false)
       expect(cdl.run(`['a', 'xyz', 'bc'].some(fun (item, i) i == item.length)`)).toEqual(true)
+      expect(cdl.run(`[8, 3, 7, 7, 6, 9].some(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(true)
     })
   })
   test.todo('Object methods: Object.keys(), Object.entries()')

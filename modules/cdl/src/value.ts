@@ -400,9 +400,12 @@ export class Value {
     }
     if (index === 'some') {
       return Value.foreign(predicate =>
-        s.some((item, i) =>
+        s.some((...args) =>
           rt()
-            .call(predicate, [from(item), from(i)])
+            .call(
+              predicate,
+              args.map(x => from(x)),
+            )
             .assertBool(),
         ),
       )
