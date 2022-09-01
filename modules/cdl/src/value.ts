@@ -14,45 +14,48 @@ type Inner =
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
   | { tag: 'foreign'; val: (...args: Value[]) => unknown }
 
+type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
+type Tag = InferTag<Inner>
+
 type X = {
-  num: (arg: number) => Value
-  bool: (arg: boolean) => Value
-  str: (arg: string) => Value
-  arr: (arg: Value[]) => Value
-  obj: (arg: Record<string, Value>) => Value
-  lambda: (arg: { ast: Lambda; table: SymbolTable }) => Value
-  foreign: (arg: (...args: Value[]) => unknown) => Value
+  num: (arg: number, tag: Tag) => Value
+  bool: (arg: boolean, tag: Tag) => Value
+  str: (arg: string, tag: Tag) => Value
+  arr: (arg: Value[], tag: Tag) => Value
+  obj: (arg: Record<string, Value>, tag: Tag) => Value
+  lambda: (arg: { ast: Lambda; table: SymbolTable }, tag: Tag) => Value
+  foreign: (arg: (...args: Value[]) => unknown, tag: Tag) => Value
+}
+
+const badType = (expected: Tag) => (_ignore: unknown, actual: Tag) => {
+  throw new Error(`value type error: expected ${expected} but found ${actual}`)
 }
 
 function onVal(inner: Inner, cases: X): Value {
   if (inner.tag === 'arr') {
-    return cases.arr(inner.val)
+    return cases.arr(inner.val, inner.tag)
   }
   if (inner.tag === 'bool') {
-    return cases.bool(inner.val)
+    return cases.bool(inner.val, inner.tag)
   }
   if (inner.tag === 'foreign') {
-    return cases.foreign(inner.val)
+    return cases.foreign(inner.val, inner.tag)
   }
   if (inner.tag === 'lambda') {
-    return cases.lambda(inner.val)
+    return cases.lambda(inner.val, inner.tag)
   }
   if (inner.tag === 'num') {
-    return cases.num(inner.val)
+    return cases.num(inner.val, inner.tag)
   }
   if (inner.tag === 'obj') {
-    return cases.obj(inner.val)
+    return cases.obj(inner.val, inner.tag)
   }
   if (inner.tag === 'str') {
-    return cases.str(inner.val)
+    return cases.str(inner.val, inner.tag)
   }
 
   shouldNeverHappen(inner)
 }
-
-type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
-
-type Tag = InferTag<Inner>
 
 export class Value {
   private constructor(private readonly inner: Inner) {}
@@ -145,14 +148,25 @@ export class Value {
   }
 
   or(that: Value) {
-    onVal.name
-    if (this.inner.tag === 'bool' && that.inner.tag === 'bool') {
-      return Value.bool(this.inner.val || that.inner.val)
-    }
-
-    this.requireType('bool')
-    that.requireType('bool')
-    throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
+    const err = badType('bool')
+    return onVal(this.inner, {
+      arr: err,
+      bool: lhs =>
+        onVal(that.inner, {
+          arr: err,
+          bool: rhs => Value.bool(lhs || rhs),
+          foreign: err,
+          lambda: err,
+          num: err,
+          obj: err,
+          str: err,
+        }),
+      foreign: err,
+      lambda: err,
+      num: err,
+      obj: err,
+      str: err,
+    })
   }
 
   and(that: Value) {
