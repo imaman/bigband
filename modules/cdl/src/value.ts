@@ -347,34 +347,36 @@ export class Value {
     }
     if (index === 'filter') {
       return Value.foreign(predicate =>
-        s.filter((item, index) =>
+        s.filter((item, index, a) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item), Value.num(index)])
+            .call(predicate, [Value.fromUnknown(item), Value.num(index), Value.fromUnknown(a)])
             .assertBool(),
         ),
       )
     }
     if (index === 'find') {
       return Value.foreign(predicate =>
-        s.find((item, i) =>
+        s.find((item, i, a) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i)])
+            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i), Value.fromUnknown(a)])
             .assertBool(),
         ),
       )
     }
     if (index === 'findIndex') {
       return Value.foreign(predicate =>
-        s.findIndex((item, i) =>
+        s.findIndex((item, i, a) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i)])
+            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i), Value.fromUnknown(a)])
             .assertBool(),
         ),
       )
     }
     if (index === 'flatMap') {
       return Value.foreign(callback => {
-        const mapped = s.map((item, i) => rt().call(callback, [Value.fromUnknown(item), Value.fromUnknown(i)]))
+        const mapped = s.map((item, i, a) =>
+          rt().call(callback, [Value.fromUnknown(item), Value.fromUnknown(i), Value.fromUnknown(a)]),
+        )
         return Value.flatten(mapped)
       })
     }
@@ -405,7 +407,9 @@ export class Value {
     }
     if (index === 'map') {
       return Value.foreign(callback =>
-        s.map((item, i) => rt().call(callback, [Value.fromUnknown(item), Value.fromUnknown(i)])),
+        s.map((item, i, a) =>
+          rt().call(callback, [Value.fromUnknown(item), Value.fromUnknown(i), Value.fromUnknown(a)]),
+        ),
       )
     }
     if (index === 'reverse') {
