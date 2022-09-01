@@ -42,10 +42,11 @@ describe('cdl', () => {
     expect(cdl.run(`6**4`)).toEqual(1296)
     expect(cdl.run(`2*3**4`)).toEqual(162)
     expect(cdl.run(`(2*3)**4`)).toEqual(1296)
-    expect(() => cdl.run(`!5`)).toThrowError(`value type error: expected bool but found: 5`)
-    expect(() => cdl.run(`!0`)).toThrowError(`value type error: expected bool but found: 0`)
-    expect(() => cdl.run(`!!0`)).toThrowError(`value type error: expected bool but found: 0`)
-    expect(() => cdl.run(`!!4`)).toThrowError(`value type error: expected bool but found: 4`)
+
+    expect(() => cdl.run(`!5`)).toThrowError(`value type error: expected bool but found num`)
+    expect(() => cdl.run(`!0`)).toThrowError(`value type error: expected bool but found num`)
+    expect(() => cdl.run(`!!0`)).toThrowError(`value type error: expected bool but found num`)
+    expect(() => cdl.run(`!!4`)).toThrowError(`value type error: expected bool but found num`)
   })
 
   test('equality', () => {
@@ -418,6 +419,7 @@ describe('cdl', () => {
   test.todo('comments')
   test.todo('comparison of arrays')
   test.todo('comparison of lambdas?')
+  test.todo(`cdl.run('!5')) should report the value of the bad type`)
   test.todo('deep equality of objects')
   test.todo('spread operator of arrays')
   test.todo('an object literal cannot have a repeated attribute name that')

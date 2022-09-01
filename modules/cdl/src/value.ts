@@ -171,13 +171,25 @@ export class Value {
   }
 
   and(that: Value) {
-    if (this.inner.tag === 'bool' && that.inner.tag === 'bool') {
-      return Value.bool(this.inner.val && that.inner.val)
-    }
-
-    this.requireType('bool')
-    that.requireType('bool')
-    throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
+    const err = badType('bool')
+    return pick(this, {
+      arr: err,
+      bool: lhs =>
+        pick(that, {
+          arr: err,
+          bool: rhs => Value.bool(lhs && rhs),
+          foreign: err,
+          lambda: err,
+          num: err,
+          obj: err,
+          str: err,
+        }),
+      foreign: err,
+      lambda: err,
+      num: err,
+      obj: err,
+      str: err,
+    })
   }
 
   equalsTo(that: Value) {
@@ -191,18 +203,44 @@ export class Value {
   }
 
   not() {
-    if (this.inner.tag === 'bool') {
-      return Value.bool(!this.inner.val)
-    }
-
-    this.requireType('bool')
-    throw new Error(`Inconsistent types: ${this.inner.tag}`)
+    const err = badType('bool')
+    return pick(this, {
+      arr: err,
+      bool: lhs => Value.bool(!lhs),
+      foreign: err,
+      lambda: err,
+      num: err,
+      obj: err,
+      str: err,
+    })
   }
 
   requireType(t: string) {
     if (this.inner.tag !== t) {
       throw new Error(`value type error: expected ${t} but found: ${this.inner.val}`)
     }
+  }
+
+  private binaryNumericOperator(a: Value, b: Value, f: (lhs: number, rhs: number) => number) {
+    const err = badType('num')
+    return pick(a, {
+      arr: err,
+      bool: err,
+      foreign: err,
+      lambda: err,
+      num: lhs =>
+        pick(b, {
+          arr: err,
+          bool: err,
+          foreign: err,
+          lambda: err,
+          num: rhs => Value.num(f(lhs, rhs)),
+          obj: err,
+          str: err,
+        }),
+      obj: err,
+      str: err,
+    })
   }
 
   plus(that: Value) {
@@ -217,12 +255,7 @@ export class Value {
     throw new Error(`Type error: operator cannot be applied to operands of type ${this.inner.tag}, ${that.inner.tag}`)
   }
   minus(that: Value) {
-    if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.num(this.inner.val - that.inner.val)
-    }
-    this.requireType('num')
-    that.requireType('num')
-    throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
+    return this.binaryNumericOperator(this, that, (a, b) => a - b)
   }
   times(that: Value) {
     if (this.inner.tag === 'num' && that.inner.tag === 'num') {
