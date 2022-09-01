@@ -181,7 +181,7 @@ export class Value {
       bool: lhs =>
         select(that, {
           arr: err,
-          bool: rhs => Value.bool(lhs && rhs),
+          bool: rhs => lhs && rhs,
           foreign: err,
           lambda: err,
           num: err,
@@ -210,7 +210,7 @@ export class Value {
     const err = badType('bool')
     return select(this, {
       arr: err,
-      bool: lhs => Value.bool(!lhs),
+      bool: lhs => !lhs,
       foreign: err,
       lambda: err,
       num: err,
@@ -238,7 +238,7 @@ export class Value {
           bool: err,
           foreign: err,
           lambda: err,
-          num: rhs => Value.num(f(lhs, rhs)),
+          num: rhs => f(lhs, rhs),
           obj: err,
           str: err,
         }),
@@ -260,20 +260,20 @@ export class Value {
           bool: errNum,
           foreign: errNum,
           lambda: errNum,
-          num: rhs => Value.num(lhs + rhs),
+          num: rhs => lhs + rhs,
           obj: errNum,
           str: errNum,
         }),
       obj: errNum,
       str: lhs =>
         select(that, {
-          arr: rhs => Value.str(lhs + rhs),
-          bool: rhs => Value.str(lhs + rhs),
-          foreign: rhs => Value.str(lhs + rhs),
-          lambda: rhs => Value.str(lhs + rhs),
-          num: rhs => Value.str(lhs + rhs),
-          obj: rhs => Value.str(lhs + rhs),
-          str: rhs => Value.str(lhs + rhs),
+          arr: rhs => lhs + rhs,
+          bool: rhs => lhs + rhs,
+          foreign: rhs => lhs + rhs,
+          lambda: rhs => lhs + rhs,
+          num: rhs => lhs + rhs,
+          obj: rhs => lhs + rhs,
+          str: rhs => lhs + rhs,
         }),
     })
   }
