@@ -344,9 +344,9 @@ export class Value {
     }
     if (index === 'filter') {
       return Value.foreign(predicate =>
-        s.filter(item =>
+        s.filter((item, index) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item)])
+            .call(predicate, [Value.fromUnknown(item), Value.num(index)])
             .assertBool(),
         ),
       )

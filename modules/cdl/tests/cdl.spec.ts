@@ -328,10 +328,7 @@ describe('cdl', () => {
       expect(() => cdl.run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2)`)).toThrowError(
         'Arg list length mismatch: expected 4 but got 3',
       )
-      expect(() => cdl.run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2,6,1)`)).toThrowError(
-        'Arg list length mismatch: expected 4 but got 5',
-      )
-      expect(cdl.run(`let sumFour = fun(a,b,c,d) a+b+c+d; sumFour(4,8,2,6)`)).toEqual(20)
+      expect(cdl.run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2,6)`)).toEqual(20)
     })
     test('can be recursive', () => {
       expect(cdl.run(`let factorial = fun(n) if (n > 0) n*factorial(n-1) else 1; factorial(6)`)).toEqual(720)
@@ -352,9 +349,7 @@ describe('cdl', () => {
       expect(cdl.run(`let sum = fun(a) fun(b,c) a+b+c; sum(1)(600,20)`)).toEqual(621)
       expect(cdl.run(`let sum = fun(a) fun(b) fun(c) a+b+c; sum(1)(600)(20)`)).toEqual(621)
       expect(cdl.run(`let sum = fun(a) fun(b,c) a+b+c; let plusOne = sum(1); plusOne(600,20)`)).toEqual(621)
-      expect(() => cdl.run(`let sum = fun(a) fun(b) fun(c) a+b+c; let plusOne = sum(1); plusOne(600,20)`)).toThrowError(
-        'Arg list length mismatch: expected 1 but got 2',
-      )
+      expect(cdl.run(`let sum = fun(a) fun(b) fun(c) a+b+c; let plusOne = sum(1); plusOne(600)(20)`)).toEqual(621)
     })
   })
 
@@ -365,6 +360,7 @@ describe('cdl', () => {
     expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('oo'))`)).toEqual(true)
     expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('pp'))`)).toEqual(false)
     expect(cdl.run(`['foo', 'bar', 'goo'].filter(fun (item) item.endsWith('oo'))`)).toEqual(['foo', 'goo'])
+    expect(cdl.run(`['a', 'b', 'c', 'd'].filter(fun (item, i) i % 2 == 1)`)).toEqual(['b', 'd'])
     expect(cdl.run(`['Columbia', 'Eagle'].flatMap(fun (item) [item, item.length])`)).toEqual([
       'Columbia',
       8,

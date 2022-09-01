@@ -196,7 +196,6 @@ describe('value', () => {
       const actual = callee.callForeign(args)
       expect(actual.export()).toEqual(expected)
     })
-
     test('.flat() flattens', () => {
       const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
       const input = Value.arr([Value.arr([Value.str('a'), Value.str('b')]), Value.str('c')])

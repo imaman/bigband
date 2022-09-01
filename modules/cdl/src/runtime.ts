@@ -231,7 +231,7 @@ export class Runtime {
     if (callee.isLambda()) {
       const l = callee.assertLambda()
 
-      if (l.ast.formalArgs.length !== argValues.length) {
+      if (l.ast.formalArgs.length > argValues.length) {
         throw new Error(`Arg list length mismatch: expected ${l.ast.formalArgs.length} but got ${argValues.length}`)
       }
       let newTable = l.table
