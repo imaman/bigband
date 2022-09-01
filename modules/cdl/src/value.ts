@@ -269,7 +269,7 @@ export class Value {
     }
 
     if (this.inner.tag === 'str') {
-      return Value.stringMethods(this.inner.val, indexValue)
+      return Value.findStringMethod(this.inner.val, indexValue)
     }
 
     if (
@@ -284,7 +284,7 @@ export class Value {
     shouldNeverHappen(this.inner)
   }
 
-  private static stringMethods(s: string, indexValue: string | Value) {
+  private static findStringMethod(s: string, indexValue: string | Value) {
     const index = Value.toStringOrNumber(indexValue)
     if (typeof index === 'number') {
       throw new Error(`Index is of type number - not supported`)
