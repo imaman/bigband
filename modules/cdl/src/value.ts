@@ -299,6 +299,14 @@ export class Value {
   private arrayMethods(s: unknown[], index: string, runtime?: Runtime) {
     const rt = () => runtime ?? failMe('runtime is flasy')
 
+    const wrappedCallback =
+      (callback: Value) =>
+      (...args: unknown[]) =>
+        rt().call(
+          callback,
+          args.map(x => from(x)),
+        )
+
     if (index === 'at') {
       return Value.foreign(n => s.at(n.assertNum()))
     }
@@ -376,14 +384,7 @@ export class Value {
       return Value.num(s.length)
     }
     if (index === 'map') {
-      return Value.foreign(callback =>
-        s.map((...args) =>
-          rt().call(
-            callback,
-            args.map(x => from(x)),
-          ),
-        ),
-      )
+      return Value.foreign(callback => s.map(wrappedCallback(callback)))
     }
     if (index === 'reverse') {
       return Value.foreign(() => [...s].reverse())
