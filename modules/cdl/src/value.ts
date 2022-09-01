@@ -296,7 +296,7 @@ export class Value {
    *  - shift
    *  - unshift
    */
-  private arrayMethods(s: unknown[], index: string, runtime?: Runtime) {
+  private arrayMethods(arr: unknown[], index: string, runtime?: Runtime) {
     const rt = () => runtime ?? failMe('runtime is flasy')
 
     const adjustedCallback =
@@ -318,45 +318,45 @@ export class Value {
           .assertBool()
 
     if (index === 'at') {
-      return Value.foreign(n => s.at(n.assertNum()))
+      return Value.foreign(n => arr.at(n.assertNum()))
     }
     if (index === 'concat') {
-      return Value.foreign(arg => s.concat(arg.assertArr()))
+      return Value.foreign(arg => arr.concat(arg.assertArr()))
     }
     if (index === 'entries') {
-      return Value.foreign(() => [...s.entries()])
+      return Value.foreign(() => [...arr.entries()])
     }
     if (index === 'every') {
-      return Value.foreign(predicate => s.every(adjustedPredicate(predicate)))
+      return Value.foreign(predicate => arr.every(adjustedPredicate(predicate)))
     }
     if (index === 'filter') {
-      return Value.foreign(predicate => s.filter(adjustedPredicate(predicate)))
+      return Value.foreign(predicate => arr.filter(adjustedPredicate(predicate)))
     }
     if (index === 'find') {
-      return Value.foreign(predicate => s.find(adjustedPredicate(predicate)))
+      return Value.foreign(predicate => arr.find(adjustedPredicate(predicate)))
     }
     if (index === 'findIndex') {
-      return Value.foreign(predicate => s.findIndex(adjustedPredicate(predicate)))
+      return Value.foreign(predicate => arr.findIndex(adjustedPredicate(predicate)))
     }
     if (index === 'flatMap') {
-      return Value.foreign(callback => Value.flatten(s.map(adjustedCallback(callback))))
+      return Value.foreign(callback => Value.flatten(arr.map(adjustedCallback(callback))))
     }
     if (index === 'flat') {
-      return Value.foreign(() => Value.flatten(s))
+      return Value.foreign(() => Value.flatten(arr))
     }
     if (index === 'includes') {
-      return Value.foreign((arg: Value) => s.some(curr => from(curr).compare(arg) === 0))
+      return Value.foreign((arg: Value) => arr.some(curr => from(curr).compare(arg) === 0))
     }
     if (index === 'indexOf') {
-      return Value.foreign(arg => s.findIndex(curr => from(curr).compare(arg) === 0))
+      return Value.foreign(arg => arr.findIndex(curr => from(curr).compare(arg) === 0))
     }
     if (index === 'join') {
-      return Value.foreign(arg => s.join(arg.assertStr()))
+      return Value.foreign(arg => arr.join(arg.assertStr()))
     }
     if (index === 'lastIndexOf') {
       return Value.foreign(arg => {
-        for (let i = s.length - 1; i >= 0; --i) {
-          if (from(s[i]).compare(arg) === 0) {
+        for (let i = arr.length - 1; i >= 0; --i) {
+          if (from(arr[i]).compare(arg) === 0) {
             return i
           }
         }
@@ -364,25 +364,25 @@ export class Value {
       })
     }
     if (index === 'length') {
-      return Value.num(s.length)
+      return Value.num(arr.length)
     }
     if (index === 'map') {
-      return Value.foreign(callback => s.map(adjustedCallback(callback)))
+      return Value.foreign(callback => arr.map(adjustedCallback(callback)))
     }
     if (index === 'reverse') {
-      return Value.foreign(() => [...s].reverse())
+      return Value.foreign(() => [...arr].reverse())
     }
     if (index === 'reduce') {
-      return Value.foreign((callback, initialValue) => s.reduce(adjustedCallback(callback), initialValue))
+      return Value.foreign((callback, initialValue) => arr.reduce(adjustedCallback(callback), initialValue))
     }
     if (index === 'reduceRight') {
-      return Value.foreign((callback, initialValue) => s.reduceRight(adjustedCallback(callback), initialValue))
+      return Value.foreign((callback, initialValue) => arr.reduceRight(adjustedCallback(callback), initialValue))
     }
     if (index === 'slice') {
-      return Value.foreign((start, end) => s.slice(start?.assertNum(), end?.assertNum()))
+      return Value.foreign((start, end) => arr.slice(start?.assertNum(), end?.assertNum()))
     }
     if (index === 'some') {
-      return Value.foreign(predicate => s.some(adjustedPredicate(predicate)))
+      return Value.foreign(predicate => arr.some(adjustedPredicate(predicate)))
     }
     throw new Error(`Unrecognized array method: ${index}`)
   }
