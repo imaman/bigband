@@ -384,4 +384,6 @@ describe('cdl', () => {
   test.todo('quoting of a ticks inside a string')
   test.todo('number in scientific notation')
   test.todo('"abcdef"[1] == "b"')
+  test.todo('Arr.find() returns undefined')
+  test.todo('Arr.map(curr, index)')
 })
