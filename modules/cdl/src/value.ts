@@ -290,6 +290,9 @@ export class Value {
       }
 
       const i: number = indexValue.assertNum()
+      if (i < 0 || i > this.inner.val.length) {
+        throw new Error(`array index (${i}) is out of bounds (length = ${this.inner.val.length})`)
+      }
       return this.inner.val[i]
     }
 
@@ -335,9 +338,9 @@ export class Value {
     }
     if (index === 'every') {
       return Value.foreign(predicate =>
-        s.every((item, i) =>
+        s.every((item, i, a) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i)])
+            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i), Value.fromUnknown(a)])
             .assertBool(),
         ),
       )

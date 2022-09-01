@@ -364,6 +364,9 @@ describe('cdl', () => {
     test('every', () => {
       expect(cdl.run(`["", 'x', 'xx'].every(fun (item, i) item.length == i)`)).toEqual(true)
       expect(cdl.run(`["", 'yy', 'zz'].every(fun (item, i) item.length == i)`)).toEqual(false)
+      expect(
+        cdl.run(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`),
+      ).toEqual([true, false])
     })
     test('filter', () => {
       expect(cdl.run(`['foo', 'bar', 'goo'].filter(fun (item) item.endsWith('oo'))`)).toEqual(['foo', 'goo'])
@@ -408,4 +411,5 @@ describe('cdl', () => {
   test.todo('"abcdef"[1] == "b"')
   test.todo('Arr.find() returns undefined')
   test.todo('Arr.map(curr, index)')
+  test.todo('array index out of bounds')
 })
