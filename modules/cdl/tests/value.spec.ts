@@ -143,32 +143,49 @@ describe('value', () => {
     })
   })
   describe('array operations', () => {
+    test('.length', () => {
+      expect(
+        Value.arr([Value.str('foo'), Value.str('bar'), Value.str('foo'), Value.str('goo')])
+          .access('length')
+          .export(),
+      ).toEqual(4)
+    })
     test.each([
       ['at', [Value.num(-1)], 'goo'],
       ['concat', [Value.arr([Value.str('boo'), Value.str('poo')])], ['foo', 'bar', 'foo', 'goo', 'boo', 'poo']],
-      // ['copyWithin', [], []],
-      // ['entries', [], []],
+      // X ['copyWithin', [], []],
+      [
+        'entries',
+        [],
+        [
+          [0, 'foo'],
+          [1, 'bar'],
+          [2, 'foo'],
+          [3, 'goo'],
+        ],
+      ],
       // ['every', [], []],
-      // ['fill', [], []],
+      // X ['fill', [], []],
       // ['filter', [], []],
       // ['find', [], []],
       // ['findIndex', [], []],
       // ['flat', [], []],
       // ['flatMap', [], []],
-      // ['forEach', [], []],
+      // X ['forEach', [], []],
       ['includes', [Value.str('bar')], true],
       ['includes', [Value.str('lorem-ipsum')], false],
       ['indexOf', [Value.str('goo')], 3],
       ['join', [Value.str('; ')], 'foo; bar; foo; goo'],
-      // ['keys', [], []],
-      // ['lastIndexOf', [], []],
+      // X ['keys', [], []],
+      ['lastIndexOf', [Value.str('foo')], 2],
+      ['lastIndexOf', [Value.str('lorem ipsum')], -1],
       // ['map', [], []],
-      // ['pop', [], []],
-      // ['push', [], []],
+      // X ['pop', [], []],
+      // X ['push', [], []],
       // ['reduce', [], []],
       // ['reduceRight', [], []],
       ['reverse', [], ['goo', 'foo', 'bar', 'foo']],
-      // ['shift', [], []],
+      // X ['shift', [], []],
       ['slice', [Value.num(1), Value.num(2)], ['bar']],
       ['slice', [Value.num(1), Value.num(3)], ['bar', 'foo']],
       ['slice', [Value.num(2), Value.num(4)], ['foo', 'goo']],

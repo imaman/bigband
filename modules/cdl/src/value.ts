@@ -316,6 +316,9 @@ export class Value {
     if (index === 'concat') {
       return Value.foreign(arg => s.concat(arg.assertArr()))
     }
+    if (index === 'entries') {
+      return Value.foreign(() => [...s.entries()])
+    }
     if (index === 'includes') {
       return Value.foreign((arg: Value) => s.some(curr => Value.fromUnknown(curr).compare(arg) === 0))
     }
@@ -324,6 +327,16 @@ export class Value {
     }
     if (index === 'join') {
       return Value.foreign(arg => s.join(arg.assertStr()))
+    }
+    if (index === 'lastIndexOf') {
+      return Value.foreign(arg => {
+        for (let i = s.length - 1; i >= 0; --i) {
+          if (Value.fromUnknown(s[i]).compare(arg) === 0) {
+            return i
+          }
+        }
+        return -1
+      })
     }
     if (index === 'length') {
       return Value.num(s.length)
