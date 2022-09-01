@@ -17,7 +17,7 @@ type Inner =
 type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
 type Tag = InferTag<Inner>
 
-type X = {
+type Cases = {
   num: (arg: number, tag: Tag) => Value
   bool: (arg: boolean, tag: Tag) => Value
   str: (arg: string, tag: Tag) => Value
@@ -31,7 +31,7 @@ const badType = (expected: Tag) => (_ignore: unknown, actual: Tag) => {
   throw new Error(`value type error: expected ${expected} but found ${actual}`)
 }
 
-function onVal(v: Value, cases: X): Value {
+function pick(v: Value, cases: Cases): Value {
   const inner = v.inner
   if (inner.tag === 'arr') {
     return cases.arr(inner.val, inner.tag)
@@ -150,10 +150,10 @@ export class Value {
 
   or(that: Value) {
     const err = badType('bool')
-    return onVal(this, {
+    return pick(this, {
       arr: err,
       bool: lhs =>
-        onVal(that, {
+        pick(that, {
           arr: err,
           bool: rhs => Value.bool(lhs || rhs),
           foreign: err,
