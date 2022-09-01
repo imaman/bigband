@@ -387,6 +387,7 @@ export class Value {
       )
     }
     if (index === 'reduceRight') {
+      // here
       return Value.foreign((callback, initialValue) =>
         s.reduceRight(
           (...args) =>
