@@ -1,5 +1,5 @@
-import { arrayMethods as findArrayMethod } from './array-methods'
 import { Lambda, show } from './ast-node'
+import { arrayMethods as findArrayMethod } from './find-array-method'
 import { Runtime } from './runtime'
 import { shouldNeverHappen } from './should-never-happen'
 import { SymbolTable } from './symbol-table'
