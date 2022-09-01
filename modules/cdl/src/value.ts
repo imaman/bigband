@@ -32,30 +32,34 @@ const badType = (expected: Tag) => (_ignore: unknown, actual: Tag) => {
 }
 
 function select(v: Value, cases: Cases): Value {
-  const inner = v.inner
-  if (inner.tag === 'arr') {
-    return cases.arr(inner.val, inner.tag)
-  }
-  if (inner.tag === 'bool') {
-    return cases.bool(inner.val, inner.tag)
-  }
-  if (inner.tag === 'foreign') {
-    return cases.foreign(inner.val, inner.tag)
-  }
-  if (inner.tag === 'lambda') {
-    return cases.lambda(inner.val, inner.tag)
-  }
-  if (inner.tag === 'num') {
-    return cases.num(inner.val, inner.tag)
-  }
-  if (inner.tag === 'obj') {
-    return cases.obj(inner.val, inner.tag)
-  }
-  if (inner.tag === 'str') {
-    return cases.str(inner.val, inner.tag)
+  const selectUnknown = () => {
+    const inner = v.inner
+    if (inner.tag === 'arr') {
+      return cases.arr(inner.val, inner.tag)
+    }
+    if (inner.tag === 'bool') {
+      return cases.bool(inner.val, inner.tag)
+    }
+    if (inner.tag === 'foreign') {
+      return cases.foreign(inner.val, inner.tag)
+    }
+    if (inner.tag === 'lambda') {
+      return cases.lambda(inner.val, inner.tag)
+    }
+    if (inner.tag === 'num') {
+      return cases.num(inner.val, inner.tag)
+    }
+    if (inner.tag === 'obj') {
+      return cases.obj(inner.val, inner.tag)
+    }
+    if (inner.tag === 'str') {
+      return cases.str(inner.val, inner.tag)
+    }
+
+    shouldNeverHappen(inner)
   }
 
-  shouldNeverHappen(inner)
+  return Value.from(selectUnknown())
 }
 
 export class Value {
