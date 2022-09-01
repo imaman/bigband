@@ -363,6 +363,7 @@ describe('cdl', () => {
     expect(cdl.run(`['foo', 'bar', 'goo'].filter(fun (item) item.endsWith('oo'))`)).toEqual(['foo', 'goo'])
     expect(cdl.run(`['a', 'b', 'c', 'd'].filter(fun (item, i) i % 2 == 1)`)).toEqual(['b', 'd'])
     expect(cdl.run(`['a', 'b'].map(fun (item, i) item + ':' + i)`)).toEqual(['a:0', 'b:1'])
+    expect(cdl.run(`[10, 20, 30, 40].find(fun (item, i) item + i == 21)`)).toEqual(20)
     expect(cdl.run(`['Columbia', 'Eagle'].flatMap(fun (item) [item, item.length])`)).toEqual([
       'Columbia',
       8,
