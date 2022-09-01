@@ -244,58 +244,53 @@ export class Value {
   }
 
   plus(that: Value) {
-    if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.num(this.inner.val + that.inner.val)
-    }
-
-    if (this.inner.tag === 'str') {
-      return Value.str(this.inner.val + that.inner.val)
-    }
-
-    throw new Error(`Type error: operator cannot be applied to operands of type ${this.inner.tag}, ${that.inner.tag}`)
+    const errNum = badType('num')
+    return pick(this, {
+      arr: errNum,
+      bool: errNum,
+      foreign: errNum,
+      lambda: errNum,
+      num: lhs =>
+        pick(that, {
+          arr: errNum,
+          bool: errNum,
+          foreign: errNum,
+          lambda: errNum,
+          num: rhs => Value.num(lhs + rhs),
+          obj: errNum,
+          str: errNum,
+        }),
+      obj: errNum,
+      str: lhs =>
+        pick(that, {
+          arr: rhs => Value.str(lhs + rhs),
+          bool: rhs => Value.str(lhs + rhs),
+          foreign: rhs => Value.str(lhs + rhs),
+          lambda: rhs => Value.str(lhs + rhs),
+          num: rhs => Value.str(lhs + rhs),
+          obj: rhs => Value.str(lhs + rhs),
+          str: rhs => Value.str(lhs + rhs),
+        }),
+    })
   }
   minus(that: Value) {
     return this.binaryNumericOperator(this, that, (a, b) => a - b)
   }
   times(that: Value) {
-    if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.num(this.inner.val * that.inner.val)
-    }
-    this.requireType('num')
-    that.requireType('num')
-    throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
+    return this.binaryNumericOperator(this, that, (a, b) => a * b)
   }
   power(that: Value) {
-    if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.num(this.inner.val ** that.inner.val)
-    }
-    this.requireType('num')
-    that.requireType('num')
-    throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
+    return this.binaryNumericOperator(this, that, (a, b) => a ** b)
   }
   over(that: Value) {
-    if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.num(this.inner.val / that.inner.val)
-    }
-    this.requireType('num')
-    that.requireType('num')
-    throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
+    return this.binaryNumericOperator(this, that, (a, b) => a / b)
   }
   modulo(that: Value) {
-    if (this.inner.tag === 'num' && that.inner.tag === 'num') {
-      return Value.num(this.inner.val % that.inner.val)
-    }
-    this.requireType('num')
-    that.requireType('num')
-    throw new Error(`Inconsistent types: ${this.inner.tag}, ${that.inner.tag}`)
+    return this.binaryNumericOperator(this, that, (a, b) => a % b)
   }
 
   negate() {
-    if (this.inner.tag === 'num') {
-      return Value.num(-this.inner.val)
-    }
-    this.requireType('num')
-    throw new Error(`Inconsistent types: ${this.inner.tag}`)
+    return Value.num(0).minus(this)
   }
 
   compare(that: Value) {
