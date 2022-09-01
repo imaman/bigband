@@ -355,22 +355,36 @@ describe('cdl', () => {
 
   test.todo('string methods')
   test.todo('number methods')
-  test('array methods', () => {
-    expect(cdl.run(`['foo', 'bar', 'goo'].concat(['zoo', 'poo'])`)).toEqual(['foo', 'bar', 'goo', 'zoo', 'poo'])
-    expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('oo'))`)).toEqual(true)
-    expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('pp'))`)).toEqual(false)
-    expect(cdl.run(`['a', 'xyz', 'bc'].some(fun (item, i) i == item.length)`)).toEqual(true)
-    expect(cdl.run(`['foo', 'bar', 'goo'].filter(fun (item) item.endsWith('oo'))`)).toEqual(['foo', 'goo'])
-    expect(cdl.run(`['a', 'b', 'c', 'd'].filter(fun (item, i) i % 2 == 1)`)).toEqual(['b', 'd'])
-    expect(cdl.run(`['a', 'b'].map(fun (item, i) item + ':' + i)`)).toEqual(['a:0', 'b:1'])
-    expect(cdl.run(`[10, 20, 30, 40].find(fun (item, i) item + i == 21)`)).toEqual(20)
-    expect(cdl.run(`[10, 20, 30, 40].findIndex(fun (item, i) item + i == 32)`)).toEqual(2)
-    expect(cdl.run(`['Columbia', 'Eagle'].flatMap(fun (item) [item, item.length])`)).toEqual([
-      'Columbia',
-      8,
-      'Eagle',
-      5,
-    ])
+  describe('array methods', () => {
+    test('concat', () => {
+      expect(cdl.run(`['foo', 'bar', 'goo'].concat(['zoo', 'poo'])`)).toEqual(['foo', 'bar', 'goo', 'zoo', 'poo'])
+    })
+    test('some', () => {
+      expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('oo'))`)).toEqual(true)
+      expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('pp'))`)).toEqual(false)
+      expect(cdl.run(`['a', 'xyz', 'bc'].some(fun (item, i) i == item.length)`)).toEqual(true)
+    })
+    test('filter', () => {
+      expect(cdl.run(`['foo', 'bar', 'goo'].filter(fun (item) item.endsWith('oo'))`)).toEqual(['foo', 'goo'])
+      expect(cdl.run(`['a', 'b', 'c', 'd'].filter(fun (item, i) i % 2 == 1)`)).toEqual(['b', 'd'])
+    })
+    test('map', () => {
+      expect(cdl.run(`['a', 'b'].map(fun (item, i) item + ':' + i)`)).toEqual(['a:0', 'b:1'])
+    })
+    test('find', () => {
+      expect(cdl.run(`[10, 20, 30, 40].find(fun (item, i) item + i == 21)`)).toEqual(20)
+    })
+    test('findIndex', () => {
+      expect(cdl.run(`[10, 20, 30, 40].findIndex(fun (item, i) item + i == 32)`)).toEqual(2)
+    })
+    test('flatMap', () => {
+      expect(cdl.run(`['Columbia', 'Eagle'].flatMap(fun (item) [item, item.length])`)).toEqual([
+        'Columbia',
+        8,
+        'Eagle',
+        5,
+      ])
+    })
 
     // reduce*,  every,  flatmap,
   })
