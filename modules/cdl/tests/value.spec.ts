@@ -186,7 +186,7 @@ describe('value', () => {
       // X ['keys', [], []],
       ['lastIndexOf', [Value.str('foo')], 2],
       ['lastIndexOf', [Value.str('lorem ipsum')], -1],
-      // ['map', [], []],
+      ['map', [Value.foreign(v => v.assertStr().charAt(0))], ['f', 'b', 'f', 'g']],
       // X ['pop', [], []],
       // X ['push', [], []],
       // ['reduce', [], []],

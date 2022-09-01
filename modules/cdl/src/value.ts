@@ -388,6 +388,9 @@ export class Value {
     if (index === 'length') {
       return Value.num(s.length)
     }
+    if (index === 'map') {
+      return Value.foreign(callback => s.map(item => rt().call(callback, [Value.fromUnknown(item)])))
+    }
     if (index === 'reverse') {
       return Value.foreign(() => [...s].reverse())
     }
