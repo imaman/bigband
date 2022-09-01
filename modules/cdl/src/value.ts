@@ -390,22 +390,10 @@ export class Value {
       return Value.foreign(() => [...s].reverse())
     }
     if (index === 'reduce') {
-      return Value.foreign((callback, initialValue) =>
-        s.reduce((p, x, i, a) => rt().call(callback, [from(p), from(x), from(i), from(a)]), initialValue),
-      )
+      return Value.foreign((callback, initialValue) => s.reduce(wrappedCallback(callback), initialValue))
     }
     if (index === 'reduceRight') {
-      // here
-      return Value.foreign((callback, initialValue) =>
-        s.reduceRight(
-          (...args) =>
-            rt().call(
-              callback,
-              args.map(x => from(x)),
-            ),
-          initialValue,
-        ),
-      )
+      return Value.foreign((callback, initialValue) => s.reduceRight(wrappedCallback(callback), initialValue))
     }
     if (index === 'slice') {
       return Value.foreign((start, end) => s.slice(start?.assertNum(), end?.assertNum()))
