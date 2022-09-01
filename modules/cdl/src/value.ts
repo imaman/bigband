@@ -31,7 +31,7 @@ const badType = (expected: Tag) => (_ignore: unknown, actual: Tag) => {
   throw new Error(`value type error: expected ${expected} but found ${actual}`)
 }
 
-function pick(v: Value, cases: Cases): Value {
+function select(v: Value, cases: Cases): Value {
   const inner = v.inner
   if (inner.tag === 'arr') {
     return cases.arr(inner.val, inner.tag)
@@ -150,10 +150,10 @@ export class Value {
 
   or(that: Value) {
     const err = badType('bool')
-    return pick(this, {
+    return select(this, {
       arr: err,
       bool: lhs =>
-        pick(that, {
+        select(that, {
           arr: err,
           bool: rhs => Value.bool(lhs || rhs),
           foreign: err,
@@ -172,10 +172,10 @@ export class Value {
 
   and(that: Value) {
     const err = badType('bool')
-    return pick(this, {
+    return select(this, {
       arr: err,
       bool: lhs =>
-        pick(that, {
+        select(that, {
           arr: err,
           bool: rhs => Value.bool(lhs && rhs),
           foreign: err,
@@ -204,7 +204,7 @@ export class Value {
 
   not() {
     const err = badType('bool')
-    return pick(this, {
+    return select(this, {
       arr: err,
       bool: lhs => Value.bool(!lhs),
       foreign: err,
@@ -223,13 +223,13 @@ export class Value {
 
   private binaryNumericOperator(a: Value, b: Value, f: (lhs: number, rhs: number) => number) {
     const err = badType('num')
-    return pick(a, {
+    return select(a, {
       arr: err,
       bool: err,
       foreign: err,
       lambda: err,
       num: lhs =>
-        pick(b, {
+        select(b, {
           arr: err,
           bool: err,
           foreign: err,
@@ -245,13 +245,13 @@ export class Value {
 
   plus(that: Value) {
     const errNum = badType('num')
-    return pick(this, {
+    return select(this, {
       arr: errNum,
       bool: errNum,
       foreign: errNum,
       lambda: errNum,
       num: lhs =>
-        pick(that, {
+        select(that, {
           arr: errNum,
           bool: errNum,
           foreign: errNum,
@@ -262,7 +262,7 @@ export class Value {
         }),
       obj: errNum,
       str: lhs =>
-        pick(that, {
+        select(that, {
           arr: rhs => Value.str(lhs + rhs),
           bool: rhs => Value.str(lhs + rhs),
           foreign: rhs => Value.str(lhs + rhs),
