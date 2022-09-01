@@ -388,8 +388,11 @@ export class Value {
     }
     if (index === 'reduceRight') {
       return Value.foreign((callback, initialValue) =>
-        s.reduceRight((p, x, i, a) => {
-          return rt().call(callback, [from(p), from(x), from(i), from(a)])
+        s.reduceRight((...args) => {
+          return rt().call(
+            callback,
+            args.map(x => from(x)),
+          )
         }, initialValue),
       )
     }
