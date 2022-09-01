@@ -376,7 +376,14 @@ export class Value {
       return Value.num(s.length)
     }
     if (index === 'map') {
-      return Value.foreign(callback => s.map((item, i, a) => rt().call(callback, [from(item), from(i), from(a)])))
+      return Value.foreign(callback =>
+        s.map((...args) =>
+          rt().call(
+            callback,
+            args.map(x => from(x)),
+          ),
+        ),
+      )
     }
     if (index === 'reverse') {
       return Value.foreign(() => [...s].reverse())
