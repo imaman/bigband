@@ -145,7 +145,7 @@ describe('value', () => {
   describe('array operations', () => {
     test.each([
       ['at', [Value.num(-1)], 'goo'],
-      ['concat', [Value.arr([Value.str('boo'), Value.str('poo')])], ['foo', 'bar', 'goo', 'boo', 'poo']],
+      ['concat', [Value.arr([Value.str('boo'), Value.str('poo')])], ['foo', 'bar', 'foo', 'goo', 'boo', 'poo']],
       // ['copyWithin', [], []],
       // ['entries', [], []],
       // ['every', [], []],
@@ -156,9 +156,10 @@ describe('value', () => {
       // ['flat', [], []],
       // ['flatMap', [], []],
       // ['forEach', [], []],
-      // ['includes', [], []],
-      // ['indexOf', [], []],
-      // ['join', [], []],
+      ['includes', [Value.str('bar')], true],
+      ['includes', [Value.str('lorem-ipsum')], false],
+      ['indexOf', [Value.str('goo')], 3],
+      ['join', [Value.str('; ')], 'foo; bar; foo; goo'],
       // ['keys', [], []],
       // ['lastIndexOf', [], []],
       // ['map', [], []],
@@ -166,13 +167,16 @@ describe('value', () => {
       // ['push', [], []],
       // ['reduce', [], []],
       // ['reduceRight', [], []],
-      // ['reverse', [], []],
+      ['reverse', [], ['goo', 'foo', 'bar', 'foo']],
       // ['shift', [], []],
-      // ['slice', [], []],
+      ['slice', [Value.num(1), Value.num(2)], ['bar']],
+      ['slice', [Value.num(1), Value.num(3)], ['bar', 'foo']],
+      ['slice', [Value.num(2), Value.num(4)], ['foo', 'goo']],
       // ['some', [Value.lambda(v => v.assertStr().endsWith('oo'))], [true]],
-      ['unshift', [Value.str('zoo')], ['zoo', 'foo', 'bar', 'goo']],
+      ['unshift', [Value.str('zoo')], ['zoo', 'foo', 'bar', 'foo', 'goo']],
     ])('provides the .%s() method', (name, args, expected) => {
-      const callee = Value.arr([Value.str('foo'), Value.str('bar'), Value.str('goo')]).access(name)
+      const input = Value.arr([Value.str('foo'), Value.str('bar'), Value.str('foo'), Value.str('goo')])
+      const callee = input.access(name)
       const actual = callee.callForeign(args)
       expect(actual.export()).toEqual(expected)
     })

@@ -1,5 +1,6 @@
 import { Lambda, show } from './ast-node'
-import { Runtime } from './runtime';
+import { failMe } from './fail-me'
+import { Runtime } from './runtime'
 import { shouldNeverHappen } from './should-never-happen'
 import { SymbolTable } from './symbol-table'
 
@@ -316,22 +317,27 @@ export class Value {
       return Value.foreign(arg => s.concat(arg.assertArr()))
     }
     if (index === 'includes') {
-      return Value.foreign(arg => s.includes(arg.assertStr()))
+      return Value.foreign((arg: Value) => s.some(curr => Value.fromUnknown(curr).compare(arg) === 0))
     }
     if (index === 'indexOf') {
-      return Value.foreign(searchString => s.indexOf(searchString.assertStr()))
+      return Value.foreign(arg => s.findIndex(curr => Value.fromUnknown(curr).compare(arg) === 0))
     }
-    if (index === 'lastIndexOf') {
-      return Value.foreign(searchString => s.lastIndexOf(searchString.assertStr()))
+    if (index === 'join') {
+      return Value.foreign(arg => s.join(arg.assertStr()))
     }
     if (index === 'length') {
       return Value.num(s.length)
+    }
+    if (index === 'reverse') {
+      return Value.foreign(() => [...s].reverse())
     }
     if (index === 'slice') {
       return Value.foreign((start, end) => s.slice(start?.assertNum(), end?.assertNum()))
     }
     if (index === 'some') {
-      return Value.foreign(predicate => s.some((item) => runtime!.call(predicate, [Value.fromUnknown(item)]).assertBool()))
+      return Value.foreign(predicate =>
+        s.some(item => (runtime ?? failMe('runtime is flasy')).call(predicate, [Value.fromUnknown(item)]).assertBool()),
+      )
     }
     if (index === 'unshift') {
       return Value.foreign(item => {
@@ -445,12 +451,16 @@ export class Value {
     shouldNeverHappen(this.inner)
   }
 
+  toString() {
+    return this.inner.val.toString()
+  }
+
   toJSON() {
     if (this.inner.tag === 'lambda') {
-      return {_lambda: show(this.inner.val.ast)}
+      return { _lambda: show(this.inner.val.ast) }
     }
     if (this.inner.tag === 'foreign') {
-      return {_foreign: this.inner.val.toString()}
+      return { _foreign: this.inner.val.toString() }
     }
 
     return this.inner.val
