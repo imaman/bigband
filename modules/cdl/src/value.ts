@@ -418,7 +418,13 @@ export class Value {
     if (index === 'reduce') {
       return Value.foreign((callback, initialValue) =>
         s.reduce(
-          (a, b, i) => rt().call(callback, [Value.fromUnknown(a), Value.fromUnknown(b), Value.fromUnknown(i)]),
+          (p, x, i, a) =>
+            rt().call(callback, [
+              Value.fromUnknown(p),
+              Value.fromUnknown(x),
+              Value.fromUnknown(i),
+              Value.fromUnknown(a),
+            ]),
           initialValue,
         ),
       )
@@ -426,7 +432,13 @@ export class Value {
     if (index === 'reduceRight') {
       return Value.foreign((callback, initialValue) =>
         s.reduceRight(
-          (a, b, i) => rt().call(callback, [Value.fromUnknown(a), Value.fromUnknown(b), Value.fromUnknown(i)]),
+          (p, x, i, a) =>
+            rt().call(callback, [
+              Value.fromUnknown(p),
+              Value.fromUnknown(x),
+              Value.fromUnknown(i),
+              Value.fromUnknown(a),
+            ]),
           initialValue,
         ),
       )
