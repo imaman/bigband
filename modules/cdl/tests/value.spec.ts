@@ -1,3 +1,4 @@
+import { Runtime } from '../src/runtime'
 import { Value } from '../src/value'
 
 describe('value', () => {
@@ -189,11 +190,13 @@ describe('value', () => {
       ['slice', [Value.num(1), Value.num(2)], ['bar']],
       ['slice', [Value.num(1), Value.num(3)], ['bar', 'foo']],
       ['slice', [Value.num(2), Value.num(4)], ['foo', 'goo']],
-      // ['some', [Value.lambda(v => v.assertStr().endsWith('oo'))], [true]],
+      ['some', [Value.foreign(v => v.assertStr().endsWith('oo'))], true],
+      ['some', [Value.foreign(v => v.assertStr().startsWith('oo'))], false],
       ['unshift', [Value.str('zoo')], ['zoo', 'foo', 'bar', 'foo', 'goo']],
     ])('provides the .%s() method', (name, args, expected) => {
+      const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
       const input = Value.arr([Value.str('foo'), Value.str('bar'), Value.str('foo'), Value.str('goo')])
-      const callee = input.access(name)
+      const callee = input.access(name, r)
       const actual = callee.callForeign(args)
       expect(actual.export()).toEqual(expected)
     })
