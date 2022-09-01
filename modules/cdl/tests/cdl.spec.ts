@@ -377,11 +377,7 @@ describe('cdl', () => {
     })
     test('flatMap', () => {
       expect(cdl.run(`['Columbia', 'Eagle'].flatMap(fun (x) [x, x.length])`)).toEqual(['Columbia', 8, 'Eagle', 5])
-      expect(cdl.run(`['a', 'b', 'cd'].flatMap(fun (x,i) if (i % 2 == 0) x.split('') else [])`)).toEqual([
-        'a',
-        'c',
-        'd',
-      ])
+      expect(cdl.run(`[6,7,9].flatMap(fun (x,i) if (i % 2 == 0) [x, x/3] else [])`)).toEqual([6, 2, 9, 3])
     })
     test('map', () => {
       expect(cdl.run(`['a', 'b'].map(fun (item, i) item + ':' + i)`)).toEqual(['a:0', 'b:1'])
