@@ -1,4 +1,5 @@
 import { Lambda, show } from './ast-node'
+import { failMe } from './fail-me'
 import { findArrayMethod } from './find-array-method'
 import { findStringMethod } from './find-string-method'
 import { Runtime } from './runtime'
@@ -337,36 +338,27 @@ export class Value {
   }
 
   access(indexValue: string | Value, runtime?: Runtime): Value {
-    if (this.inner.tag === 'obj') {
-      const index = Value.toStringOrNumber(indexValue)
-      return this.inner.val[index]
-    }
-    if (this.inner.tag === 'arr') {
-      if (typeof indexValue === 'string') {
-        return findArrayMethod(this.inner.val, indexValue, runtime)
-      }
+    const err = (_ignore: unknown, t: Tag) => failMe(`Cannot access an object of type ${t}`)
 
-      const i: number = indexValue.assertNum()
-      if (i < 0 || i > this.inner.val.length) {
-        throw new Error(`array index (${i}) is out of bounds (length = ${this.inner.val.length})`)
-      }
-      return this.inner.val[i]
-    }
+    return select(this, {
+      arr: a => {
+        if (typeof indexValue === 'string') {
+          return findArrayMethod(a, indexValue, runtime)
+        }
 
-    if (this.inner.tag === 'str') {
-      return findStringMethod(this.inner.val, indexValue)
-    }
-
-    if (
-      this.inner.tag === 'bool' ||
-      this.inner.tag === 'lambda' ||
-      this.inner.tag === 'num' ||
-      this.inner.tag === 'foreign'
-    ) {
-      throw new Error(`Cannot access an object of type ${this.inner.tag}`)
-    }
-
-    shouldNeverHappen(this.inner)
+        const i: number = indexValue.assertNum()
+        if (i < 0 || i > a.length) {
+          throw new Error(`array index (${i}) is out of bounds (length = ${a.length})`)
+        }
+        return a[i]
+      },
+      obj: o => o[Value.toStringOrNumber(indexValue)],
+      str: s => findStringMethod(s, indexValue),
+      bool: err,
+      lambda: err,
+      num: err,
+      foreign: err,
+    })
   }
 
   callForeign(args: Value[]) {
