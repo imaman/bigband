@@ -111,10 +111,12 @@ describe('cdl', () => {
 
   describe('strings', () => {
     test('can be specified via the double-quotes notation', () => {
+      expect(cdl.run(`""`)).toEqual('')
       expect(cdl.run(`"ab"`)).toEqual('ab')
       expect(cdl.run(`"ab" + "cd"`)).toEqual('abcd')
     })
     test('can be specified via the single-quotes notation', () => {
+      expect(cdl.run(`''`)).toEqual('')
       expect(cdl.run(`'ab'`)).toEqual('ab')
       expect(cdl.run(`'ab' + 'cd'`)).toEqual('abcd')
     })
@@ -359,17 +361,13 @@ describe('cdl', () => {
     test('concat', () => {
       expect(cdl.run(`['foo', 'bar', 'goo'].concat(['zoo', 'poo'])`)).toEqual(['foo', 'bar', 'goo', 'zoo', 'poo'])
     })
-    test('some', () => {
-      expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('oo'))`)).toEqual(true)
-      expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('pp'))`)).toEqual(false)
-      expect(cdl.run(`['a', 'xyz', 'bc'].some(fun (item, i) i == item.length)`)).toEqual(true)
+    test('every', () => {
+      expect(cdl.run(`["", 'x', 'xx'].every(fun (item, i) item.length == i)`)).toEqual(true)
+      expect(cdl.run(`["", 'yy', 'zz'].every(fun (item, i) item.length == i)`)).toEqual(false)
     })
     test('filter', () => {
       expect(cdl.run(`['foo', 'bar', 'goo'].filter(fun (item) item.endsWith('oo'))`)).toEqual(['foo', 'goo'])
       expect(cdl.run(`['a', 'b', 'c', 'd'].filter(fun (item, i) i % 2 == 1)`)).toEqual(['b', 'd'])
-    })
-    test('map', () => {
-      expect(cdl.run(`['a', 'b'].map(fun (item, i) item + ':' + i)`)).toEqual(['a:0', 'b:1'])
     })
     test('find', () => {
       expect(cdl.run(`[10, 20, 30, 40].find(fun (item, i) item + i == 21)`)).toEqual(20)
@@ -385,8 +383,16 @@ describe('cdl', () => {
         5,
       ])
     })
+    test('map', () => {
+      expect(cdl.run(`['a', 'b'].map(fun (item, i) item + ':' + i)`)).toEqual(['a:0', 'b:1'])
+    })
+    test('some', () => {
+      expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('oo'))`)).toEqual(true)
+      expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('pp'))`)).toEqual(false)
+      expect(cdl.run(`['a', 'xyz', 'bc'].some(fun (item, i) i == item.length)`)).toEqual(true)
+    })
 
-    // reduce*,  every,  flatmap,
+    // reduce*,  flatmap,
   })
   test.todo('Object methods: Object.keys(), Object.entries()')
   test.todo('error messages to include line number and column')
