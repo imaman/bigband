@@ -18,13 +18,13 @@ type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) :
 type Tag = InferTag<Inner>
 
 type Cases = {
-  num: (arg: number, tag: Tag) => Value
-  bool: (arg: boolean, tag: Tag) => Value
-  str: (arg: string, tag: Tag) => Value
-  arr: (arg: Value[], tag: Tag) => Value
-  obj: (arg: Record<string, Value>, tag: Tag) => Value
-  lambda: (arg: { ast: Lambda; table: SymbolTable }, tag: Tag) => Value
-  foreign: (arg: (...args: Value[]) => unknown, tag: Tag) => Value
+  num: (arg: number, tag: Tag) => unknown
+  bool: (arg: boolean, tag: Tag) => unknown
+  str: (arg: string, tag: Tag) => unknown
+  arr: (arg: Value[], tag: Tag) => unknown
+  obj: (arg: Record<string, Value>, tag: Tag) => unknown
+  lambda: (arg: { ast: Lambda; table: SymbolTable }, tag: Tag) => unknown
+  foreign: (arg: (...args: Value[]) => unknown, tag: Tag) => unknown
 }
 
 const badType = (expected: Tag) => (_ignore: unknown, actual: Tag) => {
@@ -159,7 +159,7 @@ export class Value {
       bool: lhs =>
         select(that, {
           arr: err,
-          bool: rhs => Value.bool(lhs || rhs),
+          bool: rhs => lhs || rhs,
           foreign: err,
           lambda: err,
           num: err,
