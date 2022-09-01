@@ -234,7 +234,7 @@ export class Value {
     throw new Error(`Cannot compare when the left-hand-side value is of type ${this.inner.tag}`)
   }
 
-  private toStringOrNumber(indexValue: string | Value): string | number {
+  private static toStringOrNumber(indexValue: string | Value): string | number {
     if (typeof indexValue === 'string') {
       return indexValue
     } else {
@@ -253,7 +253,7 @@ export class Value {
 
   access(indexValue: string | Value, runtime?: Runtime): Value {
     if (this.inner.tag === 'obj') {
-      const index = this.toStringOrNumber(indexValue)
+      const index = Value.toStringOrNumber(indexValue)
       return this.inner.val[index]
     }
     if (this.inner.tag === 'arr') {
@@ -269,7 +269,7 @@ export class Value {
     }
 
     if (this.inner.tag === 'str') {
-      return this.stringMethods(this.inner.val, indexValue)
+      return Value.stringMethods(this.inner.val, indexValue)
     }
 
     if (
@@ -284,8 +284,8 @@ export class Value {
     shouldNeverHappen(this.inner)
   }
 
-  private stringMethods(s: string, indexValue: string | Value) {
-    const index = this.toStringOrNumber(indexValue)
+  private static stringMethods(s: string, indexValue: string | Value) {
+    const index = Value.toStringOrNumber(indexValue)
     if (typeof index === 'number') {
       throw new Error(`Index is of type number - not supported`)
     }
