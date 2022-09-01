@@ -192,9 +192,12 @@ describe('value', () => {
     ])('provides the .%s() method', (name, args, expected) => {
       const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
       const input = Value.arr([Value.str('foo'), Value.str('bar'), Value.str('foo'), Value.str('goo')])
+      const before = JSON.parse(JSON.stringify(input))
       const callee = input.access(name, r)
       const actual = callee.callForeign(args)
       expect(actual.export()).toEqual(expected)
+      // Make sure the input array was not accidentally mutated.
+      expect(JSON.parse(JSON.stringify(input))).toEqual(before)
     })
     test('.flat() flattens', () => {
       const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
