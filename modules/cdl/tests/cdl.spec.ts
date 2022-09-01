@@ -369,6 +369,8 @@ describe('cdl', () => {
       'Eagle',
       5,
     ])
+
+    // reduce*, find, findIndex, every,  flatmap,
   })
   test.todo('Object methods: Object.keys(), Object.entries()')
   test.todo('error messages to include line number and column')
