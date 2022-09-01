@@ -376,12 +376,7 @@ describe('cdl', () => {
       expect(cdl.run(`[10, 20, 30, 40].findIndex(fun (item, i) item + i == 32)`)).toEqual(2)
     })
     test('flatMap', () => {
-      expect(cdl.run(`['Columbia', 'Eagle'].flatMap(fun (item) [item, item.length])`)).toEqual([
-        'Columbia',
-        8,
-        'Eagle',
-        5,
-      ])
+      expect(cdl.run(`['Columbia', 'Eagle'].flatMap(fun (x) [x, x.length])`)).toEqual(['Columbia', 8, 'Eagle', 5])
     })
     test('map', () => {
       expect(cdl.run(`['a', 'b'].map(fun (item, i) item + ':' + i)`)).toEqual(['a:0', 'b:1'])
