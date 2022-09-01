@@ -56,10 +56,10 @@ export function findArrayMethod(arr: unknown[], index: string, runtime?: Runtime
     return Value.foreign(predicate => arr.findIndex(adjustedPredicate(predicate)))
   }
   if (index === 'flatMap') {
-    return Value.foreign(callback => Value.flatten(arr.map(adjustedCallback(callback))))
+    return Value.foreign(callback => flatten(arr.map(adjustedCallback(callback))))
   }
   if (index === 'flat') {
-    return Value.foreign(() => Value.flatten(arr))
+    return Value.foreign(() => flatten(arr))
   }
   if (index === 'includes') {
     return Value.foreign((arg: Value) => arr.some(curr => Value.from(curr).compare(arg) === 0))
@@ -102,4 +102,18 @@ export function findArrayMethod(arr: unknown[], index: string, runtime?: Runtime
     return Value.foreign(predicate => arr.some(adjustedPredicate(predicate)))
   }
   throw new Error(`Unrecognized array method: ${index}`)
+}
+
+function flatten(input: unknown[]) {
+  const ret = []
+  for (const curr of input) {
+    const v = Value.from(curr)
+    const unwrapped = v.unwrap()
+    if (Array.isArray(unwrapped)) {
+      ret.push(...unwrapped)
+    } else {
+      ret.push(v)
+    }
+  }
+  return ret
 }

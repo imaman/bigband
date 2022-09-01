@@ -324,20 +324,6 @@ export class Value {
     return JSON.parse(JSON.stringify(this))
   }
 
-  static flatten(input: unknown[]) {
-    const ret = []
-    for (const curr of input) {
-      const v = from(curr)
-      const unwrapped = v.unwrap()
-      if (Array.isArray(unwrapped)) {
-        ret.push(...unwrapped)
-      } else {
-        ret.push(v)
-      }
-    }
-    return ret
-  }
-
   static from(u: unknown) {
     return from(u)
   }
