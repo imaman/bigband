@@ -189,7 +189,7 @@ describe('value', () => {
       ['map', [Value.foreign(v => v.assertStr().charAt(0))], ['f', 'b', 'f', 'g']],
       // X ['pop', [], []],
       // X ['push', [], []],
-      // ['reduce', [], []],
+      // ['reduce', [Value.foreign(v => v.assertStr().charAt(0)), 0], 12],
       // ['reduceRight', [], []],
       ['reverse', [], ['goo', 'foo', 'bar', 'foo']],
       // X ['shift', [], []],
@@ -207,12 +207,19 @@ describe('value', () => {
       expect(actual.export()).toEqual(expected)
     })
 
-    test('Array.flat() flattens', () => {
+    test('.flat() flattens', () => {
       const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
       const input = Value.arr([Value.arr([Value.str('a'), Value.str('b')]), Value.str('c')])
       const callee = input.access('flat', r)
       const actual = callee.callForeign([])
       expect(actual.export()).toEqual(['a', 'b', 'c'])
+    })
+    test('.reduce() reduces', () => {
+      const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
+      const input = Value.arr([Value.str('a'), Value.str('boom'), Value.str('cat')])
+      const callee = input.access('reduce', r)
+      const actual = callee.callForeign([Value.foreign((x, y) => x.assertNum() + y.assertStr().length), Value.num(0)])
+      expect(actual.export()).toEqual(8)
     })
   })
 

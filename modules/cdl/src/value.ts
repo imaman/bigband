@@ -394,6 +394,11 @@ export class Value {
     if (index === 'reverse') {
       return Value.foreign(() => [...s].reverse())
     }
+    if (index === 'reduce') {
+      return Value.foreign((callback, initialValue) =>
+        s.reduce((a, b) => rt().call(callback, [Value.fromUnknown(a), Value.fromUnknown(b)]), initialValue),
+      )
+    }
     if (index === 'slice') {
       return Value.foreign((start, end) => s.slice(start?.assertNum(), end?.assertNum()))
     }
