@@ -299,13 +299,23 @@ export class Value {
   private arrayMethods(s: unknown[], index: string, runtime?: Runtime) {
     const rt = () => runtime ?? failMe('runtime is flasy')
 
-    const wrappedCallback =
+    const adjustedCallback =
       (callback: Value) =>
       (...args: unknown[]) =>
         rt().call(
           callback,
           args.map(x => from(x)),
         )
+
+    const adjustedPredicate =
+      (predicate: Value) =>
+      (...args: unknown[]) =>
+        rt()
+          .call(
+            predicate,
+            args.map(x => from(x)),
+          )
+          .assertBool()
 
     if (index === 'at') {
       return Value.foreign(n => s.at(n.assertNum()))
@@ -317,43 +327,19 @@ export class Value {
       return Value.foreign(() => [...s.entries()])
     }
     if (index === 'every') {
-      return Value.foreign(predicate =>
-        s.every((item, i, a) =>
-          rt()
-            .call(predicate, [from(item), from(i), from(a)])
-            .assertBool(),
-        ),
-      )
+      return Value.foreign(predicate => s.every(adjustedPredicate(predicate)))
     }
     if (index === 'filter') {
-      return Value.foreign(predicate =>
-        s.filter((item, index, a) =>
-          rt()
-            .call(predicate, [from(item), Value.num(index), from(a)])
-            .assertBool(),
-        ),
-      )
+      return Value.foreign(predicate => s.filter(adjustedPredicate(predicate)))
     }
     if (index === 'find') {
-      return Value.foreign(predicate =>
-        s.find((item, i, a) =>
-          rt()
-            .call(predicate, [from(item), from(i), from(a)])
-            .assertBool(),
-        ),
-      )
+      return Value.foreign(predicate => s.find(adjustedPredicate(predicate)))
     }
     if (index === 'findIndex') {
-      return Value.foreign(predicate =>
-        s.findIndex((item, i, a) =>
-          rt()
-            .call(predicate, [from(item), from(i), from(a)])
-            .assertBool(),
-        ),
-      )
+      return Value.foreign(predicate => s.findIndex(adjustedPredicate(predicate)))
     }
     if (index === 'flatMap') {
-      return Value.foreign(callback => Value.flatten(s.map(wrappedCallback(callback))))
+      return Value.foreign(callback => Value.flatten(s.map(adjustedCallback(callback))))
     }
     if (index === 'flat') {
       return Value.foreign(() => Value.flatten(s))
@@ -381,31 +367,22 @@ export class Value {
       return Value.num(s.length)
     }
     if (index === 'map') {
-      return Value.foreign(callback => s.map(wrappedCallback(callback)))
+      return Value.foreign(callback => s.map(adjustedCallback(callback)))
     }
     if (index === 'reverse') {
       return Value.foreign(() => [...s].reverse())
     }
     if (index === 'reduce') {
-      return Value.foreign((callback, initialValue) => s.reduce(wrappedCallback(callback), initialValue))
+      return Value.foreign((callback, initialValue) => s.reduce(adjustedCallback(callback), initialValue))
     }
     if (index === 'reduceRight') {
-      return Value.foreign((callback, initialValue) => s.reduceRight(wrappedCallback(callback), initialValue))
+      return Value.foreign((callback, initialValue) => s.reduceRight(adjustedCallback(callback), initialValue))
     }
     if (index === 'slice') {
       return Value.foreign((start, end) => s.slice(start?.assertNum(), end?.assertNum()))
     }
     if (index === 'some') {
-      return Value.foreign(predicate =>
-        s.some((...args) =>
-          rt()
-            .call(
-              predicate,
-              args.map(x => from(x)),
-            )
-            .assertBool(),
-        ),
-      )
+      return Value.foreign(predicate => s.some(adjustedPredicate(predicate)))
     }
     throw new Error(`Unrecognized array method: ${index}`)
   }
