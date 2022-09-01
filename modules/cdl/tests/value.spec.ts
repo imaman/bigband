@@ -165,11 +165,13 @@ describe('value', () => {
           [3, 'goo'],
         ],
       ],
-      // ['every', [], []],
+      ['every', [Value.foreign(v => v.assertStr().endsWith('oo'))], false],
+      ['every', [Value.foreign(v => v.assertStr().length === 3)], true],
       // X ['fill', [], []],
-      // ['filter', [], []],
-      // ['find', [], []],
-      // ['findIndex', [], []],
+      ['filter', [Value.foreign(v => Boolean(v.assertStr().match(/^b|^g/)))], ['bar', 'goo']],
+      ['find', [Value.foreign(v => v.assertStr() === 'bar')], 'bar'],
+      // TODO(imaman): ['find', [Value.foreign(v => v.assertStr() === 'lorem ipsum')], ??]"",
+      ['findIndex', [Value.foreign(v => v.assertStr() === 'goo')], 3],
       // ['flat', [], []],
       // ['flatMap', [], []],
       // X ['forEach', [], []],
@@ -192,7 +194,7 @@ describe('value', () => {
       ['slice', [Value.num(2), Value.num(4)], ['foo', 'goo']],
       ['some', [Value.foreign(v => v.assertStr().endsWith('oo'))], true],
       ['some', [Value.foreign(v => v.assertStr().startsWith('oo'))], false],
-      ['unshift', [Value.str('zoo')], ['zoo', 'foo', 'bar', 'foo', 'goo']],
+      // X ['unshift', [], []]
     ])('provides the .%s() method', (name, args, expected) => {
       const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
       const input = Value.arr([Value.str('foo'), Value.str('bar'), Value.str('foo'), Value.str('goo')])

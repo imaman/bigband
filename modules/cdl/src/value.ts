@@ -310,6 +310,8 @@ export class Value {
   }
 
   private arrayMethods(s: unknown[], index: string, runtime?: Runtime) {
+    const rt = () => runtime ?? failMe('runtime is flasy')
+
     if (index === 'at') {
       return Value.foreign(n => s.at(n.assertNum()))
     }
@@ -318,6 +320,42 @@ export class Value {
     }
     if (index === 'entries') {
       return Value.foreign(() => [...s.entries()])
+    }
+    if (index === 'every') {
+      return Value.foreign(predicate =>
+        s.every(item =>
+          rt()
+            .call(predicate, [Value.fromUnknown(item)])
+            .assertBool(),
+        ),
+      )
+    }
+    if (index === 'filter') {
+      return Value.foreign(predicate =>
+        s.filter(item =>
+          rt()
+            .call(predicate, [Value.fromUnknown(item)])
+            .assertBool(),
+        ),
+      )
+    }
+    if (index === 'find') {
+      return Value.foreign(predicate =>
+        s.find(item =>
+          rt()
+            .call(predicate, [Value.fromUnknown(item)])
+            .assertBool(),
+        ),
+      )
+    }
+    if (index === 'findIndex') {
+      return Value.foreign(predicate =>
+        s.findIndex(item =>
+          rt()
+            .call(predicate, [Value.fromUnknown(item)])
+            .assertBool(),
+        ),
+      )
     }
     if (index === 'includes') {
       return Value.foreign((arg: Value) => s.some(curr => Value.fromUnknown(curr).compare(arg) === 0))
@@ -349,15 +387,12 @@ export class Value {
     }
     if (index === 'some') {
       return Value.foreign(predicate =>
-        s.some(item => (runtime ?? failMe('runtime is flasy')).call(predicate, [Value.fromUnknown(item)]).assertBool()),
+        s.some(item =>
+          rt()
+            .call(predicate, [Value.fromUnknown(item)])
+            .assertBool(),
+        ),
       )
-    }
-    if (index === 'unshift') {
-      return Value.foreign(item => {
-        const ret = [...s]
-        ret.unshift(item)
-        return ret
-      })
     }
     throw new Error(`Unrecognized array method: ${index}`)
   }
