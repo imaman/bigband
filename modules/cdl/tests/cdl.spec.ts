@@ -383,15 +383,16 @@ describe('cdl', () => {
       expect(cdl.run(`['a', 'b'].map(fun (item, i) item + ':' + i)`)).toEqual(['a:0', 'b:1'])
     })
     test('reduce', () => {
-      expect(cdl.run(`[6, 7, 9].reduce(fun (w, x, i) if (i % 2 == 0) w+x else w, 10)`)).toEqual(25)
+      expect(cdl.run(`['a','b','c','d','e'].reduce(fun (w, x, i) if (i % 2 == 0) w+x else w, '')`)).toEqual('ace')
+    })
+    test('reduceRight', () => {
+      expect(cdl.run(`['a','b','c','d','e'].reduceRight(fun (w, x, i) if (i % 2 == 0) w+x else w, '')`)).toEqual('eca')
     })
     test('some', () => {
       expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('oo'))`)).toEqual(true)
       expect(cdl.run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('pp'))`)).toEqual(false)
       expect(cdl.run(`['a', 'xyz', 'bc'].some(fun (item, i) i == item.length)`)).toEqual(true)
     })
-
-    // reduce*
   })
   test.todo('Object methods: Object.keys(), Object.entries()')
   test.todo('error messages to include line number and column')

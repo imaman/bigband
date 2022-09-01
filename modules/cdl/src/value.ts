@@ -418,7 +418,10 @@ export class Value {
     }
     if (index === 'reduceRight') {
       return Value.foreign((callback, initialValue) =>
-        s.reduceRight((a, b) => rt().call(callback, [Value.fromUnknown(a), Value.fromUnknown(b)]), initialValue),
+        s.reduceRight(
+          (a, b, i) => rt().call(callback, [Value.fromUnknown(a), Value.fromUnknown(b), Value.fromUnknown(i)]),
+          initialValue,
+        ),
       )
     }
     if (index === 'slice') {
