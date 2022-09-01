@@ -388,12 +388,14 @@ export class Value {
     }
     if (index === 'reduceRight') {
       return Value.foreign((callback, initialValue) =>
-        s.reduceRight((...args) => {
-          return rt().call(
-            callback,
-            args.map(x => from(x)),
-          )
-        }, initialValue),
+        s.reduceRight(
+          (...args) =>
+            rt().call(
+              callback,
+              args.map(x => from(x)),
+            ),
+          initialValue,
+        ),
       )
     }
     if (index === 'slice') {
