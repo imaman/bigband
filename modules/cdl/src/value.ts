@@ -14,6 +14,42 @@ type Inner =
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
   | { tag: 'foreign'; val: (...args: Value[]) => unknown }
 
+type X = {
+  num: (arg: number) => Value
+  bool: (arg: boolean) => Value
+  str: (arg: string) => Value
+  arr: (arg: Value[]) => Value
+  obj: (arg: Record<string, Value>) => Value
+  lambda: (arg: { ast: Lambda; table: SymbolTable }) => Value
+  foreign: (arg: (...args: Value[]) => unknown) => Value
+}
+
+function onVal(inner: Inner, cases: X): Value {
+  if (inner.tag === 'arr') {
+    return cases.arr(inner.val)
+  }
+  if (inner.tag === 'bool') {
+    return cases.bool(inner.val)
+  }
+  if (inner.tag === 'foreign') {
+    return cases.foreign(inner.val)
+  }
+  if (inner.tag === 'lambda') {
+    return cases.lambda(inner.val)
+  }
+  if (inner.tag === 'num') {
+    return cases.num(inner.val)
+  }
+  if (inner.tag === 'obj') {
+    return cases.obj(inner.val)
+  }
+  if (inner.tag === 'str') {
+    return cases.str(inner.val)
+  }
+
+  shouldNeverHappen(inner)
+}
+
 type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
 
 type Tag = InferTag<Inner>
@@ -109,6 +145,7 @@ export class Value {
   }
 
   or(that: Value) {
+    onVal.name
     if (this.inner.tag === 'bool' && that.inner.tag === 'bool') {
       return Value.bool(this.inner.val || that.inner.val)
     }

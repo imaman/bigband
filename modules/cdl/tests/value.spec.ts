@@ -25,6 +25,20 @@ describe('value', () => {
     expect(Value.bool(false).not().export()).toEqual(true)
     expect(Value.bool(true).not().export()).toEqual(false)
   })
+  describe('boolean operators', () => {
+    test('or', () => {
+      expect(Value.bool(false).or(Value.bool(false)).export()).toEqual(false)
+      expect(Value.bool(false).or(Value.bool(true)).export()).toEqual(true)
+      expect(Value.bool(true).or(Value.bool(false)).export()).toEqual(true)
+      expect(Value.bool(true).or(Value.bool(true)).export()).toEqual(true)
+    })
+    test('and', () => {
+      expect(Value.bool(false).and(Value.bool(false)).export()).toEqual(false)
+      expect(Value.bool(false).and(Value.bool(true)).export()).toEqual(false)
+      expect(Value.bool(true).and(Value.bool(false)).export()).toEqual(false)
+      expect(Value.bool(true).and(Value.bool(true)).export()).toEqual(true)
+    })
+  })
   test('comparisons of booleans', () => {
     expect(Value.bool(false).compare(Value.bool(false))).toEqual(0)
     expect(Value.bool(false).compare(Value.bool(true))).toEqual(-1)
