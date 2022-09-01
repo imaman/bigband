@@ -401,7 +401,9 @@ export class Value {
       return Value.num(s.length)
     }
     if (index === 'map') {
-      return Value.foreign(callback => s.map(item => rt().call(callback, [Value.fromUnknown(item)])))
+      return Value.foreign(callback =>
+        s.map((item, i) => rt().call(callback, [Value.fromUnknown(item), Value.fromUnknown(i)])),
+      )
     }
     if (index === 'reverse') {
       return Value.foreign(() => [...s].reverse())
@@ -421,9 +423,9 @@ export class Value {
     }
     if (index === 'some') {
       return Value.foreign(predicate =>
-        s.some(item =>
+        s.some((item, i) =>
           rt()
-            .call(predicate, [Value.fromUnknown(item)])
+            .call(predicate, [Value.fromUnknown(item), Value.fromUnknown(i)])
             .assertBool(),
         ),
       )
