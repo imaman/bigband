@@ -371,7 +371,7 @@ export class Value {
     }
     if (index === 'flatMap') {
       return Value.foreign(callback => {
-        const mapped = s.map(item => rt().call(callback, [Value.fromUnknown(item)]))
+        const mapped = s.map((item, i) => rt().call(callback, [Value.fromUnknown(item), Value.fromUnknown(i)]))
         return Value.flatten(mapped)
       })
     }
