@@ -13,7 +13,7 @@ import { Value } from './value'
  *  - shift
  *  - unshift
  */
-export function arrayMethods(arr: unknown[], index: string, runtime?: Runtime) {
+export function findArrayMethod(arr: unknown[], index: string, runtime?: Runtime) {
   const rt = () => runtime ?? failMe('runtime is flasy')
 
   const adjustedCallback =
