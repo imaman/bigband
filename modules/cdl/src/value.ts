@@ -31,7 +31,8 @@ const badType = (expected: Tag) => (_ignore: unknown, actual: Tag) => {
   throw new Error(`value type error: expected ${expected} but found ${actual}`)
 }
 
-function onVal(inner: Inner, cases: X): Value {
+function onVal(v: Value, cases: X): Value {
+  const inner = v.inner
   if (inner.tag === 'arr') {
     return cases.arr(inner.val, inner.tag)
   }
@@ -58,7 +59,7 @@ function onVal(inner: Inner, cases: X): Value {
 }
 
 export class Value {
-  private constructor(private readonly inner: Inner) {}
+  private constructor(readonly inner: Inner) {}
 
   static bool(val: boolean): Value {
     return new Value({ val, tag: 'bool' })
@@ -149,10 +150,10 @@ export class Value {
 
   or(that: Value) {
     const err = badType('bool')
-    return onVal(this.inner, {
+    return onVal(this, {
       arr: err,
       bool: lhs =>
-        onVal(that.inner, {
+        onVal(that, {
           arr: err,
           bool: rhs => Value.bool(lhs || rhs),
           foreign: err,
