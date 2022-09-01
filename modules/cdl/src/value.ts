@@ -309,6 +309,18 @@ export class Value {
     shouldNeverHappen(this.inner)
   }
 
+  /**
+   * return an implementation for array methods. The following Array methods were not implemented
+   * as it is hard to find an intuitive immutable API due to their mutable nature:
+   *  - copyWithin
+   *  - fill
+   *  - forEach
+   *  - keys
+   *  - pop
+   *  - push
+   *  - shift
+   *  - unshift
+   */
   private arrayMethods(s: unknown[], index: string, runtime?: Runtime) {
     const rt = () => runtime ?? failMe('runtime is flasy')
 

@@ -154,7 +154,6 @@ describe('value', () => {
     test.each([
       ['at', [Value.num(-1)], 'goo'],
       ['concat', [Value.arr([Value.str('boo'), Value.str('poo')])], ['foo', 'bar', 'foo', 'goo', 'boo', 'poo']],
-      // X ['copyWithin', [], []],
       [
         'entries',
         [],
@@ -167,7 +166,6 @@ describe('value', () => {
       ],
       ['every', [Value.foreign(v => v.assertStr().endsWith('oo'))], false],
       ['every', [Value.foreign(v => v.assertStr().length === 3)], true],
-      // X ['fill', [], []],
       ['filter', [Value.foreign(v => Boolean(v.assertStr().match(/^b|^g/)))], ['bar', 'goo']],
       ['find', [Value.foreign(v => v.assertStr() === 'bar')], 'bar'],
       // TODO(imaman): ['find', [Value.foreign(v => v.assertStr() === 'lorem ipsum')], ??]"",
@@ -178,27 +176,19 @@ describe('value', () => {
         [Value.foreign(v => v.assertStr().split(''))],
         ['f', 'o', 'o', 'b', 'a', 'r', 'f', 'o', 'o', 'g', 'o', 'o'],
       ],
-      // X ['forEach', [], []],
       ['includes', [Value.str('bar')], true],
       ['includes', [Value.str('lorem-ipsum')], false],
       ['indexOf', [Value.str('goo')], 3],
       ['join', [Value.str('; ')], 'foo; bar; foo; goo'],
-      // X ['keys', [], []],
       ['lastIndexOf', [Value.str('foo')], 2],
       ['lastIndexOf', [Value.str('lorem ipsum')], -1],
       ['map', [Value.foreign(v => v.assertStr().charAt(0))], ['f', 'b', 'f', 'g']],
-      // X ['pop', [], []],
-      // X ['push', [], []],
-      // ['reduce', [Value.foreign(v => v.assertStr().charAt(0)), 0], 12],
-      // ['reduceRight', [], []],
       ['reverse', [], ['goo', 'foo', 'bar', 'foo']],
-      // X ['shift', [], []],
       ['slice', [Value.num(1), Value.num(2)], ['bar']],
       ['slice', [Value.num(1), Value.num(3)], ['bar', 'foo']],
       ['slice', [Value.num(2), Value.num(4)], ['foo', 'goo']],
       ['some', [Value.foreign(v => v.assertStr().endsWith('oo'))], true],
       ['some', [Value.foreign(v => v.assertStr().startsWith('oo'))], false],
-      // X ['unshift', [], []]
     ])('provides the .%s() method', (name, args, expected) => {
       const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
       const input = Value.arr([Value.str('foo'), Value.str('bar'), Value.str('foo'), Value.str('goo')])
