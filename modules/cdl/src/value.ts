@@ -360,18 +360,7 @@ export class Value {
     if (index === 'flatMap') {
       return Value.foreign(callback => {
         const mapped = s.map(item => rt().call(callback, [Value.fromUnknown(item)]))
-
-        const ret = []
-        for (const curr of mapped) {
-          const v = Value.fromUnknown(curr)
-          const unwrapped = v.unwrap()
-          if (Array.isArray(unwrapped)) {
-            ret.push(...unwrapped)
-          } else {
-            ret.push(v)
-          }
-        }
-        return ret
+        return Value.flatten(mapped)
       })
     }
     if (index === 'flat') {
