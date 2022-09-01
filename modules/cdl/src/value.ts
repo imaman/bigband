@@ -362,23 +362,16 @@ export class Value {
   }
 
   callForeign(args: Value[]) {
-    if (this.inner.tag === 'foreign') {
-      const output = this.inner.val(...args)
-      return from(output)
-    }
-
-    if (
-      this.inner.tag === 'bool' ||
-      this.inner.tag === 'lambda' ||
-      this.inner.tag === 'num' ||
-      this.inner.tag === 'str' ||
-      this.inner.tag === 'arr' ||
-      this.inner.tag === 'obj'
-    ) {
-      throw new Error(`Not a foreign function: ${this.inner.tag}`)
-    }
-
-    shouldNeverHappen(this.inner)
+    const err = (_ignore: unknown, t: Tag) => failMe(`Not a foreign function: ${t}`)
+    return select(this, {
+      arr: err,
+      bool: err,
+      foreign: f => from(f(...args)),
+      lambda: err,
+      num: err,
+      obj: err,
+      str: err,
+    })
   }
 
   toString() {
