@@ -1,5 +1,4 @@
 import { Lambda, show } from './ast-node'
-import { failMe } from './fail-me'
 import { findArrayMethod } from './find-array-method'
 import { findStringMethod } from './find-string-method'
 import { Runtime } from './runtime'
@@ -373,7 +372,7 @@ export class Value {
   }
 
   access(indexValue: string | Value, runtime?: Runtime): Value {
-    const err = (_ignore: unknown, t: Tag) => failMe(`Cannot access an object of type ${t}`)
+    const err = badType('obj', 'str', 'arr')
 
     return select(this, {
       arr: a => {
@@ -397,7 +396,7 @@ export class Value {
   }
 
   callForeign(args: Value[]) {
-    const err = (_ignore: unknown, t: Tag) => failMe(`Not a foreign function: ${t}`)
+    const err = badType('foreign')
     return select(this, {
       arr: err,
       bool: err,
