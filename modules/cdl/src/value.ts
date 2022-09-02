@@ -6,25 +6,25 @@ import { shouldNeverHappen } from './should-never-happen'
 import { SymbolTable } from './symbol-table'
 
 type Inner =
-  | { tag: 'num'; val: number }
-  | { tag: 'bool'; val: boolean }
-  | { tag: 'str'; val: string }
   | { tag: 'arr'; val: Value[] }
-  | { tag: 'obj'; val: Record<string, Value> }
-  | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
+  | { tag: 'bool'; val: boolean }
   | { tag: 'foreign'; val: (...args: Value[]) => unknown }
+  | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
+  | { tag: 'num'; val: number }
+  | { tag: 'obj'; val: Record<string, Value> }
+  | { tag: 'str'; val: string }
 
 type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
 type Tag = InferTag<Inner>
 
 type Cases<R> = {
-  num: (arg: number, tag: Tag) => R
-  bool: (arg: boolean, tag: Tag) => R
-  str: (arg: string, tag: Tag) => R
   arr: (arg: Value[], tag: Tag) => R
-  obj: (arg: Record<string, Value>, tag: Tag) => R
-  lambda: (arg: { ast: Lambda; table: SymbolTable }, tag: Tag) => R
+  bool: (arg: boolean, tag: Tag) => R
   foreign: (arg: (...args: Value[]) => unknown, tag: Tag) => R
+  lambda: (arg: { ast: Lambda; table: SymbolTable }, tag: Tag) => R
+  num: (arg: number, tag: Tag) => R
+  obj: (arg: Record<string, Value>, tag: Tag) => R
+  str: (arg: string, tag: Tag) => R
 }
 
 function inspectValue(u: unknown) {
