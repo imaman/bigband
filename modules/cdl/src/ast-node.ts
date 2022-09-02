@@ -82,7 +82,7 @@ export function show(ast: AstNode | AstNode[]): string {
   }
 
   if (ast.tag === 'binaryOperator') {
-    return `${show(ast.lhs)} ${ast.operator} ${show(ast.rhs)}}`
+    return `(${show(ast.lhs)} ${ast.operator} ${show(ast.rhs)})`
   }
 
   if (ast.tag === 'dot') {
@@ -105,7 +105,7 @@ export function show(ast: AstNode | AstNode[]): string {
     return `fun (${show(ast.formalArgs)}) ${show(ast.body)}`
   }
   if (ast.tag === 'literal') {
-    return JSON.stringify(ast.t.text)
+    return ast.t.text
   }
   if (ast.tag === 'objectLiteral') {
     const pairs = ast.parts.map(p => {
