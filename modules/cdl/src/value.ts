@@ -18,14 +18,14 @@ type Inner =
 type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
 type Tag = InferTag<Inner>
 
-type Cases = {
-  num: (arg: number, tag: Tag) => unknown
-  bool: (arg: boolean, tag: Tag) => unknown
-  str: (arg: string, tag: Tag) => unknown
-  arr: (arg: Value[], tag: Tag) => unknown
-  obj: (arg: Record<string, Value>, tag: Tag) => unknown
-  lambda: (arg: { ast: Lambda; table: SymbolTable }, tag: Tag) => unknown
-  foreign: (arg: (...args: Value[]) => unknown, tag: Tag) => unknown
+type Cases<R> = {
+  num: (arg: number, tag: Tag) => R
+  bool: (arg: boolean, tag: Tag) => R
+  str: (arg: string, tag: Tag) => R
+  arr: (arg: Value[], tag: Tag) => R
+  obj: (arg: Record<string, Value>, tag: Tag) => R
+  lambda: (arg: { ast: Lambda; table: SymbolTable }, tag: Tag) => R
+  foreign: (arg: (...args: Value[]) => unknown, tag: Tag) => R
 }
 
 import * as util from 'util'
@@ -34,35 +34,35 @@ const badType = (expected: Tag) => (u: unknown, _actual: Tag) => {
   throw new Error(`value type error: expected ${expected} but found ${util.inspect(u)}`)
 }
 
-function select(v: Value, cases: Cases): Value {
-  const selectUnknown = () => {
-    const inner = v.inner
-    if (inner.tag === 'arr') {
-      return cases.arr(inner.val, inner.tag)
-    }
-    if (inner.tag === 'bool') {
-      return cases.bool(inner.val, inner.tag)
-    }
-    if (inner.tag === 'foreign') {
-      return cases.foreign(inner.val, inner.tag)
-    }
-    if (inner.tag === 'lambda') {
-      return cases.lambda(inner.val, inner.tag)
-    }
-    if (inner.tag === 'num') {
-      return cases.num(inner.val, inner.tag)
-    }
-    if (inner.tag === 'obj') {
-      return cases.obj(inner.val, inner.tag)
-    }
-    if (inner.tag === 'str') {
-      return cases.str(inner.val, inner.tag)
-    }
-
-    shouldNeverHappen(inner)
+function selectRaw(v: Value, cases: Cases<unknown>) {
+  const inner = v.inner
+  if (inner.tag === 'arr') {
+    return cases.arr(inner.val, inner.tag)
+  }
+  if (inner.tag === 'bool') {
+    return cases.bool(inner.val, inner.tag)
+  }
+  if (inner.tag === 'foreign') {
+    return cases.foreign(inner.val, inner.tag)
+  }
+  if (inner.tag === 'lambda') {
+    return cases.lambda(inner.val, inner.tag)
+  }
+  if (inner.tag === 'num') {
+    return cases.num(inner.val, inner.tag)
+  }
+  if (inner.tag === 'obj') {
+    return cases.obj(inner.val, inner.tag)
+  }
+  if (inner.tag === 'str') {
+    return cases.str(inner.val, inner.tag)
   }
 
-  return Value.from(selectUnknown())
+  shouldNeverHappen(inner)
+}
+
+function select(v: Value, cases: Cases<unknown>): Value {
+  return Value.from(selectRaw(v, cases))
 }
 
 export class Value {
