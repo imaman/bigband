@@ -13,7 +13,6 @@ type Inner =
   | { tag: 'num'; val: number }
   | { tag: 'obj'; val: Record<string, Value> }
   | { tag: 'str'; val: string }
-  | { tag: 'undefined'; val: undefined }
 
 type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
 type Tag = InferTag<Inner>
@@ -26,11 +25,6 @@ type Cases<R> = {
   num: (arg: number, tag: Tag) => R
   obj: (arg: Record<string, Value>, tag: Tag) => R
   str: (arg: string, tag: Tag) => R
-  undefined: (arg: undefined, tag: Tag) => R
-}
-
-const nil = () => {
-  throw new Error(`undefined`)
 }
 
 function inspectValue(u: unknown) {
@@ -71,9 +65,6 @@ function selectRaw<R>(v: Value, cases: Cases<R>): R {
   }
   if (inner.tag === 'str') {
     return cases.str(inner.val, inner.tag)
-  }
-  if (inner.tag === 'undefined') {
-    return cases.undefined(inner.val, inner.tag)
   }
 
   shouldNeverHappen(inner)
@@ -131,7 +122,6 @@ export class Value {
       num: err,
       obj: err,
       str: err,
-      undefined: nil,
     })
   }
 
@@ -145,7 +135,6 @@ export class Value {
       num: a => a,
       obj: err,
       str: err,
-      undefined: nil,
     })
   }
 
@@ -159,7 +148,6 @@ export class Value {
       num: err,
       obj: err,
       str: a => a,
-      undefined: err,
     })
   }
 
@@ -173,7 +161,6 @@ export class Value {
       num: err,
       obj: err,
       str: err,
-      undefined: err,
     })
   }
 
@@ -187,7 +174,6 @@ export class Value {
       num: err,
       obj: a => a,
       str: err,
-      undefined: err,
     })
   }
 
@@ -201,7 +187,6 @@ export class Value {
       num: err,
       obj: err,
       str: err,
-      undefined: err,
     })
   }
 
@@ -222,14 +207,12 @@ export class Value {
           num: err,
           obj: err,
           str: err,
-          undefined: err,
         }),
       foreign: err,
       lambda: err,
       num: err,
       obj: err,
       str: err,
-      undefined: err,
     })
   }
 
@@ -246,14 +229,12 @@ export class Value {
           num: err,
           obj: err,
           str: err,
-          undefined: err,
         }),
       foreign: err,
       lambda: err,
       num: err,
       obj: err,
       str: err,
-      undefined: err,
     })
   }
 
@@ -277,7 +258,6 @@ export class Value {
       num: err,
       obj: err,
       str: err,
-      undefined: err,
     })
   }
 
@@ -297,11 +277,9 @@ export class Value {
           num: rhs => f(lhs, rhs),
           obj: err,
           str: err,
-          undefined: err,
         }),
       obj: err,
       str: err,
-      undefined: err,
     })
   }
 
@@ -321,7 +299,6 @@ export class Value {
           num: rhs => lhs + rhs,
           obj: errNum,
           str: errNum,
-          undefined: errNum,
         }),
       obj: errNum,
       str: lhs =>
@@ -333,11 +310,7 @@ export class Value {
           num: rhs => lhs + rhs,
           obj: rhs => lhs + rhs,
           str: rhs => lhs + rhs,
-          undefined: () => {
-            throw new Error(`Cannot + on undefined`)
-          },
         }),
-      undefined: errNum,
     })
   }
   minus(that: Value) {
@@ -376,7 +349,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: () => {
-        const d = this.minus(that).assertNum()
+        const d = this.minus(that).inner.val
         return d < 0 ? -1 : d > 0 ? 1 : 0
       },
       obj: err,
@@ -386,7 +359,6 @@ export class Value {
         const d = a.localeCompare(rhs)
         return d < 0 ? -1 : d > 0 ? 1 : 0
       },
-      undefined: err,
     })
   }
 
@@ -404,7 +376,6 @@ export class Value {
       num: a => a,
       obj: err,
       str: a => a,
-      undefined: err,
     })
   }
 
@@ -429,7 +400,6 @@ export class Value {
       num: err,
       obj: o => o[Value.toStringOrNumber(indexValue)],
       str: s => findStringMethod(s, indexValue),
-      undefined: err,
     })
   }
 
@@ -443,12 +413,11 @@ export class Value {
       num: err,
       obj: err,
       str: err,
-      undefined: err,
     })
   }
 
   toString() {
-    return this.inner.val?.toString() ?? 'undefined'
+    return this.inner.val.toString()
   }
 
   toJSON(): unknown {
@@ -460,7 +429,6 @@ export class Value {
       num: a => a,
       obj: a => a,
       str: a => a,
-      undefined: () => null,
     })
   }
 
