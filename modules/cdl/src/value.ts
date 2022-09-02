@@ -222,12 +222,6 @@ export class Value {
     })
   }
 
-  requireType(t: string) {
-    if (this.inner.tag !== t) {
-      throw new Error(`value type error: expected ${t} but found: ${this.inner.val}`)
-    }
-  }
-
   private binaryNumericOperator(a: Value, b: Value, f: (lhs: number, rhs: number) => number) {
     const err = badType('num')
     return select(a, {
@@ -302,7 +296,7 @@ export class Value {
 
   compare(that: Value) {
     if (this.inner.tag === 'num') {
-      const d = this.minus(that)?.inner.val
+      const d = this.minus(that).inner.val
       return d < 0 ? -1 : d > 0 ? 1 : 0
     }
 
@@ -354,12 +348,12 @@ export class Value {
         }
         return a[i]
       },
-      obj: o => o[Value.toStringOrNumber(indexValue)],
-      str: s => findStringMethod(s, indexValue),
       bool: err,
+      foreign: err,
       lambda: err,
       num: err,
-      foreign: err,
+      obj: o => o[Value.toStringOrNumber(indexValue)],
+      str: s => findStringMethod(s, indexValue),
     })
   }
 
