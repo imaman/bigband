@@ -40,7 +40,8 @@ export class Runtime {
 
     const keys = Value.foreign(o => o.keys())
     const entries = Value.foreign(o => o.entries())
-    const lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries }) }, empty)
+    const fromEntries = Value.foreign(o => o.fromEntries())
+    const lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty)
     return this.evalNode(this.root, lib)
   }
 

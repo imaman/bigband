@@ -1,4 +1,5 @@
 import { Lambda, show } from './ast-node'
+import { failMe } from './fail-me'
 import { findArrayMethod } from './find-array-method'
 import { findStringMethod } from './find-string-method'
 import { Runtime } from './runtime'
@@ -440,6 +441,34 @@ export class Value {
       obj: a => Object.entries(a),
       str: err,
     })
+  }
+
+  fromEntries() {
+    const err = badType('arr')
+    const pairs = selectRaw(this, {
+      arr: a =>
+        a.map(x =>
+          selectRaw(x, {
+            arr: pair => {
+              pair.length === 2 || failMe(`each entry must be a [key, value] pair`)
+              return [pair[0].assertStr(), pair[1]]
+            },
+            bool: err,
+            foreign: err,
+            lambda: err,
+            num: err,
+            obj: err,
+            str: err,
+          }),
+        ),
+      bool: err,
+      foreign: err,
+      lambda: err,
+      num: err,
+      obj: err,
+      str: err,
+    })
+    return Value.obj(Object.fromEntries(pairs))
   }
 
   toString() {

@@ -442,20 +442,24 @@ describe('cdl', () => {
       expect(() => cdl.run(`Object.entries(fun () 5)`)).toThrowError('type error: expected obj but found "fun () 5"')
     })
   })
-  describe.skip('Object.fromEntries()', () => {
-    test('returns a [key, value] pair for each attribute of the given object', () => {
-      expect(cdl.run(`Object.entries({a: 1, b: 2, w: 30})`)).toEqual([
-        ['a', 1],
-        ['b', 2],
-        ['w', 30],
-      ])
+  describe('Object.fromEntries()', () => {
+    test('constructs an object from a list of [key, value] pairs describing its attributes', () => {
+      expect(cdl.run(`Object.fromEntries([['a', 1], ['b', 2], ['w', 30], ['y', 'yoo'], ['z', true]])`)).toEqual({
+        a: 1,
+        b: 2,
+        w: 30,
+        y: 'yoo',
+        z: true,
+      })
     })
     test('fails if applied to a non-object value', () => {
-      expect(() => cdl.run(`Object.entries('a')`)).toThrowError('type error: expected obj but found "a"')
-      expect(() => cdl.run(`Object.entries(5)`)).toThrowError('type error: expected obj but found 5')
-      expect(() => cdl.run(`Object.entries(false)`)).toThrowError('type error: expected obj but found false')
-      expect(() => cdl.run(`Object.entries(['a'])`)).toThrowError('type error: expected obj but found ["a"]')
-      expect(() => cdl.run(`Object.entries(fun () 5)`)).toThrowError('type error: expected obj but found "fun () 5"')
+      expect(() => cdl.run(`Object.fromEntries('a')`)).toThrowError('type error: expected obj but found "a"')
+      expect(() => cdl.run(`Object.fromEntries(5)`)).toThrowError('type error: expected obj but found 5')
+      expect(() => cdl.run(`Object.fromEntries(false)`)).toThrowError('type error: expected obj but found false')
+      expect(() => cdl.run(`Object.fromEntries(['a'])`)).toThrowError('type error: expected obj but found ["a"]')
+      expect(() => cdl.run(`Object.fromEntries(fun () 5)`)).toThrowError(
+        'type error: expected obj but found "fun () 5"',
+      )
     })
   })
   test.todo('Object methods: Object.keys(), Object.entries()')
