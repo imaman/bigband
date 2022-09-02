@@ -43,10 +43,10 @@ describe('cdl', () => {
     expect(cdl.run(`2*3**4`)).toEqual(162)
     expect(cdl.run(`(2*3)**4`)).toEqual(1296)
 
-    expect(() => cdl.run(`!5`)).toThrowError(`value type error: expected bool but found num`)
-    expect(() => cdl.run(`!0`)).toThrowError(`value type error: expected bool but found num`)
-    expect(() => cdl.run(`!!0`)).toThrowError(`value type error: expected bool but found num`)
-    expect(() => cdl.run(`!!4`)).toThrowError(`value type error: expected bool but found num`)
+    expect(() => cdl.run(`!5`)).toThrowError(`value type error: expected bool but found 5`)
+    expect(() => cdl.run(`!0`)).toThrowError(`value type error: expected bool but found 0`)
+    expect(() => cdl.run(`!!0`)).toThrowError(`value type error: expected bool but found 0`)
+    expect(() => cdl.run(`!!4`)).toThrowError(`value type error: expected bool but found 4`)
   })
 
   test('equality', () => {

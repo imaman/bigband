@@ -28,8 +28,10 @@ type Cases = {
   foreign: (arg: (...args: Value[]) => unknown, tag: Tag) => unknown
 }
 
-const badType = (expected: Tag) => (_ignore: unknown, actual: Tag) => {
-  throw new Error(`value type error: expected ${expected} but found ${actual}`)
+import * as util from 'util'
+
+const badType = (expected: Tag) => (u: unknown, _actual: Tag) => {
+  throw new Error(`value type error: expected ${expected} but found ${util.inspect(u)}`)
 }
 
 function select(v: Value, cases: Cases): Value {
