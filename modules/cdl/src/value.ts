@@ -38,8 +38,9 @@ const badType =
       throw new Error(`value type error: expected ${expected} but found ${inspectValue(u)}`)
     }
 
-    const all = [expected, ...moreExpected]
-    throw new Error(`value type error: expected either ${all.join(', ')} but found ${inspectValue(u)}`)
+    throw new Error(
+      `value type error: expected either ${moreExpected.join(', ')} or ${expected} but found ${inspectValue(u)}`,
+    )
   }
 
 function selectRaw<R>(v: Value, cases: Cases<R>): R {
@@ -333,6 +334,7 @@ export class Value {
   }
 
   compare(that: Value) {
+    // here!
     if (this.inner.tag === 'num') {
       const d = this.minus(that).inner.val
       return d < 0 ? -1 : d > 0 ? 1 : 0

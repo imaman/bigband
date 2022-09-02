@@ -83,13 +83,13 @@ describe('value', () => {
   test('yells if access() is called with value which is neither string or num', () => {
     const o = Value.obj({ the: Value.str('ab'), quick: Value.num(500), brown: Value.bool(true) })
     expect(() => o.access(Value.arr([])).export()).toThrowError(
-      'value type error: expected either str, num but found []',
+      'value type error: expected either num or str but found []',
     )
     expect(() => o.access(Value.bool(false)).export()).toThrowError(
-      'value type error: expected either str, num but found false',
+      'value type error: expected either num or str but found false',
     )
     expect(() => o.access(Value.obj({ x: Value.num(1) })).export()).toThrowError(
-      'value type error: expected either str, num but found {"x":1}',
+      'value type error: expected either num or str but found {"x":1}',
     )
   })
   test('json', () => {
