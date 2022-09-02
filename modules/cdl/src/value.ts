@@ -34,7 +34,7 @@ const badType = (expected: Tag) => (u: unknown, _actual: Tag) => {
   throw new Error(`value type error: expected ${expected} but found ${util.inspect(u)}`)
 }
 
-function selectRaw(v: Value, cases: Cases<unknown>) {
+function selectRaw<R>(v: Value, cases: Cases<R>): R {
   const inner = v.inner
   if (inner.tag === 'arr') {
     return cases.arr(inner.val, inner.tag)
@@ -104,51 +104,81 @@ export class Value {
   }
 
   assertBool(): boolean {
-    if (this.inner.tag === 'bool') {
-      return this.inner.val
-    }
-
-    throw new Error(`Not a boolean: ${JSON.stringify(this.inner.val)}`)
+    const err = badType('bool')
+    return selectRaw(this, {
+      arr: err,
+      bool: a => a,
+      foreign: err,
+      lambda: err,
+      num: err,
+      obj: err,
+      str: err,
+    })
   }
 
   assertNum(): number {
-    if (this.inner.tag === 'num') {
-      return this.inner.val
-    }
-
-    throw new Error(`Not a number: ${JSON.stringify(this.inner.val)}`)
+    const err = badType('num')
+    return selectRaw(this, {
+      arr: err,
+      bool: err,
+      foreign: err,
+      lambda: err,
+      num: a => a,
+      obj: err,
+      str: err,
+    })
   }
 
   assertStr(): string {
-    if (this.inner.tag === 'str') {
-      return this.inner.val
-    }
-
-    throw new Error(`Not a string: ${JSON.stringify(this.inner.val)}`)
+    const err = badType('num')
+    return selectRaw(this, {
+      arr: err,
+      bool: err,
+      foreign: err,
+      lambda: err,
+      num: err,
+      obj: err,
+      str: a => a,
+    })
   }
 
   assertArr(): unknown[] {
-    if (this.inner.tag === 'arr') {
-      return this.inner.val
-    }
-
-    throw new Error(`Not an array: ${JSON.stringify(this.inner.val)}`)
+    const err = badType('arr')
+    return selectRaw(this, {
+      arr: a => a,
+      bool: err,
+      foreign: err,
+      lambda: err,
+      num: err,
+      obj: err,
+      str: err,
+    })
   }
 
   assertObj(): Record<string, Value> {
-    if (this.inner.tag === 'obj') {
-      return this.inner.val
-    }
-
-    throw new Error(`Not an object: ${JSON.stringify(this.inner.val)}`)
+    const err = badType('obj')
+    return selectRaw(this, {
+      arr: err,
+      bool: err,
+      foreign: err,
+      lambda: err,
+      num: err,
+      obj: a => a,
+      str: err,
+    })
   }
 
   assertLambda() {
-    if (this.inner.tag === 'lambda') {
-      return this.inner.val
-    }
-
-    throw new Error(`Not a lambda: ${JSON.stringify(this.inner.val)}`)
+    const err = badType('lambda')
+    return selectRaw(this, {
+      arr: err,
+      bool: err,
+      foreign: err,
+      lambda: a => a,
+      num: err,
+      obj: err,
+      str: err,
+    })
   }
 
   isLambda() {
