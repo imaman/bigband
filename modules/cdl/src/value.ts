@@ -28,17 +28,19 @@ type Cases<R> = {
   foreign: (arg: (...args: Value[]) => unknown, tag: Tag) => R
 }
 
-import * as util from 'util'
+function inspectValue(u: unknown) {
+  return JSON.stringify(u)
+}
 
 const badType =
   (expected: Tag, ...moreExpected: Tag[]) =>
   (u: unknown, _actual: Tag) => {
     if (moreExpected.length === 0) {
-      throw new Error(`value type error: expected ${expected} but found ${util.inspect(u)}`)
+      throw new Error(`value type error: expected ${expected} but found ${inspectValue(u)}`)
     }
 
     const all = [expected, ...moreExpected]
-    throw new Error(`value type error: expected either ${all.join(', ')} but found ${util.inspect(u)}`)
+    throw new Error(`value type error: expected either ${all.join(', ')} but found ${inspectValue(u)}`)
   }
 
 function selectRaw<R>(v: Value, cases: Cases<R>): R {
@@ -411,18 +413,14 @@ export class Value {
     return this.inner.val.toString()
   }
 
-  toJSON() {
+  toJSON(): unknown {
     return selectRaw<unknown>(this, {
       arr: a => a,
       bool: a => a,
-      foreign: a => {
-        a.toString()
-      },
-      lambda: a => {
-        show(a.ast)
-      },
+      foreign: a => a.toString(),
+      lambda: a => show(a.ast),
       num: a => a,
-      obj: a => a,
+      obj: a => Object.fromEntries(Object.keys(a).map(k => [k, a[k].toJSON()])),
       str: a => a,
     })
   }
