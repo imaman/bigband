@@ -426,12 +426,15 @@ describe('cdl', () => {
       expect(() => cdl.run(`Object.keys(fun () 5)`)).toThrowError('value type error: expected obj but found "fun () 5"')
     })
   })
-  describe.skip('Object.entries()', () => {
+  describe('Object.entries()', () => {
     test('returns a [key, value] pair for each attribute of the given object', () => {
-      expect(cdl.run(`Object.keys({a: 1, b: 2, w: 30})`)).toEqual(['a', 'b', 'w'])
-      // expect(cdl.run(`Object.entries({a: 1, b: 2, w: 30})`)).toEqual([['a', 1], ['b', 2], ['w', 30]])
+      expect(cdl.run(`Object.entries({a: 1, b: 2, w: 30})`)).toEqual([
+        ['a', 1],
+        ['b', 2],
+        ['w', 30],
+      ])
     })
-    test('fails if applied to a non-object value', () => {
+    test.skip('fails if applied to a non-object value', () => {
       expect(() => cdl.run(`Object.keys('a')`)).toThrowError('value type error: expected obj but found "a"')
       expect(() => cdl.run(`Object.keys(5)`)).toThrowError('value type error: expected obj but found 5')
       expect(() => cdl.run(`Object.keys(false)`)).toThrowError('value type error: expected obj but found false')

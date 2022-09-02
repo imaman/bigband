@@ -39,7 +39,8 @@ export class Runtime {
     const empty = new EmptySymbolTable()
 
     const keys = Value.foreign(o => o.keys())
-    const lib = new SymbolFrame('Object', { destination: Value.obj({ keys }) }, empty)
+    const entries = Value.foreign(o => o.entries())
+    const lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries }) }, empty)
     return this.evalNode(this.root, lib)
   }
 

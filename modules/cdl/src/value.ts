@@ -429,6 +429,19 @@ export class Value {
     })
   }
 
+  entries() {
+    const err = badType('obj')
+    return select(this, {
+      arr: err,
+      bool: err,
+      foreign: err,
+      lambda: err,
+      num: err,
+      obj: a => Object.entries(a),
+      str: err,
+    })
+  }
+
   toString() {
     return this.inner.val.toString()
   }
