@@ -37,18 +37,22 @@ export class Runtime {
 
   run(): Value {
     const empty = new EmptySymbolTable()
-    return this.evalNode(this.root, empty)
+
+    const keys = Value.foreign(o => o.keys())
+    const lib = new SymbolFrame('Object', { destination: Value.obj({ keys }) }, empty)
+    return this.evalNode(this.root, lib)
   }
 
   private evalNode(ast: AstNode, table: SymbolTable): Value {
-    const ret= this.evalNodeImpl(ast, table)
+    const ret = this.evalNodeImpl(ast, table)
     switchOn(this.verbosity, {
-      'quiet': () => {},
-      'trace': () => {
+      quiet: () => {},
+      trace: () => {
         if (ast.tag !== `topLevelExpression`) {
+          // eslint-disable-next-line no-console
           console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
-        }    
-      }
+        }
+      },
     })
     return ret
   }

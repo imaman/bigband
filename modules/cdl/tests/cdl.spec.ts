@@ -413,6 +413,12 @@ describe('cdl', () => {
       expect(cdl.run(`[8, 3, 7, 7, 6, 9].some(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(true)
     })
   })
+  describe('Object.keys()', () => {
+    test('returns all attributes names of the given object', () => {
+      expect(cdl.run(`Object.keys({a: 1, b: 2, w: 30})`)).toEqual(['a', 'b', 'w'])
+      // expect(cdl.run(`Object.entries({a: 1, b: 2, w: 30})`)).toEqual([['a', 1], ['b', 2], ['w', 30]])
+    })
+  })
   test.todo('Object methods: Object.keys(), Object.entries()')
   test.todo('error messages to include line number and column')
   test.todo('syntax errors')
