@@ -30,9 +30,16 @@ type Cases<R> = {
 
 import * as util from 'util'
 
-const badType = (expected: Tag) => (u: unknown, _actual: Tag) => {
-  throw new Error(`value type error: expected ${expected} but found ${util.inspect(u)}`)
-}
+const badType =
+  (expected: Tag, ...moreExpected: Tag[]) =>
+  (u: unknown, _actual: Tag) => {
+    if (moreExpected.length === 0) {
+      throw new Error(`value type error: expected ${expected} but found ${util.inspect(u)}`)
+    }
+
+    const all = [expected, ...moreExpected]
+    throw new Error(`value type error: expected either ${all.join(', ')} but found ${util.inspect(u)}`)
+  }
 
 function selectRaw<R>(v: Value, cases: Cases<R>): R {
   const inner = v.inner
@@ -346,20 +353,21 @@ export class Value {
     throw new Error(`Cannot compare when the left-hand-side value is of type ${this.inner.tag}`)
   }
 
-  static toStringOrNumber(indexValue: string | Value): string | number {
-    if (typeof indexValue === 'string') {
-      return indexValue
+  static toStringOrNumber(input: string | Value): string | number {
+    if (typeof input === 'string') {
+      return input
     }
-    const i = indexValue.inner
-    if (i.tag == 'str') {
-      return i.val
-    } else if (i.tag === 'num') {
-      return i.val
-    } else if (i.tag === 'arr' || i.tag === 'bool' || i.tag == 'lambda' || i.tag === 'obj' || i.tag === 'foreign') {
-      throw new Error(`Invalid index value: ${indexValue}`)
-    } else {
-      shouldNeverHappen(i)
-    }
+
+    const err = badType('str', 'num')
+    return selectRaw<string | number>(input, {
+      arr: err,
+      bool: err,
+      foreign: err,
+      lambda: err,
+      num: a => a,
+      obj: err,
+      str: a => a,
+    })
   }
 
   access(indexValue: string | Value, runtime?: Runtime): Value {
