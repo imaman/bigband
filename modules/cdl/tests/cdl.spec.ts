@@ -452,14 +452,22 @@ describe('cdl', () => {
         z: true,
       })
     })
-    test('fails if applied to a non-object value', () => {
-      expect(() => cdl.run(`Object.fromEntries('a')`)).toThrowError('type error: expected obj but found "a"')
-      expect(() => cdl.run(`Object.fromEntries(5)`)).toThrowError('type error: expected obj but found 5')
-      expect(() => cdl.run(`Object.fromEntries(false)`)).toThrowError('type error: expected obj but found false')
-      expect(() => cdl.run(`Object.fromEntries(['a'])`)).toThrowError('type error: expected obj but found ["a"]')
+    test('fails if applied to a non-array value', () => {
+      expect(() => cdl.run(`Object.fromEntries('a')`)).toThrowError('type error: expected arr but found "a"')
+      expect(() => cdl.run(`Object.fromEntries(5)`)).toThrowError('type error: expected arr but found 5')
+      expect(() => cdl.run(`Object.fromEntries(false)`)).toThrowError('type error: expected arr but found false')
+      expect(() => cdl.run(`Object.fromEntries({x: 1})`)).toThrowError('type error: expected arr but found {"x":1}')
       expect(() => cdl.run(`Object.fromEntries(fun () 5)`)).toThrowError(
-        'type error: expected obj but found "fun () 5"',
+        'type error: expected arr but found "fun () 5"',
       )
+    })
+    test('the input array must be an array of pairs', () => {
+      expect(() => cdl.run(`Object.fromEntries([['a', 1], ['b']])`)).toThrowError(
+        'each entry must be a [key, value] pair',
+      )
+    })
+    test('the first element in each pair must be a string', () => {
+      expect(() => cdl.run(`Object.fromEntries([[1, 'a']])`)).toThrowError('value type error: expected str but found 1')
     })
   })
   test.todo('Object methods: Object.keys(), Object.entries()')

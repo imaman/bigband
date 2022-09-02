@@ -140,7 +140,7 @@ export class Value {
   }
 
   assertStr(): string {
-    const err = badType('num')
+    const err = badType('str')
     return selectRaw(this, {
       arr: err,
       bool: err,
