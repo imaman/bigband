@@ -349,17 +349,16 @@ export class Value {
   static toStringOrNumber(indexValue: string | Value): string | number {
     if (typeof indexValue === 'string') {
       return indexValue
+    }
+    const i = indexValue.inner
+    if (i.tag == 'str') {
+      return i.val
+    } else if (i.tag === 'num') {
+      return i.val
+    } else if (i.tag === 'arr' || i.tag === 'bool' || i.tag == 'lambda' || i.tag === 'obj' || i.tag === 'foreign') {
+      throw new Error(`Invalid index value: ${indexValue}`)
     } else {
-      const i = indexValue.inner
-      if (i.tag == 'str') {
-        return i.val
-      } else if (i.tag === 'num') {
-        return i.val
-      } else if (i.tag === 'arr' || i.tag === 'bool' || i.tag == 'lambda' || i.tag === 'obj' || i.tag === 'foreign') {
-        throw new Error(`Invalid index value: ${indexValue}`)
-      } else {
-        shouldNeverHappen(i)
-      }
+      shouldNeverHappen(i)
     }
   }
 
@@ -405,14 +404,19 @@ export class Value {
   }
 
   toJSON() {
-    if (this.inner.tag === 'lambda') {
-      return { _lambda: show(this.inner.val.ast) }
-    }
-    if (this.inner.tag === 'foreign') {
-      return { _foreign: this.inner.val.toString() }
-    }
-
-    return this.inner.val
+    return selectRaw<unknown>(this, {
+      arr: a => a,
+      bool: a => a,
+      foreign: a => {
+        a.toString()
+      },
+      lambda: a => {
+        show(a.ast)
+      },
+      num: a => a,
+      obj: a => a,
+      str: a => a,
+    })
   }
 
   export() {

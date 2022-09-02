@@ -309,7 +309,7 @@ describe('cdl', () => {
       expect(cdl.run(`if (true) 200 else x`)).toEqual(200)
     })
     test('yells if conditions is not boolean', () => {
-      expect(() => cdl.run(`if (5+8) 200 else -100`)).toThrowError('Not a boolean: 13')
+      expect(() => cdl.run(`if (5+8) 200 else -100`)).toThrowError('value type error: expected bool but found 13')
     })
   })
 
