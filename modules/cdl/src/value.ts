@@ -420,7 +420,7 @@ export class Value {
       foreign: a => a.toString(),
       lambda: a => show(a.ast),
       num: a => a,
-      obj: a => Object.fromEntries(Object.keys(a).map(k => [k, a[k].toJSON()])),
+      obj: a => a,
       str: a => a,
     })
   }
