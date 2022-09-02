@@ -434,12 +434,28 @@ describe('cdl', () => {
         ['w', 30],
       ])
     })
-    test.skip('fails if applied to a non-object value', () => {
-      expect(() => cdl.run(`Object.keys('a')`)).toThrowError('value type error: expected obj but found "a"')
-      expect(() => cdl.run(`Object.keys(5)`)).toThrowError('value type error: expected obj but found 5')
-      expect(() => cdl.run(`Object.keys(false)`)).toThrowError('value type error: expected obj but found false')
-      expect(() => cdl.run(`Object.keys(['a'])`)).toThrowError('value type error: expected obj but found ["a"]')
-      expect(() => cdl.run(`Object.keys(fun () 5)`)).toThrowError('value type error: expected obj but found "fun () 5"')
+    test('fails if applied to a non-object value', () => {
+      expect(() => cdl.run(`Object.entries('a')`)).toThrowError('type error: expected obj but found "a"')
+      expect(() => cdl.run(`Object.entries(5)`)).toThrowError('type error: expected obj but found 5')
+      expect(() => cdl.run(`Object.entries(false)`)).toThrowError('type error: expected obj but found false')
+      expect(() => cdl.run(`Object.entries(['a'])`)).toThrowError('type error: expected obj but found ["a"]')
+      expect(() => cdl.run(`Object.entries(fun () 5)`)).toThrowError('type error: expected obj but found "fun () 5"')
+    })
+  })
+  describe.skip('Object.fromEntries()', () => {
+    test('returns a [key, value] pair for each attribute of the given object', () => {
+      expect(cdl.run(`Object.entries({a: 1, b: 2, w: 30})`)).toEqual([
+        ['a', 1],
+        ['b', 2],
+        ['w', 30],
+      ])
+    })
+    test('fails if applied to a non-object value', () => {
+      expect(() => cdl.run(`Object.entries('a')`)).toThrowError('type error: expected obj but found "a"')
+      expect(() => cdl.run(`Object.entries(5)`)).toThrowError('type error: expected obj but found 5')
+      expect(() => cdl.run(`Object.entries(false)`)).toThrowError('type error: expected obj but found false')
+      expect(() => cdl.run(`Object.entries(['a'])`)).toThrowError('type error: expected obj but found ["a"]')
+      expect(() => cdl.run(`Object.entries(fun () 5)`)).toThrowError('type error: expected obj but found "fun () 5"')
     })
   })
   test.todo('Object methods: Object.keys(), Object.entries()')
