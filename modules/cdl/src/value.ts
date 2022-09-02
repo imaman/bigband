@@ -18,13 +18,13 @@ type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) :
 type Tag = InferTag<Inner>
 
 type Cases<R> = {
-  arr: (arg: Value[], tag: Tag) => R
-  bool: (arg: boolean, tag: Tag) => R
-  foreign: (arg: (...args: Value[]) => unknown, tag: Tag) => R
-  lambda: (arg: { ast: Lambda; table: SymbolTable }, tag: Tag) => R
-  num: (arg: number, tag: Tag) => R
-  obj: (arg: Record<string, Value>, tag: Tag) => R
-  str: (arg: string, tag: Tag) => R
+  arr: (arg: Value[], tag: Tag, v: Value) => R
+  bool: (arg: boolean, tag: Tag, v: Value) => R
+  foreign: (arg: (...args: Value[]) => unknown, tag: Tag, v: Value) => R
+  lambda: (arg: { ast: Lambda; table: SymbolTable }, tag: Tag, v: Value) => R
+  num: (arg: number, tag: Tag, v: Value) => R
+  obj: (arg: Record<string, Value>, tag: Tag, v: Value) => R
+  str: (arg: string, tag: Tag, v: Value) => R
 }
 
 function inspectValue(u: unknown) {
@@ -33,38 +33,38 @@ function inspectValue(u: unknown) {
 
 const badType =
   (expected: Tag, ...moreExpected: Tag[]) =>
-  (u: unknown, _actual: Tag) => {
+  (u: unknown, _actual: Tag, v: Value) => {
     if (moreExpected.length === 0) {
-      throw new Error(`value type error: expected ${expected} but found ${inspectValue(u)}`)
+      throw new Error(`value type error: expected ${expected} but found ${inspectValue(v)}`)
     }
 
     throw new Error(
-      `value type error: expected either ${moreExpected.join(', ')} or ${expected} but found ${inspectValue(u)}`,
+      `value type error: expected either ${moreExpected.join(', ')} or ${expected} but found ${inspectValue(v)}`,
     )
   }
 
 function selectRaw<R>(v: Value, cases: Cases<R>): R {
   const inner = v.inner
   if (inner.tag === 'arr') {
-    return cases.arr(inner.val, inner.tag)
+    return cases.arr(inner.val, inner.tag, v)
   }
   if (inner.tag === 'bool') {
-    return cases.bool(inner.val, inner.tag)
+    return cases.bool(inner.val, inner.tag, v)
   }
   if (inner.tag === 'foreign') {
-    return cases.foreign(inner.val, inner.tag)
+    return cases.foreign(inner.val, inner.tag, v)
   }
   if (inner.tag === 'lambda') {
-    return cases.lambda(inner.val, inner.tag)
+    return cases.lambda(inner.val, inner.tag, v)
   }
   if (inner.tag === 'num') {
-    return cases.num(inner.val, inner.tag)
+    return cases.num(inner.val, inner.tag, v)
   }
   if (inner.tag === 'obj') {
-    return cases.obj(inner.val, inner.tag)
+    return cases.obj(inner.val, inner.tag, v)
   }
   if (inner.tag === 'str') {
-    return cases.str(inner.val, inner.tag)
+    return cases.str(inner.val, inner.tag, v)
   }
 
   shouldNeverHappen(inner)
