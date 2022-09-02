@@ -28,7 +28,14 @@ export class Parser {
   }
 
   expression(): AstNode {
-    return { tag: 'topLevelExpression', definitions: this.definitions(), computation: this.lambda() }
+    const definitions = this.definitions()
+    const computation = this.lambda()
+
+    if (definitions.length === 0) {
+      return computation
+    }
+
+    return { tag: 'topLevelExpression', definitions, computation }
   }
 
   lambda(): AstNode {

@@ -50,10 +50,8 @@ export class Runtime {
     switchOn(this.verbosity, {
       quiet: () => {},
       trace: () => {
-        if (ast.tag !== `topLevelExpression`) {
-          // eslint-disable-next-line no-console
-          console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
-        }
+        // eslint-disable-next-line no-console
+        console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
       },
     })
     return ret

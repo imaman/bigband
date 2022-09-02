@@ -485,4 +485,5 @@ describe('cdl', () => {
   test.todo('an object literal cannot have a repeated attribute name that')
   test.todo('quoting of a ticks inside a string')
   test.todo('number in scientific notation')
+  test.todo('API access to evaluation trace')
 })
