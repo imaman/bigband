@@ -176,7 +176,8 @@ export class Runtime {
         if (curr.tag === 'element') {
           arr.push(this.evalNode(curr.v, table))
         } else if (curr.tag === 'spread') {
-          throw new Error(`Not supported yet`)
+          const v = this.evalNode(curr.v, table)
+          arr.push(...v.assertArr())
         } else {
           shouldNeverHappen(curr)
         }

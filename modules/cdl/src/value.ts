@@ -71,7 +71,7 @@ function selectRaw<R>(v: Value, cases: Cases<R>): R {
   shouldNeverHappen(inner)
 }
 
-function select(v: Value, cases: Cases<unknown>): Value {
+function select<R>(v: Value, cases: Cases<R>): Value {
   return Value.from(selectRaw(v, cases))
 }
 
@@ -152,7 +152,7 @@ export class Value {
     })
   }
 
-  assertArr(): unknown[] {
+  assertArr(): Value[] {
     const err = badType('arr')
     return selectRaw(this, {
       arr: a => a,

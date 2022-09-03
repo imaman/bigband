@@ -287,8 +287,13 @@ export class Parser {
 
     const parts: ArrayLiteralPart[] = []
     while (true) {
-      const exp = this.expression()
-      parts.push({ tag: 'element', v: exp })
+      if (this.scanner.consumeIf('...')) {
+        parts.push({ tag: 'spread', v: this.expression() })
+      } else {
+        const exp = this.expression()
+        parts.push({ tag: 'element', v: exp })
+      }
+
       if (this.scanner.consumeIf(']')) {
         return { tag: 'arrayLiteral', parts }
       }
