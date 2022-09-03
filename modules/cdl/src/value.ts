@@ -341,8 +341,7 @@ export class Value {
 
     return selectRaw(this, {
       arr: err,
-      bool: () => {
-        const lhs = this.assertBool()
+      bool: lhs => {
         const rhs = that.assertBool()
 
         return lhs && !rhs ? 1 : !lhs && rhs ? -1 : 0
@@ -350,7 +349,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: () => {
-        const d = this.minus(that).inner.val
+        const d = this.minus(that).assertNum()
         return d < 0 ? -1 : d > 0 ? 1 : 0
       },
       obj: err,
