@@ -1,4 +1,4 @@
-import { AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
+import { ArrayLiteralPart, AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
 import { Scanner } from './scanner'
 
 export class Parser {
@@ -282,15 +282,15 @@ export class Parser {
   arrayBody(): AstNode {
     if (this.scanner.consumeIf(']')) {
       // an empty array literal
-      return { tag: 'arrayLiteral', elements: [] }
+      return { tag: 'arrayLiteral', parts: [] }
     }
 
-    const elements: AstNode[] = []
+    const parts: ArrayLiteralPart[] = []
     while (true) {
       const exp = this.expression()
-      elements.push(exp)
+      parts.push({ tag: 'element', v: exp })
       if (this.scanner.consumeIf(']')) {
-        return { tag: 'arrayLiteral', elements }
+        return { tag: 'arrayLiteral', parts }
       }
 
       this.scanner.consume(',')

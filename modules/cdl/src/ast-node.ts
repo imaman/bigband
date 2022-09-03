@@ -8,6 +8,8 @@ export type ObjectLiteralPart =
   | { tag: 'computedName'; k: AstNode; v: AstNode }
   | { tag: 'spread'; o: AstNode }
 
+export type ArrayLiteralPart = { tag: 'element'; v: AstNode } | { tag: 'spread'; v: AstNode }
+
 export type Ident = {
   tag: 'ident'
   t: Token
@@ -23,7 +25,7 @@ export type AstNode =
   | Ident
   | {
       tag: 'arrayLiteral'
-      elements: AstNode[]
+      parts: ArrayLiteralPart[]
     }
   | {
       tag: 'objectLiteral'
@@ -78,7 +80,18 @@ export function show(ast: AstNode | AstNode[]): string {
     return ast.map(curr => show(curr)).join(', ')
   }
   if (ast.tag === 'arrayLiteral') {
-    return `[${show(ast.elements)}]`
+    const parts = ast.parts.map(p => {
+      if (p.tag === 'element') {
+        return show(p.v)
+      }
+
+      if (p.tag === 'spread') {
+        return `...${show(p.v)}`
+      }
+
+      shouldNeverHappen(p)
+    })
+    return `[${parts.join(', ')}]`
   }
 
   if (ast.tag === 'binaryOperator') {

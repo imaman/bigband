@@ -171,7 +171,18 @@ export class Runtime {
     }
 
     if (ast.tag === 'arrayLiteral') {
-      return Value.arr(ast.elements.map(at => this.evalNode(at, table)))
+      const arr: Value[] = []
+      for (const curr of ast.parts) {
+        if (curr.tag === 'element') {
+          arr.push(this.evalNode(curr.v, table))
+        } else if (curr.tag === 'spread') {
+          throw new Error(`Not supported yet`)
+        } else {
+          shouldNeverHappen(curr)
+        }
+      }
+
+      return Value.arr(arr)
     }
 
     if (ast.tag === 'objectLiteral') {
