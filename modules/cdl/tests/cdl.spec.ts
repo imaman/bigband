@@ -533,7 +533,6 @@ describe('cdl', () => {
   test.todo('comparison of arrays')
   test.todo('comparison of lambdas?')
   test.todo('deep equality of objects')
-  test.todo('spread operator of arrays')
   test.todo('"abcdef"[1] == "b"')
   test.todo('Arr.find() returns undefined - think how to go about it')
   test.todo('x.y can return undefined (e.g., if x = {z: 1}) - think how to go about it')
