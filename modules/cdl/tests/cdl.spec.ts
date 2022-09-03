@@ -266,7 +266,7 @@ describe('cdl', () => {
     })
   })
 
-  describe('spread operator on objects', () => {
+  describe('spread operator in objects', () => {
     test('shallow copies an object into an object literal', () => {
       expect(cdl.run(`let o = {a: 1, b: 2}; {...o}`)).toEqual({ a: 1, b: 2 })
     })
@@ -296,6 +296,25 @@ describe('cdl', () => {
       expect(() => cdl.run(`let o = true; {...o}`)).toThrowError('value type error: expected obj but found true')
       expect(() => cdl.run(`let o = 5; {...o}`)).toThrowError('value type error: expected obj but found 5')
       expect(() => cdl.run(`let o = 'a'; {...o}`)).toThrowError('value type error: expected obj but found "a"')
+    })
+  })
+
+  describe('spread operator in arrays', () => {
+    test('shallow copies an array into an array literal', () => {
+      expect(cdl.run(`let a = ['x', 'y']; [...a]`)).toEqual(['x', 'y'])
+    })
+    test('can be mixed with array elements', () => {
+      expect(cdl.run(`let a = ['x', 'y']; ['p', ...a, 'q']`)).toEqual(['p', 'x', 'y', 'q'])
+    })
+    test('can be used multiple times inside an array literal', () => {
+      expect(cdl.run(`let a1 = ['x', 'y']; let a2 = ['z']; ['p', ...a1, 'q', ...a2, 'r']`)).toEqual([
+        'p',
+        'x',
+        'y',
+        'q',
+        'z',
+        'r',
+      ])
     })
   })
 
