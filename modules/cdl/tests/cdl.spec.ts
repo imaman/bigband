@@ -316,6 +316,12 @@ describe('cdl', () => {
         'r',
       ])
     })
+    test('errors if applied to a non-array value', () => {
+      expect(() => cdl.run(`let a = true; [...a]`)).toThrowError('value type error: expected arr but found true')
+      expect(() => cdl.run(`let a = 5; [...a]`)).toThrowError('value type error: expected arr but found 5')
+      expect(() => cdl.run(`let a = {x: 1}; [...a]`)).toThrowError(`value type error: expected arr but found {"x":1}`)
+      expect(() => cdl.run(`let a = 'a'; [...a]`)).toThrowError('value type error: expected arr but found "a"')
+    })
   })
 
   describe('if', () => {
