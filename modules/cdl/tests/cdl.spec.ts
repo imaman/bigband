@@ -474,9 +474,9 @@ describe('cdl', () => {
     test(`anything from '//' up to the end-of-line is ignored`, () => {
       expect(
         cdl.run(`
-        1 + 2 + // 3
-        4`),
-      ).toEqual(7)
+        1 + 20 + // 300
+        4000`),
+      ).toEqual(4021)
     })
   })
   test.todo('error messages to include expression-trace')

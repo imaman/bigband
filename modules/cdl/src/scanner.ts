@@ -15,6 +15,9 @@ export class Scanner {
 
   private eatWhitespace() {
     this.consumeIf(/\s*/)
+    if (this.consumeIf('//')) {
+      this.consume(/[^\n]*/)
+    }
   }
 
   eof(): boolean {
