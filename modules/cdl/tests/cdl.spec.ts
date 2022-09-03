@@ -470,7 +470,15 @@ describe('cdl', () => {
       expect(() => cdl.run(`Object.fromEntries([[1, 'a']])`)).toThrowError('value type error: expected str but found 1')
     })
   })
-  test.todo('comments')
+  describe('comments', () => {
+    test(`anything from '//' up to the end-of-line is ignored`, () => {
+      expect(
+        cdl.run(`
+        1 + 2 + // 3
+        4`),
+      ).toEqual(7)
+    })
+  })
   test.todo('error messages to include expression-trace')
   test.todo('syntax errors')
   test.todo('comparison of arrays')
