@@ -478,6 +478,16 @@ describe('cdl', () => {
         4000`),
       ).toEqual(4021)
     })
+    test(`allow consecutive lines which are all commented out`, () => {
+      expect(
+        cdl.run(`
+        1 + 
+        // 20 + 
+        // 300 +
+        // 4000 +
+        50000`),
+      ).toEqual(50001)
+    })
   })
   test.todo('error messages to include expression-trace')
   test.todo('syntax errors')
