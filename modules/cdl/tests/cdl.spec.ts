@@ -266,7 +266,7 @@ describe('cdl', () => {
     })
   })
 
-  describe('spread operator', () => {
+  describe('spread operator on objects', () => {
     test('shallow copies an object into an object literal', () => {
       expect(cdl.run(`let o = {a: 1, b: 2}; {...o}`)).toEqual({ a: 1, b: 2 })
     })
@@ -290,6 +290,12 @@ describe('cdl', () => {
     })
     test('can be mixed with computed attribute names', () => {
       expect(cdl.run(`let o = {ab: 'anteater'}; {...o, ['c' + 'd']: 'cat'}`)).toEqual({ ab: 'anteater', cd: 'cat' })
+    })
+    test('errors if applied to a non-object value', () => {
+      expect(() => cdl.run(`let o = ['a']; {...o}`)).toThrowError(`value type error: expected obj but found ["a"]`)
+      expect(() => cdl.run(`let o = true; {...o}`)).toThrowError('value type error: expected obj but found true')
+      expect(() => cdl.run(`let o = 5; {...o}`)).toThrowError('value type error: expected obj but found 5')
+      expect(() => cdl.run(`let o = 'a'; {...o}`)).toThrowError('value type error: expected obj but found "a"')
     })
   })
 
@@ -488,12 +494,19 @@ describe('cdl', () => {
         50000`),
       ).toEqual(50001)
     })
+    test(`a comment inside a comment has no effect`, () => {
+      expect(
+        cdl.run(`
+        1 + 
+        // 20 +  // 300 +
+        4000`),
+      ).toEqual(4001)
+    })
   })
   test.todo('error messages to include expression-trace')
   test.todo('syntax errors')
   test.todo('comparison of arrays')
   test.todo('comparison of lambdas?')
-  test.todo(`cdl.run('!5')) should report the value of the bad type`)
   test.todo('deep equality of objects')
   test.todo('spread operator of arrays')
   test.todo('"abcdef"[1] == "b"')
