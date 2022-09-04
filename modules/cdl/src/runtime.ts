@@ -134,7 +134,10 @@ export class Runtime {
         return operand.not()
       }
       if (ast.operator === '+') {
-        return operand
+        // We intentionally do <0 + operand> instead of just <operand>. This is due to type-checking: the latter will
+        // evaluate to the operand as-is, making expression such as `+true` dynamically valid (which is not the desired
+        // behavior)
+        return Value.num(0).plus(operand)
       }
       if (ast.operator === '-') {
         return operand.negate()
