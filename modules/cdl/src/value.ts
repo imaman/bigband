@@ -22,7 +22,7 @@ type Inner =
 type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
 type Tag = InferTag<Inner>
 
-type Cases<R> = {
+interface Cases<R> {
   arr: (arg: Value[], tag: Tag, v: Value) => R
   bool: (arg: boolean, tag: Tag, v: Value) => R
   foreign: (arg: (...args: Value[]) => unknown, tag: Tag, v: Value) => R
@@ -30,16 +30,20 @@ type Cases<R> = {
   num: (arg: number, tag: Tag, v: Value) => R
   obj: (arg: Record<string, Value>, tag: Tag, v: Value) => R
   str: (arg: string, tag: Tag, v: Value) => R
-  sink?: () => R
+}
+
+type RawCases<R> = Cases<R> & {
+  // The arguments passed to the sink() function are essentially useless as they are awlays the following:
+  // `undefined, 'sink', Value.sink()`. Yet, we define them for consistency.
+  sink?: (arg: undefined, tag: Tag, v: Value) => R
 }
 
 function inspectValue(u: unknown) {
   return JSON.stringify(u)
 }
 
-const badType =
-  (expected: Tag, ...moreExpected: Tag[]) =>
-  (u: unknown, _actual: Tag, v: Value) => {
+function badType(expected: Tag, ...moreExpected: Tag[]) {
+  return (_u: unknown, _actual: Tag, v: Value) => {
     if (moreExpected.length === 0) {
       throw new Error(`value type error: expected ${expected} but found ${inspectValue(v)}`)
     }
@@ -48,8 +52,17 @@ const badType =
       `value type error: expected either ${moreExpected.join(', ')} or ${expected} but found ${inspectValue(v)}`,
     )
   }
+}
 
-function selectRaw<R>(v: Value, cases: Cases<R>): R {
+/**
+ * Allows the caller to "see" the native value held by a Value object. The caller supplies the `cases` object
+ * which maps a function for each possible Value tag. Returns the return value of the function associated with the tag
+ * of `v`. It is is usally preferred to use `select()` over this function which is more of a low-level function.
+ * @param v
+ * @param cases
+ * @returns
+ */
+function selectRaw<R>(v: Value, cases: RawCases<R>): R {
   const inner = v.inner
   if (inner.tag === 'arr') {
     return cases.arr(inner.val, inner.tag, v)
@@ -70,7 +83,10 @@ function selectRaw<R>(v: Value, cases: Cases<R>): R {
     return cases.obj(inner.val, inner.tag, v)
   }
   if (inner.tag === 'sink') {
-    return cases.sink?.() ?? failMe(`Cannot evaluate a sink value`)
+    if (cases.sink) {
+      return cases.sink(inner.val, inner.tag, v)
+    }
+    throw new Error(`Cannot evaluate a sink value`)
   }
   if (inner.tag === 'str') {
     return cases.str(inner.val, inner.tag, v)
@@ -132,6 +148,7 @@ export class Value {
       lambda: err,
       num: err,
       obj: err,
+      sink: err,
       str: err,
     })
   }
@@ -145,6 +162,7 @@ export class Value {
       lambda: err,
       num: a => a,
       obj: err,
+      sink: err,
       str: err,
     })
   }
@@ -158,6 +176,7 @@ export class Value {
       lambda: err,
       num: err,
       obj: err,
+      sink: err,
       str: a => a,
     })
   }
@@ -171,6 +190,7 @@ export class Value {
       lambda: err,
       num: err,
       obj: err,
+      sink: err,
       str: err,
     })
   }
@@ -184,6 +204,7 @@ export class Value {
       lambda: err,
       num: err,
       obj: a => a,
+      sink: err,
       str: err,
     })
   }
@@ -197,6 +218,7 @@ export class Value {
       lambda: a => a,
       num: err,
       obj: err,
+      sink: err,
       str: err,
     })
   }
@@ -389,6 +411,7 @@ export class Value {
       lambda: err,
       num: n => n === 0,
       obj: err,
+      sink: err,
       str: err,
     })
   }
@@ -434,6 +457,7 @@ export class Value {
       lambda: err,
       num: a => a,
       obj: err,
+      sink: err,
       str: a => a,
     })
   }
@@ -521,6 +545,7 @@ export class Value {
             lambda: err,
             num: err,
             obj: err,
+            sink: err,
             str: err,
           }),
         ),
@@ -529,6 +554,7 @@ export class Value {
       lambda: err,
       num: err,
       obj: err,
+      sink: err,
       str: err,
     })
     return Value.obj(Object.fromEntries(pairs))
@@ -546,6 +572,7 @@ export class Value {
       lambda: a => show(a.ast),
       num: a => a,
       obj: a => a,
+      sink: () => null,
       str: a => a,
     })
   }
