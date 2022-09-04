@@ -204,6 +204,17 @@ describe('value', () => {
     test('applying .fromEntries() to sink evaluates to sink', () => {
       expect(sink.fromEntries().export()).toEqual(null)
     })
+    describe('comparisons', () => {
+      test('comparing with sink evaluates to sink (including when comparing with itself)', () => {
+        expect(sink.compare(sink).export()).toEqual(null)
+        expect(sink.compare(Value.bool(false)).export()).toEqual(null)
+        expect(sink.compare(Value.bool(true)).export()).toEqual(null)
+        expect(sink.compare(Value.num(0)).export()).toEqual(null)
+        expect(sink.compare(Value.num(5)).export()).toEqual(null)
+        expect(sink.compare(Value.str('')).export()).toEqual(null)
+        expect(sink.compare(Value.str('a')).export()).toEqual(null)
+      })
+    })
   })
   describe('type erros', () => {
     const five = Value.num(1)
