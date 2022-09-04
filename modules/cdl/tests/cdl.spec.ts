@@ -494,9 +494,17 @@ describe('cdl', () => {
       expect(cdl.run(`[10, 20, 30, 40].find(fun (item, i) item + i == 21)`)).toEqual(20)
       expect(cdl.run(`[8, 3, 7, 7, 6, 9].find(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(7)
     })
+    test('find returns sink if no matching element exists', () => {
+      expect(cdl.run(`[3, 5, 7, 9].find(fun (x) x % 2 == 0)`)).toEqual(null)
+      expect(cdl.run(`[].find(fun () true)`)).toEqual(null)
+    })
     test('findIndex', () => {
       expect(cdl.run(`[10, 20, 30, 40].findIndex(fun (item, i) item + i == 32)`)).toEqual(2)
       expect(cdl.run(`[8, 3, 7, 7, 6, 9].findIndex(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(2)
+    })
+    test('findIndex returns -1 if no matching element exists', () => {
+      expect(cdl.run(`[3, 5, 7, 9].findIndex(fun (x) x % 2 == 0)`)).toEqual(-1)
+      expect(cdl.run(`[].findIndex(fun () true)`)).toEqual(-1)
     })
     test('flatMap', () => {
       expect(cdl.run(`['Columbia', 'Eagle'].flatMap(fun (x) [x, x.length])`)).toEqual(['Columbia', 8, 'Eagle', 5])
