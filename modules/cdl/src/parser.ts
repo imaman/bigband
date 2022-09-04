@@ -176,27 +176,29 @@ export class Parser {
   call(): AstNode {
     const callee = this.memberAccess()
 
-    let ret = callee
-    while (true) {
-      if (!this.scanner.consumeIf('(')) {
-        return ret
-      }
+    if (!this.scanner.consumeIf('(')) {
+      return callee
+    }
 
+    const actualArgs = this.actualArguments()
+    return { tag: 'functionCall', actualArgs, callee }
+  }
+
+  private actualArguments() {
+    while (true) {
       const actualArgs: AstNode[] = []
       if (this.scanner.consumeIf(')')) {
         // no actual args
-      } else {
-        while (true) {
-          const arg = this.expression()
-          actualArgs.push(arg)
-          if (this.scanner.consumeIf(')')) {
-            break
-          }
-          this.scanner.consume(',')
-        }
+        return actualArgs
       }
-
-      ret = { tag: 'functionCall', actualArgs, callee: ret }
+      while (true) {
+        const arg = this.expression()
+        actualArgs.push(arg)
+        if (this.scanner.consumeIf(')')) {
+          return actualArgs
+        }
+        this.scanner.consume(',')
+      }
     }
   }
 
@@ -212,6 +214,12 @@ export class Parser {
       if (this.scanner.consumeIf('[')) {
         ret = { tag: 'indexAccess', receiver: ret, index: this.expression() }
         this.scanner.consume(']')
+        continue
+      }
+
+      if (this.scanner.consumeIf('(')) {
+        const actualArgs = this.actualArguments()
+        ret = { tag: 'functionCall', actualArgs, callee: ret }
         continue
       }
 
