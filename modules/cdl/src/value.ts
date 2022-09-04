@@ -57,10 +57,13 @@ const badType =
 /**
  * Allows the caller to "see" the native value held by a Value object. The caller supplies the `cases` object
  * which maps a function for each possible Value tag. Returns the return value of the function associated with the tag
- * of `v`. It is is usally preferred to use `select()` over this function which is more of a low-level function.
- * @param v
- * @param cases
- * @returns
+ * of `v`.
+ *
+ * In the code we should perfer to use `select()` over this one as it provides better handling of `sink` values.
+ *
+ * @param v the Value object to look into
+ * @param cases an object which maps Tag values to functions
+ * @returns the return value of the function mapped to the tag of `v`
  */
 function selectRaw<R>(v: Value, cases: RawCases<R>): R {
   const inner = v.inner
@@ -83,10 +86,13 @@ function selectRaw<R>(v: Value, cases: RawCases<R>): R {
     return cases.obj(inner.val, inner.tag, v)
   }
   if (inner.tag === 'sink') {
-    if (cases.sink) {
-      return cases.sink(inner.val, inner.tag, v)
+    // For sink we provide a default behavior of throwing an exception. Yet, the caller is encouraged to explicitly
+    // provide a `sink` case as there is broader context at the caller's side which makes it possible to provide more
+    // meaningful error messages.
+    if (!cases.sink) {
+      throw new Error(`Cannot evaluate a sink value`)
     }
-    throw new Error(`Cannot evaluate a sink value`)
+    return cases.sink(inner.val, inner.tag, v)
   }
   if (inner.tag === 'str') {
     return cases.str(inner.val, inner.tag, v)
@@ -95,6 +101,18 @@ function selectRaw<R>(v: Value, cases: RawCases<R>): R {
   shouldNeverHappen(inner)
 }
 
+/**
+ * Allows the caller to "see" the native value held by a Value object. The caller supplies the `cases` object
+ * which maps a function for each possible Value tag. Returns the return value of the function associated with the tag
+ * of `v`.
+ *
+ * if `select()` is invoked on sink value (i.e., `Value.sink()`) it returns the sink value itself. This realizes the
+ * behavior that an expression involving a sink value evaluates to sink.
+ *
+ * @param v the Value object to look into
+ * @param cases an object which maps Tag values to functions
+ * @returns the return value of the function mapped to the tag of `v`
+ */
 function select<R>(v: Value, cases: Cases<R>): Value {
   if (v.isSink()) {
     return v
