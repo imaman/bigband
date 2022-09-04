@@ -449,8 +449,9 @@ export class Value {
   }
 
   /**
-   * Compares `this` and the given argument (`that`). The behavior of this method should adhere to the following principles:
-   * (i) order: if a < b then b >= a (i.e., it provides a consistent answer regardless of the order of a and b).
+   * Determines the order beteween `this` and the given argument (`that`). The behavior of this method should adhere to the following principles:
+   * (i) order: if a < b then b >= a (i.e., it provides a consistent answer regardless of the whether `this` is `a`
+   *    and `that` is `b` or vice versa)
    * (ii) comparing two values of different type result in runtime error.
    * (iii) comparing a value with itself evaluates to `true`
    *
@@ -465,7 +466,7 @@ export class Value {
    * @param that
    * @returns
    */
-  compare(that: Value): Value {
+  order(that: Value): Value {
     const err = (_u: unknown, t: Tag) => {
       throw new Error(`Cannot compare a value of type ${t}`)
     }

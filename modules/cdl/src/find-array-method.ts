@@ -62,10 +62,10 @@ export function findArrayMethod(arr: unknown[], index: string, runtime?: Runtime
     return Value.foreign(() => flatten(arr))
   }
   if (index === 'includes') {
-    return Value.foreign((arg: Value) => arr.some(curr => Value.from(curr).compare(arg).isZero()))
+    return Value.foreign((arg: Value) => arr.some(curr => Value.from(curr).order(arg).isZero()))
   }
   if (index === 'indexOf') {
-    return Value.foreign(arg => arr.findIndex(curr => Value.from(curr).compare(arg).isZero()))
+    return Value.foreign(arg => arr.findIndex(curr => Value.from(curr).order(arg).isZero()))
   }
   if (index === 'join') {
     return Value.foreign(arg => arr.join(arg.assertStr()))
@@ -73,7 +73,7 @@ export function findArrayMethod(arr: unknown[], index: string, runtime?: Runtime
   if (index === 'lastIndexOf') {
     return Value.foreign(arg => {
       for (let i = arr.length - 1; i >= 0; --i) {
-        if (Value.from(arr[i]).compare(arg).isZero()) {
+        if (Value.from(arr[i]).order(arg).isZero()) {
           return i
         }
       }
