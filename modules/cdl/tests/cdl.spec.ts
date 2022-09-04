@@ -444,6 +444,34 @@ describe('cdl', () => {
     test('calling a sink evaluates to sink', () => {
       expect(cdl.run(`sink()`)).toEqual(null)
     })
+    test('a sink compared with itself evaluates to true', () => {
+      expect(cdl.run(`sink == sink`)).toEqual(true)
+      expect(cdl.run(`sink != sink`)).toEqual(false)
+    })
+    test('a sink compared with other types evaluates to false', () => {
+      expect(cdl.run(`sink == []`)).toEqual(false)
+      expect(cdl.run(`sink == false`)).toEqual(false)
+      expect(cdl.run(`sink == true`)).toEqual(false)
+      expect(cdl.run(`sink == (fun () sink)`)).toEqual(false)
+      expect(cdl.run(`sink == 0`)).toEqual(false)
+      expect(cdl.run(`sink == 5`)).toEqual(false)
+      expect(cdl.run(`sink == {}`)).toEqual(false)
+      expect(cdl.run(`sink == ''`)).toEqual(false)
+      expect(cdl.run(`sink == 'x'`)).toEqual(false)
+    })
+    test('errors when a sink ordered with other types', () => {
+      expect(() => cdl.run(`sink < []`)).toThrowError('Cannot compare a sink value with a value of another type')
+      expect(() => cdl.run(`sink < false`)).toThrowError('Cannot compare a sink value with a value of another type')
+      expect(() => cdl.run(`sink < true`)).toThrowError('Cannot compare a sink value with a value of another type')
+      expect(() => cdl.run(`sink < (fun () sink)`)).toThrowError(
+        'Cannot compare a sink value with a value of another type',
+      )
+      expect(() => cdl.run(`sink < 0`)).toThrowError('Cannot compare a sink value with a value of another type')
+      expect(() => cdl.run(`sink < 5`)).toThrowError('Cannot compare a sink value with a value of another type')
+      expect(() => cdl.run(`sink < {}`)).toThrowError('Cannot compare a sink value with a value of another type')
+      expect(() => cdl.run(`sink < ''`)).toThrowError('Cannot compare a sink value with a value of another type')
+      expect(() => cdl.run(`sink < 'x'`)).toThrowError('Cannot compare a sink value with a value of another type')
+    })
   })
 
   describe('array methods', () => {
