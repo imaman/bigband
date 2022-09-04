@@ -5,6 +5,8 @@ const err = () => {
   throw new Error(`should not run`)
 }
 
+const fixed = (u: unknown) => () => Value.from(u)
+
 describe('value', () => {
   test('arithmetics', () => {
     expect(Value.num(5).plus(Value.num(3)).export()).toEqual(8)
@@ -134,34 +136,13 @@ describe('value', () => {
   })
   describe('ifElse', () => {
     test('when applied to true evaluates the positive branch', () => {
-      expect(
-        Value.bool(true)
-          .ifElse(
-            () => Value.str('yes'),
-            () => Value.str('no'),
-          )
-          .export(),
-      ).toEqual('yes')
+      expect(Value.bool(true).ifElse(fixed('yes'), fixed('no')).export()).toEqual('yes')
     })
     test('when applied to false evaluates the positive branch', () => {
-      expect(
-        Value.bool(false)
-          .ifElse(
-            () => Value.str('yes'),
-            () => Value.str('no'),
-          )
-          .export(),
-      ).toEqual('no')
+      expect(Value.bool(false).ifElse(fixed('yes'), fixed('no')).export()).toEqual('no')
     })
     test('errors if applied to a non-boolean', () => {
-      expect(() =>
-        Value.num(1)
-          .ifElse(
-            () => Value.str('yes'),
-            () => Value.str('no'),
-          )
-          .export(),
-      ).toThrowError('expected bool but found 1')
+      expect(() => Value.num(1).ifElse(fixed('yes'), fixed('no')).export()).toThrowError('expected bool but found 1')
     })
   })
   describe('sink', () => {
@@ -176,29 +157,15 @@ describe('value', () => {
       expect(sink.over(Value.num(5)).export()).toEqual(null)
     })
     test('ifElse on sink evaluates to sink', () => {
-      expect(
-        sink
-          .ifElse(
-            () => Value.str('y'),
-            () => Value.str('n'),
-          )
-          .export(),
-      ).toEqual(null)
+      expect(sink.ifElse(fixed('y'), fixed('n')).export()).toEqual(null)
     })
     test('access to an attribute of a sink evaluates to sink', () => {
       expect(sink.access('foo').export()).toEqual(null)
     })
     test('calling a sink evaluates to sink', () => {
-      expect(
-        sink
-          .call([], () => {
-            throw new Error(`should not be called`)
-          })
-          .export(),
-      ).toEqual(null)
+      expect(sink.call([], err).export()).toEqual(null)
     })
   })
-  test.todo('ifElse()')
   describe('type erros', () => {
     const five = Value.num(1)
     const t = Value.bool(true)
