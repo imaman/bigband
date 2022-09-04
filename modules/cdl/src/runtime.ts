@@ -208,11 +208,10 @@ export class Runtime {
 
     if (ast.tag === 'if') {
       const c = this.evalNode(ast.condition, table)
-      if (c.assertBool()) {
-        return this.evalNode(ast.positive, table)
-      } else {
-        return this.evalNode(ast.negative, table)
-      }
+      return c.ifElse(
+        () => this.evalNode(ast.positive, table),
+        () => this.evalNode(ast.negative, table),
+      )
     }
 
     if (ast.tag === 'dot') {

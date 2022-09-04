@@ -196,6 +196,19 @@ export class Value {
     return this.inner.tag === 'lambda'
   }
 
+  ifElse(positive: () => Value, negative: () => Value) {
+    const err = badType('bool')
+    return select(this, {
+      arr: err,
+      bool: c => (c ? positive() : negative()),
+      foreign: err,
+      lambda: err,
+      num: err,
+      obj: err,
+      str: err,
+    })
+  }
+
   or(that: () => Value) {
     const err = badType('bool')
     return select(this, {
