@@ -4,6 +4,31 @@ import { switchOn } from './switch-on'
 import { SymbolTable } from './symbol-table'
 import { Value } from './value'
 
+
+
+type Stack = {ast: AstNode, next: Stack} | undefined
+
+function push(ast: AstNode, s: Stack) {
+  return {ast, next: s}
+}
+
+function head(s: Stack) {
+  if (typeof s === 'undefined') {
+    return undefined
+  }
+
+  return s.ast
+}
+
+function pop(s: Stack) {
+  if (typeof s === 'undefined') {
+    throw new Error(`Cannot pop from an empty stack`)
+  }
+
+  return s.next
+}
+
+
 interface Placeholder {
   destination: undefined | Value
 }
