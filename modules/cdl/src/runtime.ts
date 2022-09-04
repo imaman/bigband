@@ -232,11 +232,7 @@ export class Runtime {
   }
 
   call(callee: Value, argValues: Value[]) {
-    if (!callee.isLambda()) {
-      return callee.callForeign(argValues)
-    }
-
-    return callee.callLambda((names, body, lambdaTable: SymbolTable) => {
+    return callee.call(argValues, (names, body, lambdaTable: SymbolTable) => {
       if (names.length > argValues.length) {
         throw new Error(`Arg list length mismatch: expected ${names.length} but got ${argValues.length}`)
       }

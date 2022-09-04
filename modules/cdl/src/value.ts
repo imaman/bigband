@@ -455,31 +455,18 @@ export class Value {
     })
   }
 
-  callLambda(evaluator: LambdaEvaluator) {
-    const err = badType('lambda')
+  call(args: Value[], evaluator: LambdaEvaluator) {
+    const err = badType('lambda', 'foreign')
     return select(this, {
       arr: err,
       bool: err,
-      foreign: err,
+      foreign: f => from(f(...args)),
       lambda: l =>
         evaluator(
           l.ast.formalArgs.map(a => a.t.text),
           l.ast.body,
           l.table,
         ),
-      num: err,
-      obj: err,
-      str: err,
-    })
-  }
-
-  callForeign(args: Value[]) {
-    const err = badType('foreign')
-    return select(this, {
-      arr: err,
-      bool: err,
-      foreign: f => from(f(...args)),
-      lambda: err,
       num: err,
       obj: err,
       str: err,

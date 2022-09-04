@@ -1,6 +1,10 @@
 import { Runtime } from '../src/runtime'
 import { Value } from '../src/value'
 
+const err = () => {
+  throw new Error(`should not run`)
+}
+
 describe('value', () => {
   test('arithmetics', () => {
     expect(Value.num(5).plus(Value.num(3)).export()).toEqual(8)
@@ -165,7 +169,7 @@ describe('value', () => {
   describe('foreign code calls', () => {
     test('invokes the given function', () => {
       const indexOf = Value.foreign(s => 'the quick brown fox jumps over the lazy dog'.indexOf(s.assertStr()))
-      expect(indexOf.callForeign([Value.str('quick')]).export()).toEqual(4)
+      expect(indexOf.call([Value.str('quick')], err).export()).toEqual(4)
     })
   })
   describe('string operatios', () => {
@@ -204,7 +208,7 @@ describe('value', () => {
       ['trimStart', [], 'four scores AND seven '],
     ])('provides the .%s() method', (name, args, expected) => {
       const callee = Value.str(' four scores AND seven ').access(name)
-      const actual = callee.callForeign(args)
+      const actual = callee.call(args, err)
       expect(actual.export()).toEqual(expected)
     })
   })
@@ -259,7 +263,7 @@ describe('value', () => {
       const input = Value.arr([Value.str('foo'), Value.str('bar'), Value.str('foo'), Value.str('goo')])
       const before = JSON.parse(JSON.stringify(input))
       const callee = input.access(name, r)
-      const actual = callee.callForeign(args)
+      const actual = callee.call(args, err)
       expect(actual.export()).toEqual(expected)
       // Make sure the input array was not accidentally mutated.
       expect(JSON.parse(JSON.stringify(input))).toEqual(before)
@@ -268,7 +272,7 @@ describe('value', () => {
       const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
       const input = Value.arr([Value.arr([Value.str('a'), Value.str('b')]), Value.str('c')])
       const callee = input.access('flat', r)
-      const actual = callee.callForeign([])
+      const actual = callee.call([], err)
       expect(actual.export()).toEqual(['a', 'b', 'c'])
     })
     test('.reduce() reduces to the left', () => {
@@ -281,7 +285,7 @@ describe('value', () => {
       ])
 
       const callee = input.access('reduce', r)
-      const actual = callee.callForeign([Value.foreign((x, y) => [...x.assertArr(), ...y.assertArr()]), Value.arr([])])
+      const actual = callee.call([Value.foreign((x, y) => [...x.assertArr(), ...y.assertArr()]), Value.arr([])], err)
       expect(actual.export()).toEqual([0, 1, 2, 3, 4, 5])
     })
     test('.reduceRight() reduces to the right', () => {
@@ -294,7 +298,7 @@ describe('value', () => {
       ])
 
       const callee = input.access('reduceRight', r)
-      const actual = callee.callForeign([Value.foreign((x, y) => [...x.assertArr(), ...y.assertArr()]), Value.arr([])])
+      const actual = callee.call([Value.foreign((x, y) => [...x.assertArr(), ...y.assertArr()]), Value.arr([])], err)
       expect(actual.export()).toEqual([4, 5, 2, 3, 0, 1])
     })
   })
