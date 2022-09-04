@@ -83,12 +83,7 @@ export class Runtime {
         return rhs
       }
       if (ast.operator === '&&') {
-        if (!lhs.assertBool()) {
-          return Value.bool(false)
-        }
-        const rhs = this.evalNode(ast.rhs, table)
-        rhs.assertBool()
-        return rhs
+        return lhs.and(() => this.evalNode(ast.rhs, table))
       }
 
       const rhs = this.evalNode(ast.rhs, table)

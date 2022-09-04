@@ -33,10 +33,26 @@ describe('value', () => {
       expect(Value.bool(true).or(Value.bool(true)).export()).toEqual(true)
     })
     test('and', () => {
-      expect(Value.bool(false).and(Value.bool(false)).export()).toEqual(false)
-      expect(Value.bool(false).and(Value.bool(true)).export()).toEqual(false)
-      expect(Value.bool(true).and(Value.bool(false)).export()).toEqual(false)
-      expect(Value.bool(true).and(Value.bool(true)).export()).toEqual(true)
+      expect(
+        Value.bool(false)
+          .and(() => Value.bool(false))
+          .export(),
+      ).toEqual(false)
+      expect(
+        Value.bool(false)
+          .and(() => Value.bool(true))
+          .export(),
+      ).toEqual(false)
+      expect(
+        Value.bool(true)
+          .and(() => Value.bool(false))
+          .export(),
+      ).toEqual(false)
+      expect(
+        Value.bool(true)
+          .and(() => Value.bool(true))
+          .export(),
+      ).toEqual(true)
     })
   })
   test('comparisons of booleans', () => {
@@ -123,7 +139,7 @@ describe('value', () => {
     })
     test('emits erros when boolean operations are applied to a number (either lhs or rhs)', () => {
       check(five, t, (x, y) => x.or(y))
-      check(five, t, (x, y) => x.and(y))
+      check(five, t, (x, y) => x.and(() => y))
       check(five, five, x => x.not())
       expect(1).toEqual(1) // make the linter happy
     })
