@@ -206,7 +206,7 @@ describe('value', () => {
     })
     describe('comparisons', () => {
       test('comparing a sink with itself evaluates to true', () => {
-        expect(() => sink.compare(sink).export()).toEqual(true)
+        expect(sink.compare(sink).export()).toEqual(true)
       })
       test('erros when comparing a sink with a non-sink', () => {
         expect(() => sink.compare(Value.arr([])).export()).toThrowError('Cannot compare a')
