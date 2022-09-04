@@ -128,6 +128,7 @@ describe('value', () => {
     const v = Value.obj({ x: Value.num(1) })
     expect(JSON.stringify(v)).toEqual('{"x":1}')
   })
+  test.todo('ifElse()')
   describe('type erros', () => {
     const five = Value.num(1)
     const t = Value.bool(true)

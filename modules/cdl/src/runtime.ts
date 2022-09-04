@@ -232,21 +232,21 @@ export class Runtime {
   }
 
   call(callee: Value, argValues: Value[]) {
-    if (callee.isLambda()) {
-      const l = callee.assertLambda()
-
-      if (l.ast.formalArgs.length > argValues.length) {
-        throw new Error(`Arg list length mismatch: expected ${l.ast.formalArgs.length} but got ${argValues.length}`)
-      }
-      let newTable = l.table
-      for (let i = 0; i < l.ast.formalArgs.length; ++i) {
-        const name = l.ast.formalArgs[i].t.text
-        newTable = new SymbolFrame(name, { destination: argValues[i] }, newTable)
-      }
-
-      return this.evalNode(l.ast.body, newTable)
+    if (!callee.isLambda()) {
+      return callee.callForeign(argValues)
     }
 
-    return callee.callForeign(argValues)
+    const l = callee.assertLambda()
+
+    if (l.ast.formalArgs.length > argValues.length) {
+      throw new Error(`Arg list length mismatch: expected ${l.ast.formalArgs.length} but got ${argValues.length}`)
+    }
+    let newTable = l.table
+    for (let i = 0; i < l.ast.formalArgs.length; ++i) {
+      const name = l.ast.formalArgs[i].t.text
+      newTable = new SymbolFrame(name, { destination: argValues[i] }, newTable)
+    }
+
+    return this.evalNode(l.ast.body, newTable)
   }
 }
