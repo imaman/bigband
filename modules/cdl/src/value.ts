@@ -42,8 +42,9 @@ function inspectValue(u: unknown) {
   return JSON.stringify(u)
 }
 
-function badType(expected: Tag, ...moreExpected: Tag[]) {
-  return (_u: unknown, _actual: Tag, v: Value) => {
+const badType =
+  (expected: Tag, ...moreExpected: Tag[]) =>
+  (_u: unknown, _actual: Tag, v: Value) => {
     if (moreExpected.length === 0) {
       throw new Error(`value type error: expected ${expected} but found ${inspectValue(v)}`)
     }
@@ -52,7 +53,6 @@ function badType(expected: Tag, ...moreExpected: Tag[]) {
       `value type error: expected either ${moreExpected.join(', ')} or ${expected} but found ${inspectValue(v)}`,
     )
   }
-}
 
 /**
  * Allows the caller to "see" the native value held by a Value object. The caller supplies the `cases` object
