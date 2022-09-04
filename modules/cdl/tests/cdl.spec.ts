@@ -270,6 +270,10 @@ describe('cdl', () => {
       test('supports chains of attribute accesses mixing the .<ident> and the [<name>] notations', () => {
         expect(cdl.run(`let o = {b: {x: {M: 5}}}; [o["b"].x["M"], o.b["x"].M, o.b.x["M"]]`)).toEqual([5, 5, 5])
       })
+      test('supports chains of calls to nested attributes which are lambda expressions', () => {
+        expect(cdl.run(`let o = {a: fun () { b: fun () { c: fun () { d: 'x' }}}}; o.a().b().c().d`)).toEqual('x')
+        expect(cdl.run(`let o = {a: fun () { b: { c: fun () { d: 'x' }}}}; o.a().b.c().d`)).toEqual('x')
+      })
       test('the <name> value at the [<name>] notation can be a computed value', () => {
         expect(
           cdl.run(`let q = fun (x) x + "eb"; let o = {Jan: 1, Feb: 2, May: 5}; [o["Ja" + 'n'], o[q('F')]]`),
@@ -622,8 +626,8 @@ describe('cdl', () => {
     })
   })
   describe('evaluation stack', () => {
-    test.only('stackoverflow', () => {
-      expect(cdl.run(`'abcdefghijkl'.split('').length`)).toEqual(-12)
+    test.skip('stackoverflow', () => {
+      expect(cdl.run(`let bigList = 'a'.repeat(1000).split('').length`)).toEqual(1000)
       // expect(cdl.run(`'a,b,c'.split(',').length`)).toEqual(80000*-1)
     })
   })
