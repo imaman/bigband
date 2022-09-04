@@ -434,6 +434,20 @@ export class Value {
     })
   }
 
+  isTrue(): boolean {
+    const err = badType('bool')
+    return selectRaw(this, {
+      arr: err,
+      bool: b => b,
+      foreign: err,
+      lambda: err,
+      num: err,
+      obj: err,
+      sink: err,
+      str: err,
+    })
+  }
+
   isZero(): boolean {
     const err = badType('num')
     return selectRaw(this, {
