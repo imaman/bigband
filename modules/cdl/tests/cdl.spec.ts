@@ -109,7 +109,7 @@ describe('cdl', () => {
       expect(() => cdl.run(`+[]`)).toThrowError('expected num but found []')
       expect(() => cdl.run(`+{}`)).toThrowError('expected num but found {}')
       expect(() => cdl.run(`+(fun (x) x*2)`)).toThrowError('expected num but found "fun (x) (x * 2)"')
-      expect(() => cdl.trace(`+'abc'`)).toThrowError(`expected num but found "abc"`)
+      expect(() => cdl.run(`+'abc'`)).toThrowError(`expected num but found "abc"`)
     })
     test('-', () => {
       expect(cdl.run(`-7`)).toEqual(-7)
