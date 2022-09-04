@@ -236,17 +236,17 @@ export class Runtime {
       return callee.callForeign(argValues)
     }
 
-    const l = callee.assertLambda()
+    return callee.callLambda((names, body, lambdaTable: SymbolTable) => {
+      if (names.length > argValues.length) {
+        throw new Error(`Arg list length mismatch: expected ${names.length} but got ${argValues.length}`)
+      }
+      let newTable = lambdaTable
+      for (let i = 0; i < names.length; ++i) {
+        const name = names[i]
+        newTable = new SymbolFrame(name, { destination: argValues[i] }, newTable)
+      }
 
-    if (l.ast.formalArgs.length > argValues.length) {
-      throw new Error(`Arg list length mismatch: expected ${l.ast.formalArgs.length} but got ${argValues.length}`)
-    }
-    let newTable = l.table
-    for (let i = 0; i < l.ast.formalArgs.length; ++i) {
-      const name = l.ast.formalArgs[i].t.text
-      newTable = new SymbolFrame(name, { destination: argValues[i] }, newTable)
-    }
-
-    return this.evalNode(l.ast.body, newTable)
+      return this.evalNode(body, newTable)
+    })
   }
 }

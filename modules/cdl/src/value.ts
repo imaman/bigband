@@ -1,4 +1,4 @@
-import { Lambda, show } from './ast-node'
+import { AstNode, Lambda, show } from './ast-node'
 import { failMe } from './fail-me'
 import { findArrayMethod } from './find-array-method'
 import { findStringMethod } from './find-string-method'
@@ -6,6 +6,8 @@ import { Runtime } from './runtime'
 import { shouldNeverHappen } from './should-never-happen'
 import { switchOn } from './switch-on'
 import { SymbolTable } from './symbol-table'
+
+type LambdaEvaluator = (names: string[], ast: AstNode, table: SymbolTable) => Value
 
 type Inner =
   | { tag: 'arr'; val: Value[] }
@@ -450,6 +452,24 @@ export class Value {
       num: err,
       obj: o => o[Value.toStringOrNumber(indexValue)],
       str: s => findStringMethod(s, indexValue),
+    })
+  }
+
+  callLambda(evaluator: LambdaEvaluator) {
+    const err = badType('lambda')
+    return select(this, {
+      arr: err,
+      bool: err,
+      foreign: err,
+      lambda: l =>
+        evaluator(
+          l.ast.formalArgs.map(a => a.t.text),
+          l.ast.body,
+          l.table,
+        ),
+      num: err,
+      obj: err,
+      str: err,
     })
   }
 
