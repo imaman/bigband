@@ -64,9 +64,11 @@ export class Runtime {
       for (let curr = this.stack; curr; curr = curr?.next) {
         nodes.push(show(curr.ast))
       }
-      const formatted = nodes.join('\n')
+      nodes.reverse()
+      const spacer = '  '
+      const formatted = nodes.join(`\n${spacer}`)
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      throw new Error(`${(e as { message?: string }).message} when evaluating:\n${formatted}`)
+      throw new Error(`${(e as { message?: string }).message} when evaluating:\n${spacer}${formatted}`)
     }
   }
 
