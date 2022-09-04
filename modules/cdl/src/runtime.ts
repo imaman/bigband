@@ -4,20 +4,10 @@ import { switchOn } from './switch-on'
 import { SymbolTable } from './symbol-table'
 import { Value } from './value'
 
-
-
-type Stack = {ast: AstNode, next: Stack} | undefined
+type Stack = { ast: AstNode; next: Stack } | undefined
 
 function push(ast: AstNode, s: Stack) {
-  return {ast, next: s}
-}
-
-function head(s: Stack) {
-  if (typeof s === 'undefined') {
-    return undefined
-  }
-
-  return s.ast
+  return { ast, next: s }
 }
 
 function pop(s: Stack) {
@@ -27,7 +17,6 @@ function pop(s: Stack) {
 
   return s.next
 }
-
 
 interface Placeholder {
   destination: undefined | Value
@@ -58,6 +47,7 @@ class EmptySymbolTable implements SymbolTable {
 export type Verbosity = 'quiet' | 'trace'
 
 export class Runtime {
+  private stack: Stack = undefined
   constructor(private readonly root: AstNode, private readonly verbosity: Verbosity = 'quiet') {}
 
   run(): Value {
@@ -67,10 +57,21 @@ export class Runtime {
     const entries = Value.foreign(o => o.entries())
     const fromEntries = Value.foreign(o => o.fromEntries())
     const lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty)
-    return this.evalNode(this.root, lib)
+    try {
+      return this.evalNode(this.root, lib)
+    } catch (e) {
+      const nodes: string[] = []
+      for (let curr = this.stack; curr; curr = curr?.next) {
+        nodes.push(show(curr.ast))
+      }
+      const formatted = nodes.join('\n')
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      throw new Error(`${(e as { message?: string }).message} when evaluating:\n${formatted}`)
+    }
   }
 
   private evalNode(ast: AstNode, table: SymbolTable): Value {
+    this.stack = push(ast, this.stack)
     const ret = this.evalNodeImpl(ast, table)
     switchOn(this.verbosity, {
       quiet: () => {},
@@ -79,6 +80,7 @@ export class Runtime {
         console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
       },
     })
+    this.stack = pop(this.stack)
     return ret
   }
 
