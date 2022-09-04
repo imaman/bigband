@@ -550,32 +550,32 @@ export class Value {
 
   fromEntries() {
     const err = badType('arr')
-    const pairs = selectRaw(this, {
+    return select(this, {
       arr: a =>
-        a.map(x =>
-          selectRaw(x, {
-            arr: pair => {
-              pair.length === 2 || failMe(`each entry must be a [key, value] pair`)
-              return [pair[0].assertStr(), pair[1]]
-            },
-            bool: err,
-            foreign: err,
-            lambda: err,
-            num: err,
-            obj: err,
-            sink: err,
-            str: err,
-          }),
+        Object.fromEntries(
+          a.map(x =>
+            selectRaw(x, {
+              arr: pair => {
+                pair.length === 2 || failMe(`each entry must be a [key, value] pair`)
+                return [pair[0].assertStr(), pair[1]]
+              },
+              bool: err,
+              foreign: err,
+              lambda: err,
+              num: err,
+              obj: err,
+              sink: err,
+              str: err,
+            }),
+          ),
         ),
       bool: err,
       foreign: err,
       lambda: err,
       num: err,
       obj: err,
-      sink: err,
       str: err,
     })
-    return Value.obj(Object.fromEntries(pairs))
   }
 
   toString() {
@@ -626,7 +626,7 @@ function from(u: unknown): Value {
   }
 
   if (u && typeof u === 'object') {
-    Value.obj(Object.fromEntries(Object.entries(u).map(([k, v]) => [k, from(v)])))
+    return Value.obj(Object.fromEntries(Object.entries(u).map(([k, v]) => [k, from(v)])))
   }
 
   throw new Error(`cannot convert ${JSON.stringify(u)} to Value`)

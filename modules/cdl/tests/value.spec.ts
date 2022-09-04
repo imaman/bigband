@@ -155,15 +155,54 @@ describe('value', () => {
       expect(sink.minus(Value.num(5)).export()).toEqual(null)
       expect(sink.times(Value.num(5)).export()).toEqual(null)
       expect(sink.over(Value.num(5)).export()).toEqual(null)
+      expect(sink.power(Value.num(5)).export()).toEqual(null)
+      expect(sink.modulo(Value.num(5)).export()).toEqual(null)
+      expect(sink.negate().export()).toEqual(null)
+
+      expect(Value.num(5).plus(sink).export()).toEqual(null)
+      expect(Value.num(5).minus(sink).export()).toEqual(null)
+      expect(Value.num(5).times(sink).export()).toEqual(null)
+      expect(Value.num(5).over(sink).export()).toEqual(null)
+      expect(Value.num(5).power(sink).export()).toEqual(null)
+      expect(Value.num(5).modulo(sink).export()).toEqual(null)
     })
-    test('ifElse on sink evaluates to sink', () => {
+    test('boolean operations on sink evaluate to sink', () => {
+      expect(sink.and(fixed(true)).export()).toEqual(null)
+      expect(sink.or(fixed(true)).export()).toEqual(null)
+      expect(sink.not().export()).toEqual(null)
+    })
+    test('when sink is the right-hand-side of a boolean expression, the result is sink only if the left-hand-side dictates so', () => {
+      expect(Value.bool(true).and(fixed(sink)).export()).toEqual(null)
+      expect(Value.bool(false).and(fixed(sink)).export()).toEqual(false)
+      expect(Value.bool(true).or(fixed(sink)).export()).toEqual(true)
+      expect(Value.bool(false).or(fixed(sink)).export()).toEqual(null)
+    })
+    test('ifElse with sink condition evaluates to sink', () => {
       expect(sink.ifElse(fixed('y'), fixed('n')).export()).toEqual(null)
+    })
+    test('ifElse with sink positive expression evaluates to sink only if the condition is true', () => {
+      expect(Value.bool(true).ifElse(fixed(sink), fixed(-200)).export()).toEqual(null)
+      expect(Value.bool(false).ifElse(fixed(sink), fixed(-200)).export()).toEqual(-200)
+    })
+    test('ifElse with sink negative expression evaluates to sink only if the condition is false', () => {
+      expect(Value.bool(true).ifElse(fixed(-300), fixed(sink)).export()).toEqual(-300)
+      expect(Value.bool(false).ifElse(fixed(-300), fixed(sink)).export()).toEqual(null)
     })
     test('access to an attribute of a sink evaluates to sink', () => {
       expect(sink.access('foo').export()).toEqual(null)
     })
     test('calling a sink evaluates to sink', () => {
       expect(sink.call([], err).export()).toEqual(null)
+    })
+
+    test('applying .keys() to sink evaluates to sink', () => {
+      expect(sink.keys().export()).toEqual(null)
+    })
+    test('applying .entries() to sink evaluates to sink', () => {
+      expect(sink.entries().export()).toEqual(null)
+    })
+    test('applying .fromEntries() to sink evaluates to sink', () => {
+      expect(sink.fromEntries().export()).toEqual(null)
     })
   })
   describe('type erros', () => {
