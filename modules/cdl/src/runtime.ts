@@ -240,12 +240,7 @@ export class Runtime {
       if (names.length > argValues.length) {
         throw new Error(`Arg list length mismatch: expected ${names.length} but got ${argValues.length}`)
       }
-      let newTable = lambdaTable
-      for (let i = 0; i < names.length; ++i) {
-        const name = names[i]
-        newTable = new SymbolFrame(name, { destination: argValues[i] }, newTable)
-      }
-
+      const newTable = names.reduce((t, n, i) => new SymbolFrame(n, { destination: argValues[i] }, t), lambdaTable)
       return this.evalNode(body, newTable)
     })
   }
