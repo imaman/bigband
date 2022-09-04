@@ -463,11 +463,13 @@ export class Value {
   }
 
   /**
-   * Determines the order beteween `this` and the given argument (`that`). The behavior of this method should adhere to the following principles:
-   * (i) order: if a < b then b >= a (i.e., it provides a consistent answer regardless of the whether `this` is `a`
+   * Determines the order beteween `this` and the given argument (`that`). The behavior of this method is dictated by
+   * the following principles:
+   *
+   * (i) if a < b then b >= a (i.e., it provides a consistent answer regardless of the whether `this` is `a`
    *    and `that` is `b` or vice versa)
-   * (ii) comparing two values of different type result in runtime error.
-   * (iii) comparing a value with itself evaluates to `true`
+   * (ii) ordering two values of different type result in runtime error.
+   * (iii) orderingg a value with itself evaluates to `0`
    *
    * Principles (i) and (iii) realizes the intuitive behavior of comparisons. (ii) realizes the idea that
    * "one cannot compare oranges and apples". This is essentially a design decision. We could have gone with defining
