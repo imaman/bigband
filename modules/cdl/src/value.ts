@@ -30,6 +30,7 @@ type Cases<R> = {
   num: (arg: number, tag: Tag, v: Value) => R
   obj: (arg: Record<string, Value>, tag: Tag, v: Value) => R
   str: (arg: string, tag: Tag, v: Value) => R
+  sink?: () => R
 }
 
 function inspectValue(u: unknown) {
@@ -69,7 +70,7 @@ function selectRaw<R>(v: Value, cases: Cases<R>): R {
     return cases.obj(inner.val, inner.tag, v)
   }
   if (inner.tag === 'sink') {
-    throw new Error(`Cannot perform an operation on undefined`)
+    return cases.sink?.() ?? failMe(`Cannot evaluate a sink value`)
   }
   if (inner.tag === 'str') {
     return cases.str(inner.val, inner.tag, v)
@@ -118,15 +119,7 @@ export class Value {
     return this.inner.tag === 'sink'
   }
 
-  unwrap(t: Tag): unknown
-  unwrap(): unknown
-  unwrap(t?: Tag): unknown {
-    if (t !== undefined) {
-      if (t !== this.inner.tag) {
-        throw new Error(`Type mismatch: expected <${t}> but actual type is <${this.inner.tag}>`)
-      }
-    }
-
+  unwrap(): unknown {
     return this.inner.val
   }
 
