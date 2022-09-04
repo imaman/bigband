@@ -196,14 +196,15 @@ export class Value {
     return this.inner.tag === 'lambda'
   }
 
-  or(that: Value) {
+  or(that: () => Value) {
     const err = badType('bool')
     return select(this, {
       arr: err,
       bool: lhs =>
-        select(that, {
+        lhs ||
+        select(that(), {
           arr: err,
-          bool: rhs => lhs || rhs,
+          bool: rhs => rhs,
           foreign: err,
           lambda: err,
           num: err,

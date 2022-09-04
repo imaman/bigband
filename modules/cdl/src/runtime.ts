@@ -74,13 +74,7 @@ export class Runtime {
     if (ast.tag === 'binaryOperator') {
       const lhs = this.evalNode(ast.lhs, table)
       if (ast.operator === '||') {
-        if (lhs.assertBool()) {
-          return Value.bool(true)
-        }
-
-        const rhs = this.evalNode(ast.rhs, table)
-        rhs.assertBool()
-        return rhs
+        return lhs.or(() => this.evalNode(ast.rhs, table))
       }
       if (ast.operator === '&&') {
         return lhs.and(() => this.evalNode(ast.rhs, table))

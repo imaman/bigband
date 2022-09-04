@@ -27,10 +27,26 @@ describe('value', () => {
   })
   describe('boolean operators', () => {
     test('or', () => {
-      expect(Value.bool(false).or(Value.bool(false)).export()).toEqual(false)
-      expect(Value.bool(false).or(Value.bool(true)).export()).toEqual(true)
-      expect(Value.bool(true).or(Value.bool(false)).export()).toEqual(true)
-      expect(Value.bool(true).or(Value.bool(true)).export()).toEqual(true)
+      expect(
+        Value.bool(false)
+          .or(() => Value.bool(false))
+          .export(),
+      ).toEqual(false)
+      expect(
+        Value.bool(false)
+          .or(() => Value.bool(true))
+          .export(),
+      ).toEqual(true)
+      expect(
+        Value.bool(true)
+          .or(() => Value.bool(false))
+          .export(),
+      ).toEqual(true)
+      expect(
+        Value.bool(true)
+          .or(() => Value.bool(true))
+          .export(),
+      ).toEqual(true)
     })
     test('and', () => {
       expect(
@@ -115,6 +131,7 @@ describe('value', () => {
   describe('type erros', () => {
     const five = Value.num(1)
     const t = Value.bool(true)
+    const f = Value.bool(false)
 
     const check = (a: Value, b: Value | Value[], f: (lhs: Value, rhs: Value) => void) => {
       const arr = Array.isArray(b) ? b : [b]
@@ -138,7 +155,7 @@ describe('value', () => {
       expect(1).toEqual(1) // make the linter happy
     })
     test('emits erros when boolean operations are applied to a number (either lhs or rhs)', () => {
-      check(five, t, (x, y) => x.or(y))
+      check(five, f, (x, y) => x.or(() => y))
       check(five, t, (x, y) => x.and(() => y))
       check(five, five, x => x.not())
       expect(1).toEqual(1) // make the linter happy
