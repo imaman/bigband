@@ -16,6 +16,7 @@ type Inner =
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
   | { tag: 'num'; val: number }
   | { tag: 'obj'; val: Record<string, Value> }
+  | { tag: 'sink'; val: undefined }
   | { tag: 'str'; val: string }
 
 type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
@@ -67,6 +68,9 @@ function selectRaw<R>(v: Value, cases: Cases<R>): R {
   if (inner.tag === 'obj') {
     return cases.obj(inner.val, inner.tag, v)
   }
+  if (inner.tag === 'sink') {
+    throw new Error(`Cannot perform an operation on undefined`)
+  }
   if (inner.tag === 'str') {
     return cases.str(inner.val, inner.tag, v)
   }
@@ -75,6 +79,9 @@ function selectRaw<R>(v: Value, cases: Cases<R>): R {
 }
 
 function select<R>(v: Value, cases: Cases<R>): Value {
+  if (v.isSink()) {
+    return v
+  }
   return Value.from(selectRaw(v, cases))
 }
 
@@ -86,6 +93,9 @@ export class Value {
   }
   static num(val: number): Value {
     return new Value({ val, tag: 'num' })
+  }
+  static sink(): Value {
+    return new Value({ val: undefined, tag: 'sink' })
   }
   static str(val: string): Value {
     return new Value({ val, tag: 'str' })
@@ -102,6 +112,10 @@ export class Value {
 
   static foreign(f: (...args: Value[]) => unknown) {
     return new Value({ tag: 'foreign', val: f })
+  }
+
+  isSink() {
+    return this.inner.tag === 'sink'
   }
 
   unwrap(t: Tag): unknown
@@ -528,7 +542,7 @@ export class Value {
   }
 
   toString() {
-    return this.inner.val.toString()
+    return this.inner.val?.toString() ?? 'sink'
   }
 
   toJSON(): unknown {
@@ -570,7 +584,7 @@ function from(u: unknown): Value {
   }
 
   if (typeof u === 'undefined') {
-    throw new Error(`Cannot convert undefined to Value`)
+    return Value.sink()
   }
 
   if (u && typeof u === 'object') {
