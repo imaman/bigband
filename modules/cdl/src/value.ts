@@ -129,6 +129,20 @@ export class Value {
   static num(val: number): Value {
     return new Value({ val, tag: 'num' })
   }
+  /**
+   * Returns a Value which is essentially a "sink": (almost) every computation involving a sink evaluates to sink. A few
+   * quick examples: `5+sink`, `sink.x`, `sink()`, `Object.keys(sink)`, `if (sink) 4 else 8` all evaluate to `sink`. The
+   * raitonale is that once an expression evaluates to `sink` all expressions depending on it also evaluate to `sink`.
+   *
+   * There are however a few (intentional) exemptions:
+   * (i) a sink can be passed as an actual parameter in a function call. Hence `(fun (x,y) y)(sink, 5)` will evaluate
+   *    to `5`.
+   * (ii) a sink can be compared with itself.
+   * (iii) in `if()` expressions, only one of the branches is evlauated (based on the condition's value). As a result,
+   *    evluation of a sink-producing branch can be skipping. Specifically, `if (true) 5 else sink` evaluates to `5`.
+   * (iv) in `||` and `&&` expressions, the evaluation of the right hand side can be skipped. Specifically,
+   *    `true || sink` evaluates to `true` and `false && sink` evaluates to `false`.
+   */
   static sink(): Value {
     return new Value({ val: undefined, tag: 'sink' })
   }
@@ -434,9 +448,30 @@ export class Value {
     })
   }
 
+  /**
+   * Compares `this` and the given argument (`that`). The behavior of this method should adhere to the following principles:
+   * (i) order: if a < b then b >= a (i.e., it provides a consistent answer regardless of the order of a and b).
+   * (ii) comparing two values of different type result in runtime error.
+   * (iii) comparing a value with itself evaluates to `true`
+   *
+   * Principles (i) and (iii) realizes the intuitive behavior of comparisons. (ii) realizes the idea that
+   * "one cannot compare oranges and apples". This is essentially a design decision. We could have gone with defining
+   * some order between types (the tag of a Value object), but we feel that a saner approach is to say "we do not know
+   * how to sort an array containing numbers and booleans".
+   *
+   * IMPORTANT: these principles overpower other principles. In parituclar, the principles that "an expression with
+   * sink evaluates to sink" is trumped by comparison principle (ii)
+   *
+   * @param that
+   * @returns
+   */
   compare(that: Value): Value {
     const err = (_u: unknown, t: Tag) => {
       throw new Error(`Cannot compare a value of type ${t}`)
+    }
+
+    if (this.inner.tag !== that.inner.tag) {
+      throw new Error(`Cannot compare a ${this.inner.tag} value with a value of another type (${that.inner.tag})`)
     }
 
     return select(this, {

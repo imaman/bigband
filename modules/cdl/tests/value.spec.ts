@@ -205,14 +205,27 @@ describe('value', () => {
       expect(sink.fromEntries().export()).toEqual(null)
     })
     describe('comparisons', () => {
-      test('comparing with sink evaluates to sink (including when comparing with itself)', () => {
-        expect(sink.compare(sink).export()).toEqual(null)
-        expect(sink.compare(Value.bool(false)).export()).toEqual(null)
-        expect(sink.compare(Value.bool(true)).export()).toEqual(null)
-        expect(sink.compare(Value.num(0)).export()).toEqual(null)
-        expect(sink.compare(Value.num(5)).export()).toEqual(null)
-        expect(sink.compare(Value.str('')).export()).toEqual(null)
-        expect(sink.compare(Value.str('a')).export()).toEqual(null)
+      test('comparing a sink with itself evaluates to true', () => {
+        expect(() => sink.compare(sink).export()).toEqual(true)
+      })
+      test('erros when comparing a sink with a non-sink', () => {
+        expect(() => sink.compare(Value.arr([])).export()).toThrowError('Cannot compare a')
+        expect(() => sink.compare(Value.bool(false)).export()).toThrowError('Cannot compare a')
+        expect(() => sink.compare(Value.bool(true)).export()).toThrowError('Cannot compare a')
+        expect(() => sink.compare(Value.num(0)).export()).toThrowError('Cannot compare a')
+        expect(() => sink.compare(Value.num(5)).export()).toThrowError('Cannot compare a')
+        expect(() => sink.compare(Value.obj({})).export()).toThrowError('Cannot compare a')
+        expect(() => sink.compare(Value.str('')).export()).toThrowError('Cannot compare a')
+        expect(() => sink.compare(Value.str('a')).export()).toThrowError('Cannot compare a')
+
+        expect(() => Value.arr([]).compare(sink).export()).toThrowError('Cannot compare a')
+        expect(() => Value.bool(false).compare(sink).export()).toThrowError('Cannot compare a')
+        expect(() => Value.bool(true).compare(sink).export()).toThrowError('Cannot compare a')
+        expect(() => Value.num(0).compare(sink).export()).toThrowError('Cannot compare a')
+        expect(() => Value.num(5).compare(sink).export()).toThrowError('Cannot compare a')
+        expect(() => Value.obj({}).compare(sink).export()).toThrowError('Cannot compare a')
+        expect(() => Value.str('').compare(sink).export()).toThrowError('Cannot compare a')
+        expect(() => Value.str('a').compare(sink).export()).toThrowError('Cannot compare a')
       })
     })
   })
@@ -223,8 +236,8 @@ describe('value', () => {
 
     const check = (a: Value, b: Value | Value[], f: (lhs: Value, rhs: Value) => void) => {
       const arr = Array.isArray(b) ? b : [b]
-      const r =
-        /(^value type error: expected)|(^Type error: operator cannot be applied to operands of type)|(^Cannot compare when the left-hand-side value is of type)|(^Not a)/
+      const r = /(^value type error: expected)|(^Cannot compare a )/
+      // /(^value type error: expected)|(^Type error: operator cannot be applied to operands of type)|(^Cannot compare when the left-hand-side value is of type)|(^Not a)/
       for (const curr of arr) {
         expect(() => f(a, curr)).toThrowError(r)
         expect(() => f(curr, a)).toThrowError(r)
