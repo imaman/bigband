@@ -4,6 +4,7 @@ import { findArrayMethod } from './find-array-method'
 import { findStringMethod } from './find-string-method'
 import { Runtime } from './runtime'
 import { shouldNeverHappen } from './should-never-happen'
+import { switchOn } from './switch-on'
 import { SymbolTable } from './symbol-table'
 
 type Inner =
@@ -334,12 +335,46 @@ export class Value {
     return Value.num(0).minus(this)
   }
 
-  compare(that: Value): number {
+  isToZero(comparator: '<' | '<=' | '==' | '!=' | '>=' | '>'): Value {
+    const err = badType('num')
+    return select(this, {
+      arr: err,
+      bool: err,
+      foreign: err,
+      lambda: err,
+      num: n =>
+        switchOn(comparator, {
+          '<': () => Value.bool(n < 0),
+          '<=': () => Value.bool(n <= 0),
+          '==': () => Value.bool(n == 0),
+          '!=': () => Value.bool(n !== 0),
+          '>=': () => Value.bool(n >= 0),
+          '>': () => Value.bool(n > 0),
+        }),
+      obj: err,
+      str: err,
+    })
+  }
+
+  isZero(): boolean {
+    const err = badType('num')
+    return selectRaw(this, {
+      arr: err,
+      bool: err,
+      foreign: err,
+      lambda: err,
+      num: n => n === 0,
+      obj: err,
+      str: err,
+    })
+  }
+
+  compare(that: Value): Value {
     const err = (_u: unknown, t: Tag) => {
       throw new Error(`Cannot compare a value of type ${t}`)
     }
 
-    return selectRaw(this, {
+    return select(this, {
       arr: err,
       bool: lhs => {
         const rhs = that.assertBool()

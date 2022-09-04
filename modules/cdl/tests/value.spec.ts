@@ -13,11 +13,11 @@ describe('value', () => {
     expect(Value.num(2).power(Value.num(8)).export()).toEqual(256)
   })
   test('comparisons of numbers', () => {
-    expect(Value.num(5).compare(Value.num(3))).toEqual(1)
-    expect(Value.num(5).compare(Value.num(4))).toEqual(1)
-    expect(Value.num(5).compare(Value.num(5))).toEqual(0)
-    expect(Value.num(5).compare(Value.num(6))).toEqual(-1)
-    expect(Value.num(5).compare(Value.num(7))).toEqual(-1)
+    expect(Value.num(5).compare(Value.num(3)).export()).toEqual(1)
+    expect(Value.num(5).compare(Value.num(4)).export()).toEqual(1)
+    expect(Value.num(5).compare(Value.num(5)).export()).toEqual(0)
+    expect(Value.num(5).compare(Value.num(6)).export()).toEqual(-1)
+    expect(Value.num(5).compare(Value.num(7)).export()).toEqual(-1)
   })
   test('booleans', () => {
     expect(Value.bool(true).export()).toEqual(true)
@@ -40,10 +40,10 @@ describe('value', () => {
     })
   })
   test('comparisons of booleans', () => {
-    expect(Value.bool(false).compare(Value.bool(false))).toEqual(0)
-    expect(Value.bool(false).compare(Value.bool(true))).toEqual(-1)
-    expect(Value.bool(true).compare(Value.bool(false))).toEqual(1)
-    expect(Value.bool(true).compare(Value.bool(true))).toEqual(0)
+    expect(Value.bool(false).compare(Value.bool(false)).export()).toEqual(0)
+    expect(Value.bool(false).compare(Value.bool(true)).export()).toEqual(-1)
+    expect(Value.bool(true).compare(Value.bool(false)).export()).toEqual(1)
+    expect(Value.bool(true).compare(Value.bool(true)).export()).toEqual(0)
   })
   test('strings', () => {
     expect(Value.str('abc').export()).toEqual('abc')
@@ -55,11 +55,11 @@ describe('value', () => {
     expect(Value.str('zxcvb').plus(Value.str('nm')).export()).toEqual('zxcvbnm')
   })
   test('comparisons of strings', () => {
-    expect(Value.str('e').compare(Value.str('c'))).toEqual(1)
-    expect(Value.str('e').compare(Value.str('d'))).toEqual(1)
-    expect(Value.str('e').compare(Value.str('e'))).toEqual(0)
-    expect(Value.str('e').compare(Value.str('f'))).toEqual(-1)
-    expect(Value.str('e').compare(Value.str('g'))).toEqual(-1)
+    expect(Value.str('e').compare(Value.str('c')).export()).toEqual(1)
+    expect(Value.str('e').compare(Value.str('d')).export()).toEqual(1)
+    expect(Value.str('e').compare(Value.str('e')).export()).toEqual(0)
+    expect(Value.str('e').compare(Value.str('f')).export()).toEqual(-1)
+    expect(Value.str('e').compare(Value.str('g')).export()).toEqual(-1)
   })
   test('arrays', () => {
     expect(Value.arr([Value.num(10), Value.num(20)]).export()).toEqual([10, 20])

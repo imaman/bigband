@@ -94,28 +94,28 @@ export class Runtime {
       const rhs = this.evalNode(ast.rhs, table)
       if (ast.operator === '!=') {
         const comp = lhs.compare(rhs)
-        return Value.bool(comp !== 0)
+        return comp.isToZero('!=')
       }
       if (ast.operator === '==') {
         const comp = lhs.compare(rhs)
-        return Value.bool(comp === 0)
+        return comp.isToZero('==')
       }
 
       if (ast.operator === '<=') {
         const comp = lhs.compare(rhs)
-        return Value.bool(comp <= 0)
+        return comp.isToZero('<=')
       }
       if (ast.operator === '<') {
         const comp = lhs.compare(rhs)
-        return Value.bool(comp < 0)
+        return comp.isToZero('<')
       }
       if (ast.operator === '>=') {
         const comp = lhs.compare(rhs)
-        return Value.bool(comp >= 0)
+        return comp.isToZero('>=')
       }
       if (ast.operator === '>') {
         const comp = lhs.compare(rhs)
-        return Value.bool(comp > 0)
+        return comp.isToZero('>')
       }
       if (ast.operator === '%') {
         return lhs.modulo(rhs)
