@@ -205,11 +205,11 @@ describe('value', () => {
       expect(sink.fromEntries().export()).toEqual(null)
     })
     describe('comparisons', () => {
-      test.skip('comparing a sink with itself evaluates to true', () => {
+      test('comparing a sink with itself evaluates to true', () => {
         expect(sink.equalsTo(sink).export()).toEqual(true)
       })
 
-      test.skip('comparing a sink with other types evaluates to false', () => {
+      test('comparing a sink with other types evaluates to false', () => {
         expect(sink.equalsTo(Value.arr([])).export()).toEqual(false)
         expect(sink.equalsTo(Value.bool(false)).export()).toEqual(false)
         expect(sink.equalsTo(Value.bool(true)).export()).toEqual(false)
