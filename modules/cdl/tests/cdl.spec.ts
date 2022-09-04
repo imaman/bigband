@@ -399,8 +399,53 @@ describe('cdl', () => {
     })
   })
 
-  test.todo('string methods')
-  test.todo('number methods')
+  describe('sink', () => {
+    test('specified via the "sink" literal', () => {
+      expect(cdl.run(`sink`)).toEqual(null)
+    })
+    test('an expression involving a sink evaluates to sink', () => {
+      expect(cdl.run(`5+8+9+sink+20+30`)).toEqual(null)
+      expect(cdl.run(`let x = sink; 5+8+9+x+20+30`)).toEqual(null)
+      expect(cdl.run(`let f = fun (a) if (a > 0) a else sink; 2+f(-1)+4`)).toEqual(null)
+      expect(cdl.run(`let f = fun (a) if (a > 0) a else sink; 2+f(3)+4`)).toEqual(9)
+    })
+    test('an array can hold a sink without becoming a sink itself', () => {
+      expect(cdl.run(`let f = fun (a) if (a > 0) a else sink; [f(1), f(-1), f(8)]`)).toEqual([1, null, 8])
+    })
+    test('an object can hold a sink without becoming a sink itself', () => {
+      expect(cdl.run(`{a: 5, b: sink, c: 20}`)).toEqual({ a: 5, b: null, c: 20 })
+    })
+    test('an if() expression an have a sink positive/negative branch without becoming a sink itself', () => {
+      expect(cdl.run(`if (true) 5 else sink`)).toEqual(5)
+      expect(cdl.run(`if (false) sink else 5`)).toEqual(5)
+    })
+    test('an if() expression becomes a sink itself if the branch dictated by the condition evaluates to sink', () => {
+      expect(cdl.run(`if (false) 5 else sink`)).toEqual(null)
+      expect(cdl.run(`if (true) sink else 5`)).toEqual(null)
+    })
+    test('an if() expression becomes a sink itself if the the condition expression evaluates to sink', () => {
+      expect(cdl.run(`if (sink) 5 else 7`)).toEqual(null)
+    })
+    test('an && expression with sinks', () => {
+      expect(cdl.run(`sink && false`)).toEqual(null)
+      expect(cdl.run(`sink && true`)).toEqual(null)
+      expect(cdl.run(`false && sink`)).toEqual(false)
+      expect(cdl.run(`true && sink`)).toEqual(null)
+    })
+    test('an || expression with sinks', () => {
+      expect(cdl.run(`sink || false`)).toEqual(null)
+      expect(cdl.run(`sink || true`)).toEqual(null)
+      expect(cdl.run(`false || sink`)).toEqual(null)
+      expect(cdl.run(`true || sink`)).toEqual(true)
+    })
+    test('access to an attribute of a sink evaluates to sink', () => {
+      expect(cdl.run(`sink.x`)).toEqual(null)
+    })
+    test('calling a sink evaluates to sink', () => {
+      expect(cdl.run(`sink()`)).toEqual(null)
+    })
+  })
+
   describe('array methods', () => {
     test('concat', () => {
       expect(cdl.run(`['foo', 'bar', 'goo'].concat(['zoo', 'poo'])`)).toEqual(['foo', 'bar', 'goo', 'zoo', 'poo'])
@@ -553,4 +598,5 @@ describe('cdl', () => {
   test.todo('quoting of a ticks inside a string')
   test.todo('number in scientific notation')
   test.todo('API access to evaluation trace')
+  test.todo('number methods')
 })
