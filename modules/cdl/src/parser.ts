@@ -230,7 +230,12 @@ export class Parser {
   }
 
   literalOrIdent(): AstNode {
-    let t = this.scanner.consumeIf('true')
+    let t = this.scanner.consumeIf('sink')
+    if (t) {
+      return { tag: 'literal', type: 'sink', t }
+    }
+
+    t = this.scanner.consumeIf('true')
     if (t) {
       return { tag: 'literal', type: 'bool', t }
     }
