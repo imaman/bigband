@@ -621,13 +621,6 @@ describe('cdl', () => {
       ).toEqual(4001)
     })
   })
-  describe('evaluation stack', () => {
-    test.only('stackoverflow', () => {
-      expect(cdl.run(`'abcdefghijkl'.split('').length`)).toEqual(-12)
-      // expect(cdl.run(`'a,b,c'.split(',').length`)).toEqual(80000*-1)
-    })
-  })
-  test.todo('left associativity of +/-')
   test.todo('error messages to include expression-trace')
   test.todo('syntax errors')
   test.todo('comparison of arrays')
