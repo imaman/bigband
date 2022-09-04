@@ -626,9 +626,8 @@ describe('cdl', () => {
     })
   })
   describe('evaluation stack', () => {
-    test.skip('stackoverflow', () => {
-      expect(cdl.run(`let bigList = 'a'.repeat(1000).split('').length`)).toEqual(1000)
-      // expect(cdl.run(`'a,b,c'.split(',').length`)).toEqual(80000*-1)
+    test('max recursion depth', () => {
+      expect(cdl.run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(352)`)).toEqual(352)
     })
   })
   test.todo('left associativity of +/-')
