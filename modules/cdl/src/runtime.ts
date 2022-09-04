@@ -156,6 +156,9 @@ export class Runtime {
       if (ast.type === 'num') {
         return Value.num(Number(ast.t.text))
       }
+      if (ast.type === 'sink') {
+        return Value.sink()
+      }
       if (ast.type === 'str') {
         return Value.str(ast.t.text)
       }
