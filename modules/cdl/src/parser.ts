@@ -66,7 +66,7 @@ export class Parser {
 
   ifExpression(): AstNode {
     if (!this.scanner.consumeIf('if')) {
-      return this.or()
+      return this.unsink()
     }
 
     this.scanner.consume('(')
@@ -80,6 +80,14 @@ export class Parser {
     const negative = this.expression()
 
     return { tag: 'if', condition, positive, negative }
+  }
+
+  unsink(): AstNode {
+    const lhs = this.or()
+    if (this.scanner.consumeIf('??')) {
+      return { tag: 'binaryOperator', operator: '??', lhs, rhs: this.unsink() }
+    }
+    return lhs
   }
 
   or(): AstNode {

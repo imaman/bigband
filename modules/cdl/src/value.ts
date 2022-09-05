@@ -317,6 +317,13 @@ export class Value {
       str: err,
     })
   }
+  unsink(that: () => Value) {
+    if (this.isSink()) {
+      return that()
+    }
+
+    return this
+  }
 
   equalsTo(that: Value) {
     if (this.inner.tag !== that.inner.tag) {
