@@ -392,10 +392,10 @@ describe('cdl', () => {
         cdl.run(`let by2 = fun(x) x*2; (let by10 = (let by5 = fun(x) x*5; fun(x) by2(by5(x))); by10(20))`),
       ).toEqual(200)
     })
-    test.skip('expression trace on error', () => {
-      expect(cdl.run(`let by2 = fun(x) !x; (let by10 = (let by5 = fun(x) x*5; fun(x) by2(by5(x))); by10(20))`)).toEqual(
-        200,
-      )
+    test('expression trace on error', () => {
+      expect(() =>
+        cdl.run(`let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(x); a(5)`),
+      ).toThrowError('  a(5)\n  b(x)\n  c(x)\n  d(x)\n  x2')
     })
     test('only lexical scope is considered when looking up a definition', () => {
       expect(cdl.run(`let a = 1; let inc = fun(n) n+a; (let a = 100; inc(2))`)).toEqual(3)
