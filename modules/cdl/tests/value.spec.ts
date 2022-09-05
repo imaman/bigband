@@ -204,6 +204,14 @@ describe('value', () => {
     test('applying .fromEntries() to sink evaluates to sink', () => {
       expect(sink.fromEntries().export()).toEqual(null)
     })
+    describe('unsink()', () => {
+      test('when applied to a non-sink value evaluates to it', () => {
+        expect(Value.num(5).unsink(fixed('x')).export()).toEqual(5)
+      })
+      test('when applied to a sink value evaluates to its argument', () => {
+        expect(Value.num(5).unsink(fixed('x')).export()).toEqual(5)
+      })
+    })
     describe('comparisons', () => {
       test('comparing a sink with itself evaluates to true', () => {
         expect(sink.equalsTo(sink).export()).toEqual(true)
