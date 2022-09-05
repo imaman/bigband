@@ -109,6 +109,10 @@ export class Runtime {
         return lhs.and(() => this.evalNode(ast.rhs, table))
       }
 
+      if (ast.operator === '??') {
+        return lhs.unsink(() => this.evalNode(ast.rhs, table))
+      }
+
       const rhs = this.evalNode(ast.rhs, table)
       if (ast.operator === '!=') {
         return lhs.equalsTo(rhs).not()
