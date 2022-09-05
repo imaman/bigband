@@ -38,7 +38,7 @@ export type AstNode =
     }
   | {
       tag: 'binaryOperator'
-      operator: '+' | '-' | '*' | '/' | '**' | '%' | '&&' | '||' | '>' | '<' | '>=' | '<=' | '==' | '!='
+      operator: '+' | '-' | '*' | '/' | '**' | '%' | '&&' | '||' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '??'
       lhs: AstNode
       rhs: AstNode
     }
