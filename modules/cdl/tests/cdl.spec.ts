@@ -481,6 +481,12 @@ describe('cdl', () => {
       expect(() => cdl.run(`sink < ''`)).toThrowError('Cannot compare a sink value with a value of another type')
       expect(() => cdl.run(`sink < 'x'`)).toThrowError('Cannot compare a sink value with a value of another type')
     })
+    test(`the ?? operator translates a sink into something else`, () => {
+      expect(() => cdl.run(`sink ?? 1`)).toEqual(1)
+    })
+    test(`the ?? operator retains a non-sink as-is`, () => {
+      expect(() => cdl.run(`0 ?? 1`)).toEqual(1)
+    })
   })
 
   describe('array methods', () => {
