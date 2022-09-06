@@ -538,6 +538,23 @@ describe('cdl', () => {
       )
     })
   })
+  describe('sink!!', () => {
+    test(`captures the expression trace and the symbol-table at runtime`, () => {
+      const evalTraceSink = (s: string) => {
+        const cdl = new Cdl(s)
+        const v = cdl.run()
+        return { symbols: cdl.symbols(v), trace: cdl.trace(v) }
+      }
+      const actual = evalTraceSink(`let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`).symbols
+      expect(actual).toMatchObject({
+        f: 'fun (x, y) (x * (y * (sink!! * a)))',
+        a: 2,
+        x: 30,
+        y: 40,
+      })
+      expect(Object.keys(actual ?? {})).toEqual(['Object', 'a', 'f', 'x', 'y'])
+    })
+  })
 
   describe('array methods', () => {
     test('concat', () => {

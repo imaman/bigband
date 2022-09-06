@@ -17,7 +17,7 @@ type Inner =
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
   | { tag: 'num'; val: number }
   | { tag: 'obj'; val: Record<string, Value> }
-  | { tag: 'sink'; val: undefined; span?: Span; trace?: Stack.T }
+  | { tag: 'sink'; val: undefined; span?: Span; trace?: Stack.T; symbols?: SymbolTable }
   | { tag: 'str'; val: string }
 
 type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
@@ -144,8 +144,14 @@ export class Value {
    * (iv) in `||` and `&&` expressions, the evaluation of the right hand side can be skipped. Specifically,
    *    `true || sink` evaluates to `true` and `false && sink` evaluates to `false`.
    */
-  static sink(span?: Span, trace?: Stack.T): Value {
-    return new Value({ val: undefined, tag: 'sink', ...(span ? { span } : {}), ...(trace ? { trace } : {}) })
+  static sink(span?: Span, trace?: Stack.T, symbols?: SymbolTable): Value {
+    return new Value({
+      val: undefined,
+      tag: 'sink',
+      ...(span ? { span } : {}),
+      ...(trace ? { trace } : {}),
+      ...(symbols ? { symbols } : {}),
+    })
   }
   static str(val: string): Value {
     return new Value({ val, tag: 'str' })
@@ -279,7 +285,7 @@ export class Value {
       throw new Error(`Not supported on type ${this.inner.tag}`)
     }
 
-    return Value.sink(span, inner.trace)
+    return Value.sink(span, inner.trace, inner.symbols)
   }
 
   trace() {
@@ -293,6 +299,15 @@ export class Value {
       ret.push(curr.ast)
     }
     return ret
+  }
+
+  symbols() {
+    const inner = this.inner
+    if (inner.tag !== 'sink') {
+      return undefined
+    }
+
+    return inner.symbols
   }
 
   span() {

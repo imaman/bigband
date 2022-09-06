@@ -91,6 +91,10 @@ export class Cdl {
 
     return undefined
   }
+
+  symbols(v: Value) {
+    return v.symbols()?.export()
+  }
 }
 
 export function parse(arg: string | Parser) {

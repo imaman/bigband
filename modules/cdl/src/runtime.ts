@@ -1,5 +1,6 @@
 import { AstNode, show } from './ast-node'
 import { extractMessage } from './extract-message'
+import { failMe } from './fail-me'
 import { Parser } from './parser'
 import { shouldNeverHappen } from './should-never-happen'
 import * as Stack from './stack'
@@ -25,11 +26,21 @@ class SymbolFrame implements SymbolTable {
 
     return this.earlier.lookup(sym)
   }
+
+  export() {
+    const ret = this.earlier.export()
+    ret[this.symbol] = this.placeholder.destination?.export() ?? failMe(`Unbounded symbol: ${this.symbol}`)
+    return ret
+  }
 }
 
 class EmptySymbolTable implements SymbolTable {
   lookup(sym: string): Value {
     throw new Error(`Symbol ${sym} was not found`)
+  }
+
+  export() {
+    return {}
   }
 }
 
@@ -184,6 +195,9 @@ export class Runtime {
       }
       if (ast.type === 'num') {
         return Value.num(Number(ast.t.text))
+      }
+      if (ast.type === 'sink!!') {
+        return Value.sink(undefined, this.stack, table)
       }
       if (ast.type === 'sink!') {
         return Value.sink(undefined, this.stack)
