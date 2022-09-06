@@ -1,7 +1,7 @@
-import * as cdl from '../src/cdl'
+import { Cdl } from '../src/cdl'
 
 function run(input: string) {
-  return cdl.run(input)
+  return new Cdl(input).run().export()
 }
 describe('cdl', () => {
   test('basics', () => {
@@ -486,11 +486,16 @@ describe('cdl', () => {
       expect(() => run(`sink < ''`)).toThrowError('Cannot compare a sink value with a value of another type')
       expect(() => run(`sink < 'x'`)).toThrowError('Cannot compare a sink value with a value of another type')
     })
-    test(`the ?? operator translates a sink into something else`, () => {
+    test(`the ?? operator translates a sink into the right-hand-side`, () => {
       expect(run(`sink ?? 1`)).toEqual(1)
     })
     test(`the ?? operator retains a non-sink as-is`, () => {
       expect(run(`0 ?? 1`)).toEqual(0)
+    })
+    test(`the returned sink holds a location in the source code`, () => {
+      const cdl = new Cdl(`1 + 2 + 3 + sink + 4 + sink`)
+      const v = cdl.run()
+      expect(cdl.locate(v)).toEqual({ line: 1, col: 13 })
     })
   })
 

@@ -3,19 +3,32 @@ import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { Value } from './value'
 
-export function trace(s: string) {
-  return run(s, 'trace')
+export class Cdl {
+  private readonly parser
+  private readonly scanner
+
+  constructor(readonly input: string) {
+    this.scanner = new Scanner(this.input)
+    this.parser = new Parser(this.scanner)
+  }
+  run(verbosity: Verbosity = 'quiet'): Value {
+    const ast = parse(this.parser)
+    const runtime = new Runtime(ast, verbosity, this.parser)
+    return runtime.run()
+  }
+
+  locate(v: Value) {
+    const loc = v.location()
+    if (loc) {
+      return this.scanner.resolveLocation(loc)
+    }
+
+    return undefined
+  }
 }
 
-export function run(s: string, verbosity: Verbosity = 'quiet'): Value {
-  const parser = new Parser(new Scanner(s))
-  const ast = parse(s)
-  const runtime = new Runtime(ast, verbosity, parser)
-  return runtime.run()
-}
-
-export function parse(s: string, parser?: Parser) {
-  parser = parser ?? new Parser(new Scanner(s))
+export function parse(arg: string | Parser) {
+  const parser = typeof arg === 'string' ? new Parser(new Scanner(arg)) : arg
   const ast = parser.parse()
   return ast
 }
