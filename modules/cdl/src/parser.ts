@@ -431,10 +431,10 @@ export class Parser {
       return ofRange(ofToken(ast.start), ofToken(ast.end))
     }
     if (ast.tag === 'topLevelExpression') {
-      // we return the span of the computation because span is usually meaningful for rendering the expression trace
-      // that was captured at runtime. At runtime, the definitions are meaningless: only the computation is directly
-      // evaluated.
-      return this.span(ast.computation)
+      const d0 = ast.definitions.find(Boolean)
+      const comp = this.span(ast.computation)
+
+      return ofRange(d0 ? ofToken(d0.start) : comp, comp)
     }
     if (ast.tag === 'unaryOperator') {
       return ofRange(ofToken(ast.operatorToken), this.span(ast.operand))
