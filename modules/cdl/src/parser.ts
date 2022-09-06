@@ -17,16 +17,18 @@ export class Parser {
 
   definitions(): Let[] {
     const ret: Let[] = []
-    while (this.scanner.consumeIf('let ')) {
+    while (true) {
+      const start = this.scanner.consumeIf('let ')
+      if (!start) {
+        return ret
+      }
       const ident = this.identifier()
       this.scanner.consume('=')
       const value = this.lambda()
       this.scanner.consume(';')
 
-      ret.push({ ident, value })
+      ret.push({ start, ident, value })
     }
-
-    return ret
   }
 
   expression(): AstNode {
@@ -430,9 +432,9 @@ export class Parser {
     }
     if (ast.tag === 'topLevelExpression') {
       const d0 = ast.definitions.find(Boolean)
-      const from = d0 ? this.span(d0.ident) : this.span(ast.computation)
+      const comp = this.span(ast.computation)
 
-      return ofRange(from, this.span(ast.computation))
+      return ofRange(d0 ? ofToken(d0.start) : comp, comp)
     }
     if (ast.tag === 'unaryOperator') {
       return ofRange(ofToken(ast.operatorToken), this.span(ast.operand))

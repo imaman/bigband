@@ -401,7 +401,7 @@ describe('cdl', () => {
     })
     test('expression trace on error', () => {
       const expected = [
-        '  at (1:5) d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(x); ...',
+        '  at (1:1) let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(...',
         '  at (1:85) a(5)',
         '  at (1:79) b(x)',
         '  at (1:58) c(x)',
