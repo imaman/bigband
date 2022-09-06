@@ -26,10 +26,12 @@ export type AstNode =
   | {
       tag: 'arrayLiteral'
       parts: ArrayLiteralPart[]
+      start: Token
     }
   | {
       tag: 'objectLiteral'
       parts: ObjectLiteralPart[]
+      start: Token
     }
   | {
       tag: 'literal'

@@ -1,5 +1,5 @@
 import { AstNode, show } from './ast-node'
-import { Location } from './location'
+import { extractMessage } from './extract-message'
 import { Parser } from './parser'
 import { shouldNeverHappen } from './should-never-happen'
 import { switchOn } from './switch-on'
@@ -50,7 +50,11 @@ export type Verbosity = 'quiet' | 'trace'
 
 export class Runtime {
   private stack: Stack = undefined
-  constructor(private readonly root: AstNode, private readonly verbosity: Verbosity = 'quiet', private readonly parser: Parser) {}
+  constructor(
+    private readonly root: AstNode,
+    private readonly verbosity: Verbosity = 'quiet',
+    private readonly parser: Parser,
+  ) {}
 
   run(): Value {
     const empty = new EmptySymbolTable()
@@ -62,20 +66,23 @@ export class Runtime {
     try {
       return this.evalNode(this.root, lib)
     } catch (e) {
+      let lineCol = { line: 0, col: 0 }
+      if (this.stack) {
+        lineCol = this.parser.locate(this.stack.ast)
+      }
+
       const nodes: string[] = []
       for (let curr = this.stack; curr; curr = curr?.next) {
         nodes.push(show(curr.ast))
       }
       nodes.reverse()
       const spacer = '  '
-
-      let lineCol = {line: 0, col: 0}
-      if (this.stack) {
-        lineCol = this.parser.locate(this.stack.ast)
-      }
       const formatted = nodes.join(`\n${spacer}`)
+
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      throw new Error(`(Ln ${lineCol.line},Col ${lineCol.col}) ${(e as { message?: string }).message} when evaluating:\n${spacer}${formatted}`)
+      throw new Error(
+        `(Ln ${lineCol.line},Col ${lineCol.col}) ${extractMessage(e)} when evaluating:\n${spacer}${formatted}`,
+      )
     }
   }
 

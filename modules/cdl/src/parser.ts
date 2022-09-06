@@ -1,5 +1,5 @@
 import { ArrayLiteralPart, AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
-import { Scanner } from './scanner'
+import { Scanner, Token } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
 
 export class Parser {
@@ -280,12 +280,14 @@ export class Parser {
       return { tag: 'literal', type: 'str', t }
     }
 
-    if (this.scanner.consumeIf('[')) {
-      return this.arrayBody()
+    t = this.scanner.consumeIf('[')
+    if (t) {
+      return this.arrayBody(t)
     }
 
-    if (this.scanner.consumeIf('{')) {
-      return this.objectBody()
+    t = this.scanner.consumeIf('{')
+    if (t) {
+      return this.objectBody(t)
     }
 
     const ident = this.maybeIdentifier()
@@ -301,10 +303,10 @@ export class Parser {
    * This method assumes that the caller consumed the opening '[' token. It consumes the array's elements
    * (comma-separated list of expressions) as well as the closing ']' token.
    */
-  arrayBody(): AstNode {
+  arrayBody(start: Token): AstNode {
     if (this.scanner.consumeIf(']')) {
       // an empty array literal
-      return { tag: 'arrayLiteral', parts: [] }
+      return { tag: 'arrayLiteral', start, parts: [] }
     }
 
     const parts: ArrayLiteralPart[] = []
@@ -317,7 +319,7 @@ export class Parser {
       }
 
       if (this.scanner.consumeIf(']')) {
-        return { tag: 'arrayLiteral', parts }
+        return { tag: 'arrayLiteral', start, parts }
       }
 
       this.scanner.consume(',')
@@ -328,10 +330,10 @@ export class Parser {
    * This method assumes that the caller consumed the opening '{' token. It consumes the object's attributes
    * (comma-separated list of key:value parirs) as well as the closing '}' token.
    */
-  objectBody(): AstNode {
+  objectBody(start: Token): AstNode {
     if (this.scanner.consumeIf('}')) {
       // an empty array literal
-      return { tag: 'objectLiteral', parts: [] }
+      return { tag: 'objectLiteral', start, parts: [] }
     }
 
     const parts: ObjectLiteralPart[] = []
@@ -352,7 +354,7 @@ export class Parser {
       }
 
       if (this.scanner.consumeIf('}')) {
-        return { tag: 'objectLiteral', parts }
+        return { tag: 'objectLiteral', start, parts }
       }
 
       this.scanner.consume(',')
@@ -380,7 +382,7 @@ export class Parser {
 
   locate(ast: AstNode): { line: number; col: number } {
     if (ast.tag === 'arrayLiteral') {
-      return this.locate(ast.parts[0].v)
+      return this.scanner.locateToken(ast.start)
     }
 
     if (ast.tag === 'binaryOperator') {
@@ -410,20 +412,7 @@ export class Parser {
       return this.scanner.locateToken(ast.t)
     }
     if (ast.tag === 'objectLiteral') {
-      const mapped = ast.parts.map(curr => {
-        if (curr.tag === 'computedName') {
-          return curr.k
-        }
-        if (curr.tag === 'hardName') {
-          return curr.k
-        }
-        if (curr.tag === 'spread') {
-          return curr.o
-        }
-        shouldNeverHappen(curr)
-      })
-
-      return this.locate(mapped[0])
+      return this.scanner.locateToken(ast.start)
     }
     if (ast.tag === 'topLevelExpression') {
       if (ast.definitions.length) {
