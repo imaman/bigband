@@ -17,6 +17,7 @@ export type Ident = {
 
 export type Lambda = {
   tag: 'lambda'
+  start: Token
   formalArgs: Ident[]
   body: AstNode
 }
@@ -24,14 +25,16 @@ export type Lambda = {
 export type AstNode =
   | Ident
   | {
+      start: Token
       tag: 'arrayLiteral'
       parts: ArrayLiteralPart[]
-      start: Token
+      end: Token
     }
   | {
+      start: Token
       tag: 'objectLiteral'
       parts: ObjectLiteralPart[]
-      start: Token
+      end: Token
     }
   | {
       tag: 'literal'
@@ -46,6 +49,7 @@ export type AstNode =
     }
   | {
       tag: 'unaryOperator'
+      operatorToken: Token
       operator: '+' | '-' | '!'
       operand: AstNode
     }
@@ -59,6 +63,7 @@ export type AstNode =
       tag: 'functionCall'
       actualArgs: AstNode[]
       callee: AstNode
+      end: Token
     }
   | {
       tag: 'if'
