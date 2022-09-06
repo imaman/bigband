@@ -2,23 +2,10 @@ import { AstNode, show } from './ast-node'
 import { extractMessage } from './extract-message'
 import { Parser } from './parser'
 import { shouldNeverHappen } from './should-never-happen'
+import * as Stack from './stack'
 import { switchOn } from './switch-on'
 import { SymbolTable } from './symbol-table'
 import { Value } from './value'
-
-type Stack = { ast: AstNode; next: Stack } | undefined
-
-function push(ast: AstNode, s: Stack) {
-  return { ast, next: s }
-}
-
-function pop(s: Stack) {
-  if (typeof s === 'undefined') {
-    throw new Error(`Cannot pop from an empty stack`)
-  }
-
-  return s.next
-}
 
 interface Placeholder {
   destination: undefined | Value
@@ -49,7 +36,7 @@ class EmptySymbolTable implements SymbolTable {
 export type Verbosity = 'quiet' | 'trace'
 
 export class Runtime {
-  private stack: Stack = undefined
+  private stack: Stack.T = undefined
   constructor(
     private readonly root: AstNode,
     private readonly verbosity: Verbosity = 'quiet',
@@ -81,7 +68,7 @@ export class Runtime {
   }
 
   private evalNode(ast: AstNode, table: SymbolTable): Value {
-    this.stack = push(ast, this.stack)
+    this.stack = Stack.push(ast, this.stack)
     let ret = this.evalNodeImpl(ast, table)
     if (ret.isSink() && !ret.span()) {
       ret = ret.bindToSpan(this.parser.span(ast))
@@ -93,7 +80,7 @@ export class Runtime {
         console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
       },
     })
-    this.stack = pop(this.stack)
+    this.stack = Stack.pop(this.stack)
     return ret
   }
 
@@ -197,6 +184,9 @@ export class Runtime {
       }
       if (ast.type === 'num') {
         return Value.num(Number(ast.t.text))
+      }
+      if (ast.type === 'sink!') {
+        return Value.sink(undefined, this.stack)
       }
       if (ast.type === 'sink') {
         return Value.sink()

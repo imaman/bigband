@@ -504,10 +504,10 @@ describe('cdl', () => {
       expect(() => run(`sink < ''`)).toThrowError('Cannot compare a sink value with a value of another type')
       expect(() => run(`sink < 'x'`)).toThrowError('Cannot compare a sink value with a value of another type')
     })
-    test(`the ?? operator translates a sink into the right-hand-side`, () => {
+    test(`the ?? operator evaluates to its right-hand-side if its left-hand-side is a sink`, () => {
       expect(run(`sink ?? 1`)).toEqual(1)
     })
-    test(`the ?? operator retains a non-sink as-is`, () => {
+    test(`the ?? operator evaluates to its left-hand-side if it is a non-sink`, () => {
       expect(run(`0 ?? 1`)).toEqual(0)
     })
     test(`the returned sink holds a location in the source code`, () => {
@@ -519,6 +519,23 @@ describe('cdl', () => {
       expect(evalLocateSink(`1000 + 2000 + 3000 + sink + 5000 + sink`)).toEqual({ line: 0, col: 21 })
       expect(evalLocateSink(`1000 + 2000 + 3000 + 4000 + 5000 + sink`)).toEqual({ line: 0, col: 35 })
       expect(evalLocateSink(`1000\n + 2000\n + sink\n + 4000\n + 5000\n + sink`)).toEqual({ line: 2, col: 3 })
+    })
+  })
+  describe('sink!', () => {
+    test(`foo`, () => {
+      const evalTraceSink = (s: string) => {
+        const cdl = new Cdl(s)
+        const v = cdl.run()
+        return cdl.trace(v)
+      }
+      expect(evalTraceSink(`1000 + 2000 + 3000 + sink!`)).toEqual(
+        [
+          `  at (1:1) 1000 + 2000 + 3000 + sink!`,
+          `  at (1:8) 2000 + 3000 + sink!`,
+          `  at (1:15) 3000 + sink!`,
+          `  at (1:22) sink!`,
+        ].join('\n'),
+      )
     })
   })
 

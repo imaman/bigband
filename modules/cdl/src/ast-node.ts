@@ -38,7 +38,7 @@ export type AstNode =
     }
   | {
       tag: 'literal'
-      type: 'str' | 'bool' | 'num' | 'sink'
+      type: 'str' | 'bool' | 'num' | 'sink' | 'sink!'
       t: Token
     }
   | {

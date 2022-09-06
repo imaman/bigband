@@ -1,3 +1,4 @@
+import { AstNode } from './ast-node'
 import { Location2d, Span } from './location'
 import { Parser } from './parser'
 import { Runtime, Verbosity } from './runtime'
@@ -18,13 +19,18 @@ export class Cdl {
     const runtime = new Runtime(ast, verbosity, this.parser)
     const c = runtime.compute()
 
-    const spacer = '  '
-
     if (c.value) {
       return c.value
     }
 
-    const enriched = c.expressionTrace.map(curr => {
+    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${this.mapTrace(c.expressionTrace)}`
+    throw new Error(runtimeErrorMessage)
+  }
+
+  private mapTrace(trace: AstNode[]) {
+    const spacer = '  '
+
+    const enriched = trace.map(curr => {
       const span = this.parser.span(curr)
       return {
         ast: curr,
@@ -38,9 +44,7 @@ export class Cdl {
       .map(curr => `at (${curr.from.line + 1}:${curr.from.col + 1}) ${this.interestingPart(curr)}`)
       .reverse()
       .join(`\n${spacer}`)
-    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${spacer}${formatted}`
-
-    throw new Error(runtimeErrorMessage)
+    return `${spacer}${formatted}`
   }
 
   private interestingPart(arg: { span: Span; from: Location2d; to: Location2d }) {
@@ -74,6 +78,15 @@ export class Cdl {
     const span = v.span()
     if (span) {
       return this.scanner.resolveLocation(span.from)
+    }
+
+    return undefined
+  }
+
+  trace(v: Value) {
+    const trace = v.trace()
+    if (trace) {
+      return this.mapTrace(trace)
     }
 
     return undefined
