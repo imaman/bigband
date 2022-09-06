@@ -1,16 +1,17 @@
 import { Parser } from './parser'
 import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
+import { Value } from './value'
 
 export function trace(s: string) {
   return run(s, 'trace')
 }
 
-export function run(s: string, verbosity: Verbosity = 'quiet') {
+export function run(s: string, verbosity: Verbosity = 'quiet'): Value {
   const parser = new Parser(new Scanner(s))
   const ast = parse(s)
   const runtime = new Runtime(ast, verbosity, parser)
-  return runtime.run().export()
+  return runtime.run()
 }
 
 export function parse(s: string, parser?: Parser) {
