@@ -49,6 +49,10 @@ describe('cdl', () => {
     expect(() => cdl.run(`!!4`)).toThrowError(`value type error: expected bool but found 4`)
   })
 
+  test('error holds the location in the file', () => {
+    expect(() => cdl.run(`6+\n7+\n+!5`)).toThrowError(`(Ln 3,Col 2) value type error: expected bool but found 5`)
+  })
+
   test('equality', () => {
     expect(cdl.run(`3==4`)).toEqual(false)
     expect(cdl.run(`3==3`)).toEqual(true)
