@@ -1,9 +1,8 @@
 import { AstNode, Lambda, show } from './ast-node'
 import { failMe } from './fail-me'
-import { findArrayMethod } from './find-array-method'
+import { CallEvaluator, findArrayMethod } from './find-array-method'
 import { findStringMethod } from './find-string-method'
 import { Location } from './location'
-import { Runtime } from './runtime'
 import { shouldNeverHappen } from './should-never-happen'
 import { switchOn } from './switch-on'
 import { SymbolTable } from './symbol-table'
@@ -556,13 +555,13 @@ export class Value {
     })
   }
 
-  access(indexValue: string | Value, runtime?: Runtime): Value {
+  access(indexValue: string | Value, callEvaluator: CallEvaluator): Value {
     const err = badType('obj', 'str', 'arr')
 
     return select(this, {
       arr: a => {
         if (typeof indexValue === 'string') {
-          return findArrayMethod(a, indexValue, runtime)
+          return findArrayMethod(a, indexValue, callEvaluator)
         }
 
         const i: number = indexValue.assertNum()
