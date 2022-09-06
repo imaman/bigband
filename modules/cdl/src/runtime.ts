@@ -56,7 +56,7 @@ export class Runtime {
     private readonly parser: Parser,
   ) {}
 
-  run(): Value {
+  compute() {
     const empty = new EmptySymbolTable()
 
     const keys = Value.foreign(o => o.keys())
@@ -64,25 +64,19 @@ export class Runtime {
     const fromEntries = Value.foreign(o => o.fromEntries())
     const lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty)
     try {
-      return this.evalNode(this.root, lib)
+      const value = this.evalNode(this.root, lib)
+      return { value }
     } catch (e) {
-      let lineCol = { line: 0, col: 0 }
-      if (this.stack) {
-        lineCol = this.parser.resolveLocation(this.parser.locate(this.stack.ast))
-      }
-
-      const nodes: string[] = []
+      const trace: AstNode[] = []
       for (let curr = this.stack; curr; curr = curr?.next) {
-        nodes.push(show(curr.ast))
+        trace.push(curr.ast)
       }
-      nodes.reverse()
-      const spacer = '  '
-      const formatted = nodes.join(`\n${spacer}`)
-
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      throw new Error(
-        `(Ln ${lineCol.line},Col ${lineCol.col}) ${extractMessage(e)} when evaluating:\n${spacer}${formatted}`,
-      )
+      return {
+        expressionTrace: trace,
+        errorMessage: extractMessage(e),
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        stack: (e as { stack?: string[] }).stack,
+      }
     }
   }
 

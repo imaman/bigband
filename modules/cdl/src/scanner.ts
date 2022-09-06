@@ -106,4 +106,15 @@ export class Scanner {
 
     return { line, col }
   }
+
+  lineAt(loc: Location) {
+    const from = Math.max(this.input.lastIndexOf('\n', loc.offset), 0)
+    let to = this.input.indexOf('\n', loc.offset)
+    if (to < 0) {
+      to = this.input.length
+    }
+
+    const ret = this.input.substring(from, to)
+    return ret
+  }
 }
