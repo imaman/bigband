@@ -640,7 +640,7 @@ describe('cdl', () => {
   })
   describe('evaluation stack', () => {
     test('max recursion depth', () => {
-      expect(run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(350)`)).toEqual(350)
+      expect(run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(340)`)).toEqual(340)
     })
   })
   test.todo('left associativity of +/-')
