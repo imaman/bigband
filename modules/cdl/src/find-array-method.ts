@@ -1,6 +1,6 @@
-import { failMe } from './fail-me'
-import { Runtime } from './runtime'
 import { Value } from './value'
+
+export type CallEvaluator = (callable: Value, args: Value[]) => Value
 /**
  * return an implementation for array methods. The following Array methods were not implemented
  * as it is hard to find an intuitive immutable API due to their mutable nature:
@@ -13,13 +13,11 @@ import { Value } from './value'
  *  - shift
  *  - unshift
  */
-export function findArrayMethod(arr: unknown[], index: string, runtime?: Runtime) {
-  const rt = () => runtime ?? failMe('runtime is flasy')
-
+export function findArrayMethod(arr: unknown[], index: string, callEvaluator: CallEvaluator) {
   const adjustedCallback =
     (callback: Value) =>
     (...args: unknown[]) =>
-      rt().call(
+      callEvaluator(
         callback,
         args.map(x => Value.from(x)),
       )
@@ -27,12 +25,10 @@ export function findArrayMethod(arr: unknown[], index: string, runtime?: Runtime
   const adjustedPredicate =
     (predicate: Value) =>
     (...args: unknown[]) =>
-      rt()
-        .call(
-          predicate,
-          args.map(x => Value.from(x)),
-        )
-        .assertBool()
+      callEvaluator(
+        predicate,
+        args.map(x => Value.from(x)),
+      ).assertBool()
 
   if (index === 'at') {
     return Value.foreign(n => arr.at(n.assertNum()))
