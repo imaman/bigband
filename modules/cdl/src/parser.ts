@@ -1,5 +1,6 @@
 import { ArrayLiteralPart, AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
 import { Scanner } from './scanner'
+import { shouldNeverHappen } from './should-never-happen'
 
 export class Parser {
   constructor(private readonly scanner: Scanner) {}
@@ -375,5 +376,66 @@ export class Parser {
     }
 
     return undefined
+  }
+
+  locate(ast: AstNode): { line: number; col: number } {
+    if (ast.tag === 'arrayLiteral') {
+      return this.locate(ast.parts[0].v)
+    }
+
+    if (ast.tag === 'binaryOperator') {
+      return this.locate(ast.lhs)
+    }
+
+    if (ast.tag === 'dot') {
+      return this.locate(ast.receiver)
+    }
+
+    if (ast.tag === 'functionCall') {
+      return this.locate(ast.callee)
+    }
+    if (ast.tag === 'ident') {
+      return this.scanner.locateToken(ast.t)
+    }
+    if (ast.tag === 'if') {
+      return this.locate(ast.condition)
+    }
+    if (ast.tag === 'indexAccess') {
+      return this.locate(ast.receiver)
+    }
+    if (ast.tag === 'lambda') {
+      return this.locate(ast.body)
+    }
+    if (ast.tag === 'literal') {
+      return this.scanner.locateToken(ast.t)
+    }
+    if (ast.tag === 'objectLiteral') {
+      const mapped = ast.parts.map(curr => {
+        if (curr.tag === 'computedName') {
+          return curr.k
+        }
+        if (curr.tag === 'hardName') {
+          return curr.k
+        }
+        if (curr.tag === 'spread') {
+          return curr.o
+        }
+        shouldNeverHappen(curr)
+      })
+
+      return this.locate(mapped[0])
+    }
+    if (ast.tag === 'topLevelExpression') {
+      if (ast.definitions.length) {
+        return this.locate(ast.definitions[0].ident)
+      }
+
+      return this.locate(ast.computation)
+    }
+    if (ast.tag === 'unaryOperator') {
+      return this.locate(ast.operand)
+    }
+
+    shouldNeverHappen(ast)
   }
 }
