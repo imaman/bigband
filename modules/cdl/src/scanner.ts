@@ -7,7 +7,7 @@ export interface Token {
 
 export class Scanner {
   private offset = 0
-  constructor(private input: string) {
+  constructor(private readonly input: string) {
     this.eatWhitespace()
   }
 
@@ -84,5 +84,26 @@ export class Scanner {
     }
 
     return undefined
+  }
+
+  locateToken(t: Token): { line: number; col: number } {
+    const prefix = this.input.slice(0, t.location.offset)
+    let line = 1
+    for (let i = 0; i < prefix.length; ++i) {
+      const ch = prefix[i]
+      if (ch === '\n') {
+        line += 1
+      }
+    }
+
+    let col = 1
+    for (let i = prefix.length - 1; i >= 0; --i, ++col) {
+      const ch = prefix[i]
+      if (ch === '\n') {
+        break
+      }
+    }
+
+    return { line, col }
   }
 }
