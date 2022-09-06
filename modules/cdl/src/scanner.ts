@@ -1,4 +1,4 @@
-import { Location } from './location'
+import { Location, Location2d } from './location'
 
 export interface Token {
   readonly text: string
@@ -86,9 +86,9 @@ export class Scanner {
     return undefined
   }
 
-  resolveLocation(loc: Location): { line: number; col: number } {
+  resolveLocation(loc: Location): Location2d {
     const prefix = this.input.slice(0, loc.offset)
-    let line = 1
+    let line = 0
     for (let i = 0; i < prefix.length; ++i) {
       const ch = prefix[i]
       if (ch === '\n') {
@@ -96,7 +96,7 @@ export class Scanner {
       }
     }
 
-    let col = 1
+    let col = 0
     for (let i = prefix.length - 1; i >= 0; --i, ++col) {
       const ch = prefix[i]
       if (ch === '\n') {
