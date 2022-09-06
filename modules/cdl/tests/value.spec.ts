@@ -1,4 +1,5 @@
 import { Runtime } from '../src/runtime'
+import { Token } from '../src/scanner'
 import { Value } from '../src/value'
 
 const err = () => {
@@ -328,6 +329,7 @@ describe('value', () => {
     })
   })
   describe('array operations', () => {
+    const token: Token = { location: { offset: 0 }, text: 'x' }
     test('.length', () => {
       expect(
         Value.arr([Value.str('foo'), Value.str('bar'), Value.str('foo'), Value.str('goo')])
@@ -375,7 +377,7 @@ describe('value', () => {
       ['some', [Value.foreign(v => v.assertStr().endsWith('oo'))], true],
       ['some', [Value.foreign(v => v.assertStr().startsWith('oo'))], false],
     ])('provides the .%s() method', (name, args, expected) => {
-      const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
+      const r = new Runtime({ tag: 'literal', type: 'num', t: token })
       const input = Value.arr([Value.str('foo'), Value.str('bar'), Value.str('foo'), Value.str('goo')])
       const before = JSON.parse(JSON.stringify(input))
       const callee = input.access(name, r)
@@ -385,14 +387,14 @@ describe('value', () => {
       expect(JSON.parse(JSON.stringify(input))).toEqual(before)
     })
     test('.flat() flattens', () => {
-      const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
+      const r = new Runtime({ tag: 'literal', type: 'num', t: token })
       const input = Value.arr([Value.arr([Value.str('a'), Value.str('b')]), Value.str('c')])
       const callee = input.access('flat', r)
       const actual = callee.call([], err)
       expect(actual.export()).toEqual(['a', 'b', 'c'])
     })
     test('.reduce() reduces to the left', () => {
-      const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
+      const r = new Runtime({ tag: 'literal', type: 'num', t: token })
 
       const input = Value.arr([
         Value.arr([Value.num(0), Value.num(1)]),
@@ -405,7 +407,7 @@ describe('value', () => {
       expect(actual.export()).toEqual([0, 1, 2, 3, 4, 5])
     })
     test('.reduceRight() reduces to the right', () => {
-      const r = new Runtime({ tag: 'literal', type: 'num', t: { offset: 0, text: '1' } })
+      const r = new Runtime({ tag: 'literal', type: 'num', t: token })
 
       const input = Value.arr([
         Value.arr([Value.num(0), Value.num(1)]),

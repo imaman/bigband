@@ -1,6 +1,8 @@
+import { Location } from './location'
+
 export interface Token {
   readonly text: string
-  readonly offset: number
+  readonly location: Location
 }
 
 export class Scanner {
@@ -56,7 +58,7 @@ export class Scanner {
     if (eatWhitespace) {
       this.eatWhitespace()
     }
-    return { offset, text }
+    return { location: { offset }, text }
   }
 
   consumeIf(r: RegExp | string, eatWhitespace = true): Token | undefined {
