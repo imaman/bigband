@@ -1,4 +1,4 @@
-import { Location } from './location'
+import { Location2d, Span } from './location'
 import { Parser } from './parser'
 import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
@@ -25,42 +25,60 @@ export class Cdl {
     }
 
     const enriched = c.expressionTrace.map(curr => {
-      const location = this.parser.locate(curr)
+      const span = this.parser.span(curr)
       return {
         ast: curr,
-        location,
-        resolvedLocation: this.scanner.resolveLocation(location),
+        span,
+        from: this.scanner.resolveLocation(span.from),
+        to: this.scanner.resolveLocation(span.to),
       }
     })
 
     const mostRecent = enriched.find(Boolean)
-    const lineCol = mostRecent?.resolvedLocation ?? { line: 0, col: 0 }
+    const lineCol = mostRecent?.from ?? { line: -1, col: -1 }
 
     const formatted = enriched
-      .map(curr => `at (${curr.resolvedLocation.line}:${curr.resolvedLocation.col}) ${this.interestingPart(curr)}`)
+      .map(curr => `at (${curr.from.line + 1}:${curr.from.col + 1}) ${this.interestingPart(curr)}`)
       .reverse()
       .join(`\n${spacer}`)
     const error = new Error(
-      `(Ln ${lineCol.line},Col ${lineCol.col}) ${c.errorMessage} when evaluating:\n${spacer}${formatted}`,
+      `(Ln ${lineCol.line + 1},Col ${lineCol.col + 1}) ${c.errorMessage} when evaluating:\n${spacer}${formatted}`,
     )
 
     throw error
   }
 
-  private interestingPart(arg: { location: Location }) {
-    const ret = this.scanner.lineAt(arg.location)
+  private interestingPart(arg: { span: Span; from: Location2d; to: Location2d }) {
+    if (arg.from.line === arg.to.line) {
+      const line = this.scanner
+        .lineAt(arg.span.from)
+        .substring(arg.from.col, arg.to.col)
+        .replace(/^[\n]*/, '')
+        .replace(/[\n]*$/, '')
+
+      const limit = 80
+      if (line.length <= limit) {
+        return line
+      }
+
+      return `${line.substring(0, limit)}...`
+    }
+    const line = this.scanner
+      .lineAt(arg.span.from)
+      .replace(/^[\n]*/, '')
+      .replace(/[\n]*$/, '')
     const limit = 80
-    if (ret.length <= limit) {
-      return ret
+    if (line.length <= limit) {
+      return line
     }
 
-    return `${ret.substring(0, limit)}...`
+    return `${line.substring(0, limit)}...`
   }
 
   locate(v: Value) {
-    const loc = v.location()
-    if (loc) {
-      return this.scanner.resolveLocation(loc)
+    const span = v.span()
+    if (span) {
+      return this.scanner.resolveLocation(span.from)
     }
 
     return undefined
