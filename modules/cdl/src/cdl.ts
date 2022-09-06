@@ -34,25 +34,20 @@ export class Cdl {
       }
     })
 
-    const mostRecent = enriched.find(Boolean)
-    const lineCol = mostRecent?.from ?? { line: -1, col: -1 }
-
     const formatted = enriched
       .map(curr => `at (${curr.from.line + 1}:${curr.from.col + 1}) ${this.interestingPart(curr)}`)
       .reverse()
       .join(`\n${spacer}`)
-    const error = new Error(
-      `(Ln ${lineCol.line + 1},Col ${lineCol.col + 1}) ${c.errorMessage} when evaluating:\n${spacer}${formatted}`,
-    )
+    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${spacer}${formatted}`
 
-    throw error
+    throw new Error(runtimeErrorMessage)
   }
 
   private interestingPart(arg: { span: Span; from: Location2d; to: Location2d }) {
     if (arg.from.line === arg.to.line) {
       const line = this.scanner
         .lineAt(arg.span.from)
-        .substring(arg.from.col, arg.to.col)
+        .substring(arg.from.col, arg.to.col + 1)
         .replace(/^[\n]*/, '')
         .replace(/[\n]*$/, '')
 

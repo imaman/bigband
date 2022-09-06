@@ -53,7 +53,16 @@ describe('cdl', () => {
   })
 
   test('error message specifies the location in the file', () => {
-    expect(() => run(`7+\n6+\n5+4+3+!2`)).toThrowError(`(Ln 3,Col 7) value type error: expected bool but found 2`)
+    expect(() => run(`7+\n6+\n5+4+3+!2`)).toThrowError(`value type error: expected bool but found 2`)
+
+    const expected = [
+      `value type error: expected num but found "zxcvbnm" when evaluating:`,
+      `  at (1:1) 9 * 8 * 'zxcvbnm' * 7`,
+      `  at (1:5) 8 * 'zxcvbnm' * 7`,
+      `  at (1:10) zxcvbnm' * 7`,
+    ].join('\n')
+
+    expect(() => run(`9 * 8 * 'zxcvbnm' * 7`)).toThrowError(expected)
   })
 
   test('equality', () => {
@@ -403,10 +412,10 @@ describe('cdl', () => {
       const expected = [
         '  at (1:1) let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(...',
         '  at (1:85) a(5)',
-        '  at (1:79) b(x)',
-        '  at (1:58) c(x)',
-        '  at (1:36) d(x)',
-        '  at (1:17) x2',
+        '  at (1:79) b(x);',
+        '  at (1:58) c(x);',
+        '  at (1:36) d(x);',
+        '  at (1:17) x2;',
       ].join('\n')
 
       expect(() =>
