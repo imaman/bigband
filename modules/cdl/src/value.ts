@@ -2,7 +2,7 @@ import { AstNode, Lambda, show } from './ast-node'
 import { failMe } from './fail-me'
 import { CallEvaluator, findArrayMethod } from './find-array-method'
 import { findStringMethod } from './find-string-method'
-import { Location } from './location'
+import { Span } from './location'
 import { shouldNeverHappen } from './should-never-happen'
 import { switchOn } from './switch-on'
 import { SymbolTable } from './symbol-table'
@@ -16,7 +16,7 @@ type Inner =
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
   | { tag: 'num'; val: number }
   | { tag: 'obj'; val: Record<string, Value> }
-  | { tag: 'sink'; val: undefined; location?: Location }
+  | { tag: 'sink'; val: undefined; span?: Span }
   | { tag: 'str'; val: string }
 
 type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
@@ -143,8 +143,8 @@ export class Value {
    * (iv) in `||` and `&&` expressions, the evaluation of the right hand side can be skipped. Specifically,
    *    `true || sink` evaluates to `true` and `false && sink` evaluates to `false`.
    */
-  static sink(location?: Location): Value {
-    return new Value({ val: undefined, tag: 'sink', ...(location ? { location } : {}) })
+  static sink(span?: Span): Value {
+    return new Value({ val: undefined, tag: 'sink', ...(span ? { span } : {}) })
   }
   static str(val: string): Value {
     return new Value({ val, tag: 'str' })
@@ -272,20 +272,20 @@ export class Value {
     })
   }
 
-  bindToLocation(loc: Location) {
+  bindToSpan(span: Span) {
     if (!this.isSink()) {
       throw new Error(`Not supported on type ${this.inner.tag}`)
     }
 
-    return Value.sink(loc)
+    return Value.sink(span)
   }
 
-  location() {
+  span() {
     const inner = this.inner
     if (inner.tag !== 'sink') {
       return undefined
     }
-    return inner.location
+    return inner.span
   }
 
   or(that: () => Value) {

@@ -83,8 +83,8 @@ export class Runtime {
   private evalNode(ast: AstNode, table: SymbolTable): Value {
     this.stack = push(ast, this.stack)
     let ret = this.evalNodeImpl(ast, table)
-    if (ret.isSink() && !ret.location()) {
-      ret = ret.bindToLocation(this.parser.locate(ast))
+    if (ret.isSink() && !ret.span()) {
+      ret = ret.bindToSpan(this.parser.span(ast))
     }
     switchOn(this.verbosity, {
       quiet: () => {},
