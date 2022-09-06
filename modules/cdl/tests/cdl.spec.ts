@@ -443,7 +443,7 @@ describe('cdl', () => {
     test('specified via the "sink" literal', () => {
       expect(run(`sink`)).toEqual(null)
     })
-    test('access to non-existing attribute of an object evalutes to sink', () => {
+    test('access to non-existing attribute of an object evalutes to a sink', () => {
       expect(run(`{a: 1}.b`)).toEqual(null)
       expect(run(`6\n+ 7\n+ 8\n+ 9 + 10 + 11 + {a: 9000}.b`, 'locate')).toEqual({
         from: { col: 16, line: 3 },
@@ -524,20 +524,15 @@ describe('cdl', () => {
       expect(run(`0 ?? 1`)).toEqual(0)
     })
     test(`the returned sink holds a location in the source code`, () => {
-      const evalLocateSink = (s: string) => {
-        const cdl = new Cdl(s)
-        const v = cdl.run()
-        return cdl.locate(v)
-      }
-      expect(evalLocateSink(`1000 + 2000 + 3000 + sink + 5000 + sink`)).toEqual({
+      expect(run(`1000 + 2000 + 3000 + sink + 5000 + sink`, 'locate')).toEqual({
         from: { line: 0, col: 21 },
         to: { line: 0, col: 24 },
       })
-      expect(evalLocateSink(`1000 + 2000 + 3000 + 4000 + 5000 + sink`)).toEqual({
+      expect(run(`1000 + 2000 + 3000 + 4000 + 5000 + sink`, 'locate')).toEqual({
         from: { line: 0, col: 35 },
         to: { line: 0, col: 38 },
       })
-      expect(evalLocateSink(`1000\n + 2000\n + sink\n + 4000\n + 5000\n + sink`)).toEqual({
+      expect(run(`1000\n + 2000\n + sink\n + 4000\n + 5000\n + sink`, 'locate')).toEqual({
         from: { line: 2, col: 3 },
         to: { line: 2, col: 6 },
       })
