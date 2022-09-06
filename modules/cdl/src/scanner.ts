@@ -86,10 +86,6 @@ export class Scanner {
     return undefined
   }
 
-  locateToken(t: Token): { line: number; col: number } {
-    return this.resolveLocation(t.location)
-  }
-
   resolveLocation(loc: Location): { line: number; col: number } {
     const prefix = this.input.slice(0, loc.offset)
     let line = 1

@@ -1,4 +1,5 @@
 import { ArrayLiteralPart, AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
+import { Location } from './location'
 import { Scanner, Token } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
 
@@ -380,9 +381,13 @@ export class Parser {
     return undefined
   }
 
-  locate(ast: AstNode): { line: number; col: number } {
+  resolveLocation(loc: Location) {
+    return this.scanner.resolveLocation(loc)
+  }
+
+  locate(ast: AstNode): Location {
     if (ast.tag === 'arrayLiteral') {
-      return this.scanner.locateToken(ast.start)
+      return ast.start.location
     }
 
     if (ast.tag === 'binaryOperator') {
@@ -397,7 +402,7 @@ export class Parser {
       return this.locate(ast.callee)
     }
     if (ast.tag === 'ident') {
-      return this.scanner.locateToken(ast.t)
+      return ast.t.location
     }
     if (ast.tag === 'if') {
       return this.locate(ast.condition)
@@ -409,10 +414,10 @@ export class Parser {
       return this.locate(ast.body)
     }
     if (ast.tag === 'literal') {
-      return this.scanner.locateToken(ast.t)
+      return ast.t.location
     }
     if (ast.tag === 'objectLiteral') {
-      return this.scanner.locateToken(ast.start)
+      return ast.start.location
     }
     if (ast.tag === 'topLevelExpression') {
       if (ast.definitions.length) {

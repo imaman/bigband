@@ -68,7 +68,7 @@ export class Runtime {
     } catch (e) {
       let lineCol = { line: 0, col: 0 }
       if (this.stack) {
-        lineCol = this.parser.locate(this.stack.ast)
+        lineCol = this.parser.resolveLocation(this.parser.locate(this.stack.ast))
       }
 
       const nodes: string[] = []
@@ -88,7 +88,10 @@ export class Runtime {
 
   private evalNode(ast: AstNode, table: SymbolTable): Value {
     this.stack = push(ast, this.stack)
-    const ret = this.evalNodeImpl(ast, table)
+    let ret = this.evalNodeImpl(ast, table)
+    if (ret.isSink() && !ret.location()) {
+      ret = ret.bindToLocation(this.parser.locate(ast))
+    }
     switchOn(this.verbosity, {
       quiet: () => {},
       trace: () => {
