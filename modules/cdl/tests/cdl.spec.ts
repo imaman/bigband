@@ -493,9 +493,14 @@ describe('cdl', () => {
       expect(run(`0 ?? 1`)).toEqual(0)
     })
     test(`the returned sink holds a location in the source code`, () => {
-      const cdl = new Cdl(`1 + 2 + 3 + sink + 4 + sink`)
-      const v = cdl.run()
-      expect(cdl.locate(v)).toEqual({ line: 1, col: 13 })
+      const evalLocateSink = (s: string) => {
+        const cdl = new Cdl(s)
+        const v = cdl.run()
+        return cdl.locate(v)
+      }
+      expect(evalLocateSink(`1000 + 2000 + 3000 + sink + 5000 + sink`)).toEqual({ line: 1, col: 22 })
+      expect(evalLocateSink(`1000 + 2000 + 3000 + 4000 + 5000 + sink`)).toEqual({ line: 1, col: 36 })
+      expect(evalLocateSink(`1000\n + 2000\n + sink\n + 4000\n + 5000\n + sink`)).toEqual({ line: 3, col: 4 })
     })
   })
 
