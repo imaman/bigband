@@ -53,7 +53,7 @@ describe('cdl', () => {
   })
 
   test('error message specifies the location in the file', () => {
-    expect(() => run(`6+\n7+\n5+4+3+!2`)).toThrowError(`(Ln 3,Col 8) value type error: expected bool but found 2`)
+    expect(() => run(`7+\n6+\n5+4+3+!2`)).toThrowError(`(Ln 3,Col 7) value type error: expected bool but found 2`)
   })
 
   test('equality', () => {
@@ -400,9 +400,18 @@ describe('cdl', () => {
       )
     })
     test('expression trace on error', () => {
+      const expected = [
+        '  at (1:5) d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(x); ...',
+        '  at (1:85) a(5)',
+        '  at (1:79) b(x)',
+        '  at (1:58) c(x)',
+        '  at (1:36) d(x)',
+        '  at (1:17) x2',
+      ].join('\n')
+
       expect(() =>
         run(`let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(x); a(5)`),
-      ).toThrowError('  a(5)\n  b(x)\n  c(x)\n  d(x)\n  x2')
+      ).toThrowError(expected)
     })
     test('only lexical scope is considered when looking up a definition', () => {
       expect(run(`let a = 1; let inc = fun(n) n+a; (let a = 100; inc(2))`)).toEqual(3)
@@ -498,9 +507,9 @@ describe('cdl', () => {
         const v = cdl.run()
         return cdl.locate(v)
       }
-      expect(evalLocateSink(`1000 + 2000 + 3000 + sink + 5000 + sink`)).toEqual({ line: 1, col: 22 })
-      expect(evalLocateSink(`1000 + 2000 + 3000 + 4000 + 5000 + sink`)).toEqual({ line: 1, col: 36 })
-      expect(evalLocateSink(`1000\n + 2000\n + sink\n + 4000\n + 5000\n + sink`)).toEqual({ line: 3, col: 4 })
+      expect(evalLocateSink(`1000 + 2000 + 3000 + sink + 5000 + sink`)).toEqual({ line: 0, col: 21 })
+      expect(evalLocateSink(`1000 + 2000 + 3000 + 4000 + 5000 + sink`)).toEqual({ line: 0, col: 35 })
+      expect(evalLocateSink(`1000\n + 2000\n + sink\n + 4000\n + 5000\n + sink`)).toEqual({ line: 2, col: 3 })
     })
   })
 
@@ -645,7 +654,7 @@ describe('cdl', () => {
   })
   describe('evaluation stack', () => {
     test('max recursion depth', () => {
-      expect(run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(340)`)).toEqual(340)
+      expect(run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(330)`)).toEqual(330)
     })
   })
   test.todo('left associativity of +/-')
