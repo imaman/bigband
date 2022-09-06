@@ -1,5 +1,5 @@
 import { ArrayLiteralPart, AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
-import { Location } from './location'
+import { Location, Span } from './location'
 import { Scanner, Token } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
 
@@ -41,29 +41,30 @@ export class Parser {
   }
 
   lambda(): AstNode {
-    if (this.scanner.consumeIf('fun')) {
-      this.scanner.consume('(')
-      const args: Ident[] = []
-
-      if (this.scanner.consumeIf(')')) {
-        // no formal args
-      } else {
-        while (true) {
-          const arg = this.identifier()
-          args.push(arg)
-          if (this.scanner.consumeIf(')')) {
-            break
-          }
-
-          this.scanner.consume(',')
-        }
-      }
-
-      const body = this.expression()
-      return { tag: 'lambda', formalArgs: args, body }
+    const start = this.scanner.consumeIf('fun')
+    if (!start) {
+      return this.ifExpression()
     }
 
-    return this.ifExpression()
+    this.scanner.consume('(')
+    const args: Ident[] = []
+
+    if (this.scanner.consumeIf(')')) {
+      // no formal args
+    } else {
+      while (true) {
+        const arg = this.identifier()
+        args.push(arg)
+        if (this.scanner.consumeIf(')')) {
+          break
+        }
+
+        this.scanner.consume(',')
+      }
+    }
+
+    const body = this.expression()
+    return { tag: 'lambda', start, formalArgs: args, body }
   }
 
   ifExpression(): AstNode {
@@ -170,14 +171,17 @@ export class Parser {
   }
 
   unary(): AstNode {
-    if (this.scanner.consumeIf('!')) {
-      return { tag: 'unaryOperator', operand: this.unary(), operator: '!' }
+    let operatorToken = this.scanner.consumeIf('!')
+    if (operatorToken) {
+      return { tag: 'unaryOperator', operand: this.unary(), operator: '!', operatorToken }
     }
-    if (this.scanner.consumeIf('+')) {
-      return { tag: 'unaryOperator', operand: this.unary(), operator: '+' }
+    operatorToken = this.scanner.consumeIf('+')
+    if (operatorToken) {
+      return { tag: 'unaryOperator', operand: this.unary(), operator: '+', operatorToken }
     }
-    if (this.scanner.consumeIf('-')) {
-      return { tag: 'unaryOperator', operand: this.unary(), operator: '-' }
+    operatorToken = this.scanner.consumeIf('-')
+    if (operatorToken) {
+      return { tag: 'unaryOperator', operand: this.unary(), operator: '-', operatorToken }
     }
 
     return this.call()
@@ -190,25 +194,26 @@ export class Parser {
       return callee
     }
 
-    const actualArgs = this.actualArguments()
-    return { tag: 'functionCall', actualArgs, callee }
+    const { actualArgs, end } = this.actualArgList()
+    return { tag: 'functionCall', actualArgs, callee, end }
   }
 
-  private actualArguments() {
+  private actualArgList() {
+    const actualArgs: AstNode[] = []
+    const endEmpty = this.scanner.consumeIf(')')
+    if (endEmpty) {
+      // no actual args
+      return { actualArgs, end: endEmpty }
+    }
+
     while (true) {
-      const actualArgs: AstNode[] = []
-      if (this.scanner.consumeIf(')')) {
-        // no actual args
-        return actualArgs
+      const arg = this.expression()
+      actualArgs.push(arg)
+      const end = this.scanner.consumeIf(')')
+      if (end) {
+        return { actualArgs, end }
       }
-      while (true) {
-        const arg = this.expression()
-        actualArgs.push(arg)
-        if (this.scanner.consumeIf(')')) {
-          return actualArgs
-        }
-        this.scanner.consume(',')
-      }
+      this.scanner.consume(',')
     }
   }
 
@@ -228,8 +233,8 @@ export class Parser {
       }
 
       if (this.scanner.consumeIf('(')) {
-        const actualArgs = this.actualArguments()
-        ret = { tag: 'functionCall', actualArgs, callee: ret }
+        const { actualArgs, end } = this.actualArgList()
+        ret = { tag: 'functionCall', actualArgs, callee: ret, end }
         continue
       }
 
@@ -305,9 +310,10 @@ export class Parser {
    * (comma-separated list of expressions) as well as the closing ']' token.
    */
   arrayBody(start: Token): AstNode {
-    if (this.scanner.consumeIf(']')) {
+    const t = this.scanner.consumeIf(']')
+    if (t) {
       // an empty array literal
-      return { tag: 'arrayLiteral', start, parts: [] }
+      return { tag: 'arrayLiteral', start, parts: [], end: t }
     }
 
     const parts: ArrayLiteralPart[] = []
@@ -319,8 +325,9 @@ export class Parser {
         parts.push({ tag: 'element', v: exp })
       }
 
-      if (this.scanner.consumeIf(']')) {
-        return { tag: 'arrayLiteral', start, parts }
+      const end = this.scanner.consumeIf(']')
+      if (end) {
+        return { tag: 'arrayLiteral', start, parts, end }
       }
 
       this.scanner.consume(',')
@@ -332,9 +339,10 @@ export class Parser {
    * (comma-separated list of key:value parirs) as well as the closing '}' token.
    */
   objectBody(start: Token): AstNode {
-    if (this.scanner.consumeIf('}')) {
+    const t = this.scanner.consumeIf('}')
+    if (t) {
       // an empty array literal
-      return { tag: 'objectLiteral', start, parts: [] }
+      return { tag: 'objectLiteral', start, parts: [], end: t }
     }
 
     const parts: ObjectLiteralPart[] = []
@@ -354,8 +362,9 @@ export class Parser {
         parts.push({ tag: 'hardName', k, v })
       }
 
-      if (this.scanner.consumeIf('}')) {
-        return { tag: 'objectLiteral', start, parts }
+      const end = this.scanner.consumeIf('}')
+      if (end) {
+        return { tag: 'objectLiteral', start, parts, end }
       }
 
       this.scanner.consume(',')
@@ -385,49 +394,48 @@ export class Parser {
     return this.scanner.resolveLocation(loc)
   }
 
-  locate(ast: AstNode): Location {
+  span(ast: AstNode): Span {
+    const ofRange = (a: Span, b: Span) => ({ from: a.from, to: b.to })
+    const ofToken = (t: Token) => ({ from: t.location, to: { offset: t.location.offset + t.text.length } })
+
     if (ast.tag === 'arrayLiteral') {
-      return ast.start.location
+      return ofRange(ofToken(ast.start), ofToken(ast.end))
     }
-
     if (ast.tag === 'binaryOperator') {
-      return this.locate(ast.lhs)
+      return ofRange(this.span(ast.lhs), this.span(ast.rhs))
     }
-
     if (ast.tag === 'dot') {
-      return this.locate(ast.receiver)
+      return ofRange(this.span(ast.receiver), this.span(ast.ident))
     }
-
     if (ast.tag === 'functionCall') {
-      return this.locate(ast.callee)
+      return ofRange(this.span(ast.callee), ofToken(ast.end))
     }
     if (ast.tag === 'ident') {
-      return ast.t.location
+      return ofToken(ast.t)
     }
     if (ast.tag === 'if') {
-      return this.locate(ast.condition)
+      return ofRange(this.span(ast.condition), this.span(ast.negative))
     }
     if (ast.tag === 'indexAccess') {
-      return this.locate(ast.receiver)
+      return ofRange(this.span(ast.receiver), this.span(ast.index))
     }
     if (ast.tag === 'lambda') {
-      return this.locate(ast.body)
+      return ofRange(ofToken(ast.start), this.span(ast.body))
     }
     if (ast.tag === 'literal') {
-      return ast.t.location
+      return ofToken(ast.t)
     }
     if (ast.tag === 'objectLiteral') {
-      return ast.start.location
+      return ofRange(ofToken(ast.start), ofToken(ast.end))
     }
     if (ast.tag === 'topLevelExpression') {
-      if (ast.definitions.length) {
-        return this.locate(ast.definitions[0].ident)
-      }
+      const d0 = ast.definitions.find(Boolean)
+      const from = d0 ? this.span(d0.ident) : this.span(ast.computation)
 
-      return this.locate(ast.computation)
+      return ofRange(from, this.span(ast.computation))
     }
     if (ast.tag === 'unaryOperator') {
-      return this.locate(ast.operand)
+      return ofRange(ofToken(ast.operatorToken), this.span(ast.operand))
     }
 
     shouldNeverHappen(ast)
