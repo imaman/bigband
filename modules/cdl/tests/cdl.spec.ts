@@ -521,19 +521,19 @@ describe('cdl', () => {
       expect(evalLocateSink(`1000\n + 2000\n + sink\n + 4000\n + 5000\n + sink`)).toEqual({ line: 2, col: 3 })
     })
   })
-  describe('sink!', () => {
-    test(`foo`, () => {
+  describe('sink+', () => {
+    test(`captures the expression trace at runtime`, () => {
       const evalTraceSink = (s: string) => {
         const cdl = new Cdl(s)
         const v = cdl.run()
         return cdl.trace(v)
       }
-      expect(evalTraceSink(`1000 + 2000 + 3000 + sink!`)).toEqual(
+      expect(evalTraceSink(`1000 + 2000 + 3000 + sink+`)).toEqual(
         [
-          `  at (1:1) 1000 + 2000 + 3000 + sink!`,
-          `  at (1:8) 2000 + 3000 + sink!`,
-          `  at (1:15) 3000 + sink!`,
-          `  at (1:22) sink!`,
+          `  at (1:1) 1000 + 2000 + 3000 + sink+`,
+          `  at (1:8) 2000 + 3000 + sink+`,
+          `  at (1:15) 3000 + sink+`,
+          `  at (1:22) sink+`,
         ].join('\n'),
       )
     })
