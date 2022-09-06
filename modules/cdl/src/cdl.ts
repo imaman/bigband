@@ -77,7 +77,7 @@ export class Cdl {
   locate(v: Value) {
     const span = v.span()
     if (span) {
-      return this.scanner.resolveLocation(span.from)
+      return { from: this.scanner.resolveLocation(span.from), to: this.scanner.resolveLocation(span.to) }
     }
 
     return undefined
