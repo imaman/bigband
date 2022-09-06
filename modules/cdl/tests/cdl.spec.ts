@@ -49,8 +49,8 @@ describe('cdl', () => {
     expect(() => cdl.run(`!!4`)).toThrowError(`value type error: expected bool but found 4`)
   })
 
-  test('error holds the location in the file', () => {
-    expect(() => cdl.run(`6+\n7+\n+!5`)).toThrowError(`(Ln 3,Col 2) value type error: expected bool but found 5`)
+  test('error message specifies the location in the file', () => {
+    expect(() => cdl.run(`6+\n7+\n5+4+3+!2`)).toThrowError(`(Ln 3,Col 8) value type error: expected bool but found 2`)
   })
 
   test('equality', () => {
@@ -533,6 +533,7 @@ describe('cdl', () => {
       ])
     })
     test('map', () => {
+      expect(cdl.run(`['foo', 'bar', 'goo'].map(fun (s) s.charAt(0))`)).toEqual(['f', 'b', 'g'])
       expect(cdl.run(`['a', 'b'].map(fun (item, i) item + ':' + i)`)).toEqual(['a:0', 'b:1'])
       expect(cdl.run(`['a', 'b', 'p', 'q'].map(fun (x, i, a) x + a[a.length - (i+1)])`)).toEqual([
         'aq',
@@ -542,10 +543,12 @@ describe('cdl', () => {
       ])
     })
     test('reduce', () => {
+      expect(cdl.run(`['a','b','c','d'].reduce(fun (w, x) w+x, '')`)).toEqual('abcd')
       expect(cdl.run(`['a','b','c','d','e'].reduce(fun (w, x, i) if (i % 2 == 0) w+x else w, '')`)).toEqual('ace')
       expect(cdl.run(`[['w',2], ['x',0], ['y',1]].reduce(fun (w, x, i, a) w+a[x[1]][0], '')`)).toEqual('ywx')
     })
     test('reduceRight', () => {
+      expect(cdl.run(`['a','b','c','d'].reduceRight(fun (w, x) w+x, '')`)).toEqual('dcba')
       expect(cdl.run(`['a','b','c','d','e'].reduceRight(fun (w, x, i) if (i % 2 == 0) w+x else w, '')`)).toEqual('eca')
       expect(cdl.run(`[['w',2], ['x',0], ['y',1]].reduceRight(fun (w, x, i, a) w+a[x[1]][0], '')`)).toEqual('xwy')
     })
