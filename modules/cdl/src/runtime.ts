@@ -1,4 +1,6 @@
 import { AstNode, show } from './ast-node'
+import { Location } from './location'
+import { Parser } from './parser'
 import { shouldNeverHappen } from './should-never-happen'
 import { switchOn } from './switch-on'
 import { SymbolTable } from './symbol-table'
@@ -48,7 +50,7 @@ export type Verbosity = 'quiet' | 'trace'
 
 export class Runtime {
   private stack: Stack = undefined
-  constructor(private readonly root: AstNode, private readonly verbosity: Verbosity = 'quiet') {}
+  constructor(private readonly root: AstNode, private readonly verbosity: Verbosity = 'quiet', private readonly parser: Parser) {}
 
   run(): Value {
     const empty = new EmptySymbolTable()
@@ -66,9 +68,14 @@ export class Runtime {
       }
       nodes.reverse()
       const spacer = '  '
+
+      let lineCol = {line: 0, col: 0}
+      if (this.stack) {
+        lineCol = this.parser.locate(this.stack.ast)
+      }
       const formatted = nodes.join(`\n${spacer}`)
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      throw new Error(`${(e as { message?: string }).message} when evaluating:\n${spacer}${formatted}`)
+      throw new Error(`(Ln ${lineCol.line},Col ${lineCol.col}) ${(e as { message?: string }).message} when evaluating:\n${spacer}${formatted}`)
     }
   }
 
@@ -256,13 +263,13 @@ export class Runtime {
       if (rec === undefined || rec === null) {
         throw new Error(`Cannot access attribute .${ast.ident.t.text} of ${rec}`)
       }
-      return rec.access(ast.ident.t.text, this)
+      return rec.access(ast.ident.t.text, (callee, args) => this.call(callee, args))
     }
 
     if (ast.tag === 'indexAccess') {
       const rec = this.evalNode(ast.receiver, table)
       const index = this.evalNode(ast.index, table)
-      return rec.access(index, this)
+      return rec.access(index, (callee, args) => this.call(callee, args))
     }
 
     shouldNeverHappen(ast)
