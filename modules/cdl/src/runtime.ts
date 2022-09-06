@@ -185,7 +185,7 @@ export class Runtime {
       if (ast.type === 'num') {
         return Value.num(Number(ast.t.text))
       }
-      if (ast.type === 'sink+') {
+      if (ast.type === 'sink!') {
         return Value.sink(undefined, this.stack)
       }
       if (ast.type === 'sink') {

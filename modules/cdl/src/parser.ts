@@ -255,9 +255,9 @@ export class Parser {
   }
 
   literalOrIdent(): AstNode {
-    let t = this.scanner.consumeIf('sink+')
+    let t = this.scanner.consumeIf('sink!')
     if (t) {
-      return { tag: 'literal', type: 'sink+', t }
+      return { tag: 'literal', type: 'sink!', t }
     }
 
     t = this.scanner.consumeIf('sink')
