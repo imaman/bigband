@@ -408,7 +408,7 @@ export class Parser {
 
   span(ast: AstNode): Span {
     const ofRange = (a: Span, b: Span) => ({ from: a.from, to: b.to })
-    const ofToken = (t: Token) => ({ from: t.location, to: { offset: t.location.offset + t.text.length } })
+    const ofToken = (t: Token) => ({ from: t.location, to: { offset: t.location.offset + t.text.length - 1 } })
 
     if (ast.tag === 'arrayLiteral') {
       return ofRange(ofToken(ast.start), ofToken(ast.end))

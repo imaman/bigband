@@ -1,7 +1,15 @@
 import { Cdl } from '../src/cdl'
+import { switchOn } from '../src/switch-on'
 
-function run(input: string) {
-  return new Cdl(input).run().export()
+function run(input: string, returns: 'value' | 'locate' | 'trace' | 'symbols' = 'value') {
+  const cdl = new Cdl(input)
+  const v = cdl.run()
+  return switchOn(returns, {
+    symbols: () => cdl.symbols(v),
+    trace: () => cdl.trace(v),
+    locate: () => cdl.locate(v),
+    value: () => v.export(),
+  })
 }
 describe('cdl', () => {
   test('basics', () => {
@@ -9,8 +17,6 @@ describe('cdl', () => {
     expect(() => run(`6 6`)).toThrowError(`Loitering input at position 2: <6>`)
     expect(run(`3.14`)).toEqual(3.14)
   })
-
-  test.todo('error value/exception')
 
   test('booleans', () => {
     expect(run(`true`)).toEqual(true)
@@ -412,10 +418,10 @@ describe('cdl', () => {
       const expected = [
         '  at (1:1) let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(...',
         '  at (1:85) a(5)',
-        '  at (1:79) b(x);',
-        '  at (1:58) c(x);',
-        '  at (1:36) d(x);',
-        '  at (1:17) x2;',
+        '  at (1:79) b(x)',
+        '  at (1:58) c(x)',
+        '  at (1:36) d(x)',
+        '  at (1:17) x2',
       ].join('\n')
 
       expect(() =>
@@ -436,6 +442,10 @@ describe('cdl', () => {
   describe('sink', () => {
     test('specified via the "sink" literal', () => {
       expect(run(`sink`)).toEqual(null)
+    })
+    test('access to non-existing attribute of an object evalutes to sink', () => {
+      expect(run(`{a: 1}.b`)).toEqual(null)
+      expect(run(`6\n+ 7\n+ 8\n+ 9 + 10 + 11 + {a: 9000}.b`, 'locate')).toEqual({ col: 16, line: 3 })
     })
     test('an expression involving a sink evaluates to sink', () => {
       expect(run(`5+8+9+sink+20+30`)).toEqual(null)
@@ -493,7 +503,7 @@ describe('cdl', () => {
       expect(run(`sink == ''`)).toEqual(false)
       expect(run(`sink == 'x'`)).toEqual(false)
     })
-    test('errors when a sink ordered with other types', () => {
+    test('errors when a sink is ordered with other types', () => {
       expect(() => run(`sink < []`)).toThrowError('Cannot compare a sink value with a value of another type')
       expect(() => run(`sink < false`)).toThrowError('Cannot compare a sink value with a value of another type')
       expect(() => run(`sink < true`)).toThrowError('Cannot compare a sink value with a value of another type')
@@ -523,12 +533,7 @@ describe('cdl', () => {
   })
   describe('sink!', () => {
     test(`captures the expression trace at runtime`, () => {
-      const evalTraceSink = (s: string) => {
-        const cdl = new Cdl(s)
-        const v = cdl.run()
-        return cdl.trace(v)
-      }
-      expect(evalTraceSink(`1000 + 2000 + 3000 + sink!`)).toEqual(
+      expect(run(`1000 + 2000 + 3000 + sink!`, 'trace')).toEqual(
         [
           `  at (1:1) 1000 + 2000 + 3000 + sink!`,
           `  at (1:8) 2000 + 3000 + sink!`,
@@ -536,6 +541,9 @@ describe('cdl', () => {
           `  at (1:22) sink!`,
         ].join('\n'),
       )
+    })
+    test(`trace() is undefined  if the returned value is not a sink`, () => {
+      expect(run(`1000 + 2000 + 3000 + 4000`, 'trace')).toBe(undefined)
     })
   })
   describe('sink!!', () => {
@@ -545,14 +553,24 @@ describe('cdl', () => {
         const v = cdl.run()
         return { symbols: cdl.symbols(v), trace: cdl.trace(v) }
       }
-      const actual = evalTraceSink(`let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`).symbols
-      expect(actual).toMatchObject({
+      const actual = evalTraceSink(`let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`)
+      expect(actual.symbols).toMatchObject({
         f: 'fun (x, y) (x * (y * (sink!! * a)))',
         a: 2,
         x: 30,
         y: 40,
       })
-      expect(Object.keys(actual ?? {})).toEqual(['Object', 'a', 'f', 'x', 'y'])
+      expect(Object.keys(actual.symbols ?? {})).toEqual(['Object', 'a', 'f', 'x', 'y'])
+      expect(actual.trace).toEqual(
+        [
+          `  at (1:1) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
+          `  at (1:50) f(30, 40)`,
+          `  at (1:30) x * y * sink!! * a`,
+          `  at (1:34) y * sink!! * a`,
+          `  at (1:38) sink!! * a`,
+          `  at (1:38) sink!!`,
+        ].join('\n'),
+      )
     })
   })
 
@@ -701,7 +719,6 @@ describe('cdl', () => {
     })
   })
   test.todo('left associativity of +/-')
-  test.todo('error messages to include expression-trace')
   test.todo('syntax errors')
   test.todo('comparison of arrays')
   test.todo('comparison of lambdas?')
