@@ -1,7 +1,6 @@
 import { ArrayLiteralPart, AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
-import { Location, Span } from './location'
+import { Location } from './location'
 import { Scanner, Token } from './scanner'
-import { shouldNeverHappen } from './should-never-happen'
 
 export class Parser {
   constructor(private readonly scanner: Scanner) {}
@@ -404,52 +403,5 @@ export class Parser {
 
   resolveLocation(loc: Location) {
     return this.scanner.resolveLocation(loc)
-  }
-
-  span(ast: AstNode): Span {
-    const ofRange = (a: Span, b: Span) => ({ from: a.from, to: b.to })
-    const ofToken = (t: Token) => ({ from: t.location, to: { offset: t.location.offset + t.text.length - 1 } })
-
-    if (ast.tag === 'arrayLiteral') {
-      return ofRange(ofToken(ast.start), ofToken(ast.end))
-    }
-    if (ast.tag === 'binaryOperator') {
-      return ofRange(this.span(ast.lhs), this.span(ast.rhs))
-    }
-    if (ast.tag === 'dot') {
-      return ofRange(this.span(ast.receiver), this.span(ast.ident))
-    }
-    if (ast.tag === 'functionCall') {
-      return ofRange(this.span(ast.callee), ofToken(ast.end))
-    }
-    if (ast.tag === 'ident') {
-      return ofToken(ast.t)
-    }
-    if (ast.tag === 'if') {
-      return ofRange(this.span(ast.condition), this.span(ast.negative))
-    }
-    if (ast.tag === 'indexAccess') {
-      return ofRange(this.span(ast.receiver), this.span(ast.index))
-    }
-    if (ast.tag === 'lambda') {
-      return ofRange(ofToken(ast.start), this.span(ast.body))
-    }
-    if (ast.tag === 'literal') {
-      return ofToken(ast.t)
-    }
-    if (ast.tag === 'objectLiteral') {
-      return ofRange(ofToken(ast.start), ofToken(ast.end))
-    }
-    if (ast.tag === 'topLevelExpression') {
-      const d0 = ast.definitions.find(Boolean)
-      const comp = this.span(ast.computation)
-
-      return ofRange(d0 ? ofToken(d0.start) : comp, comp)
-    }
-    if (ast.tag === 'unaryOperator') {
-      return ofRange(ofToken(ast.operatorToken), this.span(ast.operand))
-    }
-
-    shouldNeverHappen(ast)
   }
 }

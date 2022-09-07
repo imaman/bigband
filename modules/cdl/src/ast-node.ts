@@ -1,3 +1,4 @@
+import { Span } from './location'
 import { Token } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
 
@@ -151,6 +152,53 @@ export function show(ast: AstNode | AstNode[]): string {
   }
   if (ast.tag === 'unaryOperator') {
     return `${ast.operator}${show(ast.operand)}`
+  }
+
+  shouldNeverHappen(ast)
+}
+
+export function span(ast: AstNode): Span {
+  const ofRange = (a: Span, b: Span) => ({ from: a.from, to: b.to })
+  const ofToken = (t: Token) => ({ from: t.location, to: { offset: t.location.offset + t.text.length - 1 } })
+
+  if (ast.tag === 'arrayLiteral') {
+    return ofRange(ofToken(ast.start), ofToken(ast.end))
+  }
+  if (ast.tag === 'binaryOperator') {
+    return ofRange(span(ast.lhs), span(ast.rhs))
+  }
+  if (ast.tag === 'dot') {
+    return ofRange(span(ast.receiver), span(ast.ident))
+  }
+  if (ast.tag === 'functionCall') {
+    return ofRange(span(ast.callee), ofToken(ast.end))
+  }
+  if (ast.tag === 'ident') {
+    return ofToken(ast.t)
+  }
+  if (ast.tag === 'if') {
+    return ofRange(span(ast.condition), span(ast.negative))
+  }
+  if (ast.tag === 'indexAccess') {
+    return ofRange(span(ast.receiver), span(ast.index))
+  }
+  if (ast.tag === 'lambda') {
+    return ofRange(ofToken(ast.start), span(ast.body))
+  }
+  if (ast.tag === 'literal') {
+    return ofToken(ast.t)
+  }
+  if (ast.tag === 'objectLiteral') {
+    return ofRange(ofToken(ast.start), ofToken(ast.end))
+  }
+  if (ast.tag === 'topLevelExpression') {
+    const d0 = ast.definitions.find(Boolean)
+    const comp = span(ast.computation)
+
+    return ofRange(d0 ? ofToken(d0.start) : comp, comp)
+  }
+  if (ast.tag === 'unaryOperator') {
+    return ofRange(ofToken(ast.operatorToken), span(ast.operand))
   }
 
   shouldNeverHappen(ast)

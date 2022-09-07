@@ -15,9 +15,9 @@ interface Options {
 }
 
 export class Cdl {
-  private readonly parser
   private readonly scanner
   private readonly sourceCode
+  private readonly parser
 
   /**
    * Runs a CDL program and returns the value it evaluates to. If it evaluates to `sink`, returns the value computed
@@ -50,8 +50,8 @@ export class Cdl {
 
   constructor(readonly input: string) {
     this.scanner = new Scanner(this.input)
+    this.sourceCode = new SourceCode(this.scanner)
     this.parser = new Parser(this.scanner)
-    this.sourceCode = new SourceCode(this.scanner, this.parser)
   }
 
   compute(verbosity: Verbosity = 'quiet'): Result {

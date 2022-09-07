@@ -1,17 +1,16 @@
-import { AstNode } from './ast-node'
+import { AstNode, span } from './ast-node'
 import { Span } from './location'
-import { Parser } from './parser'
 import { Scanner } from './scanner'
 
 export class SourceCode {
   // TODO(imaman): reduce deps.
-  constructor(private readonly scanner: Scanner, private readonly parser: Parser) {}
+  constructor(private readonly scanner: Scanner) {}
 
   formatTrace(trace: AstNode[]): string {
     const spacer = '  '
 
     const formatted = trace
-      .map(ast => this.sourceRef(this.parser.span(ast)))
+      .map(ast => this.sourceRef(span(ast)))
       .reverse()
       .join(`\n${spacer}`)
     return `${spacer}${formatted}`

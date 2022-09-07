@@ -1,4 +1,4 @@
-import { AstNode, show } from './ast-node'
+import { AstNode, show, span } from './ast-node'
 import { extractMessage } from './extract-message'
 import { failMe } from './fail-me'
 import { Parser } from './parser'
@@ -82,7 +82,7 @@ export class Runtime {
     this.stack = Stack.push(ast, this.stack)
     let ret = this.evalNodeImpl(ast, table)
     if (ret.isSink() && !ret.span()) {
-      ret = ret.bindToSpan(this.parser.span(ast))
+      ret = ret.bindToSpan(span(ast))
     }
     switchOn(this.verbosity, {
       quiet: () => {},
