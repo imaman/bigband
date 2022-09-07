@@ -108,13 +108,16 @@ export class Scanner {
   }
 
   lineAt(loc: Location) {
-    const from = Math.max(this.input.lastIndexOf('\n', loc.offset), 0)
-    let to = this.input.indexOf('\n', loc.offset)
-    if (to < 0) {
-      to = this.input.length
+    const precedingNewline = this.input.lastIndexOf('\n', loc.offset)
+    // add a + 1 to skip over the '\n' character (it is not part of the line). Also works if precedingNewLine is -1 (no
+    // preceding newline exists)
+    const startOfLine = precedingNewline + 1
+    let endOfLine = this.input.indexOf('\n', loc.offset)
+    if (endOfLine < 0) {
+      endOfLine = this.input.length
     }
 
-    const ret = this.input.substring(from, to)
+    const ret = this.input.substring(startOfLine, endOfLine)
     return ret
   }
 }

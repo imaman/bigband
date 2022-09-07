@@ -298,7 +298,7 @@ export class Value {
     for (let curr = inner.trace; curr !== undefined; curr = curr?.next) {
       ret.push(curr.ast)
     }
-    return ret
+    return ret.length === 0 ? undefined : ret
   }
 
   symbols() {

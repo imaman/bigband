@@ -1,14 +1,9 @@
 import { AstNode } from './ast-node'
-import { Location2d, Span } from './location'
+import { Span } from './location'
 import { Parser } from './parser'
 import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { Value } from './value'
-
-interface LocateResult {
-  from: Location2d
-  to: Location2d
-}
 
 type Result =
   | {
@@ -17,18 +12,18 @@ type Result =
     }
   | {
       tag: 'sink'
-      where: LocateResult | undefined
+      where: Span | undefined
       trace: string | undefined
       symbols: Record<string, unknown> | undefined
-      errorMessage: () => string
+      message: string
     }
 
 class ResultSink {
   readonly tag = 'sink'
   constructor(private readonly sink: Value, private readonly cdl: Cdl) {}
 
-  get where() {
-    return this.cdl.locate(this.sink)
+  get where(): Span | undefined {
+    return this.sink.span()
   }
 
   get trace() {
@@ -39,9 +34,8 @@ class ResultSink {
     return this.cdl.symbols(this.sink)
   }
 
-  errorMessage(): string {
-    const trace = this.trace
-    const at = trace ? trace : this.where
+  get message(): string {
+    const at = this.trace ?? this.cdl.sourceRef(this.where)
     return `Evaluated to sink: ${at}`
   }
 }
@@ -81,7 +75,10 @@ export class Cdl {
     return `${spacer}${formatted}`
   }
 
-  sourceRef(span: Span) {
+  sourceRef(span: Span | undefined) {
+    if (!span) {
+      return `at <unknown location>`
+    }
     return `at ${this.formatSpan(span)} ${this.interestingPart(span)}`
   }
 
@@ -112,15 +109,6 @@ export class Cdl {
       return stripped
     }
     return `${stripped.substring(0, limit)}...`
-  }
-
-  locate(v: Value): LocateResult | undefined {
-    const span = v.span()
-    if (span) {
-      return { from: this.scanner.resolveLocation(span.from), to: this.scanner.resolveLocation(span.to) }
-    }
-
-    return undefined
   }
 
   trace(v: Value): string | undefined {

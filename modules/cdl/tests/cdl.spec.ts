@@ -471,8 +471,8 @@ describe('cdl', () => {
     test('access to non-existing attribute of an object evalutes to a sink', () => {
       expect(run(`{a: 1}.b`)).toEqual(undefined)
       expect(runSink(`6\n+ 7\n+ 8\n+ 9 + 10 + 11 + {a: 9000}.b`).where).toEqual({
-        from: { col: 16, line: 3 },
-        to: { col: 26, line: 3 },
+        from: { offset: 26 },
+        to: { offset: 36 },
       })
     })
     test('an expression involving a sink evaluates to sink', () => {
@@ -548,19 +548,24 @@ describe('cdl', () => {
     test(`the ?? operator evaluates to its left-hand-side if it is a non-sink`, () => {
       expect(run(`0 ?? 1`)).toEqual(0)
     })
-    test(`the returned sink holds a location in the source code`, () => {
+    test(`the .where attribure of the result holds the source code of the sink`, () => {
       expect(runSink(`1000 + 2000 + 3000 + sink + 5000 + sink`).where).toEqual({
-        from: { line: 0, col: 21 },
-        to: { line: 0, col: 24 },
+        from: { offset: 21 },
+        to: { offset: 24 },
       })
       expect(runSink(`1000 + 2000 + 3000 + 4000 + 5000 + sink`).where).toEqual({
-        from: { line: 0, col: 35 },
-        to: { line: 0, col: 38 },
+        from: { offset: 35 },
+        to: { offset: 38 },
       })
       expect(runSink(`1000\n + 2000\n + sink\n + 4000\n + 5000\n + sink`).where).toEqual({
-        from: { line: 2, col: 3 },
-        to: { line: 2, col: 6 },
+        from: { offset: 16 },
+        to: { offset: 19 },
       })
+    })
+    test(`the .message attribure of the result provides a human readable summary`, () => {
+      expect(runSink(`1000 + 2000\n+ 3000 + sink + 5000 + 6000`).message).toEqual(
+        'Evaluated to sink: at (2:10..13) sink',
+      )
     })
   })
   describe('sink!', () => {
