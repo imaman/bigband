@@ -81,19 +81,15 @@ export class Cdl {
     return `(${f.line + 1}:${f.col + 1}..${t.line + 1}:${t.col + 1})`
   }
 
+  sourceRef(span: Span) {
+    return `at ${this.formatSpan(span)} ${this.interestingPart(span)}`
+  }
+
   formatTrace(trace: AstNode[]): string {
     const spacer = '  '
 
-    const enriched = trace.map(curr => {
-      const span = this.parser.span(curr)
-      return {
-        ast: curr,
-        span,
-      }
-    })
-
-    const formatted = enriched
-      .map(curr => `at ${this.formatSpan(curr.span)} ${this.interestingPart(curr.span)}`)
+    const formatted = trace
+      .map(ast => this.sourceRef(this.parser.span(ast)))
       .reverse()
       .join(`\n${spacer}`)
     return `${spacer}${formatted}`
