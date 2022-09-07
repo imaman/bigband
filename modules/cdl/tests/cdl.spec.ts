@@ -29,11 +29,7 @@ function runSink(input: string) {
   if (res.tag !== 'sink') {
     throw new Error(`Not a sink: ${res.value}`)
   }
-  return {
-    where: res.where(),
-    trace: res.trace(),
-    symbols: res.symbols(),
-  }
+  return res
 }
 
 describe('cdl', () => {

@@ -17,9 +17,9 @@ type Result =
     }
   | {
       tag: 'sink'
-      where: () => LocateResult | undefined
-      trace: () => string | undefined
-      symbols: () => Record<string, unknown> | undefined
+      where: LocateResult | undefined
+      trace: string | undefined
+      symbols: Record<string, unknown> | undefined
       errorMessage: () => string
     }
 
@@ -27,20 +27,20 @@ class ResultSink {
   readonly tag = 'sink'
   constructor(private readonly sink: Value, private readonly cdl: Cdl) {}
 
-  where() {
+  get where() {
     return this.cdl.locate(this.sink)
   }
 
-  trace() {
+  get trace() {
     return this.cdl.trace(this.sink)
   }
 
-  symbols() {
+  get symbols() {
     return this.cdl.symbols(this.sink)
   }
 
   errorMessage() {
-    const trace = this.trace()
+    const trace = this.trace
     const at = trace ? trace : this.where
     return `Evaluated to sink: ${at}`
   }
