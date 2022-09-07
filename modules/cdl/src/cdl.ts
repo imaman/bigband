@@ -89,37 +89,30 @@ export class Cdl {
     })
 
     const formatted = enriched
-      .map(curr => `at ${this.formatLocation(curr.from)} ${this.interestingPart(curr)}`)
+      .map(curr => `at ${this.formatLocation(curr.from)} ${this.interestingPart(curr.span)}`)
       .reverse()
       .join(`\n${spacer}`)
     return `${spacer}${formatted}`
   }
 
-  private interestingPart(arg: { span: Span; from: Location2d; to: Location2d }) {
-    if (arg.from.line === arg.to.line) {
-      const line = this.scanner
-        .lineAt(arg.span.from)
-        .substring(arg.from.col, arg.to.col + 1)
-        .replace(/^[\n]*/, '')
-        .replace(/[\n]*$/, '')
+  private interestingPart(span: Span) {
+    const f = this.scanner.resolveLocation(span.from)
+    const t = this.scanner.resolveLocation(span.to)
 
+    const formatLine = (s: string) => {
+      const stripped = s.replace(/^[\n]*/, '').replace(/[\n]*$/, '')
       const limit = 80
-      if (line.length <= limit) {
-        return line
+      if (stripped.length <= limit) {
+        return stripped
       }
-
-      return `${line.substring(0, limit)}...`
-    }
-    const line = this.scanner
-      .lineAt(arg.span.from)
-      .replace(/^[\n]*/, '')
-      .replace(/[\n]*$/, '')
-    const limit = 80
-    if (line.length <= limit) {
-      return line
+      return `${stripped.substring(0, limit)}...`
     }
 
-    return `${line.substring(0, limit)}...`
+    const lineAtFrom = this.scanner.lineAt(span.from)
+    if (f.line === t.line) {
+      return formatLine(lineAtFrom.substring(f.col, t.col + 1))
+    }
+    return formatLine(lineAtFrom)
   }
 
   locate(v: Value): LocateResult | undefined {
