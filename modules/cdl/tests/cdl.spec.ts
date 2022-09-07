@@ -88,9 +88,9 @@ describe('cdl', () => {
 
     const expected = [
       `value type error: expected num but found "zxcvbnm" when evaluating:`,
-      `  at (1:1) 9 * 8 * 'zxcvbnm' * 7`,
-      `  at (1:5) 8 * 'zxcvbnm' * 7`,
-      `  at (1:10) zxcvbnm' * 7`,
+      `  at (1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
+      `  at (1:5..21) 8 * 'zxcvbnm' * 7`,
+      `  at (1:10..21) zxcvbnm' * 7`,
     ].join('\n')
 
     expect(() => run(`9 * 8 * 'zxcvbnm' * 7`)).toThrowError(expected)
@@ -441,12 +441,12 @@ describe('cdl', () => {
     })
     test('expression trace on error', () => {
       const expected = [
-        '  at (1:1) let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(...',
-        '  at (1:85) a(5)',
-        '  at (1:79) b(x)',
-        '  at (1:58) c(x)',
-        '  at (1:36) d(x)',
-        '  at (1:17) x2',
+        '  at (1:1..88) let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(...',
+        '  at (1:85..88) a(5)',
+        '  at (1:79..82) b(x)',
+        '  at (1:58..61) c(x)',
+        '  at (1:36..39) d(x)',
+        '  at (1:17..18) x2',
       ].join('\n')
 
       expect(() =>
@@ -567,10 +567,10 @@ describe('cdl', () => {
     test(`captures the expression trace at runtime`, () => {
       expect(runSink(`1000 + 2000 + 3000 + sink!`).trace).toEqual(
         [
-          `  at (1:1) 1000 + 2000 + 3000 + sink!`,
-          `  at (1:8) 2000 + 3000 + sink!`,
-          `  at (1:15) 3000 + sink!`,
-          `  at (1:22) sink!`,
+          `  at (1:1..26) 1000 + 2000 + 3000 + sink!`,
+          `  at (1:8..26) 2000 + 3000 + sink!`,
+          `  at (1:15..26) 3000 + sink!`,
+          `  at (1:22..26) sink!`,
         ].join('\n'),
       )
     })
@@ -587,12 +587,12 @@ describe('cdl', () => {
       expect(Object.keys(actual.symbols ?? {})).toEqual(['Object', 'a', 'f', 'x', 'y'])
       expect(actual.trace).toEqual(
         [
-          `  at (1:1) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
-          `  at (1:50) f(30, 40)`,
-          `  at (1:30) x * y * sink!! * a`,
-          `  at (1:34) y * sink!! * a`,
-          `  at (1:38) sink!! * a`,
-          `  at (1:38) sink!!`,
+          `  at (1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
+          `  at (1:50..58) f(30, 40)`,
+          `  at (1:30..47) x * y * sink!! * a`,
+          `  at (1:34..47) y * sink!! * a`,
+          `  at (1:38..47) sink!! * a`,
+          `  at (1:38..43) sink!!`,
         ].join('\n'),
       )
     })
