@@ -1,4 +1,5 @@
 import { Location } from './location'
+import { SourceCode } from './source-code'
 
 export interface Token {
   readonly text: string
@@ -7,8 +8,12 @@ export interface Token {
 
 export class Scanner {
   private offset = 0
-  constructor(private readonly input: string) {
+  constructor(private readonly input: string, private readonly sourceCode: SourceCode) {
     this.eatWhitespace()
+  }
+
+  get sourceRef() {
+    return this.sourceCode.sourceRefOfLocation({ offset: this.offset })
   }
 
   private curr() {

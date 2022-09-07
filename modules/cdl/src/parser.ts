@@ -1,15 +1,13 @@
 import { ArrayLiteralPart, AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
 import { Scanner, Token } from './scanner'
-import { SourceCode } from './source-code'
 
 export class Parser {
-  constructor(private readonly scanner: Scanner, private readonly sourceCode: SourceCode) {}
+  constructor(private readonly scanner: Scanner) {}
 
   parse() {
     const ret = this.expression()
     if (!this.scanner.eof()) {
-      const s = this.scanner.synopsis()
-      throw new Error(`Loitering input at position ${s.position}: <${s.lookingAt}>`)
+      throw new Error(`Loitering input ${this.scanner.sourceRef}`)
     }
     return ret
   }

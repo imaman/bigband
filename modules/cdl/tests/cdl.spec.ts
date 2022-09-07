@@ -27,7 +27,7 @@ function runSink(input: string) {
 describe('cdl', () => {
   test('basics', () => {
     expect(run(`5`)).toEqual(5)
-    expect(() => run(`6 6`)).toThrowError(`Loitering input at position 2: <6>`)
+    expect(() => run(`6 789`)).toThrowError(`Loitering input at (1:3..5) 789`)
     expect(run(`3.14`)).toEqual(3.14)
   })
 

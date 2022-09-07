@@ -50,8 +50,8 @@ export class Cdl {
 
   constructor(readonly input: string) {
     this.sourceCode = new SourceCode(this.input)
-    this.scanner = new Scanner(this.input)
-    this.parser = new Parser(this.scanner, this.sourceCode)
+    this.scanner = new Scanner(this.input, this.sourceCode)
+    this.parser = new Parser(this.scanner)
   }
 
   compute(verbosity: Verbosity = 'quiet'): Result {
@@ -72,7 +72,7 @@ export class Cdl {
 }
 
 export function parse(arg: string | Parser) {
-  const parser = typeof arg === 'string' ? new Parser(new Scanner(arg), new SourceCode(arg)) : arg
+  const parser = typeof arg === 'string' ? new Parser(new Scanner(arg, new SourceCode(arg))) : arg
   const ast = parser.parse()
   return ast
 }
