@@ -1,8 +1,9 @@
 import { ArrayLiteralPart, AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
 import { Scanner, Token } from './scanner'
+import { SourceCode } from './source-code'
 
 export class Parser {
-  constructor(private readonly scanner: Scanner) {}
+  constructor(private readonly scanner: Scanner, private readonly sourceCode: SourceCode) {}
 
   parse() {
     const ret = this.expression()
