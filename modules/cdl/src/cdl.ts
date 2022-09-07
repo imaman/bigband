@@ -30,11 +30,16 @@ class ResultSinkImpl {
   }
 
   get trace() {
-    return this.sourceCode.trace(this.sink)
+    const trace = this.sink.trace()
+    if (trace) {
+      return this.sourceCode.formatTrace(trace)
+    }
+
+    return undefined
   }
 
   get symbols() {
-    return this.sourceCode.symbols(this.sink)
+    return this.sink.symbols()?.export()
   }
 
   get message(): string {
@@ -99,19 +104,6 @@ class SourceCode {
       return stripped
     }
     return `${stripped.substring(0, limit)}...`
-  }
-
-  trace(v: Value): string | undefined {
-    const trace = v.trace()
-    if (trace) {
-      return this.formatTrace(trace)
-    }
-
-    return undefined
-  }
-
-  symbols(v: Value): Record<string, unknown> | undefined {
-    return v.symbols()?.export()
   }
 }
 
