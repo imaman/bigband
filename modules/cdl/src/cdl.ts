@@ -73,7 +73,7 @@ export class Cdl {
       ((r: ResultSink) => {
         throw new Error(r.message)
       })
-    const res = new Cdl(input).run()
+    const res = new Cdl(input).compute()
     if (res.tag === 'ok') {
       return res.value
     }
@@ -90,7 +90,7 @@ export class Cdl {
     this.parser = new Parser(this.scanner)
   }
 
-  run(verbosity: Verbosity = 'quiet'): Result {
+  compute(verbosity: Verbosity = 'quiet'): Result {
     const ast = parse(this.parser)
     const runtime = new Runtime(ast, verbosity, this.parser)
     const c = runtime.compute()

@@ -16,7 +16,7 @@ function run(input: string) {
  */
 function runSink(input: string) {
   const cdl = new Cdl(input)
-  const res = cdl.run()
+  const res = cdl.compute()
 
   if (res.tag !== 'sink') {
     throw new Error(`Not a sink: ${res.value}`)
