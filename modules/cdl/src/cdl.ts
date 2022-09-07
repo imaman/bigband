@@ -71,7 +71,8 @@ export class Cdl {
     throw new Error(runtimeErrorMessage)
   }
 
-  formatLocation(loc: Location2d) {
+  formatSpan(span: Span) {
+    const loc = this.scanner.resolveLocation(span.from)
     return `(${loc.line + 1}:${loc.col + 1})`
   }
 
@@ -83,13 +84,11 @@ export class Cdl {
       return {
         ast: curr,
         span,
-        from: this.scanner.resolveLocation(span.from),
-        to: this.scanner.resolveLocation(span.to),
       }
     })
 
     const formatted = enriched
-      .map(curr => `at ${this.formatLocation(curr.from)} ${this.interestingPart(curr.span)}`)
+      .map(curr => `at ${this.formatSpan(curr.span)} ${this.interestingPart(curr.span)}`)
       .reverse()
       .join(`\n${spacer}`)
     return `${spacer}${formatted}`
@@ -99,20 +98,19 @@ export class Cdl {
     const f = this.scanner.resolveLocation(span.from)
     const t = this.scanner.resolveLocation(span.to)
 
-    const formatLine = (s: string) => {
-      const stripped = s.replace(/^[\n]*/, '').replace(/[\n]*$/, '')
-      const limit = 80
-      if (stripped.length <= limit) {
-        return stripped
-      }
-      return `${stripped.substring(0, limit)}...`
-    }
+    const strip = (s: string) => s.replace(/^[\n]*/, '').replace(/[\n]*$/, '')
+    const limit = 80
 
     const lineAtFrom = this.scanner.lineAt(span.from)
-    if (f.line === t.line) {
-      return formatLine(lineAtFrom.substring(f.col, t.col + 1))
+    if (f.line !== t.line) {
+      return `${strip(lineAtFrom).substring(0, limit)}...`
     }
-    return formatLine(lineAtFrom)
+
+    const stripped = strip(lineAtFrom.substring(f.col, t.col + 1))
+    if (stripped.length <= limit) {
+      return stripped
+    }
+    return `${stripped.substring(0, limit)}...`
   }
 
   locate(v: Value): LocateResult | undefined {
