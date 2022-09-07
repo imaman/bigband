@@ -1,52 +1,10 @@
 import { AstNode } from './ast-node'
 import { Span } from './location'
 import { Parser } from './parser'
+import { Result, ResultSink, ResultSinkImpl } from './result'
 import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
-import { Value } from './value'
-
-type ResultSink = {
-  tag: 'sink'
-  where: Span | undefined
-  trace: string | undefined
-  symbols: Record<string, unknown> | undefined
-  message: string
-}
-
-type Result =
-  | {
-      tag: 'ok'
-      value: unknown
-    }
-  | ResultSink
-
-class ResultSinkImpl {
-  readonly tag = 'sink'
-  constructor(private readonly sink: Value, private readonly sourceCode: SourceCode) {}
-
-  get where(): Span | undefined {
-    return this.sink.span()
-  }
-
-  get trace() {
-    const trace = this.sink.trace()
-    if (trace) {
-      return this.sourceCode.formatTrace(trace)
-    }
-
-    return undefined
-  }
-
-  get symbols() {
-    return this.sink.symbols()?.export()
-  }
-
-  get message(): string {
-    const at = this.trace ?? this.sourceCode.sourceRef(this.where)
-    return `Evaluated to sink: ${at}`
-  }
-}
 
 interface Options {
   /**
