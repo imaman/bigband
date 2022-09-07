@@ -310,8 +310,7 @@ export class Parser {
       return ident
     }
 
-    const s = this.scanner.synopsis()
-    throw new Error(`Unparsable input at position ${s.position}: ${s.lookingAt}`)
+    throw new Error(`Unparsable input ${this.scanner.sourceRef}`)
   }
 
   /**
@@ -383,8 +382,7 @@ export class Parser {
   private identifier(): Ident {
     const ret = this.maybeIdentifier()
     if (!ret) {
-      const s = this.scanner.synopsis()
-      throw new Error(`Expected an identifier at position ${s.position} but found: ${s.lookingAt}`)
+      throw new Error(`Expected an identifier ${this.scanner.sourceRef}`)
     }
 
     return ret

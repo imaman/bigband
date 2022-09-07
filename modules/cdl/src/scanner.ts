@@ -54,7 +54,7 @@ export class Scanner {
   consume(r: RegExp | string, eatWhitespace = true): Token {
     const text = this.match(r)
     if (text === undefined) {
-      throw new Error(`Expected ${r} at position ${this.offset} but found: ${this.synopsis().lookingAt}`)
+      throw new Error(`Expected ${r} ${this.sourceRef}`)
     }
 
     const offset = this.offset
