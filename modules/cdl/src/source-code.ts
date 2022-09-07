@@ -15,7 +15,7 @@ export class SourceCode {
   }
 
   sourceRefOfLocation(loc: Location) {
-    return this.sourceRef({ from: loc, to: this.computeEndOfLine(loc) })
+    return this.sourceRef(this.expandToEndOfLine(loc))
   }
 
   sourceRef(span: Span | undefined) {
@@ -76,15 +76,16 @@ export class SourceCode {
   }
 
   /**
-   * Returns the location of the last character on the line specified by `loc`. The last character is the character
-   * immediately before the terminating newline character
+   * Returns a span starting a the given input location that runs all the way to the end of the line. Specifically, the
+   * returned span's `.to` location will point at the character (in the same line as `loc`) that is immediately before
+   * the terminating newline character.
    */
-  private computeEndOfLine(loc: Location) {
+  expandToEndOfLine(loc: Location): Span {
     let endOfLine = this.input.indexOf('\n', loc.offset)
     if (endOfLine < 0) {
       endOfLine = this.input.length - 1
     }
-    return { offset: endOfLine }
+    return { from: loc, to: { offset: endOfLine } }
   }
 
   lineAt(loc: Location) {
@@ -92,7 +93,7 @@ export class SourceCode {
     // add a + 1 to skip over the '\n' character (it is not part of the line). Also works if precedingNewLine is -1 (no
     // preceding newline exists)
     const startOfLine = precedingNewline + 1
-    const endOfLine = this.computeEndOfLine(loc)
+    const endOfLine = this.expandToEndOfLine(loc).to
 
     const ret = this.input.substring(startOfLine, endOfLine.offset + 1)
     return ret

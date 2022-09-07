@@ -14,7 +14,7 @@ export class Scanner {
   }
 
   get sourceRef() {
-    return this.sourceCode.sourceRefOfLocation({ offset: this.offset })
+    return this.sourceCode.sourceRef(this.sourceCode.expandToEndOfLine({ offset: this.offset }))
   }
 
   private curr() {
