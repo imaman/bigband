@@ -8,7 +8,8 @@ export interface Token {
 
 export class Scanner {
   private offset = 0
-  constructor(private readonly input: string, private readonly sourceCode: SourceCode) {
+
+  constructor(private readonly sourceCode: SourceCode) {
     this.eatWhitespace()
   }
 
@@ -17,7 +18,7 @@ export class Scanner {
   }
 
   private curr() {
-    return this.input.substring(this.offset)
+    return this.sourceCode.input.substring(this.offset)
   }
 
   private eatWhitespace() {
@@ -35,7 +36,7 @@ export class Scanner {
   }
 
   eof(): boolean {
-    return this.offset >= this.input.length
+    return this.offset >= this.sourceCode.input.length
   }
 
   synopsis() {
