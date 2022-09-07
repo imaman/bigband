@@ -4,6 +4,7 @@ import { Parser } from './parser'
 import { Scanner } from './scanner'
 
 export class SourceCode {
+  // TODO(imaman): reduce deps.
   constructor(private readonly scanner: Scanner, private readonly parser: Parser) {}
 
   formatTrace(trace: AstNode[]): string {

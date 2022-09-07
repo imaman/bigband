@@ -1,4 +1,5 @@
 import { Span } from './location'
+import { SourceCode } from './source-code'
 import { Value } from './value'
 
 export type ResultSink = {
