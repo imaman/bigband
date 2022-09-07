@@ -3,22 +3,25 @@ import { Span } from './location'
 import { Parser } from './parser'
 import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
+import { shouldNeverHappen } from './should-never-happen'
 import { Value } from './value'
+
+type ResultSink = {
+  tag: 'sink'
+  where: Span | undefined
+  trace: string | undefined
+  symbols: Record<string, unknown> | undefined
+  message: string
+}
 
 type Result =
   | {
       tag: 'ok'
       value: unknown
     }
-  | {
-      tag: 'sink'
-      where: Span | undefined
-      trace: string | undefined
-      symbols: Record<string, unknown> | undefined
-      message: string
-    }
+  | ResultSink
 
-class ResultSink {
+class ResultSinkImpl {
   readonly tag = 'sink'
   constructor(private readonly sink: Value, private readonly cdl: Cdl) {}
 
@@ -40,9 +43,36 @@ class ResultSink {
   }
 }
 
+interface Options {
+  /**
+   * A callback function to be invoked when the CDL program evaluated to `sink`. Allows the caller to determine which
+   * value will be returned in that case. For instance, passing `() => undefined` will translate a `sink` value to
+   * `undefined`. The default behavior is to throw an error.
+   */
+  onSink?: (res: ResultSink) => unknown
+}
+
 export class Cdl {
   private readonly parser
   private readonly scanner
+
+  static run(input: string, options?: Options): unknown {
+    const onSink =
+      options?.onSink ??
+      ((r: ResultSink) => {
+        throw new Error(r.message)
+      })
+    const res = new Cdl(input).run()
+    if (res.tag === 'ok') {
+      return res.value
+    }
+
+    if (res.tag === 'sink') {
+      return onSink(res)
+    }
+
+    shouldNeverHappen(res)
+  }
 
   constructor(readonly input: string) {
     this.scanner = new Scanner(this.input)
@@ -58,7 +88,7 @@ export class Cdl {
       if (!c.value.isSink()) {
         return { value: c.value.export(), tag: 'ok' }
       }
-      return new ResultSink(c.value, this)
+      return new ResultSinkImpl(c.value, this)
     }
 
     const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${this.formatTrace(c.expressionTrace)}`
