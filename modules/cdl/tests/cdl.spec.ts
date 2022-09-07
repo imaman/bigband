@@ -65,6 +65,9 @@ describe('cdl', () => {
     expect(run(`2*3**4`)).toEqual(162)
     expect(run(`(2*3)**4`)).toEqual(1296)
 
+    expect(run(`8/0`)).toEqual(Infinity)
+    expect(run(`(-4) ** 0.5`)).toEqual(NaN)
+
     expect(() => run(`!5`)).toThrowError(`value type error: expected bool but found 5`)
     expect(() => run(`!0`)).toThrowError(`value type error: expected bool but found 0`)
     expect(() => run(`!!0`)).toThrowError(`value type error: expected bool but found 0`)
@@ -588,6 +591,11 @@ describe('cdl', () => {
           `  at (1:38..43) sink!!`,
         ].join('\n'),
       )
+    })
+    test('can be used to recover values of definitions from a crash site', () => {
+      expect(runSink(`let f = fun (n) if (n >= 0) f(n-7) else (sink!! && [n].goo()); f(18)`).symbols).toMatchObject({
+        n: -3,
+      })
     })
   })
 
