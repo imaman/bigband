@@ -39,7 +39,7 @@ class ResultSink {
     return this.cdl.symbols(this.sink)
   }
 
-  errorMessage() {
+  errorMessage(): string {
     const trace = this.trace
     const at = trace ? trace : this.where
     return `Evaluated to sink: ${at}`
@@ -71,7 +71,11 @@ export class Cdl {
     throw new Error(runtimeErrorMessage)
   }
 
-  private formatTrace(trace: AstNode[]): string {
+  formatLocation(loc: Location2d) {
+    return `(${loc.line + 1}:${loc.col + 1})`
+  }
+
+  formatTrace(trace: AstNode[]): string {
     const spacer = '  '
 
     const enriched = trace.map(curr => {
@@ -85,7 +89,7 @@ export class Cdl {
     })
 
     const formatted = enriched
-      .map(curr => `at (${curr.from.line + 1}:${curr.from.col + 1}) ${this.interestingPart(curr)}`)
+      .map(curr => `at ${this.formatLocation(curr.from)} ${this.interestingPart(curr)}`)
       .reverse()
       .join(`\n${spacer}`)
     return `${spacer}${formatted}`
@@ -127,16 +131,16 @@ export class Cdl {
     return undefined
   }
 
-  trace(v: Value) {
+  trace(v: Value): string | undefined {
     const trace = v.trace()
     if (trace) {
-      return this.mapTrace(trace)
+      return this.formatTrace(trace)
     }
 
     return undefined
   }
 
-  symbols(v: Value) {
+  symbols(v: Value): Record<string, unknown> | undefined {
     return v.symbols()?.export()
   }
 }
