@@ -1,16 +1,41 @@
 import { Cdl } from '../src/cdl'
-import { switchOn } from '../src/switch-on'
+import { shouldNeverHappen } from '../src/should-never-happen'
 
-function run(input: string, returns: 'value' | 'locate' | 'trace' | 'symbols' = 'value') {
+const THROW_ON_SINK = new Object({ aSpecialObjectToIndicate: 'throw' })
+
+function run(input: string, returnOnSink: unknown = null) {
   const cdl = new Cdl(input)
-  const v = cdl.run()
-  return switchOn(returns, {
-    symbols: () => cdl.symbols(v),
-    trace: () => cdl.trace(v),
-    locate: () => cdl.locate(v),
-    value: () => v.export(),
-  })
+  const res = cdl.run()
+
+  if (res.tag === 'sink') {
+    if (returnOnSink === THROW_ON_SINK) {
+      throw new Error(`Evaluated to sink`)
+    }
+
+    return returnOnSink
+  }
+
+  if (res.tag === 'ok') {
+    return res.value
+  }
+
+  shouldNeverHappen(res)
 }
+
+function runSink(input: string) {
+  const cdl = new Cdl(input)
+  const res = cdl.run()
+
+  if (res.tag !== 'sink') {
+    throw new Error(`Not a sink: ${res.value}`)
+  }
+  return {
+    where: res.where(),
+    trace: res.trace(),
+    symbols: res.symbols(),
+  }
+}
+
 describe('cdl', () => {
   test('basics', () => {
     expect(run(`5`)).toEqual(5)
@@ -444,8 +469,8 @@ describe('cdl', () => {
       expect(run(`sink`)).toEqual(null)
     })
     test('access to non-existing attribute of an object evalutes to a sink', () => {
-      expect(run(`{a: 1}.b`)).toEqual(null)
-      expect(run(`6\n+ 7\n+ 8\n+ 9 + 10 + 11 + {a: 9000}.b`, 'locate')).toEqual({
+      expect(run(`{a: 1}.b`, null)).toEqual(null)
+      expect(runSink(`6\n+ 7\n+ 8\n+ 9 + 10 + 11 + {a: 9000}.b`).where).toEqual({
         from: { col: 16, line: 3 },
         to: { col: 26, line: 3 },
       })
@@ -524,15 +549,15 @@ describe('cdl', () => {
       expect(run(`0 ?? 1`)).toEqual(0)
     })
     test(`the returned sink holds a location in the source code`, () => {
-      expect(run(`1000 + 2000 + 3000 + sink + 5000 + sink`, 'locate')).toEqual({
+      expect(runSink(`1000 + 2000 + 3000 + sink + 5000 + sink`).where).toEqual({
         from: { line: 0, col: 21 },
         to: { line: 0, col: 24 },
       })
-      expect(run(`1000 + 2000 + 3000 + 4000 + 5000 + sink`, 'locate')).toEqual({
+      expect(runSink(`1000 + 2000 + 3000 + 4000 + 5000 + sink`).where).toEqual({
         from: { line: 0, col: 35 },
         to: { line: 0, col: 38 },
       })
-      expect(run(`1000\n + 2000\n + sink\n + 4000\n + 5000\n + sink`, 'locate')).toEqual({
+      expect(runSink(`1000\n + 2000\n + sink\n + 4000\n + 5000\n + sink`).where).toEqual({
         from: { line: 2, col: 3 },
         to: { line: 2, col: 6 },
       })
@@ -540,7 +565,7 @@ describe('cdl', () => {
   })
   describe('sink!', () => {
     test(`captures the expression trace at runtime`, () => {
-      expect(run(`1000 + 2000 + 3000 + sink!`, 'trace')).toEqual(
+      expect(runSink(`1000 + 2000 + 3000 + sink!`).trace).toEqual(
         [
           `  at (1:1) 1000 + 2000 + 3000 + sink!`,
           `  at (1:8) 2000 + 3000 + sink!`,
@@ -549,18 +574,10 @@ describe('cdl', () => {
         ].join('\n'),
       )
     })
-    test(`trace() is undefined if the returned value is not a sink`, () => {
-      expect(run(`1000 + 2000 + 3000 + 4000`, 'trace')).toBe(undefined)
-    })
   })
   describe('sink!!', () => {
     test(`captures the expression trace and the symbol-table at runtime`, () => {
-      const evalTraceSink = (s: string) => {
-        const cdl = new Cdl(s)
-        const v = cdl.run()
-        return { symbols: cdl.symbols(v), trace: cdl.trace(v) }
-      }
-      const actual = evalTraceSink(`let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`)
+      const actual = runSink(`let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`)
       expect(actual.symbols).toMatchObject({
         f: 'fun (x, y) (x * (y * (sink!! * a)))',
         a: 2,

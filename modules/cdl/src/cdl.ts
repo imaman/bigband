@@ -5,6 +5,41 @@ import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { Value } from './value'
 
+interface LocateResult {
+  from: Location2d
+  to: Location2d
+}
+
+type Result =
+  | {
+      tag: 'ok'
+      value: unknown
+    }
+  | {
+      tag: 'sink'
+      where: () => LocateResult | undefined
+      trace: () => string | undefined
+      symbols: () => Record<string, unknown> | undefined
+      value: never
+    }
+
+class ResultSink {
+  readonly tag = 'sink'
+  constructor(private readonly sink: Value, private readonly cdl: Cdl) {}
+
+  where() {
+    return this.cdl.locate(this.sink)
+  }
+
+  trace() {
+    return this.cdl.trace(this.sink)
+  }
+
+  symbols() {
+    return this.cdl.symbols(this.sink)
+  }
+}
+
 export class Cdl {
   private readonly parser
   private readonly scanner
@@ -14,13 +49,16 @@ export class Cdl {
     this.parser = new Parser(this.scanner)
   }
 
-  run(verbosity: Verbosity = 'quiet'): Value {
+  run(verbosity: Verbosity = 'quiet'): Result {
     const ast = parse(this.parser)
     const runtime = new Runtime(ast, verbosity, this.parser)
     const c = runtime.compute()
 
     if (c.value) {
-      return c.value
+      if (!c.value.isSink()) {
+        return { value: c.value.export(), tag: 'ok' }
+      }
+      return new ResultSink(c.value, this)
     }
 
     const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${this.mapTrace(c.expressionTrace)}`
@@ -74,7 +112,7 @@ export class Cdl {
     return `${line.substring(0, limit)}...`
   }
 
-  locate(v: Value) {
+  locate(v: Value): LocateResult | undefined {
     const span = v.span()
     if (span) {
       return { from: this.scanner.resolveLocation(span.from), to: this.scanner.resolveLocation(span.to) }

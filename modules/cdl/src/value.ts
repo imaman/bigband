@@ -700,7 +700,7 @@ export class Value {
     })
   }
 
-  export() {
+  export(): unknown {
     return JSON.parse(JSON.stringify(this))
   }
 
