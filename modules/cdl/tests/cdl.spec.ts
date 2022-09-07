@@ -549,7 +549,7 @@ describe('cdl', () => {
         ].join('\n'),
       )
     })
-    test(`trace() is undefined  if the returned value is not a sink`, () => {
+    test(`trace() is undefined if the returned value is not a sink`, () => {
       expect(run(`1000 + 2000 + 3000 + 4000`, 'trace')).toBe(undefined)
     })
   })
