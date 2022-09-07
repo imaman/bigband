@@ -20,7 +20,7 @@ type Result =
       where: () => LocateResult | undefined
       trace: () => string | undefined
       symbols: () => Record<string, unknown> | undefined
-      value: never
+      errorMessage: () => string
     }
 
 class ResultSink {
@@ -37,6 +37,12 @@ class ResultSink {
 
   symbols() {
     return this.cdl.symbols(this.sink)
+  }
+
+  errorMessage() {
+    const trace = this.trace()
+    const at = trace ? trace : this.where
+    return `Evaluated to sink: ${at}`
   }
 }
 
