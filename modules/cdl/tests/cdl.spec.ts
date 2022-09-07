@@ -1,18 +1,12 @@
 import { Cdl } from '../src/cdl'
 import { shouldNeverHappen } from '../src/should-never-happen'
 
-const THROW_ON_SINK = new Object({ aSpecialObjectToIndicate: 'throw' })
-
-function run(input: string, returnOnSink: unknown = null) {
+function run(input: string) {
   const cdl = new Cdl(input)
   const res = cdl.run()
 
   if (res.tag === 'sink') {
-    if (returnOnSink === THROW_ON_SINK) {
-      throw new Error(`Evaluated to sink`)
-    }
-
-    return returnOnSink
+    return null
   }
 
   if (res.tag === 'ok') {
