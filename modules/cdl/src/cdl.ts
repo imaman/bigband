@@ -71,20 +71,6 @@ export class Cdl {
     throw new Error(runtimeErrorMessage)
   }
 
-  formatSpan(span: Span) {
-    const f = this.scanner.resolveLocation(span.from)
-    const t = this.scanner.resolveLocation(span.to)
-    if (f.line === t.line) {
-      return `(${f.line + 1}:${f.col + 1}..${t.col + 1})`
-    }
-
-    return `(${f.line + 1}:${f.col + 1}..${t.line + 1}:${t.col + 1})`
-  }
-
-  sourceRef(span: Span) {
-    return `at ${this.formatSpan(span)} ${this.interestingPart(span)}`
-  }
-
   formatTrace(trace: AstNode[]): string {
     const spacer = '  '
 
@@ -93,6 +79,20 @@ export class Cdl {
       .reverse()
       .join(`\n${spacer}`)
     return `${spacer}${formatted}`
+  }
+
+  sourceRef(span: Span) {
+    return `at ${this.formatSpan(span)} ${this.interestingPart(span)}`
+  }
+
+  formatSpan(span: Span) {
+    const f = this.scanner.resolveLocation(span.from)
+    const t = this.scanner.resolveLocation(span.to)
+    if (f.line === t.line) {
+      return `(${f.line + 1}:${f.col + 1}..${t.col + 1})`
+    }
+
+    return `(${f.line + 1}:${f.col + 1}..${t.line + 1}:${t.col + 1})`
   }
 
   private interestingPart(span: Span) {
