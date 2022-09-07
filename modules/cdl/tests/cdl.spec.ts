@@ -1,5 +1,4 @@
 import { Cdl } from '../src/cdl'
-import { shouldNeverHappen } from '../src/should-never-happen'
 
 /**
  * Runs a CDL program for testing purposes. If the CDL program evaluated to `sink` an `undefined` is
@@ -7,18 +6,7 @@ import { shouldNeverHappen } from '../src/should-never-happen'
  * @param input the CDL program to run
  */
 function run(input: string) {
-  const cdl = new Cdl(input)
-  const res = cdl.run()
-
-  if (res.tag === 'sink') {
-    return undefined
-  }
-
-  if (res.tag === 'ok') {
-    return res.value
-  }
-
-  shouldNeverHappen(res)
+  return Cdl.run(input, { onSink: () => undefined })
 }
 
 /**

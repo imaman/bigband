@@ -56,6 +56,17 @@ export class Cdl {
   private readonly parser
   private readonly scanner
 
+  /**
+   * Runs a CDL program and returns the value it evaluates to. If it evaluates to `sink`, returns the value computed
+   * by `options.onSink()` - if present, or throws an error - otherwise.
+   *
+   * This method is the simplest way to evaluate a CDL program. One can also use `.compute()` to get a higher degree
+   * of details about the result.
+   *
+   * @param input the source code of the CDL program
+   * @param options
+   * @returns the value that `input` evaluates to
+   */
   static run(input: string, options?: Options): unknown {
     const onSink =
       options?.onSink ??
