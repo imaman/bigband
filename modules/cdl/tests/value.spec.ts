@@ -150,62 +150,62 @@ describe('value', () => {
   })
   describe('sink', () => {
     const sink = Value.sink()
-    test('exported as null', () => {
-      expect(sink.export()).toEqual(null)
+    test('exported as undefined', () => {
+      expect(sink.export()).toEqual(undefined)
     })
     test('arithmetic operations on sink evaluate to sink', () => {
-      expect(sink.plus(Value.num(5)).export()).toEqual(null)
-      expect(sink.minus(Value.num(5)).export()).toEqual(null)
-      expect(sink.times(Value.num(5)).export()).toEqual(null)
-      expect(sink.over(Value.num(5)).export()).toEqual(null)
-      expect(sink.power(Value.num(5)).export()).toEqual(null)
-      expect(sink.modulo(Value.num(5)).export()).toEqual(null)
-      expect(sink.negate().export()).toEqual(null)
+      expect(sink.plus(Value.num(5)).export()).toEqual(undefined)
+      expect(sink.minus(Value.num(5)).export()).toEqual(undefined)
+      expect(sink.times(Value.num(5)).export()).toEqual(undefined)
+      expect(sink.over(Value.num(5)).export()).toEqual(undefined)
+      expect(sink.power(Value.num(5)).export()).toEqual(undefined)
+      expect(sink.modulo(Value.num(5)).export()).toEqual(undefined)
+      expect(sink.negate().export()).toEqual(undefined)
 
-      expect(Value.num(5).plus(sink).export()).toEqual(null)
-      expect(Value.num(5).minus(sink).export()).toEqual(null)
-      expect(Value.num(5).times(sink).export()).toEqual(null)
-      expect(Value.num(5).over(sink).export()).toEqual(null)
-      expect(Value.num(5).power(sink).export()).toEqual(null)
-      expect(Value.num(5).modulo(sink).export()).toEqual(null)
+      expect(Value.num(5).plus(sink).export()).toEqual(undefined)
+      expect(Value.num(5).minus(sink).export()).toEqual(undefined)
+      expect(Value.num(5).times(sink).export()).toEqual(undefined)
+      expect(Value.num(5).over(sink).export()).toEqual(undefined)
+      expect(Value.num(5).power(sink).export()).toEqual(undefined)
+      expect(Value.num(5).modulo(sink).export()).toEqual(undefined)
     })
     test('boolean operations on sink evaluate to sink', () => {
-      expect(sink.and(fixed(true)).export()).toEqual(null)
-      expect(sink.or(fixed(true)).export()).toEqual(null)
-      expect(sink.not().export()).toEqual(null)
+      expect(sink.and(fixed(true)).export()).toEqual(undefined)
+      expect(sink.or(fixed(true)).export()).toEqual(undefined)
+      expect(sink.not().export()).toEqual(undefined)
     })
     test('when sink is the right-hand-side of a boolean expression, the result is sink only if the left-hand-side dictates so', () => {
-      expect(Value.bool(true).and(fixed(sink)).export()).toEqual(null)
+      expect(Value.bool(true).and(fixed(sink)).export()).toEqual(undefined)
       expect(Value.bool(false).and(fixed(sink)).export()).toEqual(false)
       expect(Value.bool(true).or(fixed(sink)).export()).toEqual(true)
-      expect(Value.bool(false).or(fixed(sink)).export()).toEqual(null)
+      expect(Value.bool(false).or(fixed(sink)).export()).toEqual(undefined)
     })
     test('ifElse with sink condition evaluates to sink', () => {
-      expect(sink.ifElse(fixed('y'), fixed('n')).export()).toEqual(null)
+      expect(sink.ifElse(fixed('y'), fixed('n')).export()).toEqual(undefined)
     })
     test('ifElse with sink positive expression evaluates to sink only if the condition is true', () => {
-      expect(Value.bool(true).ifElse(fixed(sink), fixed(-200)).export()).toEqual(null)
+      expect(Value.bool(true).ifElse(fixed(sink), fixed(-200)).export()).toEqual(undefined)
       expect(Value.bool(false).ifElse(fixed(sink), fixed(-200)).export()).toEqual(-200)
     })
     test('ifElse with sink negative expression evaluates to sink only if the condition is false', () => {
       expect(Value.bool(true).ifElse(fixed(-300), fixed(sink)).export()).toEqual(-300)
-      expect(Value.bool(false).ifElse(fixed(-300), fixed(sink)).export()).toEqual(null)
+      expect(Value.bool(false).ifElse(fixed(-300), fixed(sink)).export()).toEqual(undefined)
     })
     test('access to an attribute of a sink evaluates to sink', () => {
-      expect(sink.access('foo', notFromHere).export()).toEqual(null)
+      expect(sink.access('foo', notFromHere).export()).toEqual(undefined)
     })
     test('calling a sink evaluates to sink', () => {
-      expect(sink.call([], err).export()).toEqual(null)
+      expect(sink.call([], err).export()).toEqual(undefined)
     })
 
     test('applying .keys() to sink evaluates to sink', () => {
-      expect(sink.keys().export()).toEqual(null)
+      expect(sink.keys().export()).toEqual(undefined)
     })
     test('applying .entries() to sink evaluates to sink', () => {
-      expect(sink.entries().export()).toEqual(null)
+      expect(sink.entries().export()).toEqual(undefined)
     })
     test('applying .fromEntries() to sink evaluates to sink', () => {
-      expect(sink.fromEntries().export()).toEqual(null)
+      expect(sink.fromEntries().export()).toEqual(undefined)
     })
     describe('unsink()', () => {
       test('when applied to a non-sink value evaluates to it', () => {
@@ -340,7 +340,7 @@ describe('value', () => {
     })
     test.each([
       ['at', [Value.num(-1)], 'goo'],
-      ['at', [Value.num(4)], null],
+      ['at', [Value.num(4)], undefined],
       ['concat', [Value.arr([Value.str('boo'), Value.str('poo')])], ['foo', 'bar', 'foo', 'goo', 'boo', 'poo']],
       [
         'entries',

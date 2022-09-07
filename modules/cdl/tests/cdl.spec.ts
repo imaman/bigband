@@ -482,10 +482,10 @@ describe('cdl', () => {
       expect(run(`let f = fun (a) if (a > 0) a else sink; 2+f(3)+4`)).toEqual(9)
     })
     test('an array can hold a sink without becoming a sink itself', () => {
-      expect(run(`let f = fun (a) if (a > 0) a else sink; [f(1), f(-1), f(8)]`)).toEqual([1, null, 8])
+      expect(run(`let f = fun (a) if (a > 0) a else sink; [f(1), f(-1), f(8)]`)).toEqual([1, undefined, 8])
     })
     test('an object can hold a sink without becoming a sink itself', () => {
-      expect(run(`{a: 5, b: sink, c: 20}`)).toEqual({ a: 5, b: null, c: 20 })
+      expect(run(`{a: 5, b: sink, c: 20}`)).toEqual({ a: 5, b: undefined, c: 20 })
     })
     test('an if() expression an have a sink positive/negative branch without becoming a sink itself', () => {
       expect(run(`if (true) 5 else sink`)).toEqual(5)

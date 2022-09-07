@@ -688,20 +688,24 @@ export class Value {
   }
 
   toJSON(): unknown {
-    return selectRaw<unknown>(this, {
-      arr: a => a,
-      bool: a => a,
-      foreign: a => a.toString(),
-      lambda: a => show(a.ast),
-      num: a => a,
-      obj: a => a,
-      sink: () => null,
-      str: a => a,
-    })
+    const copy: (v: Value) => unknown = (v: Value) => {
+      return selectRaw<unknown>(v, {
+        arr: a => a.map(x => copy(x)),
+        bool: a => a,
+        foreign: a => a.toString(),
+        lambda: a => show(a.ast),
+        num: a => a,
+        obj: a => Object.fromEntries(Object.entries(a).map(([k, x]) => [k, copy(x)])),
+        sink: () => undefined,
+        str: a => a,
+      })
+    }
+
+    return copy(this)
   }
 
   export(): unknown {
-    return JSON.parse(JSON.stringify(this))
+    return this.toJSON()
   }
 
   static from(u: unknown) {
