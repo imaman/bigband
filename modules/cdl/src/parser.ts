@@ -1,5 +1,4 @@
 import { ArrayLiteralPart, AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
-import { Location } from './location'
 import { Scanner, Token } from './scanner'
 
 export class Parser {
@@ -399,9 +398,5 @@ export class Parser {
     }
 
     return undefined
-  }
-
-  resolveLocation(loc: Location) {
-    return this.scanner.resolveLocation(loc)
   }
 }

@@ -49,8 +49,8 @@ export class Cdl {
   }
 
   constructor(readonly input: string) {
+    this.sourceCode = new SourceCode(this.input)
     this.scanner = new Scanner(this.input)
-    this.sourceCode = new SourceCode(this.scanner)
     this.parser = new Parser(this.scanner)
   }
 

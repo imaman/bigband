@@ -1,4 +1,4 @@
-import { Location, Location2d } from './location'
+import { Location } from './location'
 
 export interface Token {
   readonly text: string
@@ -84,40 +84,5 @@ export class Scanner {
     }
 
     return undefined
-  }
-
-  resolveLocation(loc: Location): Location2d {
-    const prefix = this.input.slice(0, loc.offset)
-    let line = 0
-    for (let i = 0; i < prefix.length; ++i) {
-      const ch = prefix[i]
-      if (ch === '\n') {
-        line += 1
-      }
-    }
-
-    let col = 0
-    for (let i = prefix.length - 1; i >= 0; --i, ++col) {
-      const ch = prefix[i]
-      if (ch === '\n') {
-        break
-      }
-    }
-
-    return { line, col }
-  }
-
-  lineAt(loc: Location) {
-    const precedingNewline = this.input.lastIndexOf('\n', loc.offset)
-    // add a + 1 to skip over the '\n' character (it is not part of the line). Also works if precedingNewLine is -1 (no
-    // preceding newline exists)
-    const startOfLine = precedingNewline + 1
-    let endOfLine = this.input.indexOf('\n', loc.offset)
-    if (endOfLine < 0) {
-      endOfLine = this.input.length
-    }
-
-    const ret = this.input.substring(startOfLine, endOfLine)
-    return ret
   }
 }
