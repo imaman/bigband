@@ -1,12 +1,17 @@
 import { Cdl } from '../src/cdl'
 import { shouldNeverHappen } from '../src/should-never-happen'
 
+/**
+ * Runs a CDL program for testing purposes. If the CDL program evaluated to `sink` an `undefined` is
+ * returned.
+ * @param input the CDL program to run
+ */
 function run(input: string) {
   const cdl = new Cdl(input)
   const res = cdl.run()
 
   if (res.tag === 'sink') {
-    return null
+    return undefined
   }
 
   if (res.tag === 'ok') {
@@ -16,6 +21,11 @@ function run(input: string) {
   shouldNeverHappen(res)
 }
 
+/**
+ * Runs a CDL program for testing purposes. The program is expected to evaluate to `sink`. Throws an exception if that
+ * is not the case.
+ * @param input the CDL program to run
+ */
 function runSink(input: string) {
   const cdl = new Cdl(input)
   const res = cdl.run()
@@ -456,19 +466,19 @@ describe('cdl', () => {
 
   describe('sink', () => {
     test('specified via the "sink" literal', () => {
-      expect(run(`sink`)).toEqual(null)
+      expect(run(`sink`)).toEqual(undefined)
     })
     test('access to non-existing attribute of an object evalutes to a sink', () => {
-      expect(run(`{a: 1}.b`, null)).toEqual(null)
+      expect(run(`{a: 1}.b`)).toEqual(undefined)
       expect(runSink(`6\n+ 7\n+ 8\n+ 9 + 10 + 11 + {a: 9000}.b`).where).toEqual({
         from: { col: 16, line: 3 },
         to: { col: 26, line: 3 },
       })
     })
     test('an expression involving a sink evaluates to sink', () => {
-      expect(run(`5+8+9+sink+20+30`)).toEqual(null)
-      expect(run(`let x = sink; 5+8+9+x+20+30`)).toEqual(null)
-      expect(run(`let f = fun (a) if (a > 0) a else sink; 2+f(-1)+4`)).toEqual(null)
+      expect(run(`5+8+9+sink+20+30`)).toEqual(undefined)
+      expect(run(`let x = sink; 5+8+9+x+20+30`)).toEqual(undefined)
+      expect(run(`let f = fun (a) if (a > 0) a else sink; 2+f(-1)+4`)).toEqual(undefined)
       expect(run(`let f = fun (a) if (a > 0) a else sink; 2+f(3)+4`)).toEqual(9)
     })
     test('an array can hold a sink without becoming a sink itself', () => {
@@ -482,29 +492,29 @@ describe('cdl', () => {
       expect(run(`if (false) sink else 5`)).toEqual(5)
     })
     test('an if() expression becomes a sink itself if the branch dictated by the condition evaluates to sink', () => {
-      expect(run(`if (false) 5 else sink`)).toEqual(null)
-      expect(run(`if (true) sink else 5`)).toEqual(null)
+      expect(run(`if (false) 5 else sink`)).toEqual(undefined)
+      expect(run(`if (true) sink else 5`)).toEqual(undefined)
     })
     test('an if() expression becomes a sink itself if the the condition expression evaluates to sink', () => {
-      expect(run(`if (sink) 5 else 7`)).toEqual(null)
+      expect(run(`if (sink) 5 else 7`)).toEqual(undefined)
     })
     test('an && expression with sinks', () => {
-      expect(run(`sink && false`)).toEqual(null)
-      expect(run(`sink && true`)).toEqual(null)
+      expect(run(`sink && false`)).toEqual(undefined)
+      expect(run(`sink && true`)).toEqual(undefined)
       expect(run(`false && sink`)).toEqual(false)
-      expect(run(`true && sink`)).toEqual(null)
+      expect(run(`true && sink`)).toEqual(undefined)
     })
     test('an || expression with sinks', () => {
-      expect(run(`sink || false`)).toEqual(null)
-      expect(run(`sink || true`)).toEqual(null)
-      expect(run(`false || sink`)).toEqual(null)
+      expect(run(`sink || false`)).toEqual(undefined)
+      expect(run(`sink || true`)).toEqual(undefined)
+      expect(run(`false || sink`)).toEqual(undefined)
       expect(run(`true || sink`)).toEqual(true)
     })
     test('access to an attribute of a sink evaluates to sink', () => {
-      expect(run(`sink.x`)).toEqual(null)
+      expect(run(`sink.x`)).toEqual(undefined)
     })
     test('calling a sink evaluates to sink', () => {
-      expect(run(`sink()`)).toEqual(null)
+      expect(run(`sink()`)).toEqual(undefined)
     })
     test('a sink compared with itself evaluates to true', () => {
       expect(run(`sink == sink`)).toEqual(true)
@@ -609,8 +619,8 @@ describe('cdl', () => {
       expect(run(`[8, 3, 7, 7, 6, 9].find(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(7)
     })
     test('find returns sink if no matching element exists', () => {
-      expect(run(`[3, 5, 7, 9].find(fun (x) x % 2 == 0)`)).toEqual(null)
-      expect(run(`[].find(fun () true)`)).toEqual(null)
+      expect(run(`[3, 5, 7, 9].find(fun (x) x % 2 == 0)`)).toEqual(undefined)
+      expect(run(`[].find(fun () true)`)).toEqual(undefined)
     })
     test('findIndex', () => {
       expect(run(`[10, 20, 30, 40].findIndex(fun (item, i) item + i == 32)`)).toEqual(2)
