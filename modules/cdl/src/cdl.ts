@@ -67,11 +67,11 @@ export class Cdl {
       return new ResultSink(c.value, this)
     }
 
-    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${this.mapTrace(c.expressionTrace)}`
+    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${this.formatTrace(c.expressionTrace)}`
     throw new Error(runtimeErrorMessage)
   }
 
-  private mapTrace(trace: AstNode[]) {
+  private formatTrace(trace: AstNode[]): string {
     const spacer = '  '
 
     const enriched = trace.map(curr => {
