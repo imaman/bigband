@@ -1,4 +1,4 @@
-import { Cdl } from '../src/cdl'
+import { Cdl } from '../src/septima'
 
 /**
  * Runs a CDL program for testing purposes. If the CDL program evaluated to `sink` an `undefined` is

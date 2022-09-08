@@ -1,5 +1,5 @@
 import { show } from '../src/ast-node'
-import * as cdl from '../src/cdl'
+import * as cdl from '../src/septima'
 
 describe('parser', () => {
   test('show()', () => {
