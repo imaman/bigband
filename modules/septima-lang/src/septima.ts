@@ -14,7 +14,7 @@ interface Options {
   onSink?: (res: ResultSink) => unknown
 }
 
-export class Cdl {
+export class Septima {
   private readonly scanner
   private readonly sourceCode
   private readonly parser
@@ -36,7 +36,7 @@ export class Cdl {
       ((r: ResultSink) => {
         throw new Error(r.message)
       })
-    const res = new Cdl(input).compute()
+    const res = new Septima(input).compute()
     if (res.tag === 'ok') {
       return res.value
     }

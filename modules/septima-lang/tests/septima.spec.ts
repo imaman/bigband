@@ -1,4 +1,4 @@
-import { Cdl } from '../src/septima'
+import { Septima } from '../src/septima'
 
 /**
  * Runs a CDL program for testing purposes. If the CDL program evaluated to `sink` an `undefined` is
@@ -6,7 +6,7 @@ import { Cdl } from '../src/septima'
  * @param input the CDL program to run
  */
 function run(input: string) {
-  return Cdl.run(input, { onSink: () => undefined })
+  return Septima.run(input, { onSink: () => undefined })
 }
 
 /**
@@ -15,7 +15,7 @@ function run(input: string) {
  * @param input the CDL program to run
  */
 function runSink(input: string) {
-  const cdl = new Cdl(input)
+  const cdl = new Septima(input)
   const res = cdl.compute()
 
   if (res.tag !== 'sink') {
