@@ -743,6 +743,28 @@ describe('septima', () => {
       expect(run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(330)`)).toEqual(330)
     })
   })
+  describe('preimport', () => {
+    test('definitions from a preimported file can be used', () => {
+      const septima = new Septima(`libA.plus10(4) + libA.plus20(2)`, {
+        libA: `{ plus10: fun (n) n+10, plus20: fun (n) n+20}`,
+      })
+      expect(septima.compute()).toMatchObject({ value: 36 })
+    })
+    test('supports multiple preimports', () => {
+      const septima = new Septima(`a.calc(4) + b.calc(1)`, {
+        a: `{ calc: fun (n) n+10 }`,
+        b: `{ calc: fun (n) n+20 }`,
+      })
+      expect(septima.compute()).toMatchObject({ value: 35 })
+    })
+  })
+  test.todo('support file names in locations')
+  test.todo('string interpolation via `foo` strings')
+  test.todo('imports')
+  test.todo('arrow functions')
+  test.todo('optional parameters')
+  test.todo('optional type annotations?')
+  test.todo('allow redundant commas')
   test.todo('left associativity of +/-')
   test.todo('comparison of arrays')
   test.todo('comparison of lambdas?')

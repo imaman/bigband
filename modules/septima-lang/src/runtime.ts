@@ -1,7 +1,6 @@
 import { AstNode, show, span } from './ast-node'
 import { extractMessage } from './extract-message'
 import { failMe } from './fail-me'
-import { Parser } from './parser'
 import { shouldNeverHappen } from './should-never-happen'
 import * as Stack from './stack'
 import { switchOn } from './switch-on'
@@ -51,7 +50,7 @@ export class Runtime {
   constructor(
     private readonly root: AstNode,
     private readonly verbosity: Verbosity = 'quiet',
-    private readonly parser: Parser,
+    private readonly preimports: Record<string, Value> = {},
   ) {}
 
   compute() {
@@ -60,7 +59,12 @@ export class Runtime {
     const keys = Value.foreign(o => o.keys())
     const entries = Value.foreign(o => o.entries())
     const fromEntries = Value.foreign(o => o.fromEntries())
-    const lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty)
+    let lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty)
+
+    for (const [importName, importValue] of Object.entries(this.preimports)) {
+      lib = new SymbolFrame(importName, { destination: importValue }, lib)
+    }
+
     try {
       const value = this.evalNode(this.root, lib)
       return { value }
