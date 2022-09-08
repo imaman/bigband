@@ -1,9 +1,10 @@
 {
-  "name": "cdl",
-  "version": "1.0.0",
+  "name": "septima-lang",
+  "version": "0.0.1",
   "description": "",
   "keywords": [],
-  "author": "",
+  "license": "MIT",
+  "author": "imaman",
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc -b",
