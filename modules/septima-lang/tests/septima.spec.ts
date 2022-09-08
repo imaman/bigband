@@ -750,6 +750,13 @@ describe('septima', () => {
       })
       expect(septima.compute()).toMatchObject({ value: 36 })
     })
+    test('supports multiple preimports', () => {
+      const septima = new Septima(`a.calc(4) + b.calc(1)`, {
+        a: `{ calc: fun (n) n+10 }`,
+        b: `{ calc: fun (n) n+20 }`,
+      })
+      expect(septima.compute()).toMatchObject({ value: 35 })
+    })
   })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
