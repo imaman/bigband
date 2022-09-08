@@ -745,7 +745,9 @@ describe('septima', () => {
   })
   describe('preimport', () => {
     test.skip('definitions from a preimported file can be used', () => {
-      const septima = new Septima(`plus10(4) + plus20(2)`, { libA: `{ plus10: fun (n) n+10, plus20: fun (n) n+20}` })
+      const septima = new Septima(`libA.plus10(4) + libA.plus20(2)`, {
+        libA: `{ plus10: fun (n) n+10, plus20: fun (n) n+20}`,
+      })
       expect(septima.compute()).toEqual(36)
     })
   })

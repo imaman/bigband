@@ -4,6 +4,7 @@ import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
 import { SourceCode } from './source-code'
+import { Value } from './value'
 
 interface Options {
   /**
@@ -15,10 +16,6 @@ interface Options {
 }
 
 export class Septima {
-  private readonly scanner
-  private readonly sourceCode
-  private readonly parser
-
   /**
    * Runs a Septima program and returns the value it evaluates to. If it evaluates to `sink`, returns the value computed
    * by `options.onSink()` - if present, or throws an error - otherwise.
@@ -48,25 +45,38 @@ export class Septima {
     shouldNeverHappen(res)
   }
 
-  constructor(readonly input: string) {
-    this.sourceCode = new SourceCode(this.input)
-    this.scanner = new Scanner(this.sourceCode)
-    this.parser = new Parser(this.scanner)
-  }
+  constructor(readonly input: string, private readonly preimports: Record<string, string> = {}) {}
 
   compute(verbosity: Verbosity = 'quiet'): Result {
-    const ast = parse(this.parser)
-    const runtime = new Runtime(ast, verbosity, this.parser)
+    const lib: Record<string, Value> = {}
+    for (const [importName, importCode] of Object.entries(this.preimports)) {
+      const sourceCode = new SourceCode(importCode)
+      const value = this.computeImpl(sourceCode, verbosity, {})
+      // TODO(imaman): throw if value is sink?
+      lib[importName] = value
+    }
+
+    const sourceCode = new SourceCode(this.input)
+    const value = this.computeImpl(sourceCode, verbosity, lib)
+    if (!value.isSink()) {
+      return { value: value.export(), tag: 'ok' }
+    }
+    return new ResultSinkImpl(value, sourceCode)
+  }
+
+  private computeImpl(sourceCode: SourceCode, verbosity: Verbosity, lib: Record<string, Value>) {
+    const scanner = new Scanner(sourceCode)
+    const parser = new Parser(scanner)
+
+    const ast = parse(parser)
+    const runtime = new Runtime(ast, verbosity, lib)
     const c = runtime.compute()
 
     if (c.value) {
-      if (!c.value.isSink()) {
-        return { value: c.value.export(), tag: 'ok' }
-      }
-      return new ResultSinkImpl(c.value, this.sourceCode)
+      return c.value
     }
 
-    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${this.sourceCode.formatTrace(c.expressionTrace)}`
+    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
     throw new Error(runtimeErrorMessage)
   }
 }
