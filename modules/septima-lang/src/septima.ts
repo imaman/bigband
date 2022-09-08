@@ -52,7 +52,11 @@ export class Septima {
     for (const [importName, importCode] of Object.entries(this.preimports)) {
       const sourceCode = new SourceCode(importCode)
       const value = this.computeImpl(sourceCode, verbosity, {})
-      // TODO(imaman): throw if value is sink?
+      if (value.isSink()) {
+        // TODO(imaman): cover!
+        const r = new ResultSinkImpl(value, sourceCode)
+        throw new Error(`preimport (${importName}) evaluated to sink: ${r.message}`)
+      }
       lib[importName] = value
     }
 
