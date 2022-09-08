@@ -1,22 +1,22 @@
-import { Cdl } from '../src/cdl'
+import { Septima } from '../src/septima'
 
 /**
- * Runs a CDL program for testing purposes. If the CDL program evaluated to `sink` an `undefined` is
+ * Runs a Septima program for testing purposes. If the program evaluates to `sink` an `undefined` is
  * returned.
- * @param input the CDL program to run
+ * @param input the Septima program to run
  */
 function run(input: string) {
-  return Cdl.run(input, { onSink: () => undefined })
+  return Septima.run(input, { onSink: () => undefined })
 }
 
 /**
- * Runs a CDL program for testing purposes. The program is expected to evaluate to `sink`. Throws an exception if that
- * is not the case.
- * @param input the CDL program to run
+ * Runs a Septima program for testing purposes. The program is expected to evaluate to `sink`. Throws an exception if
+ * this expectation is not met.
+ * @param input the Septima program to run
  */
 function runSink(input: string) {
-  const cdl = new Cdl(input)
-  const res = cdl.compute()
+  const septima = new Septima(input)
+  const res = septima.compute()
 
   if (res.tag !== 'sink') {
     throw new Error(`Not a sink: ${res.value}`)
@@ -24,7 +24,7 @@ function runSink(input: string) {
   return res
 }
 
-describe('cdl', () => {
+describe('septima', () => {
   test('basics', () => {
     expect(run(`5`)).toEqual(5)
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (1:3..5) 789`)
