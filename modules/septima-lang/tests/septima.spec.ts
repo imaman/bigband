@@ -743,6 +743,13 @@ describe('septima', () => {
       expect(run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(330)`)).toEqual(330)
     })
   })
+  describe('preimport', () => {
+    test.skip('definitions from a preimported file can be used', () => {
+      const septima = new Septima(`plus10(4) + plus20(2)`, { libA: `{ plus10: fun (n) n+10, plus20: fun (n) n+20}` })
+      expect(septima.compute()).toEqual(36)
+    })
+  })
+  test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')
   test.todo('arrow functions')
