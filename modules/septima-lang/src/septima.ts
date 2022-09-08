@@ -7,9 +7,9 @@ import { SourceCode } from './source-code'
 
 interface Options {
   /**
-   * A callback function to be invoked when the CDL program evaluated to `sink`. Allows the caller to determine which
-   * value will be returned in that case. For instance, passing `() => undefined` will translate a `sink` value to
-   * `undefined`. The default behavior is to throw an error.
+   * A callback function to be invoked when the Septima program evaluated to `sink`. Allows the caller to determine
+   * which value will be returned in that case. For instance, passing `() => undefined` will translate a `sink` value
+   * to `undefined`. The default behavior is to throw an error.
    */
   onSink?: (res: ResultSink) => unknown
 }
@@ -20,13 +20,13 @@ export class Septima {
   private readonly parser
 
   /**
-   * Runs a CDL program and returns the value it evaluates to. If it evaluates to `sink`, returns the value computed
+   * Runs a Septima program and returns the value it evaluates to. If it evaluates to `sink`, returns the value computed
    * by `options.onSink()` - if present, or throws an error - otherwise.
    *
-   * This method is the simplest way to evaluate a CDL program. One can also use `.compute()` to get a higher degree
-   * of details about the result.
+   * This method is the simplest way to evaluate a Septima program, and it fits many common use cases. One can also use
+   * `.compute()` to get additional details about the execution.
    *
-   * @param input the source code of the CDL program
+   * @param input the source code of the Septima program
    * @param options
    * @returns the value that `input` evaluates to
    */
