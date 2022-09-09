@@ -442,6 +442,9 @@ describe('septima', () => {
       })
       test('body of an arrow function can include let definitions', () => {
         expect(run(`let triple = a => { let factor = 3; return factor*a }; triple(100)`)).toEqual(300)
+        expect(run(`let triple = (a) => { let factor = 3; return 3*a }; triple(100)`)).toEqual(300)
+        expect(run(`let five = () => { let two = 2; let three = 3; return three+two }; five()`)).toEqual(5)
+        expect(run(`let concat = (a,b) => { let u = '_'; return u+a+b+u }; concat('a', 'b')`)).toEqual('_ab_')
       })
     })
     test('can have no args', () => {
