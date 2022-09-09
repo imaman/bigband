@@ -384,6 +384,13 @@ export class Parser {
 
     const parts: ArrayLiteralPart[] = []
     while (true) {
+      if (this.scanner.consumeIf(',')) {
+        const end = this.scanner.consumeIf(']')
+        if (end) {
+          return { tag: 'arrayLiteral', start, parts, end }
+        }
+        continue
+      }
       if (this.scanner.consumeIf('...')) {
         parts.push({ tag: 'spread', v: this.expression() })
       } else {
@@ -391,12 +398,16 @@ export class Parser {
         parts.push({ tag: 'element', v: exp })
       }
 
-      const end = this.scanner.consumeIf(']')
+      let end = this.scanner.consumeIf(']')
       if (end) {
         return { tag: 'arrayLiteral', start, parts, end }
       }
 
       this.scanner.consume(',')
+      end = this.scanner.consumeIf(']')
+      if (end) {
+        return { tag: 'arrayLiteral', start, parts, end }
+      }
     }
   }
 
