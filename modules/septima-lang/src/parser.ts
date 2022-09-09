@@ -22,9 +22,12 @@ export class Parser {
       const ident = this.identifier()
       this.scanner.consume('=')
       const value = this.lambda()
-      this.scanner.consume(';')
-
       ret.push({ start, ident, value })
+
+      this.scanner.consumeIf(';')
+      if (!this.scanner.headMatches('let ')) {
+        return ret
+      }
     }
   }
 

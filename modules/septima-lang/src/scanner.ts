@@ -52,6 +52,11 @@ export class Scanner {
     }
   }
 
+  headMatches(r: RegExp | string): boolean {
+    const text = this.match(r)
+    return text !== undefined
+  }
+
   consume(r: RegExp | string, eatWhitespace = true): Token {
     const text = this.match(r)
     if (text === undefined) {

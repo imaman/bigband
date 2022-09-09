@@ -200,6 +200,10 @@ describe('septima', () => {
       expect(run(`let x = 5; x+3`)).toEqual(8)
       expect(run(`let x = 5; let y = 20; x*y+4`)).toEqual(104)
     })
+    test('do not need the trailing semicolon', () => {
+      expect(run(`let x = 5 x+3`)).toEqual(8)
+      expect(run(`let x = 5 let y = 20 x*y+4`)).toEqual(104)
+    })
     test('fails if the variable was not defined', () => {
       expect(() => run(`let x = 5; x+y`)).toThrowError('Symbol y was not found')
     })
