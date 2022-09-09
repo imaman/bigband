@@ -422,9 +422,11 @@ describe('septima', () => {
     })
     describe('arrow function notation', () => {
       test('a single formal argument does not need to be surrounded with parenthesis', () => {
-        expect(run(`let triple = a => 3*a; triple(100) - triple(90)`)).toEqual(30)
+        expect(run(`let triple = a => 3*a; triple(100)`)).toEqual(300)
       })
-      test.todo('(a) => 3*a')
+      test('(a) => 3*a', () => {
+        expect(run(`let triple = (a) => 3*a; triple(100)`)).toEqual(300)
+      })
       test.todo('() => 5')
       test.todo('(a,b) => 5')
       test.todo('(a,b) => { return <expression>}')

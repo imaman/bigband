@@ -76,6 +76,14 @@ export class Parser {
       const body = this.expression()
       return { tag: 'lambda', start: ident.t, formalArgs: [ident], body }
     }
+    if (this.scanner.headMatches('(', IDENT_PATTERN, ')', '=>')) {
+      const start = this.scanner.consume('(')
+      const ident = this.identifier()
+      this.scanner.consume(')')
+      this.scanner.consume('=>')
+      const body = this.expression()
+      return { tag: 'lambda', start, formalArgs: [ident], body }
+    }
 
     return this.ifExpression()
   }
