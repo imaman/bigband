@@ -74,13 +74,13 @@ export class Parser {
       const start = this.scanner.consume('(')
       this.scanner.consume(')')
       this.scanner.consume('=>')
-      const body = this.expression()
+      const body = this.lambdaBody()
       return { tag: 'lambda', start, formalArgs: [], body }
     }
     if (this.scanner.headMatches(IDENT_PATTERN, '=>')) {
       const ident = this.identifier()
       this.scanner.consume('=>')
-      const body = this.expression()
+      const body = this.lambdaBody()
       return { tag: 'lambda', start: ident.t, formalArgs: [ident], body }
     }
     if (this.scanner.headMatches('(', IDENT_PATTERN, ')', '=>')) {
@@ -88,7 +88,7 @@ export class Parser {
       const ident = this.identifier()
       this.scanner.consume(')')
       this.scanner.consume('=>')
-      const body = this.expression()
+      const body = this.lambdaBody()
       return { tag: 'lambda', start, formalArgs: [ident], body }
     }
     if (this.scanner.headMatches('(', IDENT_PATTERN, ',')) {

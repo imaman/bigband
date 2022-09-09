@@ -434,7 +434,10 @@ describe('septima', () => {
         expect(run(`let conc = (a,b) => a+b; conc('al', 'pha')`)).toEqual('alpha')
         expect(run(`let conc = (a,b,c,d,e,f) => a+b+c+d+e+f; conc('M', 'o', 'n', 'd', 'a', 'y')`)).toEqual('Monday')
       })
-      test('(a,b) => { return <expression>}', () => {
+      test('body of an arrow function can be { return <expression>}', () => {
+        expect(run(`let triple = a => { return 3*a }; triple(100)`)).toEqual(300)
+        expect(run(`let triple = (a) => { return 3*a }; triple(100)`)).toEqual(300)
+        expect(run(`let five = () => { return 5 }; five()`)).toEqual(5)
         expect(run(`let concat = (a,b) => { return a+b }; concat('al', 'pha')`)).toEqual('alpha')
       })
       test.todo('let inside a body')
