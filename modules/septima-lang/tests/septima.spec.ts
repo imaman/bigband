@@ -427,7 +427,9 @@ describe('septima', () => {
       test('(a) => 3*a', () => {
         expect(run(`let triple = (a) => 3*a; triple(100)`)).toEqual(300)
       })
-      test.todo('() => 5')
+      test('() => 5', () => {
+        expect(run(`let five = () => 5; five()`)).toEqual(5)
+      })
       test.todo('(a,b) => 5')
       test.todo('(a,b) => { return <expression>}')
     })

@@ -70,6 +70,13 @@ export class Parser {
   }
 
   arrowFunction(): AstNode {
+    if (this.scanner.headMatches('(', ')', '=>')) {
+      const start = this.scanner.consume('(')
+      this.scanner.consume(')')
+      this.scanner.consume('=>')
+      const body = this.expression()
+      return { tag: 'lambda', start, formalArgs: [], body }
+    }
     if (this.scanner.headMatches(IDENT_PATTERN, '=>')) {
       const ident = this.identifier()
       this.scanner.consume('=>')
