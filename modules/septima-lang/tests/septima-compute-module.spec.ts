@@ -24,4 +24,7 @@ describe('septima-compute-module', () => {
   test('fetches the content of the module to compute from the given callback function', async () => {
     expect(await run('a', { a: `3+8` })).toEqual(11)
   })
+  test('can use exported definitions from another module', async () => {
+    expect(await run('a', { a: `import * as b from './b'; 3+b.eight`, b: `export let eight = 8` })).toEqual(11)
+  })
 })
