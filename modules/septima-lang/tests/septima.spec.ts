@@ -15,8 +15,8 @@ function run(input: string) {
  * @param input the Septima program to run
  */
 function runSink(input: string) {
-  const septima = new Septima(input)
-  const res = septima.compute()
+  const septima = new Septima()
+  const res = septima.compute(input)
 
   if (res.tag !== 'sink') {
     throw new Error(`Not a sink: ${res.value}`)
@@ -794,17 +794,23 @@ describe('septima', () => {
   })
   describe('preimport', () => {
     test('definitions from a preimported file can be used', () => {
-      const septima = new Septima(`libA.plus10(4) + libA.plus20(2)`, {
+      const septima = new Septima()
+
+      const input = `libA.plus10(4) + libA.plus20(2)`
+      const preimports = {
         libA: `{ plus10: fun (n) n+10, plus20: fun (n) n+20}`,
-      })
-      expect(septima.compute()).toMatchObject({ value: 36 })
+      }
+      expect(septima.compute(input, preimports)).toMatchObject({ value: 36 })
     })
     test('supports multiple preimports', () => {
-      const septima = new Septima(`a.calc(4) + b.calc(1)`, {
+      const septima = new Septima()
+
+      const input = `a.calc(4) + b.calc(1)`
+      const preimports = {
         a: `{ calc: fun (n) n+10 }`,
         b: `{ calc: fun (n) n+20 }`,
-      })
-      expect(septima.compute()).toMatchObject({ value: 35 })
+      }
+      expect(septima.compute(input, preimports)).toMatchObject({ value: 35 })
     })
   })
   test.todo('support file names in locations')

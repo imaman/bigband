@@ -33,7 +33,7 @@ export class Septima {
       ((r: ResultSink) => {
         throw new Error(r.message)
       })
-    const res = new Septima(input).compute()
+    const res = new Septima().compute(input)
     if (res.tag === 'ok') {
       return res.value
     }
@@ -45,11 +45,11 @@ export class Septima {
     shouldNeverHappen(res)
   }
 
-  constructor(readonly input: string, private readonly preimports: Record<string, string> = {}) {}
+  constructor() {}
 
-  compute(verbosity: Verbosity = 'quiet'): Result {
+  compute(input: string, preimports: Record<string, string> = {}, verbosity: Verbosity = 'quiet'): Result {
     const lib: Record<string, Value> = {}
-    for (const [importName, importCode] of Object.entries(this.preimports)) {
+    for (const [importName, importCode] of Object.entries(preimports)) {
       const sourceCode = new SourceCode(importCode)
       const value = this.computeImpl(sourceCode, verbosity, {})
       if (value.isSink()) {
@@ -60,7 +60,7 @@ export class Septima {
       lib[importName] = value
     }
 
-    const sourceCode = new SourceCode(this.input)
+    const sourceCode = new SourceCode(input)
     const value = this.computeImpl(sourceCode, verbosity, lib)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
