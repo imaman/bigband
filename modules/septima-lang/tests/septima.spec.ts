@@ -431,11 +431,13 @@ describe('septima', () => {
         expect(run(`let five = () => 5; five()`)).toEqual(5)
       })
       test('(a,b) => <expression>', () => {
-        expect(run(`let concat = (a,b) => a+b; concat('al', 'pha')`)).toEqual('alpha')
+        expect(run(`let conc = (a,b) => a+b; conc('al', 'pha')`)).toEqual('alpha')
+        expect(run(`let conc = (a,b,c,d,e,f) => a+b+c+d+e+f; conc('M', 'o', 'n', 'd', 'a', 'y')`)).toEqual('Monday')
       })
       test('(a,b) => { return <expression>}', () => {
         expect(run(`let concat = (a,b) => { return a+b }; concat('al', 'pha')`)).toEqual('alpha')
       })
+      test.todo('let inside a body')
     })
     test('can have no args', () => {
       expect(run(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)
