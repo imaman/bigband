@@ -440,7 +440,9 @@ describe('septima', () => {
         expect(run(`let five = () => { return 5 }; five()`)).toEqual(5)
         expect(run(`let concat = (a,b) => { return a+b }; concat('al', 'pha')`)).toEqual('alpha')
       })
-      test.todo('let inside a body')
+      test('body of an arrow function can include let definitions', () => {
+        expect(run(`let triple = a => { let factor = 3; return factor*a }; triple(100)`)).toEqual(300)
+      })
     })
     test('can have no args', () => {
       expect(run(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)

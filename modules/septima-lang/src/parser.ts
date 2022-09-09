@@ -33,6 +33,7 @@ export class Parser {
 
   expression(): AstNode {
     const definitions = this.definitions()
+    this.scanner.consumeIf('return')
     const computation = this.lambda()
 
     if (definitions.length === 0) {
@@ -115,7 +116,6 @@ export class Parser {
 
   private lambdaBody() {
     if (this.scanner.consumeIf('{')) {
-      this.scanner.consume('return')
       const ret = this.expression()
       this.scanner.consume('}')
       return ret
