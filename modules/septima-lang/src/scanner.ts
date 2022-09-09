@@ -7,10 +7,10 @@ export interface Token {
 }
 
 export class Scanner {
-  private offset = 0
-
-  constructor(private readonly sourceCode: SourceCode) {
-    this.eatWhitespace()
+  constructor(private readonly sourceCode: SourceCode, private offset = 0) {
+    if (this.offset === 0) {
+      this.eatWhitespace()
+    }
   }
 
   get sourceRef() {
@@ -52,9 +52,18 @@ export class Scanner {
     }
   }
 
-  headMatches(r: RegExp | string): boolean {
-    const text = this.match(r)
-    return text !== undefined
+  headMatches(...patterns: (RegExp | string)[]): boolean {
+    const alt = new Scanner(this.sourceCode, this.offset)
+    for (const p of patterns) {
+      const text = alt.match(p)
+      if (text !== undefined) {
+        return false
+      }
+
+      alt.eatWhitespace()
+    }
+
+    return true
   }
 
   consume(r: RegExp | string, eatWhitespace = true): Token {
