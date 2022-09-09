@@ -433,7 +433,9 @@ describe('septima', () => {
       test('(a,b) => <expression>', () => {
         expect(run(`let concat = (a,b) => a+b; concat('al', 'pha')`)).toEqual('alpha')
       })
-      test.todo('(a,b) => { return <expression>}')
+      test('(a,b) => { return <expression>}', () => {
+        expect(run(`let concat = (a,b) => { return a+b }; concat('al', 'pha')`)).toEqual('alpha')
+      })
     })
     test('can have no args', () => {
       expect(run(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)

@@ -106,11 +106,22 @@ export class Parser {
       }
 
       this.scanner.consume('=>')
-      const body = this.expression()
+      const body = this.lambdaBody()
       return { tag: 'lambda', start, formalArgs, body }
     }
 
     return this.ifExpression()
+  }
+
+  private lambdaBody() {
+    if (this.scanner.consumeIf('{')) {
+      this.scanner.consume('return')
+      const ret = this.expression()
+      this.scanner.consume('}')
+      return ret
+    }
+
+    return this.expression()
   }
 
   ifExpression(): AstNode {
