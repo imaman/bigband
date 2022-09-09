@@ -45,7 +45,7 @@ export class Parser {
   lambda(): AstNode {
     const start = this.scanner.consumeIf('fun')
     if (!start) {
-      return this.arrowExpression()
+      return this.ifExpression()
     }
 
     this.scanner.consume('(')
@@ -67,10 +67,6 @@ export class Parser {
 
     const body = this.expression()
     return { tag: 'lambda', start, formalArgs: args, body }
-  }
-
-  arrowExpression() {
-    if (this.scanner.headMatches(IDENT_PATTERN, '=>'))
   }
 
   ifExpression(): AstNode {
@@ -400,7 +396,7 @@ export class Parser {
   }
 
   private maybeIdentifier(): Ident | undefined {
-    const t = this.scanner.consumeIf(IDENT_PATTERN)
+    const t = this.scanner.consumeIf(/[a-zA-Z][0-9A-Za-z_]*/)
     if (t) {
       return { tag: 'ident', t }
     }
@@ -408,5 +404,3 @@ export class Parser {
     return undefined
   }
 }
-
-const IDENT_PATTERN = /[a-zA-Z][0-9A-Za-z_]*/
