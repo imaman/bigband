@@ -831,4 +831,6 @@ describe('septima', () => {
   test.todo('number methods')
   test.todo('drop the fun () notation and use just arrow functions')
   test.todo('proper internal representation of arrow function, in particular: show(), span()')
+  test.todo('sink sinkifies arrays and objects it is stored at')
+  test.todo('{foo}')
 })
