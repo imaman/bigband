@@ -282,6 +282,14 @@ describe('septima', () => {
         expect(run(`{a: 1, b: 2}`)).toEqual({ a: 1, b: 2 })
         expect(run(`{a: "A", b: "B", c: "CCC"}`)).toEqual({ a: 'A', b: 'B', c: 'CCC' })
       })
+      test('allow a dangling comma', () => {
+        expect(run(`{a: 1,}`)).toEqual({ a: 1 })
+        expect(run(`{a: 1, b: 2,}`)).toEqual({ a: 1, b: 2 })
+        expect(run(`{a: "A", b: "B", c: "CCC",}`)).toEqual({ a: 'A', b: 'B', c: 'CCC' })
+      })
+      test('a dangling comma in an empty object is not allowed', () => {
+        expect(() => run(`{,}`)).toThrowError('Expected an identifier at (1:2..3) ,}')
+      })
       test('supports computed attributes names via the [<expression>]: <value> notation', () => {
         expect(run(`{["a" + 'b']: 'a-and-b'}`)).toEqual({ ab: 'a-and-b' })
       })

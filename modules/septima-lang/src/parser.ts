@@ -370,12 +370,16 @@ export class Parser {
         parts.push({ tag: 'hardName', k, v })
       }
 
-      const end = this.scanner.consumeIf('}')
+      let end = this.scanner.consumeIf('}')
       if (end) {
         return { tag: 'objectLiteral', start, parts, end }
       }
 
       this.scanner.consume(',')
+      end = this.scanner.consumeIf('}')
+      if (end) {
+        return { tag: 'objectLiteral', start, parts, end }
+      }
     }
   }
 
