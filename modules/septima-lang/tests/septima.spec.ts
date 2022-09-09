@@ -270,6 +270,12 @@ describe('septima', () => {
       expect(run(`["ab", 5]`)).toEqual(['ab', 5])
       expect(run(`[]`)).toEqual([])
     })
+    test('allow a dangling comma', () => {
+      expect(run(`[,]`)).toEqual([])
+      expect(run(`[,,]`)).toEqual([])
+      expect(run(`[246,]`)).toEqual([246])
+      expect(run(`[246,531,]`)).toEqual([246, 531])
+    })
     test('individual elements of an array can be accessed via the [<index>] notation', () => {
       expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; a[1]`)).toEqual('mon')
     })
