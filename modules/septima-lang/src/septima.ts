@@ -47,6 +47,16 @@ export class Septima {
 
   constructor() {}
 
+  async computeModule(moduleName: string, moduleReader: (m: string) => Promise<string>): Promise<Result> {
+    const input = await moduleReader(moduleName)
+    const sourceCode = new SourceCode(input)
+    const value = this.computeImpl(sourceCode, 'quiet', {})
+    if (!value.isSink()) {
+      return { value: value.export(), tag: 'ok' }
+    }
+    return new ResultSinkImpl(value, sourceCode)
+  }
+
   compute(input: string, preimports: Record<string, string> = {}, verbosity: Verbosity = 'quiet'): Result {
     const lib: Record<string, Value> = {}
     for (const [importName, importCode] of Object.entries(preimports)) {
