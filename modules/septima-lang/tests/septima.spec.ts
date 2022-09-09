@@ -817,4 +817,6 @@ describe('septima', () => {
   test.todo('quoting of a ticks inside a string')
   test.todo('number in scientific notation')
   test.todo('number methods')
+  test.todo('drop the fun () notation and use just arrow functions')
+  test.todo('proper internal representation of arrow function, in particular: show(), span()')
 })
