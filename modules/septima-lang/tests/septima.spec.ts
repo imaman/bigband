@@ -420,6 +420,15 @@ describe('septima', () => {
       expect(run(`let triple = (fun(a) 3*a); triple(100) - triple(90)`)).toEqual(30)
       expect(run(`let triple = fun(a) 3*a; triple(100) - triple(90)`)).toEqual(30)
     })
+    describe('arrow function notation', () => {
+      test('can also be defined via the arrow notation', () => {
+        expect(run(`let triple = a => 3*a; triple(100) - triple(90)`)).toEqual(30)
+      })
+      test.todo('(a) => 3*a')
+      test.todo('() => 5')
+      test.todo('(a,b) => 5')
+      test.todo('(a,b) => { return <expression>}')
+    })
     test('can have no args', () => {
       expect(run(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)
       expect(run(`(fun() 3.14)()*2`)).toEqual(6.28)
