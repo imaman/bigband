@@ -55,12 +55,10 @@ export class Scanner {
   headMatches(...patterns: (RegExp | string)[]): boolean {
     const alt = new Scanner(this.sourceCode, this.offset)
     for (const p of patterns) {
-      const text = alt.match(p)
-      if (text === undefined) {
-        return true
+      const t = alt.consumeIf(p, true)
+      if (t === undefined) {
+        return false
       }
-
-      alt.eatWhitespace()
     }
 
     return true

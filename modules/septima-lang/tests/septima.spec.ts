@@ -421,7 +421,7 @@ describe('septima', () => {
       expect(run(`let triple = fun(a) 3*a; triple(100) - triple(90)`)).toEqual(30)
     })
     describe('arrow function notation', () => {
-      test('can also be defined via the arrow notation', () => {
+      test('a single formal argument does not need to be surrounded with parenthesis', () => {
         expect(run(`let triple = a => 3*a; triple(100) - triple(90)`)).toEqual(30)
       })
       test.todo('(a) => 3*a')

@@ -45,7 +45,7 @@ export class Parser {
   lambda(): AstNode {
     const start = this.scanner.consumeIf('fun')
     if (!start) {
-      return this.arrowExpression()
+      return this.arrowFunction()
     }
 
     this.scanner.consume('(')
@@ -69,8 +69,15 @@ export class Parser {
     return { tag: 'lambda', start, formalArgs: args, body }
   }
 
-  arrowExpression() {
-    if (this.scanner.headMatches(IDENT_PATTERN, '=>'))
+  arrowFunction(): AstNode {
+    if (this.scanner.headMatches(IDENT_PATTERN, '=>')) {
+      const ident = this.identifier()
+      this.scanner.consume('=>')
+      const body = this.expression()
+      return { tag: 'lambda', start: ident.t, formalArgs: [ident], body }
+    }
+
+    return this.ifExpression()
   }
 
   ifExpression(): AstNode {
