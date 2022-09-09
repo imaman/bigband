@@ -30,6 +30,10 @@ describe('septima', () => {
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (1:3..5) 789`)
     expect(run(`3.14`)).toEqual(3.14)
   })
+  test('an optional return keyword can be placed before the result', () => {
+    expect(run(`return 5`)).toEqual(5)
+    expect(run(`return 3.14`)).toEqual(3.14)
+  })
 
   test('booleans', () => {
     expect(run(`true`)).toEqual(true)
@@ -200,6 +204,10 @@ describe('septima', () => {
       expect(run(`let x = 5; x+3`)).toEqual(8)
       expect(run(`let x = 5; let y = 20; x*y+4`)).toEqual(104)
     })
+    test('do not need the trailing semicolon', () => {
+      expect(run(`let x = 5 x+3`)).toEqual(8)
+      expect(run(`let x = 5 let y = 20 x*y+4`)).toEqual(104)
+    })
     test('fails if the variable was not defined', () => {
       expect(() => run(`let x = 5; x+y`)).toThrowError('Symbol y was not found')
     })
@@ -281,6 +289,14 @@ describe('septima', () => {
         expect(run(`{a: 1}`)).toEqual({ a: 1 })
         expect(run(`{a: 1, b: 2}`)).toEqual({ a: 1, b: 2 })
         expect(run(`{a: "A", b: "B", c: "CCC"}`)).toEqual({ a: 'A', b: 'B', c: 'CCC' })
+      })
+      test('allow a dangling comma', () => {
+        expect(run(`{a: 1,}`)).toEqual({ a: 1 })
+        expect(run(`{a: 1, b: 2,}`)).toEqual({ a: 1, b: 2 })
+        expect(run(`{a: "A", b: "B", c: "CCC",}`)).toEqual({ a: 'A', b: 'B', c: 'CCC' })
+      })
+      test('a dangling comma in an empty object is not allowed', () => {
+        expect(() => run(`{,}`)).toThrowError('Expected an identifier at (1:2..3) ,}')
       })
       test('supports computed attributes names via the [<expression>]: <value> notation', () => {
         expect(run(`{["a" + 'b']: 'a-and-b'}`)).toEqual({ ab: 'a-and-b' })
@@ -407,6 +423,33 @@ describe('septima', () => {
     test('can be stored in a variable', () => {
       expect(run(`let triple = (fun(a) 3*a); triple(100) - triple(90)`)).toEqual(30)
       expect(run(`let triple = fun(a) 3*a; triple(100) - triple(90)`)).toEqual(30)
+    })
+    describe('arrow function notation', () => {
+      test('a single formal argument does not need to be surrounded with parenthesis', () => {
+        expect(run(`let triple = a => 3*a; triple(100)`)).toEqual(300)
+      })
+      test('(a) => <expression>', () => {
+        expect(run(`let triple = (a) => 3*a; triple(100)`)).toEqual(300)
+      })
+      test('() => <expression>', () => {
+        expect(run(`let five = () => 5; five()`)).toEqual(5)
+      })
+      test('(a,b) => <expression>', () => {
+        expect(run(`let conc = (a,b) => a+b; conc('al', 'pha')`)).toEqual('alpha')
+        expect(run(`let conc = (a,b,c,d,e,f) => a+b+c+d+e+f; conc('M', 'o', 'n', 'd', 'a', 'y')`)).toEqual('Monday')
+      })
+      test('body of an arrow function can be { return <expression>}', () => {
+        expect(run(`let triple = a => { return 3*a }; triple(100)`)).toEqual(300)
+        expect(run(`let triple = (a) => { return 3*a }; triple(100)`)).toEqual(300)
+        expect(run(`let five = () => { return 5 }; five()`)).toEqual(5)
+        expect(run(`let concat = (a,b) => { return a+b }; concat('al', 'pha')`)).toEqual('alpha')
+      })
+      test('body of an arrow function can include let definitions', () => {
+        expect(run(`let triple = a => { let factor = 3; return factor*a }; triple(100)`)).toEqual(300)
+        expect(run(`let triple = (a) => { let factor = 3; return 3*a }; triple(100)`)).toEqual(300)
+        expect(run(`let five = () => { let two = 2; let three = 3; return three+two }; five()`)).toEqual(5)
+        expect(run(`let concat = (a,b) => { let u = '_'; return u+a+b+u }; concat('a', 'b')`)).toEqual('_ab_')
+      })
     })
     test('can have no args', () => {
       expect(run(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)

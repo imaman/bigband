@@ -22,14 +22,18 @@ export class Parser {
       const ident = this.identifier()
       this.scanner.consume('=')
       const value = this.lambda()
-      this.scanner.consume(';')
-
       ret.push({ start, ident, value })
+
+      this.scanner.consumeIf(';')
+      if (!this.scanner.headMatches('let ')) {
+        return ret
+      }
     }
   }
 
   expression(): AstNode {
     const definitions = this.definitions()
+    this.scanner.consumeIf('return')
     const computation = this.lambda()
 
     if (definitions.length === 0) {
@@ -42,7 +46,7 @@ export class Parser {
   lambda(): AstNode {
     const start = this.scanner.consumeIf('fun')
     if (!start) {
-      return this.ifExpression()
+      return this.arrowFunction()
     }
 
     this.scanner.consume('(')
@@ -64,6 +68,60 @@ export class Parser {
 
     const body = this.expression()
     return { tag: 'lambda', start, formalArgs: args, body }
+  }
+
+  arrowFunction(): AstNode {
+    if (this.scanner.headMatches('(', ')', '=>')) {
+      const start = this.scanner.consume('(')
+      this.scanner.consume(')')
+      this.scanner.consume('=>')
+      const body = this.lambdaBody()
+      return { tag: 'lambda', start, formalArgs: [], body }
+    }
+    if (this.scanner.headMatches(IDENT_PATTERN, '=>')) {
+      const ident = this.identifier()
+      this.scanner.consume('=>')
+      const body = this.lambdaBody()
+      return { tag: 'lambda', start: ident.t, formalArgs: [ident], body }
+    }
+    if (this.scanner.headMatches('(', IDENT_PATTERN, ')', '=>')) {
+      const start = this.scanner.consume('(')
+      const ident = this.identifier()
+      this.scanner.consume(')')
+      this.scanner.consume('=>')
+      const body = this.lambdaBody()
+      return { tag: 'lambda', start, formalArgs: [ident], body }
+    }
+    if (this.scanner.headMatches('(', IDENT_PATTERN, ',')) {
+      const start = this.scanner.consume('(')
+      const formalArgs: Ident[] = []
+      while (true) {
+        const ident = this.identifier()
+        formalArgs.push(ident)
+
+        if (this.scanner.consumeIf(')')) {
+          break
+        }
+
+        this.scanner.consume(',')
+      }
+
+      this.scanner.consume('=>')
+      const body = this.lambdaBody()
+      return { tag: 'lambda', start, formalArgs, body }
+    }
+
+    return this.ifExpression()
+  }
+
+  private lambdaBody() {
+    if (this.scanner.consumeIf('{')) {
+      const ret = this.expression()
+      this.scanner.consume('}')
+      return ret
+    }
+
+    return this.expression()
   }
 
   ifExpression(): AstNode {
@@ -370,12 +428,16 @@ export class Parser {
         parts.push({ tag: 'hardName', k, v })
       }
 
-      const end = this.scanner.consumeIf('}')
+      let end = this.scanner.consumeIf('}')
       if (end) {
         return { tag: 'objectLiteral', start, parts, end }
       }
 
       this.scanner.consume(',')
+      end = this.scanner.consumeIf('}')
+      if (end) {
+        return { tag: 'objectLiteral', start, parts, end }
+      }
     }
   }
 
@@ -389,7 +451,7 @@ export class Parser {
   }
 
   private maybeIdentifier(): Ident | undefined {
-    const t = this.scanner.consumeIf(/[a-zA-Z][0-9A-Za-z_]*/)
+    const t = this.scanner.consumeIf(IDENT_PATTERN)
     if (t) {
       return { tag: 'ident', t }
     }
@@ -397,3 +459,5 @@ export class Parser {
     return undefined
   }
 }
+
+const IDENT_PATTERN = /[a-zA-Z][0-9A-Za-z_]*/
