@@ -30,6 +30,10 @@ describe('septima', () => {
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (1:3..5) 789`)
     expect(run(`3.14`)).toEqual(3.14)
   })
+  test('an optional return keyword can be placed before the result', () => {
+    expect(run(`return 5`)).toEqual(5)
+    expect(run(`return 3.14`)).toEqual(3.14)
+  })
 
   test('booleans', () => {
     expect(run(`true`)).toEqual(true)
