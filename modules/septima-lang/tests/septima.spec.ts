@@ -424,13 +424,15 @@ describe('septima', () => {
       test('a single formal argument does not need to be surrounded with parenthesis', () => {
         expect(run(`let triple = a => 3*a; triple(100)`)).toEqual(300)
       })
-      test('(a) => 3*a', () => {
+      test('(a) => <expression>', () => {
         expect(run(`let triple = (a) => 3*a; triple(100)`)).toEqual(300)
       })
-      test('() => 5', () => {
+      test('() => <expression>', () => {
         expect(run(`let five = () => 5; five()`)).toEqual(5)
       })
-      test.todo('(a,b) => 5')
+      test('(a,b) => <expression>', () => {
+        expect(run(`let concat = (a,b) => a+b; concat('al', 'pha')`)).toEqual('alpha')
+      })
       test.todo('(a,b) => { return <expression>}')
     })
     test('can have no args', () => {
