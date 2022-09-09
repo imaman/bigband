@@ -56,8 +56,8 @@ export class Scanner {
     const alt = new Scanner(this.sourceCode, this.offset)
     for (const p of patterns) {
       const text = alt.match(p)
-      if (text !== undefined) {
-        return false
+      if (text === undefined) {
+        return true
       }
 
       alt.eatWhitespace()
