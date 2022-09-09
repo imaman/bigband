@@ -1,3 +1,4 @@
+// something interesting goes here.
 let generation = 'prod';
 let stackName = 'd';
 let account = '091530143433';
@@ -12,10 +13,10 @@ let codeBucket = 'moojo-dev-infra';
 //    // max amount of time for handling a request, in seconds. Defaults to 3.
 //    timeoutInSeconds: number
 //  }
-let lambda = fun (name, cas, options) (
+let lambda = (name, cas, options) => {
     let roleName = name + 'Role';
     
-  {
+  return {
     [name]: {
       Type: 'AWS::Lambda::Function',
       Properties: {
@@ -53,13 +54,13 @@ let lambda = fun (name, cas, options) (
         ]
       }
     }
-});
+}};
 
-let template = fun(resources) {
+let template = (resources) => ({
   Resources: {
-    ...Object.fromEntries(resources.flatMap(fun (r) Object.entries(r)))
+    ...Object.fromEntries(resources.flatMap((r) => Object.entries(r)))
   }
-};
+})
 
 
 template([ lambda('foo', '1b393be42ae91bf07cb367466bf1c61b171aa95555f2377955648ae4', {}) ])
