@@ -36,9 +36,16 @@ export type Lambda = {
   body: AstNode
 }
 
+export type Unit = {
+  tag: 'unit'
+  imports: Import[]
+  expression: AstNode
+}
+
 export type AstNode =
   | Ident
   | Literal
+  | Unit
   | {
       start: Token
       tag: 'arrayLiteral'
@@ -62,11 +69,6 @@ export type AstNode =
       operatorToken: Token
       operator: '+' | '-' | '!'
       operand: AstNode
-    }
-  | {
-      tag: 'unit'
-      imports: Import[]
-      expression: AstNode
     }
   | {
       tag: 'topLevelExpression'

@@ -1,11 +1,11 @@
-import { ArrayLiteralPart, AstNode, Ident, Import, Let, Literal, ObjectLiteralPart, span } from './ast-node'
+import { ArrayLiteralPart, AstNode, Ident, Import, Let, Literal, ObjectLiteralPart, span, Unit } from './ast-node'
 import { Scanner, Token } from './scanner'
 import { switchOn } from './switch-on'
 
 export class Parser {
   constructor(private readonly scanner: Scanner) {}
 
-  parse() {
+  parse(): Unit {
     const ret = this.unit()
     if (!this.scanner.eof()) {
       throw new Error(`Loitering input ${this.scanner.sourceRef}`)
@@ -13,7 +13,7 @@ export class Parser {
     return ret
   }
 
-  unit(): AstNode {
+  unit(): Unit {
     const imports = this.imports()
     const expression = this.expression()
     return { tag: 'unit', imports, expression }

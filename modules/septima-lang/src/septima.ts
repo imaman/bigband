@@ -1,3 +1,4 @@
+import { Unit } from './ast-node'
 import { Parser } from './parser'
 import { Result, ResultSink, ResultSinkImpl } from './result'
 import { Runtime, Verbosity } from './runtime'
@@ -106,7 +107,7 @@ export class Septima {
   }
 }
 
-export function parse(arg: string | Parser) {
+export function parse(arg: string | Parser): Unit {
   const parser = typeof arg === 'string' ? new Parser(new Scanner(new SourceCode(arg))) : arg
   const ast = parser.parse()
   return ast

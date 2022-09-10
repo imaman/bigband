@@ -1,4 +1,4 @@
-import { AstNode, Import, show, span } from './ast-node'
+import { AstNode, show, span, Unit } from './ast-node'
 import { extractMessage } from './extract-message'
 import { failMe } from './fail-me'
 import { shouldNeverHappen } from './should-never-happen'
@@ -61,7 +61,7 @@ export class Runtime {
     private readonly root: AstNode,
     private readonly verbosity: Verbosity = 'quiet',
     private readonly preimports: Record<string, Value>,
-    private readonly getAstOf: (fileName: string) => AstNode,
+    private readonly getAstOf: (fileName: string) => Unit,
   ) {}
 
   private buildInitialSymbolTable() {
@@ -114,63 +114,38 @@ export class Runtime {
   }
 
   private importDefinitions(pathToImportFrom: string): Value {
-    const ast: AstNode = this.getAstOf(pathToImportFrom)
+    const ast = this.getAstOf(pathToImportFrom)
+    const exp = ast.expression
+    const imports = ast.imports
     if (
-      ast.tag === 'arrayLiteral' ||
-      ast.tag === 'binaryOperator' ||
-      ast.tag === 'dot' ||
-      ast.tag === 'export*' ||
-      ast.tag === 'functionCall' ||
-      ast.tag === 'ident' ||
-      ast.tag === 'if' ||
-      ast.tag === 'indexAccess' ||
-      ast.tag === 'lambda' ||
-      ast.tag === 'literal' ||
-      ast.tag === 'objectLiteral' ||
-      ast.tag === 'topLevelExpression' ||
-      ast.tag === 'unaryOperator'
+      exp.tag === 'arrayLiteral' ||
+      exp.tag === 'binaryOperator' ||
+      exp.tag === 'dot' ||
+      exp.tag === 'export*' ||
+      exp.tag === 'functionCall' ||
+      exp.tag === 'ident' ||
+      exp.tag === 'if' ||
+      exp.tag === 'indexAccess' ||
+      exp.tag === 'lambda' ||
+      exp.tag === 'literal' ||
+      exp.tag === 'objectLiteral' ||
+      exp.tag === 'unaryOperator' ||
+      exp.tag === 'unit'
     ) {
       // TODO(imaman): throw an error on non-exporting unit?
       return Value.obj({})
     }
 
-    if (ast.tag === 'unit') {
-      return this.importDefinitionsFromExpression(ast.expression, ast.imports)
-    }
-
-    shouldNeverHappen(ast)
-  }
-
-  private importDefinitionsFromExpression(ast: AstNode, imports: Import[]): Value {
-    if (
-      ast.tag === 'arrayLiteral' ||
-      ast.tag === 'binaryOperator' ||
-      ast.tag === 'dot' ||
-      ast.tag === 'export*' ||
-      ast.tag === 'functionCall' ||
-      ast.tag === 'ident' ||
-      ast.tag === 'if' ||
-      ast.tag === 'indexAccess' ||
-      ast.tag === 'lambda' ||
-      ast.tag === 'literal' ||
-      ast.tag === 'objectLiteral' ||
-      ast.tag === 'unaryOperator' ||
-      ast.tag === 'unit'
-    ) {
-      // TODO(imaman): throw an error on non-exporting unit?
-      return Value.obj({})
-    }
-
-    if (ast.tag === 'topLevelExpression') {
+    if (exp.tag === 'topLevelExpression') {
       const unit: AstNode = {
         tag: 'unit',
         imports,
-        expression: { tag: 'topLevelExpression', definitions: ast.definitions, computation: { tag: 'export*' } },
+        expression: { tag: 'topLevelExpression', definitions: exp.definitions, computation: { tag: 'export*' } },
       }
       return this.evalNode(unit, this.buildInitialSymbolTable())
     }
 
-    shouldNeverHappen(ast)
+    shouldNeverHappen(exp)
   }
 
   private evalNodeImpl(ast: AstNode, table: SymbolTable): Value {
