@@ -1,3 +1,4 @@
+import { Unit } from './ast-node'
 import { Parser } from './parser'
 import { Result, ResultSink, ResultSinkImpl } from './result'
 import { Runtime, Verbosity } from './runtime'
@@ -33,7 +34,7 @@ export class Septima {
       ((r: ResultSink) => {
         throw new Error(r.message)
       })
-    const res = new Septima(input).compute()
+    const res = new Septima().compute(input)
     if (res.tag === 'ok') {
       return res.value
     }
@@ -45,13 +46,23 @@ export class Septima {
     shouldNeverHappen(res)
   }
 
-  constructor(readonly input: string, private readonly preimports: Record<string, string> = {}) {}
+  constructor() {}
 
-  compute(verbosity: Verbosity = 'quiet'): Result {
+  computeModule(moduleName: string, moduleReader: (m: string) => string): Result {
+    const input = moduleReader(moduleName)
+    const sourceCode = new SourceCode(input)
+    const value = this.computeImpl(sourceCode, 'quiet', {}, moduleReader)
+    if (!value.isSink()) {
+      return { value: value.export(), tag: 'ok' }
+    }
+    return new ResultSinkImpl(value, sourceCode)
+  }
+
+  compute(input: string, preimports: Record<string, string> = {}, verbosity: Verbosity = 'quiet'): Result {
     const lib: Record<string, Value> = {}
-    for (const [importName, importCode] of Object.entries(this.preimports)) {
+    for (const [importName, importCode] of Object.entries(preimports)) {
       const sourceCode = new SourceCode(importCode)
-      const value = this.computeImpl(sourceCode, verbosity, {})
+      const value = this.computeImpl(sourceCode, verbosity, {}, undefined)
       if (value.isSink()) {
         // TODO(imaman): cover!
         const r = new ResultSinkImpl(value, sourceCode)
@@ -60,20 +71,31 @@ export class Septima {
       lib[importName] = value
     }
 
-    const sourceCode = new SourceCode(this.input)
-    const value = this.computeImpl(sourceCode, verbosity, lib)
+    const sourceCode = new SourceCode(input)
+    const value = this.computeImpl(sourceCode, verbosity, lib, undefined)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
     return new ResultSinkImpl(value, sourceCode)
   }
 
-  private computeImpl(sourceCode: SourceCode, verbosity: Verbosity, lib: Record<string, Value>) {
+  private computeImpl(
+    sourceCode: SourceCode,
+    verbosity: Verbosity,
+    lib: Record<string, Value>,
+    moduleReader: undefined | ((m: string) => string),
+  ) {
     const scanner = new Scanner(sourceCode)
     const parser = new Parser(scanner)
-
     const ast = parse(parser)
-    const runtime = new Runtime(ast, verbosity, lib)
+
+    const getAstOf = (fileName: string) => {
+      if (!moduleReader) {
+        throw new Error(`cannot read modules`)
+      }
+      return parse(moduleReader(fileName))
+    }
+    const runtime = new Runtime(ast, verbosity, lib, getAstOf)
     const c = runtime.compute()
 
     if (c.value) {
@@ -85,7 +107,7 @@ export class Septima {
   }
 }
 
-export function parse(arg: string | Parser) {
+export function parse(arg: string | Parser): Unit {
   const parser = typeof arg === 'string' ? new Parser(new Scanner(new SourceCode(arg))) : arg
   const ast = parser.parse()
   return ast

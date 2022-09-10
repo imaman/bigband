@@ -1,4 +1,4 @@
-import { AstNode, show, span } from './ast-node'
+import { AstNode, show, span, Unit } from './ast-node'
 import { extractMessage } from './extract-message'
 import { failMe } from './fail-me'
 import { shouldNeverHappen } from './should-never-happen'
@@ -31,6 +31,12 @@ class SymbolFrame implements SymbolTable {
     ret[this.symbol] = this.placeholder.destination?.export() ?? failMe(`Unbounded symbol: ${this.symbol}`)
     return ret
   }
+
+  exportValue(): Record<string, Value> {
+    const ret = this.earlier.exportValue()
+    ret[this.symbol] = this.placeholder.destination ?? failMe(`Unbounded symbol: ${this.symbol}`)
+    return ret
+  }
 }
 
 class EmptySymbolTable implements SymbolTable {
@@ -39,6 +45,10 @@ class EmptySymbolTable implements SymbolTable {
   }
 
   export() {
+    return {}
+  }
+
+  exportValue(): Record<string, Value> {
     return {}
   }
 }
@@ -50,10 +60,11 @@ export class Runtime {
   constructor(
     private readonly root: AstNode,
     private readonly verbosity: Verbosity = 'quiet',
-    private readonly preimports: Record<string, Value> = {},
+    private readonly preimports: Record<string, Value>,
+    private readonly getAstOf: (fileName: string) => Unit,
   ) {}
 
-  compute() {
+  private buildInitialSymbolTable() {
     const empty = new EmptySymbolTable()
 
     const keys = Value.foreign(o => o.keys())
@@ -64,9 +75,12 @@ export class Runtime {
     for (const [importName, importValue] of Object.entries(this.preimports)) {
       lib = new SymbolFrame(importName, { destination: importValue }, lib)
     }
+    return lib
+  }
 
+  compute() {
     try {
-      const value = this.evalNode(this.root, lib)
+      const value = this.evalNode(this.root, this.buildInitialSymbolTable())
       return { value }
     } catch (e) {
       const trace: AstNode[] = []
@@ -99,7 +113,50 @@ export class Runtime {
     return ret
   }
 
+  private importDefinitions(pathToImportFrom: string): Value {
+    const ast = this.getAstOf(pathToImportFrom)
+    const exp = ast.expression
+    const imports = ast.imports
+    if (
+      exp.tag === 'arrayLiteral' ||
+      exp.tag === 'binaryOperator' ||
+      exp.tag === 'dot' ||
+      exp.tag === 'export*' ||
+      exp.tag === 'functionCall' ||
+      exp.tag === 'ident' ||
+      exp.tag === 'if' ||
+      exp.tag === 'indexAccess' ||
+      exp.tag === 'lambda' ||
+      exp.tag === 'literal' ||
+      exp.tag === 'objectLiteral' ||
+      exp.tag === 'unaryOperator' ||
+      exp.tag === 'unit'
+    ) {
+      // TODO(imaman): throw an error on non-exporting unit?
+      return Value.obj({})
+    }
+
+    if (exp.tag === 'topLevelExpression') {
+      const unit: AstNode = {
+        tag: 'unit',
+        imports,
+        expression: { tag: 'topLevelExpression', definitions: exp.definitions, computation: { tag: 'export*' } },
+      }
+      return this.evalNode(unit, this.buildInitialSymbolTable())
+    }
+
+    shouldNeverHappen(exp)
+  }
+
   private evalNodeImpl(ast: AstNode, table: SymbolTable): Value {
+    if (ast.tag === 'unit') {
+      let newTable = table
+      for (const imp of ast.imports) {
+        const o = this.importDefinitions(imp.pathToImportFrom.text)
+        newTable = new SymbolFrame(imp.ident.t.text, { destination: o }, newTable)
+      }
+      return this.evalNode(ast.expression, newTable)
+    }
     if (ast.tag === 'topLevelExpression') {
       let newTable = table
       for (const def of ast.definitions) {
@@ -111,6 +168,10 @@ export class Runtime {
       }
 
       return this.evalNode(ast.computation, newTable)
+    }
+
+    if (ast.tag === 'export*') {
+      return Value.obj(table.exportValue())
     }
 
     if (ast.tag === 'binaryOperator') {

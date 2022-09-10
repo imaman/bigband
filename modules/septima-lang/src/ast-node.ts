@@ -1,8 +1,21 @@
 import { Span } from './location'
 import { Token } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
+import { switchOn } from './switch-on'
 
 export type Let = { start: Token; ident: Ident; value: AstNode }
+
+export type Import = {
+  start: Token
+  ident: Ident
+  pathToImportFrom: Token
+}
+
+export type Literal = {
+  tag: 'literal'
+  type: 'str' | 'bool' | 'num' | 'sink' | 'sink!' | 'sink!!'
+  t: Token
+}
 
 export type ObjectLiteralPart =
   | { tag: 'hardName'; k: Ident; v: AstNode }
@@ -23,8 +36,16 @@ export type Lambda = {
   body: AstNode
 }
 
+export type Unit = {
+  tag: 'unit'
+  imports: Import[]
+  expression: AstNode
+}
+
 export type AstNode =
   | Ident
+  | Literal
+  | Unit
   | {
       start: Token
       tag: 'arrayLiteral'
@@ -36,11 +57,6 @@ export type AstNode =
       tag: 'objectLiteral'
       parts: ObjectLiteralPart[]
       end: Token
-    }
-  | {
-      tag: 'literal'
-      type: 'str' | 'bool' | 'num' | 'sink' | 'sink!' | 'sink!!'
-      t: Token
     }
   | {
       tag: 'binaryOperator'
@@ -82,6 +98,12 @@ export type AstNode =
       receiver: AstNode
       index: AstNode
     }
+  | {
+      // A sepcial AST node meant to be generated internally (needed for exporting definition from one unit to another).
+      // Not intended to be parsed from source code. Hence, it is effectively empty, and its location cannot be
+      // determined.
+      tag: 'export*'
+    }
 
 export function show(ast: AstNode | AstNode[]): string {
   if (Array.isArray(ast)) {
@@ -105,11 +127,12 @@ export function show(ast: AstNode | AstNode[]): string {
   if (ast.tag === 'binaryOperator') {
     return `(${show(ast.lhs)} ${ast.operator} ${show(ast.rhs)})`
   }
-
   if (ast.tag === 'dot') {
     return `${show(ast.receiver)}.${show(ast.ident)}`
   }
-
+  if (ast.tag === 'export*') {
+    return `(export*)`
+  }
   if (ast.tag === 'functionCall') {
     return `${show(ast.callee)}(${show(ast.actualArgs)})`
   }
@@ -126,7 +149,14 @@ export function show(ast: AstNode | AstNode[]): string {
     return `fun (${show(ast.formalArgs)}) ${show(ast.body)}`
   }
   if (ast.tag === 'literal') {
-    return ast.t.text
+    return switchOn(ast.type, {
+      bool: () => ast.t.text,
+      num: () => ast.t.text,
+      sink: () => 'sink',
+      'sink!': () => 'sink!',
+      'sink!!': () => 'sink!!',
+      str: () => `'${ast.t.text}'`,
+    })
   }
   if (ast.tag === 'objectLiteral') {
     const pairs = ast.parts.map(p => {
@@ -153,6 +183,12 @@ export function show(ast: AstNode | AstNode[]): string {
   if (ast.tag === 'unaryOperator') {
     return `${ast.operator}${show(ast.operand)}`
   }
+  if (ast.tag === 'unit') {
+    const imports = ast.imports
+      .map(imp => `import * as ${show(imp.ident)} from '${imp.pathToImportFrom.text}';`)
+      .join('\n')
+    return `${imports ? imports + '\n' : ''}${show(ast.expression)}`
+  }
 
   shouldNeverHappen(ast)
 }
@@ -175,6 +211,9 @@ export function span(ast: AstNode): Span {
   }
   if (ast.tag === 'ident') {
     return ofToken(ast.t)
+  }
+  if (ast.tag === 'export*') {
+    return { from: { offset: 0 }, to: { offset: 0 } }
   }
   if (ast.tag === 'if') {
     return ofRange(span(ast.condition), span(ast.negative))
@@ -199,6 +238,11 @@ export function span(ast: AstNode): Span {
   }
   if (ast.tag === 'unaryOperator') {
     return ofRange(ofToken(ast.operatorToken), span(ast.operand))
+  }
+  if (ast.tag === 'unit') {
+    const i0 = ast.imports.find(Boolean)
+    const exp = span(ast.expression)
+    return ofRange(i0 ? ofToken(i0.start) : exp, exp)
   }
 
   shouldNeverHappen(ast)

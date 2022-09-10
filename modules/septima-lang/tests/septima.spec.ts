@@ -15,8 +15,8 @@ function run(input: string) {
  * @param input the Septima program to run
  */
 function runSink(input: string) {
-  const septima = new Septima(input)
-  const res = septima.compute()
+  const septima = new Septima()
+  const res = septima.compute(input)
 
   if (res.tag !== 'sink') {
     throw new Error(`Not a sink: ${res.value}`)
@@ -83,6 +83,7 @@ describe('septima', () => {
 
     const expected = [
       `value type error: expected num but found "zxcvbnm" when evaluating:`,
+      `  at (1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
       `  at (1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
       `  at (1:5..21) 8 * 'zxcvbnm' * 7`,
       `  at (1:10..21) zxcvbnm' * 7`,
@@ -613,6 +614,7 @@ describe('septima', () => {
       expect(runSink(`1000 + 2000 + 3000 + sink!`).trace).toEqual(
         [
           `  at (1:1..26) 1000 + 2000 + 3000 + sink!`,
+          `  at (1:1..26) 1000 + 2000 + 3000 + sink!`,
           `  at (1:8..26) 2000 + 3000 + sink!`,
           `  at (1:15..26) 3000 + sink!`,
           `  at (1:22..26) sink!`,
@@ -632,6 +634,7 @@ describe('septima', () => {
       expect(Object.keys(actual.symbols ?? {})).toEqual(['Object', 'a', 'f', 'x', 'y'])
       expect(actual.trace).toEqual(
         [
+          `  at (1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
           `  at (1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
           `  at (1:50..58) f(30, 40)`,
           `  at (1:30..47) x * y * sink!! * a`,
@@ -794,17 +797,23 @@ describe('septima', () => {
   })
   describe('preimport', () => {
     test('definitions from a preimported file can be used', () => {
-      const septima = new Septima(`libA.plus10(4) + libA.plus20(2)`, {
+      const septima = new Septima()
+
+      const input = `libA.plus10(4) + libA.plus20(2)`
+      const preimports = {
         libA: `{ plus10: fun (n) n+10, plus20: fun (n) n+20}`,
-      })
-      expect(septima.compute()).toMatchObject({ value: 36 })
+      }
+      expect(septima.compute(input, preimports)).toMatchObject({ value: 36 })
     })
     test('supports multiple preimports', () => {
-      const septima = new Septima(`a.calc(4) + b.calc(1)`, {
+      const septima = new Septima()
+
+      const input = `a.calc(4) + b.calc(1)`
+      const preimports = {
         a: `{ calc: fun (n) n+10 }`,
         b: `{ calc: fun (n) n+20 }`,
-      })
-      expect(septima.compute()).toMatchObject({ value: 35 })
+      }
+      expect(septima.compute(input, preimports)).toMatchObject({ value: 35 })
     })
   })
   test.todo('support file names in locations')
@@ -825,4 +834,6 @@ describe('septima', () => {
   test.todo('number methods')
   test.todo('drop the fun () notation and use just arrow functions')
   test.todo('proper internal representation of arrow function, in particular: show(), span()')
+  test.todo('sink sinkifies arrays and objects it is stored at')
+  test.todo('{foo}')
 })

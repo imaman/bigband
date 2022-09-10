@@ -11,4 +11,20 @@ describe('parser', () => {
     expect(() => parse(`{#$%x: 8}`)).toThrowError('Expected an identifier at (1:2..9) #$%x: 8}')
     expect(() => parse(`"foo" "goo"`)).toThrowError('Loitering input at (1:7..11) "goo"')
   })
+
+  describe('unit', () => {
+    test('show', () => {
+      expect(show(parse(`import * as foo from './bar';'a'`))).toEqual(`import * as foo from './bar';\n'a'`)
+    })
+  })
+  describe('expression', () => {
+    test('show', () => {
+      expect(show(parse(`'sunday'`))).toEqual(`'sunday'`)
+      expect(show(parse(`true`))).toEqual(`true`)
+      expect(show(parse(`500`))).toEqual(`500`)
+      expect(show(parse(`sink`))).toEqual(`sink`)
+      expect(show(parse(`sink!`))).toEqual(`sink!`)
+      expect(show(parse(`sink!!`))).toEqual(`sink!!`)
+    })
+  })
 })

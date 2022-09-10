@@ -7,7 +7,7 @@ export interface Token {
 }
 
 export class Scanner {
-  constructor(private readonly sourceCode: SourceCode, private offset = 0) {
+  constructor(readonly sourceCode: SourceCode, private offset = 0) {
     if (this.offset === 0) {
       this.eatWhitespace()
     }
