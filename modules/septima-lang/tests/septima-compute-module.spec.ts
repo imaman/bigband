@@ -2,13 +2,11 @@ import { Septima } from '../src/septima'
 import { shouldNeverHappen } from '../src/should-never-happen'
 
 /**
- * Runs a Septima program for testing purposes. If the program evaluates to `sink` an `undefined` is
- * returned.
- * @param input the Septima program to run
+ * Runs a Septima program for testing purposes. Throws an error If the program evaluated to `sink`.
  */
 async function run(mainModule: string, inputs: Record<string, string>) {
   const septima = new Septima()
-  const res = await septima.computeModule(mainModule, (m: string) => inputs[m])
+  const res = septima.computeModule(mainModule, (m: string) => inputs[m])
   if (res.tag === 'ok') {
     return res.value
   }
