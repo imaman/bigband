@@ -8,7 +8,7 @@ export type Let = { start: Token; ident: Ident; value: AstNode }
 export type Import = {
   start: Token
   ident: Ident
-  pathToImportFrom: AstNode
+  pathToImportFrom: Token
 }
 
 export type Literal = {
@@ -96,6 +96,9 @@ export type AstNode =
       receiver: AstNode
       index: AstNode
     }
+  | {
+      tag: 'export*'
+    }
 
 export function show(ast: AstNode | AstNode[]): string {
   if (Array.isArray(ast)) {
@@ -119,11 +122,12 @@ export function show(ast: AstNode | AstNode[]): string {
   if (ast.tag === 'binaryOperator') {
     return `(${show(ast.lhs)} ${ast.operator} ${show(ast.rhs)})`
   }
-
   if (ast.tag === 'dot') {
     return `${show(ast.receiver)}.${show(ast.ident)}`
   }
-
+  if (ast.tag === 'export*') {
+    return `(export*)`
+  }
   if (ast.tag === 'functionCall') {
     return `${show(ast.callee)}(${show(ast.actualArgs)})`
   }
@@ -176,7 +180,7 @@ export function show(ast: AstNode | AstNode[]): string {
   }
   if (ast.tag === 'unit') {
     const imports = ast.imports
-      .map(imp => `import * as ${show(imp.ident)} from ${show(imp.pathToImportFrom)};`)
+      .map(imp => `import * as ${show(imp.ident)} from '${imp.pathToImportFrom.text}';`)
       .join('\n')
     return `${imports ? imports + '\n' : ''}${show(ast.expression)}`
   }
@@ -202,6 +206,9 @@ export function span(ast: AstNode): Span {
   }
   if (ast.tag === 'ident') {
     return ofToken(ast.t)
+  }
+  if (ast.tag === 'export*') {
+    return { from: { offset: 0 }, to: { offset: 0 } }
   }
   if (ast.tag === 'if') {
     return ofRange(span(ast.condition), span(ast.negative))
