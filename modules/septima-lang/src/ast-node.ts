@@ -99,6 +99,9 @@ export type AstNode =
       index: AstNode
     }
   | {
+      // A sepcial AST node meant to be generated internally (needed for exporting definition from one unit to another).
+      // Not intended to be parsed from source code. Hence, it is effectively empty, and its location cannot be
+      // determined.
       tag: 'export*'
     }
 
