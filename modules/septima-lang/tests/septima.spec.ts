@@ -84,6 +84,7 @@ describe('septima', () => {
     const expected = [
       `value type error: expected num but found "zxcvbnm" when evaluating:`,
       `  at (1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
+      `  at (1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
       `  at (1:5..21) 8 * 'zxcvbnm' * 7`,
       `  at (1:10..21) zxcvbnm' * 7`,
     ].join('\n')
@@ -613,6 +614,7 @@ describe('septima', () => {
       expect(runSink(`1000 + 2000 + 3000 + sink!`).trace).toEqual(
         [
           `  at (1:1..26) 1000 + 2000 + 3000 + sink!`,
+          `  at (1:1..26) 1000 + 2000 + 3000 + sink!`,
           `  at (1:8..26) 2000 + 3000 + sink!`,
           `  at (1:15..26) 3000 + sink!`,
           `  at (1:22..26) sink!`,
@@ -632,6 +634,7 @@ describe('septima', () => {
       expect(Object.keys(actual.symbols ?? {})).toEqual(['Object', 'a', 'f', 'x', 'y'])
       expect(actual.trace).toEqual(
         [
+          `  at (1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
           `  at (1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
           `  at (1:50..58) f(30, 40)`,
           `  at (1:30..47) x * y * sink!! * a`,
