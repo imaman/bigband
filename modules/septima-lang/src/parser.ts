@@ -1,15 +1,60 @@
-import { ArrayLiteralPart, AstNode, Ident, Let, ObjectLiteralPart } from './ast-node'
+import { ArrayLiteralPart, AstNode, Ident, Import, Let, Literal, ObjectLiteralPart, span } from './ast-node'
 import { Scanner, Token } from './scanner'
+import { switchOn } from './switch-on'
 
 export class Parser {
   constructor(private readonly scanner: Scanner) {}
 
   parse() {
-    const ret = this.expression()
+    const ret = this.unit()
     if (!this.scanner.eof()) {
       throw new Error(`Loitering input ${this.scanner.sourceRef}`)
     }
     return ret
+  }
+
+  unit(): AstNode {
+    const imports = this.imports()
+    const expression = this.expression()
+    if (imports.length === 0) {
+      return expression
+    }
+
+    return { tag: 'unit', imports, expression }
+  }
+
+  imports(): Import[] {
+    const ret: Import[] = []
+    while (true) {
+      const start = this.scanner.consumeIf('import')
+      if (!start) {
+        return ret
+      }
+
+      this.scanner.consume('*')
+      this.scanner.consume('as')
+      const ident = this.identifier()
+      this.scanner.consume('from')
+      const pathToImportFrom = this.maybePrimitiveLiteral()
+      if (pathToImportFrom === undefined) {
+        throw new Error(`Expected a literal ${this.scanner.sourceRef}`)
+      }
+
+      const notString = () => {
+        throw new Error(`Expected a string literal ${this.scanner.sourceCode.sourceRef(span(pathToImportFrom))}`)
+      }
+      switchOn(pathToImportFrom.type, {
+        bool: notString,
+        num: notString,
+        str: () => {},
+        sink: notString,
+        'sink!': notString,
+        'sink!!': notString,
+      })
+      ret.push({ start, ident, pathToImportFrom })
+
+      this.scanner.consumeIf(';')
+    }
   }
 
   definitions(): Let[] {
@@ -310,6 +355,18 @@ export class Parser {
   }
 
   literalOrIdent(): AstNode {
+    const ret = this.maybeLiteral() ?? this.maybeIdentifier()
+    if (!ret) {
+      throw new Error(`Unparsable input ${this.scanner.sourceRef}`)
+    }
+    return ret
+  }
+
+  maybeLiteral(): AstNode | undefined {
+    return this.maybePrimitiveLiteral() ?? this.maybeCompositeLiteral()
+  }
+
+  maybePrimitiveLiteral(): Literal | undefined {
     let t = this.scanner.consumeIf('sink!!')
     if (t) {
       return { tag: 'literal', type: 'sink!!', t }
@@ -353,7 +410,11 @@ export class Parser {
       return { tag: 'literal', type: 'str', t }
     }
 
-    t = this.scanner.consumeIf('[')
+    return undefined
+  }
+
+  maybeCompositeLiteral(): AstNode | undefined {
+    let t = this.scanner.consumeIf('[')
     if (t) {
       return this.arrayBody(t)
     }
@@ -363,12 +424,7 @@ export class Parser {
       return this.objectBody(t)
     }
 
-    const ident = this.maybeIdentifier()
-    if (ident) {
-      return ident
-    }
-
-    throw new Error(`Unparsable input ${this.scanner.sourceRef}`)
+    return undefined
   }
 
   /**
