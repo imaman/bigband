@@ -100,6 +100,9 @@ export class Runtime {
   }
 
   private evalNodeImpl(ast: AstNode, table: SymbolTable): Value {
+    if (ast.tag === 'unit') {
+      return this.evalNode(ast.expression, table)
+    }
     if (ast.tag === 'topLevelExpression') {
       let newTable = table
       for (const def of ast.definitions) {
