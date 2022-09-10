@@ -1,8 +1,21 @@
 import { Span } from './location'
 import { Token } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
+import { switchOn } from './switch-on'
 
 export type Let = { start: Token; ident: Ident; value: AstNode }
+
+export type Import = {
+  start: Token
+  ident: Ident
+  pathToImportFrom: AstNode
+}
+
+export type Literal = {
+  tag: 'literal'
+  type: 'str' | 'bool' | 'num' | 'sink' | 'sink!' | 'sink!!'
+  t: Token
+}
 
 export type ObjectLiteralPart =
   | { tag: 'hardName'; k: Ident; v: AstNode }
@@ -25,6 +38,7 @@ export type Lambda = {
 
 export type AstNode =
   | Ident
+  | Literal
   | {
       start: Token
       tag: 'arrayLiteral'
@@ -38,11 +52,6 @@ export type AstNode =
       end: Token
     }
   | {
-      tag: 'literal'
-      type: 'str' | 'bool' | 'num' | 'sink' | 'sink!' | 'sink!!'
-      t: Token
-    }
-  | {
       tag: 'binaryOperator'
       operator: '+' | '-' | '*' | '/' | '**' | '%' | '&&' | '||' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '??'
       lhs: AstNode
@@ -53,6 +62,11 @@ export type AstNode =
       operatorToken: Token
       operator: '+' | '-' | '!'
       operand: AstNode
+    }
+  | {
+      tag: 'unit'
+      imports: Import[]
+      expression: AstNode
     }
   | {
       tag: 'topLevelExpression'
@@ -126,7 +140,14 @@ export function show(ast: AstNode | AstNode[]): string {
     return `fun (${show(ast.formalArgs)}) ${show(ast.body)}`
   }
   if (ast.tag === 'literal') {
-    return ast.t.text
+    return switchOn(ast.type, {
+      bool: () => ast.t.text,
+      num: () => ast.t.text,
+      sink: () => 'sink',
+      'sink!': () => 'sink!',
+      'sink!!': () => 'sink!!',
+      str: () => `'${ast.t.text}'`,
+    })
   }
   if (ast.tag === 'objectLiteral') {
     const pairs = ast.parts.map(p => {
@@ -152,6 +173,12 @@ export function show(ast: AstNode | AstNode[]): string {
   }
   if (ast.tag === 'unaryOperator') {
     return `${ast.operator}${show(ast.operand)}`
+  }
+  if (ast.tag === 'unit') {
+    const imports = ast.imports
+      .map(imp => `import * as ${show(imp.ident)} from ${show(imp.pathToImportFrom)};`)
+      .join('\n')
+    return `${imports ? imports + '\n' : ''}${show(ast.expression)}`
   }
 
   shouldNeverHappen(ast)
@@ -199,6 +226,11 @@ export function span(ast: AstNode): Span {
   }
   if (ast.tag === 'unaryOperator') {
     return ofRange(ofToken(ast.operatorToken), span(ast.operand))
+  }
+  if (ast.tag === 'unit') {
+    const i0 = ast.imports.find(Boolean)
+    const exp = span(ast.expression)
+    return ofRange(i0 ? ofToken(i0.start) : exp, exp)
   }
 
   shouldNeverHappen(ast)
