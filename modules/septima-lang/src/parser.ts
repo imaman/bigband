@@ -16,10 +16,6 @@ export class Parser {
   unit(): AstNode {
     const imports = this.imports()
     const expression = this.expression()
-    if (imports.length === 0) {
-      return expression
-    }
-
     return { tag: 'unit', imports, expression }
   }
 
@@ -51,7 +47,7 @@ export class Parser {
         'sink!': notString,
         'sink!!': notString,
       })
-      ret.push({ start, ident, pathToImportFrom })
+      ret.push({ start, ident, pathToImportFrom: pathToImportFrom.t })
 
       this.scanner.consumeIf(';')
     }
