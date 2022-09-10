@@ -47,10 +47,10 @@ export class Septima {
 
   constructor() {}
 
-  async computeModule(moduleName: string, moduleReader: (m: string) => Promise<string>): Promise<Result> {
-    const input = await moduleReader(moduleName)
+  computeModule(moduleName: string, moduleReader: (m: string) => string): Result {
+    const input = moduleReader(moduleName)
     const sourceCode = new SourceCode(input)
-    const value = this.computeImpl(sourceCode, 'quiet', {})
+    const value = this.computeImpl(sourceCode, 'quiet', {}, moduleReader)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
@@ -61,7 +61,7 @@ export class Septima {
     const lib: Record<string, Value> = {}
     for (const [importName, importCode] of Object.entries(preimports)) {
       const sourceCode = new SourceCode(importCode)
-      const value = this.computeImpl(sourceCode, verbosity, {})
+      const value = this.computeImpl(sourceCode, verbosity, {}, undefined)
       if (value.isSink()) {
         // TODO(imaman): cover!
         const r = new ResultSinkImpl(value, sourceCode)
@@ -71,19 +71,30 @@ export class Septima {
     }
 
     const sourceCode = new SourceCode(input)
-    const value = this.computeImpl(sourceCode, verbosity, lib)
+    const value = this.computeImpl(sourceCode, verbosity, lib, undefined)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
     return new ResultSinkImpl(value, sourceCode)
   }
 
-  private computeImpl(sourceCode: SourceCode, verbosity: Verbosity, lib: Record<string, Value>) {
+  private computeImpl(
+    sourceCode: SourceCode,
+    verbosity: Verbosity,
+    lib: Record<string, Value>,
+    moduleReader: undefined | ((m: string) => string),
+  ) {
     const scanner = new Scanner(sourceCode)
     const parser = new Parser(scanner)
-
     const ast = parse(parser)
-    const runtime = new Runtime(ast, verbosity, lib)
+
+    const getAstOf = (fileName: string) => {
+      if (!moduleReader) {
+        throw new Error(`cannot read modules`)
+      }
+      return parse(moduleReader(fileName))
+    }
+    const runtime = new Runtime(ast, verbosity, lib, getAstOf)
     const c = runtime.compute()
 
     if (c.value) {
