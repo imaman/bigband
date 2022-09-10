@@ -8,7 +8,7 @@ import { shouldNeverHappen } from '../src/should-never-happen'
  */
 async function run(mainModule: string, inputs: Record<string, string>) {
   const septima = new Septima()
-  const res = await septima.computeModule(mainModule, async (m: string) => inputs[m])
+  const res = await septima.computeModule(mainModule, (m: string) => inputs[m])
   if (res.tag === 'ok') {
     return res.value
   }
@@ -25,7 +25,7 @@ describe('septima-compute-module', () => {
     expect(await run('a', { a: `3+8` })).toEqual(11)
   })
   test('can use exported definitions from another module', async () => {
-    expect(await run('a', { a: `import * as b from './b'; 3+b.eight`, b: `export let eight = 8` })).toEqual(11)
+    expect(await run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `let eight = 8; {}` })).toEqual(11)
   })
   test('errors if the path to input from is not a string literal', async () => {
     await expect(run('a', { a: `import * as foo from 500` })).rejects.toThrowError(
