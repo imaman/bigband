@@ -462,7 +462,7 @@ describe('septima', () => {
       expect(run(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)
       expect(run(`(fun() 3.14)()*2`)).toEqual(6.28)
     })
-    test('error on arg list mismatch', () => {
+    test('errors on arg list mismatch', () => {
       expect(() => run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2)`)).toThrowError(
         'Arg list length mismatch: expected 4 but got 3',
       )
@@ -819,7 +819,6 @@ describe('septima', () => {
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')
-  test.todo('arrow functions')
   test.todo('optional parameters')
   test.todo('optional type annotations?')
   test.todo('allow redundant commas')
