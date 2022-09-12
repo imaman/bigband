@@ -855,8 +855,7 @@ describe('septima', () => {
       ).toMatchObject({ value: 'Green' })
     })
     test('are supported also via the Septima.run() API', () => {
-      const septima = new Septima()
-      expect(septima.compute(`args.a + args.b`, {}, 'quiet', { a: 100, b: 2 })).toMatchObject({ value: 102 })
+      expect(Septima.run(`args.a + args.b`, undefined, { a: 100, b: 2 })).toEqual(102)
     })
   })
   test.todo('support file names in locations')

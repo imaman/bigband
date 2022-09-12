@@ -28,13 +28,13 @@ export class Septima {
    * @param options
    * @returns the value that `input` evaluates to
    */
-  static run(input: string, options?: Options): unknown {
+  static run(input: string, options?: Options, args: Record<string, unknown> = {}): unknown {
     const onSink =
       options?.onSink ??
       ((r: ResultSink) => {
         throw new Error(r.message)
       })
-    const res = new Septima().compute(input, {}, 'quiet', {})
+    const res = new Septima().compute(input, {}, 'quiet', args)
     if (res.tag === 'ok') {
       return res.value
     }
