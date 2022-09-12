@@ -846,6 +846,10 @@ describe('septima', () => {
         }),
       ).toMatchObject({ value: 'Sunday_Red_Monday_Green' })
     })
+    test('are supported also via the Septima.run() API', () => {
+      const septima = new Septima()
+      expect(septima.compute(`args.a + args.b`, {}, 'quiet', { a: 100, b: 2 })).toMatchObject({ value: 102 })
+    })
   })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
