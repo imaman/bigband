@@ -6,7 +6,7 @@ import { shouldNeverHappen } from '../src/should-never-happen'
  */
 async function run(mainModule: string, inputs: Record<string, string>) {
   const septima = new Septima()
-  const res = septima.computeModule(mainModule, (m: string) => inputs[m])
+  const res = septima.computeModule(mainModule, (m: string) => inputs[m], {})
   if (res.tag === 'ok') {
     return res.value
   }

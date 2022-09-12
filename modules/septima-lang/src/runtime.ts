@@ -62,6 +62,7 @@ export class Runtime {
     private readonly verbosity: Verbosity = 'quiet',
     private readonly preimports: Record<string, Value>,
     private readonly getAstOf: (fileName: string) => Unit,
+    private readonly args: Record<string, unknown>,
   ) {}
 
   private buildInitialSymbolTable() {
@@ -71,6 +72,8 @@ export class Runtime {
     const entries = Value.foreign(o => o.entries())
     const fromEntries = Value.foreign(o => o.fromEntries())
     let lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty)
+
+    lib = new SymbolFrame('args', { destination: Value.from(this.args) }, lib)
 
     for (const [importName, importValue] of Object.entries(this.preimports)) {
       lib = new SymbolFrame(importName, { destination: importValue }, lib)
