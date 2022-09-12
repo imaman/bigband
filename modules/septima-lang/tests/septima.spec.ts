@@ -625,6 +625,17 @@ describe('septima', () => {
         ].join('\n'),
       )
     })
+    test(`can also appear in code as !undefined`, () => {
+      expect(runSink(`1000 + !undefined`).trace).toEqual(
+        [
+          `  at (1:1..26) 1000 + 2000 + 3000 + sink!`,
+          `  at (1:1..26) 1000 + 2000 + 3000 + sink!`,
+          `  at (1:8..26) 2000 + 3000 + sink!`,
+          `  at (1:15..26) 3000 + sink!`,
+          `  at (1:22..26) sink!`,
+        ].join('\n'),
+      )
+    })
   })
   describe('sink!!', () => {
     test(`captures the expression trace and the symbol-table at runtime`, () => {
@@ -651,6 +662,11 @@ describe('septima', () => {
     test('can be used to recover values of definitions from a crash site', () => {
       expect(runSink(`let f = fun (n) if (n >= 0) f(n-7) else (sink!! && [n].goo()); f(18)`).symbols).toMatchObject({
         n: -3,
+      })
+    })
+    test(`can also appear in code as !!undefined`, () => {
+      expect(runSink(`let f = fun (n) !!undefined; f(18)`).symbols).toMatchObject({
+        n: 18,
       })
     })
   })
