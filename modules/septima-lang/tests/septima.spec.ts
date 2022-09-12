@@ -431,6 +431,10 @@ describe('septima', () => {
       expect(run(`let triple = (fun(a) 3*a); triple(100) - triple(90)`)).toEqual(30)
       expect(run(`let triple = fun(a) 3*a; triple(100) - triple(90)`)).toEqual(30)
     })
+    test('allows a dangling comma, at the call site, after the last actual argument', () => {
+      expect(run(`let triple = (fun(a) 3*a); triple(100,)`)).toEqual(300)
+      expect(run(`let mean = (fun(a,b) (a+b)/2); mean(4, 28,)`)).toEqual(16)
+    })
     describe('arrow function notation', () => {
       test('a single formal argument does not need to be surrounded with parenthesis', () => {
         expect(run(`let triple = a => 3*a; triple(100)`)).toEqual(300)
@@ -462,7 +466,7 @@ describe('septima', () => {
       expect(run(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)
       expect(run(`(fun() 3.14)()*2`)).toEqual(6.28)
     })
-    test('error on arg list mismatch', () => {
+    test('errors on arg list mismatch', () => {
       expect(() => run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2)`)).toThrowError(
         'Arg list length mismatch: expected 4 but got 3',
       )
@@ -521,6 +525,9 @@ describe('septima', () => {
       expect(run(`let x = sink; 5+8+9+x+20+30`)).toEqual(undefined)
       expect(run(`let f = fun (a) if (a > 0) a else sink; 2+f(-1)+4`)).toEqual(undefined)
       expect(run(`let f = fun (a) if (a > 0) a else sink; 2+f(3)+4`)).toEqual(9)
+    })
+    test('the "undefined" literal is an alias for "sink"', () => {
+      expect(run(`let x = sink; 5+8+9+x+20+30`)).toEqual(undefined)
     })
     test('an array can hold a sink without becoming a sink itself', () => {
       expect(run(`let f = fun (a) if (a > 0) a else sink; [f(1), f(-1), f(8)]`)).toEqual([1, undefined, 8])
@@ -621,6 +628,13 @@ describe('septima', () => {
         ].join('\n'),
       )
     })
+    test(`can also appear in code as undefined!`, () => {
+      expect(runSink(`1000 + undefined!`).trace).toEqual(
+        [`  at (1:1..17) 1000 + undefined!`, `  at (1:1..17) 1000 + undefined!`, `  at (1:8..17) undefined!`].join(
+          '\n',
+        ),
+      )
+    })
   })
   describe('sink!!', () => {
     test(`captures the expression trace and the symbol-table at runtime`, () => {
@@ -647,6 +661,11 @@ describe('septima', () => {
     test('can be used to recover values of definitions from a crash site', () => {
       expect(runSink(`let f = fun (n) if (n >= 0) f(n-7) else (sink!! && [n].goo()); f(18)`).symbols).toMatchObject({
         n: -3,
+      })
+    })
+    test(`can also appear in code as undefined!!`, () => {
+      expect(runSink(`let f = fun (n) undefined!!; f(18)`).symbols).toMatchObject({
+        n: 18,
       })
     })
   })
@@ -819,7 +838,6 @@ describe('septima', () => {
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')
-  test.todo('arrow functions')
   test.todo('optional parameters')
   test.todo('optional type annotations?')
   test.todo('allow redundant commas')
