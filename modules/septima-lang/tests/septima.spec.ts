@@ -835,6 +835,18 @@ describe('septima', () => {
       expect(septima.compute(input, preimports, 'quiet', {})).toMatchObject({ value: 35 })
     })
   })
+  describe('args', () => {
+    test('are bounded at runtime to a special variable called "args"', () => {
+      const septima = new Septima()
+      expect(
+        septima.compute(`args.a + '_' + args.color[0] + '_' + args.b + '_' + args.color[1]`, {}, 'quiet', {
+          a: 'Sunday',
+          b: 'Monday',
+          color: ['Red', 'Green'],
+        }),
+      ).toMatchObject({ value: 'Sunday_Red_Monday_Green' })
+    })
+  })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')
