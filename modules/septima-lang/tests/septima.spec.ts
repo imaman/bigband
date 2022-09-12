@@ -431,6 +431,10 @@ describe('septima', () => {
       expect(run(`let triple = (fun(a) 3*a); triple(100) - triple(90)`)).toEqual(30)
       expect(run(`let triple = fun(a) 3*a; triple(100) - triple(90)`)).toEqual(30)
     })
+    test('allows a dangling comma, at the call site, after the last actual argument', () => {
+      expect(run(`let triple = (fun(a) 3*a); triple(100,)`)).toEqual(300)
+      expect(run(`let mean = (fun(a,b) (a+b)/2); mean(4, 28,)`)).toEqual(16)
+    })
     describe('arrow function notation', () => {
       test('a single formal argument does not need to be surrounded with parenthesis', () => {
         expect(run(`let triple = a => 3*a; triple(100)`)).toEqual(300)

@@ -307,11 +307,15 @@ export class Parser {
     while (true) {
       const arg = this.expression()
       actualArgs.push(arg)
-      const end = this.scanner.consumeIf(')')
+      let end = this.scanner.consumeIf(')')
       if (end) {
         return { actualArgs, end }
       }
       this.scanner.consume(',')
+      end = this.scanner.consumeIf(')')
+      if (end) {
+        return { actualArgs, end }
+      }
     }
   }
 
