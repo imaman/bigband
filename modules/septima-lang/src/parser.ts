@@ -367,17 +367,17 @@ export class Parser {
   }
 
   maybePrimitiveLiteral(): Literal | undefined {
-    let t = this.scanner.consumeIf('sink!!') || this.scanner.consumeIf('!!undefined')
+    let t = this.scanner.consumeIf('sink!!')
     if (t) {
       return { tag: 'literal', type: 'sink!!', t }
     }
 
-    t = this.scanner.consumeIf('sink!') || this.scanner.consumeIf('!undefined')
+    t = this.scanner.consumeIf('sink!')
     if (t) {
       return { tag: 'literal', type: 'sink!', t }
     }
 
-    t = this.scanner.consumeIf('sink') || this.scanner.consumeIf('undefined')
+    t = this.scanner.consumeIf('sink')
     if (t) {
       return { tag: 'literal', type: 'sink', t }
     }
