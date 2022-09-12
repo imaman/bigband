@@ -846,6 +846,14 @@ describe('septima', () => {
         }),
       ).toMatchObject({ value: 'Sunday_Red_Monday_Green' })
     })
+    test('are shadowed by a program-defined "args" symbol', () => {
+      const septima = new Septima()
+      expect(
+        septima.compute(`let args = {color: 'Green' }; args.color`, {}, 'quiet', {
+          color: 'Red',
+        }),
+      ).toMatchObject({ value: 'Green' })
+    })
     test('are supported also via the Septima.run() API', () => {
       const septima = new Septima()
       expect(septima.compute(`args.a + args.b`, {}, 'quiet', { a: 100, b: 2 })).toMatchObject({ value: 102 })

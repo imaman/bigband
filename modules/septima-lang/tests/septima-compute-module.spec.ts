@@ -33,4 +33,9 @@ describe('septima-compute-module', () => {
   test('support the passing of args into the runtime', async () => {
     expect(await run('a', { a: `args.x * args.y` }, { x: 5, y: 9 })).toEqual(45)
   })
+  test('the args object is available only at the main module', async () => {
+    await expect(
+      run('a', { a: `import * as b from 'b'; args.x + '_' + b.foo`, b: `let foo = args.x ?? 'N/A'; {}` }, { x: 'Red' }),
+    ).rejects.toThrowError(/Symbol args was not found when evaluating/)
+  })
 })

@@ -65,7 +65,7 @@ export class Runtime {
     private readonly args: Record<string, unknown>,
   ) {}
 
-  private buildInitialSymbolTable() {
+  private buildInitialSymbolTable(generateTheArgsObject: boolean) {
     const empty = new EmptySymbolTable()
 
     const keys = Value.foreign(o => o.keys())
@@ -73,7 +73,9 @@ export class Runtime {
     const fromEntries = Value.foreign(o => o.fromEntries())
     let lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty)
 
-    lib = new SymbolFrame('args', { destination: Value.from(this.args) }, lib)
+    if (generateTheArgsObject) {
+      lib = new SymbolFrame('args', { destination: Value.from(this.args) }, lib)
+    }
 
     for (const [importName, importValue] of Object.entries(this.preimports)) {
       lib = new SymbolFrame(importName, { destination: importValue }, lib)
@@ -83,7 +85,7 @@ export class Runtime {
 
   compute() {
     try {
-      const value = this.evalNode(this.root, this.buildInitialSymbolTable())
+      const value = this.evalNode(this.root, this.buildInitialSymbolTable(true))
       return { value }
     } catch (e) {
       const trace: AstNode[] = []
@@ -145,7 +147,7 @@ export class Runtime {
         imports,
         expression: { tag: 'topLevelExpression', definitions: exp.definitions, computation: { tag: 'export*' } },
       }
-      return this.evalNode(unit, this.buildInitialSymbolTable())
+      return this.evalNode(unit, this.buildInitialSymbolTable(false))
     }
 
     shouldNeverHappen(exp)
