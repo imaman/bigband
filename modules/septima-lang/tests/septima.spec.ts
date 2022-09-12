@@ -526,6 +526,9 @@ describe('septima', () => {
       expect(run(`let f = fun (a) if (a > 0) a else sink; 2+f(-1)+4`)).toEqual(undefined)
       expect(run(`let f = fun (a) if (a > 0) a else sink; 2+f(3)+4`)).toEqual(9)
     })
+    test('the "undefined" literal is an alias for "sink"', () => {
+      expect(run(`let x = sink; 5+8+9+x+20+30`)).toEqual(undefined)
+    })
     test('an array can hold a sink without becoming a sink itself', () => {
       expect(run(`let f = fun (a) if (a > 0) a else sink; [f(1), f(-1), f(8)]`)).toEqual([1, undefined, 8])
     })
