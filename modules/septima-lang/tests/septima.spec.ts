@@ -625,15 +625,11 @@ describe('septima', () => {
         ].join('\n'),
       )
     })
-    test(`can also appear in code as !undefined`, () => {
-      expect(runSink(`1000 + !undefined`).trace).toEqual(
-        [
-          `  at (1:1..26) 1000 + 2000 + 3000 + sink!`,
-          `  at (1:1..26) 1000 + 2000 + 3000 + sink!`,
-          `  at (1:8..26) 2000 + 3000 + sink!`,
-          `  at (1:15..26) 3000 + sink!`,
-          `  at (1:22..26) sink!`,
-        ].join('\n'),
+    test(`can also appear in code as undefined!`, () => {
+      expect(runSink(`1000 + undefined!`).trace).toEqual(
+        [`  at (1:1..17) 1000 + undefined!`, `  at (1:1..17) 1000 + undefined!`, `  at (1:8..17) undefined!`].join(
+          '\n',
+        ),
       )
     })
   })
@@ -664,8 +660,8 @@ describe('septima', () => {
         n: -3,
       })
     })
-    test(`can also appear in code as !!undefined`, () => {
-      expect(runSink(`let f = fun (n) !!undefined; f(18)`).symbols).toMatchObject({
+    test(`can also appear in code as undefined!!`, () => {
+      expect(runSink(`let f = fun (n) undefined!!; f(18)`).symbols).toMatchObject({
         n: 18,
       })
     })
