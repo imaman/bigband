@@ -4,9 +4,9 @@ import { shouldNeverHappen } from '../src/should-never-happen'
 /**
  * Runs a Septima program for testing purposes. Throws an error If the program evaluated to `sink`.
  */
-async function run(mainModule: string, inputs: Record<string, string>) {
+async function run(mainModule: string, inputs: Record<string, string>, args: Record<string, unknown> = {}) {
   const septima = new Septima()
-  const res = septima.computeModule(mainModule, (m: string) => inputs[m])
+  const res = septima.computeModule(mainModule, (m: string) => inputs[m], args)
   if (res.tag === 'ok') {
     return res.value
   }
@@ -29,5 +29,13 @@ describe('septima-compute-module', () => {
     await expect(run('a', { a: `import * as foo from 500` })).rejects.toThrowError(
       'Expected a string literal at (1:22..24) 500',
     )
+  })
+  test('support the passing of args into the runtime', async () => {
+    expect(await run('a', { a: `args.x * args.y` }, { x: 5, y: 9 })).toEqual(45)
+  })
+  test('the args object is available only at the main module', async () => {
+    await expect(
+      run('a', { a: `import * as b from 'b'; args.x + '_' + b.foo`, b: `let foo = args.x ?? 'N/A'; {}` }, { x: 'Red' }),
+    ).rejects.toThrowError(/Symbol args was not found when evaluating/)
   })
 })

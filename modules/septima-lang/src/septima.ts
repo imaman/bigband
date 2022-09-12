@@ -28,13 +28,13 @@ export class Septima {
    * @param options
    * @returns the value that `input` evaluates to
    */
-  static run(input: string, options?: Options): unknown {
+  static run(input: string, options?: Options, args: Record<string, unknown> = {}): unknown {
     const onSink =
       options?.onSink ??
       ((r: ResultSink) => {
         throw new Error(r.message)
       })
-    const res = new Septima().compute(input)
+    const res = new Septima().compute(input, {}, 'quiet', args)
     if (res.tag === 'ok') {
       return res.value
     }
@@ -48,21 +48,26 @@ export class Septima {
 
   constructor() {}
 
-  computeModule(moduleName: string, moduleReader: (m: string) => string): Result {
+  computeModule(moduleName: string, moduleReader: (m: string) => string, args: Record<string, unknown>): Result {
     const input = moduleReader(moduleName)
     const sourceCode = new SourceCode(input)
-    const value = this.computeImpl(sourceCode, 'quiet', {}, moduleReader)
+    const value = this.computeImpl(sourceCode, 'quiet', {}, moduleReader, args)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
     return new ResultSinkImpl(value, sourceCode)
   }
 
-  compute(input: string, preimports: Record<string, string> = {}, verbosity: Verbosity = 'quiet'): Result {
+  compute(
+    input: string,
+    preimports: Record<string, string> = {},
+    verbosity: Verbosity = 'quiet',
+    args: Record<string, unknown>,
+  ): Result {
     const lib: Record<string, Value> = {}
     for (const [importName, importCode] of Object.entries(preimports)) {
       const sourceCode = new SourceCode(importCode)
-      const value = this.computeImpl(sourceCode, verbosity, {}, undefined)
+      const value = this.computeImpl(sourceCode, verbosity, {}, undefined, {})
       if (value.isSink()) {
         // TODO(imaman): cover!
         const r = new ResultSinkImpl(value, sourceCode)
@@ -72,7 +77,7 @@ export class Septima {
     }
 
     const sourceCode = new SourceCode(input)
-    const value = this.computeImpl(sourceCode, verbosity, lib, undefined)
+    const value = this.computeImpl(sourceCode, verbosity, lib, undefined, args)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
@@ -84,6 +89,7 @@ export class Septima {
     verbosity: Verbosity,
     lib: Record<string, Value>,
     moduleReader: undefined | ((m: string) => string),
+    args: Record<string, unknown>,
   ) {
     const scanner = new Scanner(sourceCode)
     const parser = new Parser(scanner)
@@ -95,7 +101,8 @@ export class Septima {
       }
       return parse(moduleReader(fileName))
     }
-    const runtime = new Runtime(ast, verbosity, lib, getAstOf)
+
+    const runtime = new Runtime(ast, verbosity, lib, getAstOf, args)
     const c = runtime.compute()
 
     if (c.value) {

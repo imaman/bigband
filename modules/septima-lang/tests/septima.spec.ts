@@ -16,7 +16,7 @@ function run(input: string) {
  */
 function runSink(input: string) {
   const septima = new Septima()
-  const res = septima.compute(input)
+  const res = septima.compute(input, {}, 'quiet', {})
 
   if (res.tag !== 'sink') {
     throw new Error(`Not a sink: ${res.value}`)
@@ -645,7 +645,7 @@ describe('septima', () => {
         x: 30,
         y: 40,
       })
-      expect(Object.keys(actual.symbols ?? {})).toEqual(['Object', 'a', 'f', 'x', 'y'])
+      expect(Object.keys(actual.symbols ?? {})).toEqual(['Object', 'args', 'a', 'f', 'x', 'y'])
       expect(actual.trace).toEqual(
         [
           `  at (1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
@@ -822,7 +822,7 @@ describe('septima', () => {
       const preimports = {
         libA: `{ plus10: fun (n) n+10, plus20: fun (n) n+20}`,
       }
-      expect(septima.compute(input, preimports)).toMatchObject({ value: 36 })
+      expect(septima.compute(input, preimports, 'quiet', {})).toMatchObject({ value: 36 })
     })
     test('supports multiple preimports', () => {
       const septima = new Septima()
@@ -832,7 +832,30 @@ describe('septima', () => {
         a: `{ calc: fun (n) n+10 }`,
         b: `{ calc: fun (n) n+20 }`,
       }
-      expect(septima.compute(input, preimports)).toMatchObject({ value: 35 })
+      expect(septima.compute(input, preimports, 'quiet', {})).toMatchObject({ value: 35 })
+    })
+  })
+  describe('args', () => {
+    test('are bounded at runtime to a special variable called "args"', () => {
+      const septima = new Septima()
+      expect(
+        septima.compute(`args.a + '_' + args.color[0] + '_' + args.b + '_' + args.color[1]`, {}, 'quiet', {
+          a: 'Sunday',
+          b: 'Monday',
+          color: ['Red', 'Green'],
+        }),
+      ).toMatchObject({ value: 'Sunday_Red_Monday_Green' })
+    })
+    test('are shadowed by a program-defined "args" symbol', () => {
+      const septima = new Septima()
+      expect(
+        septima.compute(`let args = {color: 'Green' }; args.color`, {}, 'quiet', {
+          color: 'Red',
+        }),
+      ).toMatchObject({ value: 'Green' })
+    })
+    test('are supported also via the Septima.run() API', () => {
+      expect(Septima.run(`args.a + args.b`, undefined, { a: 100, b: 2 })).toEqual(102)
     })
   })
   test.todo('support file names in locations')
