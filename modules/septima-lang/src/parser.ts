@@ -56,7 +56,7 @@ export class Parser {
   definitions(): Let[] {
     const ret: Let[] = []
     while (true) {
-      const start = this.scanner.consumeIf('let ')
+      const start = this.scanner.consumeIf('let ') ?? this.scanner.consumeIf('export let ')
       if (!start) {
         return ret
       }
