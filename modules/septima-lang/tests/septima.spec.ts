@@ -859,8 +859,11 @@ describe('septima', () => {
     })
   })
   describe('export', () => {
-    test('a top level definition can be have the "export" qualifier', () => {
+    test('a top level definition can have the "export" qualifier', () => {
       expect(run(`export let x = 5; x+3`)).toEqual(8)
+    })
+    test('errors if a nested definition has the "export" qualifier', () => {
+      expect(() => run(`let x = (export let y = 4; y+1); x+3`)).toThrowError('___')
     })
   })
   test.todo('support file names in locations')
