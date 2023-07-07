@@ -15,7 +15,7 @@ export class Parser {
 
   unit(): Unit {
     const imports = this.imports()
-    const expression = this.expression()
+    const expression = this.expression('TOP_LEVEL')
     return { tag: 'unit', imports, expression }
   }
 
@@ -53,10 +53,18 @@ export class Parser {
     }
   }
 
-  definitions(): Let[] {
+  definitions(kind: 'TOP_LEVEL' | 'NESTED'): Let[] {
     const ret: Let[] = []
     while (true) {
-      const start = this.scanner.consumeIf('let ') ?? this.scanner.consumeIf('export let ')
+      if (kind === 'NESTED') {
+        if (this.scanner.headMatches('export ')) {
+          throw new Error(`non-top-level definition cannot be export ${this.scanner.sourceRef}`)
+        }
+      }
+      let start = this.scanner.consumeIf('let ')
+      if (!start && kind === 'TOP_LEVEL') {
+        start = this.scanner.consumeIf('export let ')
+      }
       if (!start) {
         return ret
       }
@@ -72,8 +80,8 @@ export class Parser {
     }
   }
 
-  expression(): AstNode {
-    const definitions = this.definitions()
+  expression(kind: 'TOP_LEVEL' | 'NESTED' = 'NESTED'): AstNode {
+    const definitions = this.definitions(kind)
     this.scanner.consumeIf('return')
     const computation = this.lambda()
 

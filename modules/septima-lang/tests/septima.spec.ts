@@ -863,7 +863,9 @@ describe('septima', () => {
       expect(run(`export let x = 5; x+3`)).toEqual(8)
     })
     test('errors if a nested definition has the "export" qualifier', () => {
-      expect(() => run(`let x = (export let y = 4; y+1); x+3`)).toThrowError('___')
+      expect(() => run(`let x = (export let y = 4; y+1); x+3`)).toThrowError(
+        'non-top-level definition cannot be export at (1:10..36) export let y = 4; y+1); x+3',
+      )
     })
   })
   test.todo('support file names in locations')
