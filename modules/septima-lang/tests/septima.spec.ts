@@ -858,6 +858,11 @@ describe('septima', () => {
       expect(Septima.run(`args.a + args.b`, undefined, { a: 100, b: 2 })).toEqual(102)
     })
   })
+  describe('export', () => {
+    test('a top level definition can be have the "export" qualifier', () => {
+      expect(run(`export let x = 5; x+3`)).toEqual(8)
+    })
+  })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')
