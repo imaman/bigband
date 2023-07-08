@@ -422,8 +422,6 @@ describe('septima', () => {
   })
 
   describe('ternary', () => {
-    test.todo('higher precendence than if')
-    test.todo('higher precendence than lambda')
     test('returns the value of the first branch if the condition is true', () => {
       expect(run(`(4 > 3) ? 200 : -100`)).toEqual(200)
     })
@@ -440,6 +438,12 @@ describe('septima', () => {
     })
     test('yells if conditions is not boolean', () => {
       expect(() => run(`5+8 ? 200 : -100`)).toThrowError('value type error: expected bool but found 13')
+    })
+    test('higher precendence than lambda', () => {
+      expect(run(`let f = (a,b) => a > b ? 'ABOVE' : 'BELOW'; f(1,2) + '_' + f(2,1)`)).toEqual('BELOW_ABOVE')
+    })
+    test('higher precendence than if', () => {
+      expect(run(`if (5 < 2) "Y" else 3+4>8? 'ABOVE' : 'BELOW'`)).toEqual('BELOW')
     })
   })
 

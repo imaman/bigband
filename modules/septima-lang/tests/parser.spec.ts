@@ -29,6 +29,8 @@ describe('parser', () => {
       expect(show(parse(`sink`))).toEqual(`sink`)
       expect(show(parse(`sink!`))).toEqual(`sink!`)
       expect(show(parse(`sink!!`))).toEqual(`sink!!`)
+      expect(show(parse(`if (3+4 > 8) "above" else "below"`))).toEqual(`if (((3 + 4) > 8)) 'above' else 'below'`)
+      expect(show(parse(`(3+4 > 8) ? "above" : "below"`))).toEqual(`((3 + 4) > 8) ? 'above' : 'below'`)
     })
   })
 })
