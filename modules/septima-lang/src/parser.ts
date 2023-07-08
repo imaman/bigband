@@ -178,7 +178,7 @@ export class Parser {
 
   ifExpression(): AstNode {
     if (!this.scanner.consumeIf('if')) {
-      return this.unsink()
+      return this.ternary()
     }
 
     this.scanner.consume('(')
@@ -192,6 +192,19 @@ export class Parser {
     const negative = this.expression()
 
     return { tag: 'if', condition, positive, negative }
+  }
+
+  ternary(): AstNode {
+    const condition = this.unsink()
+    if (!this.scanner.consumeIf('? ')) {
+      return condition
+    }
+
+    const positive = this.expression()
+    this.scanner.consume(':')
+    const negative = this.expression()
+
+    return { tag: 'ternary', condition, positive, negative }
   }
 
   unsink(): AstNode {

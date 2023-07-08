@@ -77,6 +77,12 @@ export type AstNode =
     }
   | Lambda
   | {
+      tag: 'ternary'
+      condition: AstNode
+      positive: AstNode
+      negative: AstNode
+    }
+  | {
       tag: 'functionCall'
       actualArgs: AstNode[]
       callee: AstNode
@@ -132,6 +138,9 @@ export function show(ast: AstNode | AstNode[]): string {
   }
   if (ast.tag === 'export*') {
     return `(export*)`
+  }
+  if (ast.tag === 'ternary') {
+    return `${show(ast.condition)} ? ${show(ast.positive)} : ${show(ast.negative)}`
   }
   if (ast.tag === 'functionCall') {
     return `${show(ast.callee)}(${show(ast.actualArgs)})`
@@ -224,6 +233,9 @@ export function span(ast: AstNode): Span {
   }
   if (ast.tag === 'lambda') {
     return ofRange(ofToken(ast.start), span(ast.body))
+  }
+  if (ast.tag === 'ternary') {
+    return ofRange(span(ast.condition), span(ast.negative))
   }
   if (ast.tag === 'literal') {
     return ofToken(ast.t)
