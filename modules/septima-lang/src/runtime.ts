@@ -130,6 +130,7 @@ export class Runtime {
       exp.tag === 'functionCall' ||
       exp.tag === 'ident' ||
       exp.tag === 'if' ||
+      exp.tag === 'ternary' ||
       exp.tag === 'indexAccess' ||
       exp.tag === 'lambda' ||
       exp.tag === 'literal' ||
@@ -332,7 +333,7 @@ export class Runtime {
       return this.call(callee, argValues)
     }
 
-    if (ast.tag === 'if') {
+    if (ast.tag === 'if' || ast.tag === 'ternary') {
       const c = this.evalNode(ast.condition, table)
       return c.ifElse(
         () => this.evalNode(ast.positive, table),

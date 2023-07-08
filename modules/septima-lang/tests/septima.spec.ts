@@ -421,6 +421,28 @@ describe('septima', () => {
     })
   })
 
+  describe('ternary', () => {
+    test.todo('higher precendence than if')
+    test.todo('higher precendence than lambda')
+    test('returns the value of the first branch if the condition is true', () => {
+      expect(run(`(4 > 3) ? 200 : -100`)).toEqual(200)
+    })
+    test('evaluates the first branch only if the condition is true', () => {
+      expect(() => run(`true ? x : -100`)).toThrowError('Symbol x was not found')
+      expect(run(`false ? x : -100`)).toEqual(-100)
+    })
+    test('returns the value of the second branch if the condition is false', () => {
+      expect(run(`(4 < 3) ? 200 : -100`)).toEqual(-100)
+    })
+    test('evaluates the second branch only if the condition is false', () => {
+      expect(() => run(`false ? 200 : x`)).toThrowError('Symbol x was not found')
+      expect(run(`true ? 200 : x`)).toEqual(200)
+    })
+    test('yells if conditions is not boolean', () => {
+      expect(() => run(`5+8 ? 200 : -100`)).toThrowError('value type error: expected bool but found 13')
+    })
+  })
+
   describe('lambda expressions', () => {
     test('binds the value of the actual arg to the formal arg', () => {
       expect(run(`(fun(a) 2*a)(3)`)).toEqual(6)
