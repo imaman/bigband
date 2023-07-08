@@ -868,6 +868,11 @@ describe('septima', () => {
       )
     })
   })
+  describe('unit', () => {
+    test('evaluates to an empty string if it contains only definitions', () => {
+      expect(run(`export let x = 5`)).toEqual('')
+    })
+  })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')

@@ -82,6 +82,9 @@ export class Parser {
 
   expression(kind: 'TOP_LEVEL' | 'NESTED' = 'NESTED'): AstNode {
     const definitions = this.definitions(kind)
+    if (kind === 'TOP_LEVEL' && this.scanner.eof()) {
+      return { tag: 'topLevelExpression', definitions }
+    }
     this.scanner.consumeIf('return')
     const computation = this.lambda()
 

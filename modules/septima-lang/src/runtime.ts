@@ -172,7 +172,11 @@ export class Runtime {
         placeholder.destination = v
       }
 
-      return this.evalNode(ast.computation, newTable)
+      if (ast.computation) {
+        return this.evalNode(ast.computation, newTable)
+      }
+
+      return Value.str('')
     }
 
     if (ast.tag === 'export*') {

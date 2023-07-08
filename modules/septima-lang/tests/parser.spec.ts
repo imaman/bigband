@@ -15,6 +15,10 @@ describe('parser', () => {
   describe('unit', () => {
     test('show', () => {
       expect(show(parse(`import * as foo from './bar';'a'`))).toEqual(`import * as foo from './bar';\n'a'`)
+      expect(show(parse(`let f = x => x*x; f(2)`))).toEqual(`let f = fun (x) (x * x); f(2)`)
+      expect(show(parse(`let f = x => x*x; let g = n => n+1`))).toEqual(
+        `let f = fun (x) (x * x); let g = fun (n) (n + 1);`,
+      )
     })
   })
   describe('expression', () => {
