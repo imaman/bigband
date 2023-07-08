@@ -25,7 +25,7 @@
     "@types/jest": "^26.0.14",
     "@typescript-eslint/eslint-plugin": "^5.7.0",
     "@typescript-eslint/parser": "^5.7.0",
-    "build-raptor": "0.8.0",
+    "build-raptor": "^0.66.0",
     "eslint": "^8.4.1",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-jest": "^25.3.0",
