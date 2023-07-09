@@ -8,8 +8,7 @@ rm -rf prepare-pack
 mkdir -p prepare-pack/dist
 cp package.json prepare-pack
 cp -r dist/src prepare-pack/dist/src
-
-exit 1
+cd prepare-pack
 
 echo L.7
 CURRENT_VERSION=$(npm info septima-lang version)
