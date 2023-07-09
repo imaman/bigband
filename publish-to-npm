@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+
+yarn pack-all
+
+pushd modules/build-raptor/pack
+CURRENT_VERSION=$(npm info build-raptor version)
+npm pkg set "version=$CURRENT_VERSION"
+npm version minor
+NEXT_VERSION=$(npm pkg get version | tr -d '"')
+echo "resolved new version: $NEXT_VERSION"
+npm pkg set "dependencies.build-raptor-jest-reporter=$NEXT_VERSION"
+popd
+
+
+
+pushd modules/build-raptor-jest-reporter/pack
+npm pkg set "version=$NEXT_VERSION"
+../adjust-bundle
+echo "pubishing build-raptor-jest-reporter $NEXT_VERSION"
+npm publish
+popd
+
+pushd modules/build-raptor-api/pack
+npm pkg set "version=$NEXT_VERSION"
+../adjust-bundle
+echo "pubishing build-raptor-api $NEXT_VERSION"
+npm publish
+popd
+
+pushd modules/build-raptor/pack
+echo "pubishing build-raptor $NEXT_VERSION"
+npm publish
+popd
+
+
+T="published@$NEXT_VERSION"
+echo tagging "$T"
+git tag "$T"
+git push --tags
