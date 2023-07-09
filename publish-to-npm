@@ -15,12 +15,10 @@ CURRENT_VERSION=$(npm info septima-lang version)
 echo L.8 $CURRENT_VERSION
 
 
-echo NPM version is:
-npm --version
 
 npm pkg set "version=$CURRENT_VERSION"
 echo L.13
-#npm version patch
+npm version patch
 echo L.15
 NEXT_VERSION=$(npm pkg get version | tr -d '"')
 echo L.17
