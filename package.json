@@ -41,7 +41,7 @@
     "pretty-quick": "^1.11.0",
     "sort-package-json": "^1.53.1",
     "source-map-support": "^0.5.16",
-    "syncpack": "^5.0.1",
+    "syncpack": "^9.8.6",
     "typescript": "^4.5.2"
   }
 }
