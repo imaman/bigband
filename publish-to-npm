@@ -4,6 +4,7 @@ set -e
 
 yarn test
 pushd modules/septima-lang
+echo L.7
 CURRENT_VERSION=$(npm info septima-lang version)
 echo L.8 $CURRENT_VERSION
 
