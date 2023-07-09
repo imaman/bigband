@@ -116,6 +116,5 @@ export class Septima {
 
 export function parse(arg: string | Parser): Unit {
   const parser = typeof arg === 'string' ? new Parser(new Scanner(new SourceCode(arg))) : arg
-  const ast = parser.parse()
-  return ast
+  return parser.parse()
 }
