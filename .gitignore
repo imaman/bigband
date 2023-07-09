@@ -4,3 +4,4 @@ dist
 jest-output.json
 node_modules
 tsconfig.json
+prepare-pack
