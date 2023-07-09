@@ -201,7 +201,11 @@ export class Parser {
 
   ternary(): AstNode {
     const condition = this.unsink()
-    if (!this.scanner.consumeIf('? ')) {
+    if (this.scanner.headMatches('??')) {
+      return condition
+    }
+
+    if (!this.scanner.consumeIf('?')) {
       return condition
     }
 

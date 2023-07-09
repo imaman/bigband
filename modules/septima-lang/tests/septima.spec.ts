@@ -445,6 +445,12 @@ describe('septima', () => {
     test('higher precendence than if', () => {
       expect(run(`if (5 < 2) "Y" else 3+4>8? 'ABOVE' : 'BELOW'`)).toEqual('BELOW')
     })
+    test('can span multiple lines', () => {
+      expect(run(`3 + 4 > 6\n? 'ABOVE'\n: 'BELOW'`)).toEqual('ABOVE')
+      expect(run(`3 + 4 > 8\n? 'ABOVE'\n: 'BELOW'`)).toEqual('BELOW')
+      expect(run(`3 + 4 > 6?\n 'ABOVE':\n 'BELOW'`)).toEqual('ABOVE')
+      expect(run(`3 + 4 > 8?\n 'ABOVE':\n 'BELOW'`)).toEqual('BELOW')
+    })
   })
 
   describe('lambda expressions', () => {
