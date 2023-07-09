@@ -9,7 +9,7 @@ CURRENT_VERSION=$(npm info septima-lang version)
 echo L.8 $CURRENT_VERSION
 
 
-#npm pkg set "version=$CURRENT_VERSION"
+npm pkg set "version=$CURRENT_VERSION"
 echo L.13
 #npm version patch
 echo L.15
