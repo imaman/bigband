@@ -5,6 +5,10 @@ set -e
 yarn test
 pushd modules/septima-lang
 CURRENT_VERSION=$(npm info septima-lang version)
+echo L.8 $CURRENT_VERSION
+
+exit 1
+
 npm pkg set "version=$CURRENT_VERSION"
 npm version minor
 NEXT_VERSION=$(npm pkg get version | tr -d '"')
