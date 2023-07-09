@@ -4,6 +4,12 @@ set -e
 
 yarn test
 pushd modules/septima-lang
+mkdir prepare-pack
+cp package.json prepare-pack
+cp -r dist prepare-pack/dist
+
+exit 1
+
 echo L.7
 CURRENT_VERSION=$(npm info septima-lang version)
 echo L.8 $CURRENT_VERSION
