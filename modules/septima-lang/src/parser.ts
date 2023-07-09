@@ -15,7 +15,7 @@ export class Parser {
 
   unit(): Unit {
     const imports = this.imports()
-    const expression = this.expression()
+    const expression = this.expression('TOP_LEVEL')
     return { tag: 'unit', imports, expression }
   }
 
@@ -53,10 +53,18 @@ export class Parser {
     }
   }
 
-  definitions(): Let[] {
+  definitions(kind: 'TOP_LEVEL' | 'NESTED'): Let[] {
     const ret: Let[] = []
     while (true) {
-      const start = this.scanner.consumeIf('let ')
+      if (kind === 'NESTED') {
+        if (this.scanner.headMatches('export ')) {
+          throw new Error(`non-top-level definition cannot be exported ${this.scanner.sourceRef}`)
+        }
+      }
+      let start = this.scanner.consumeIf('let ')
+      if (!start && kind === 'TOP_LEVEL') {
+        start = this.scanner.consumeIf('export let ')
+      }
       if (!start) {
         return ret
       }
@@ -66,14 +74,22 @@ export class Parser {
       ret.push({ start, ident, value })
 
       this.scanner.consumeIf(';')
-      if (!this.scanner.headMatches('let ')) {
-        return ret
+      if (this.scanner.headMatches('let ')) {
+        continue
       }
+
+      if (this.scanner.headMatches('export ')) {
+        continue
+      }
+      return ret
     }
   }
 
-  expression(): AstNode {
-    const definitions = this.definitions()
+  expression(kind: 'TOP_LEVEL' | 'NESTED' = 'NESTED'): AstNode {
+    const definitions = this.definitions(kind)
+    if (kind === 'TOP_LEVEL' && this.scanner.eof()) {
+      return { tag: 'topLevelExpression', definitions }
+    }
     this.scanner.consumeIf('return')
     const computation = this.lambda()
 
@@ -167,7 +183,7 @@ export class Parser {
 
   ifExpression(): AstNode {
     if (!this.scanner.consumeIf('if')) {
-      return this.unsink()
+      return this.ternary()
     }
 
     this.scanner.consume('(')
@@ -181,6 +197,23 @@ export class Parser {
     const negative = this.expression()
 
     return { tag: 'if', condition, positive, negative }
+  }
+
+  ternary(): AstNode {
+    const condition = this.unsink()
+    if (this.scanner.headMatches('??')) {
+      return condition
+    }
+
+    if (!this.scanner.consumeIf('?')) {
+      return condition
+    }
+
+    const positive = this.expression()
+    this.scanner.consume(':')
+    const negative = this.expression()
+
+    return { tag: 'ternary', condition, positive, negative }
   }
 
   unsink(): AstNode {

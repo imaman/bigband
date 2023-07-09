@@ -74,6 +74,7 @@ jobs:
           yarn test
         env:
           s3_cache: ${{ secrets.S3_CACHE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Archive artifacts
         uses: actions/upload-artifact@v2
         if: always()

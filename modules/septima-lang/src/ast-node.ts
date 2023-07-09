@@ -73,9 +73,15 @@ export type AstNode =
   | {
       tag: 'topLevelExpression'
       definitions: Let[]
-      computation: AstNode
+      computation?: AstNode
     }
   | Lambda
+  | {
+      tag: 'ternary'
+      condition: AstNode
+      positive: AstNode
+      negative: AstNode
+    }
   | {
       tag: 'functionCall'
       actualArgs: AstNode[]
@@ -133,6 +139,9 @@ export function show(ast: AstNode | AstNode[]): string {
   if (ast.tag === 'export*') {
     return `(export*)`
   }
+  if (ast.tag === 'ternary') {
+    return `${show(ast.condition)} ? ${show(ast.positive)} : ${show(ast.negative)}`
+  }
   if (ast.tag === 'functionCall') {
     return `${show(ast.callee)}(${show(ast.actualArgs)})`
   }
@@ -178,7 +187,8 @@ export function show(ast: AstNode | AstNode[]): string {
   }
   if (ast.tag === 'topLevelExpression') {
     const defs = ast.definitions.map(d => `let ${show(d.ident)} = ${show(d.value)}`).join('; ')
-    return `${defs ? defs + '; ' : ''}${show(ast.computation)}`
+    const sep = defs && ast.computation ? ' ' : ''
+    return `${defs ? defs + ';' : ''}${sep}${ast.computation ? show(ast.computation) : ''}`
   }
   if (ast.tag === 'unaryOperator') {
     return `${ast.operator}${show(ast.operand)}`
@@ -224,6 +234,9 @@ export function span(ast: AstNode): Span {
   if (ast.tag === 'lambda') {
     return ofRange(ofToken(ast.start), span(ast.body))
   }
+  if (ast.tag === 'ternary') {
+    return ofRange(span(ast.condition), span(ast.negative))
+  }
   if (ast.tag === 'literal') {
     return ofToken(ast.t)
   }
@@ -231,10 +244,17 @@ export function span(ast: AstNode): Span {
     return ofRange(ofToken(ast.start), ofToken(ast.end))
   }
   if (ast.tag === 'topLevelExpression') {
-    const d0 = ast.definitions.find(Boolean)
-    const comp = span(ast.computation)
-
-    return ofRange(d0 ? ofToken(d0.start) : comp, comp)
+    if (ast.computation) {
+      const d0 = ast.definitions.find(Boolean)
+      const comp = span(ast.computation)
+      return ofRange(d0 ? ofToken(d0.start) : comp, comp)
+    } else if (ast.definitions.length) {
+      const first = ast.definitions[0]
+      const last = ast.definitions[ast.definitions.length - 1]
+      return ofRange(ofToken(first.start), span(last.value))
+    } else {
+      return { from: { offset: 0 }, to: { offset: 0 } }
+    }
   }
   if (ast.tag === 'unaryOperator') {
     return ofRange(ofToken(ast.operatorToken), span(ast.operand))
