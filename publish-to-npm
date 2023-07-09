@@ -15,7 +15,6 @@ npm pkg set "version=$CURRENT_VERSION"
 npm version patch
 NEXT_VERSION=$(npm pkg get version | tr -d '"')
 echo "resolved new version: $NEXT_VERSION"
-exit 1
 
 npm publish
 popd
