@@ -58,7 +58,7 @@ export class Parser {
     while (true) {
       if (kind === 'NESTED') {
         if (this.scanner.headMatches('export ')) {
-          throw new Error(`non-top-level definition cannot be export ${this.scanner.sourceRef}`)
+          throw new Error(`non-top-level definition cannot be exported ${this.scanner.sourceRef}`)
         }
       }
       let start = this.scanner.consumeIf('let ')
@@ -74,9 +74,14 @@ export class Parser {
       ret.push({ start, ident, value })
 
       this.scanner.consumeIf(';')
-      if (!this.scanner.headMatches('let ')) {
-        return ret
+      if (this.scanner.headMatches('let ')) {
+        continue
       }
+
+      if (this.scanner.headMatches('export ')) {
+        continue
+      }
+      return ret
     }
   }
 

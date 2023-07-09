@@ -888,9 +888,15 @@ describe('septima', () => {
     test('a top level definition can have the "export" qualifier', () => {
       expect(run(`export let x = 5; x+3`)).toEqual(8)
     })
+    test('allows multiple exported definitions', () => {
+      expect(run(`export let x = 5; export let twice = n => n*2; export let a = r => r*r*3.14; twice(3)`)).toEqual(6)
+    })
+    test('multiple exported definitions can be interleaved with non-exported ones', () => {
+      expect(run(`export let x = 5; let twice = n => n*2; export let a = r => r*r*3.14; twice(3)`)).toEqual(6)
+    })
     test('errors if a nested definition has the "export" qualifier', () => {
       expect(() => run(`let x = (export let y = 4; y+1); x+3`)).toThrowError(
-        'non-top-level definition cannot be export at (1:10..36) export let y = 4; y+1); x+3',
+        'non-top-level definition cannot be exported at (1:10..36) export let y = 4; y+1); x+3',
       )
     })
   })
