@@ -13,5 +13,7 @@
   "jest": {
     "preset": "../../jest.preset.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "jest": "^29.6.1"
+  }
 }
