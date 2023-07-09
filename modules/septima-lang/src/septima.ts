@@ -115,7 +115,9 @@ export class Septima {
 }
 
 /**
- * Parses the given input and returns an AST
+ * Parses the given input and returns an AST.
+ * @param arg the source code to parse (string) or a Parser object (configured with the source code to parse).
+ * @returns
  */
 export function parse(arg: string | Parser): Unit {
   const parser = typeof arg === 'string' ? new Parser(new Scanner(new SourceCode(arg))) : arg
