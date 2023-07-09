@@ -10,20 +10,11 @@ cp package.json prepare-pack
 cp -r dist/src prepare-pack/dist/src
 cd prepare-pack
 
-echo L.7
 CURRENT_VERSION=$(npm info septima-lang version)
-echo L.8 $CURRENT_VERSION
-
-
-
 npm pkg set "version=$CURRENT_VERSION"
-echo L.13
 npm version patch
-echo L.15
 NEXT_VERSION=$(npm pkg get version | tr -d '"')
-echo L.17
 echo "resolved new version: $NEXT_VERSION"
-echo L.19
 exit 1
 
 npm publish
