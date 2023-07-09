@@ -130,6 +130,7 @@ export class Runtime {
       exp.tag === 'functionCall' ||
       exp.tag === 'ident' ||
       exp.tag === 'if' ||
+      exp.tag === 'ternary' ||
       exp.tag === 'indexAccess' ||
       exp.tag === 'lambda' ||
       exp.tag === 'literal' ||
@@ -172,7 +173,11 @@ export class Runtime {
         placeholder.destination = v
       }
 
-      return this.evalNode(ast.computation, newTable)
+      if (ast.computation) {
+        return this.evalNode(ast.computation, newTable)
+      }
+
+      return Value.str('')
     }
 
     if (ast.tag === 'export*') {
@@ -328,7 +333,7 @@ export class Runtime {
       return this.call(callee, argValues)
     }
 
-    if (ast.tag === 'if') {
+    if (ast.tag === 'if' || ast.tag === 'ternary') {
       const c = this.evalNode(ast.condition, table)
       return c.ifElse(
         () => this.evalNode(ast.positive, table),

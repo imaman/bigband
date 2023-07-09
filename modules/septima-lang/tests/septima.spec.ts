@@ -421,6 +421,38 @@ describe('septima', () => {
     })
   })
 
+  describe('ternary', () => {
+    test('returns the value of the first branch if the condition is true', () => {
+      expect(run(`(4 > 3) ? 200 : -100`)).toEqual(200)
+    })
+    test('evaluates the first branch only if the condition is true', () => {
+      expect(() => run(`true ? x : -100`)).toThrowError('Symbol x was not found')
+      expect(run(`false ? x : -100`)).toEqual(-100)
+    })
+    test('returns the value of the second branch if the condition is false', () => {
+      expect(run(`(4 < 3) ? 200 : -100`)).toEqual(-100)
+    })
+    test('evaluates the second branch only if the condition is false', () => {
+      expect(() => run(`false ? 200 : x`)).toThrowError('Symbol x was not found')
+      expect(run(`true ? 200 : x`)).toEqual(200)
+    })
+    test('yells if conditions is not boolean', () => {
+      expect(() => run(`5+8 ? 200 : -100`)).toThrowError('value type error: expected bool but found 13')
+    })
+    test('higher precendence than lambda', () => {
+      expect(run(`let f = (a,b) => a > b ? 'ABOVE' : 'BELOW'; f(1,2) + '_' + f(2,1)`)).toEqual('BELOW_ABOVE')
+    })
+    test('higher precendence than if', () => {
+      expect(run(`if (5 < 2) "Y" else 3+4>8? 'ABOVE' : 'BELOW'`)).toEqual('BELOW')
+    })
+    test('can span multiple lines', () => {
+      expect(run(`3 + 4 > 6\n? 'ABOVE'\n: 'BELOW'`)).toEqual('ABOVE')
+      expect(run(`3 + 4 > 8\n? 'ABOVE'\n: 'BELOW'`)).toEqual('BELOW')
+      expect(run(`3 + 4 > 6?\n 'ABOVE':\n 'BELOW'`)).toEqual('ABOVE')
+      expect(run(`3 + 4 > 8?\n 'ABOVE':\n 'BELOW'`)).toEqual('BELOW')
+    })
+  })
+
   describe('lambda expressions', () => {
     test('binds the value of the actual arg to the formal arg', () => {
       expect(run(`(fun(a) 2*a)(3)`)).toEqual(6)
@@ -856,6 +888,27 @@ describe('septima', () => {
     })
     test('are supported also via the Septima.run() API', () => {
       expect(Septima.run(`args.a + args.b`, undefined, { a: 100, b: 2 })).toEqual(102)
+    })
+  })
+  describe('export', () => {
+    test('a top level definition can have the "export" qualifier', () => {
+      expect(run(`export let x = 5; x+3`)).toEqual(8)
+    })
+    test('allows multiple exported definitions', () => {
+      expect(run(`export let x = 5; export let twice = n => n*2; export let a = r => r*r*3.14; twice(3)`)).toEqual(6)
+    })
+    test('multiple exported definitions can be interleaved with non-exported ones', () => {
+      expect(run(`export let x = 5; let twice = n => n*2; export let a = r => r*r*3.14; twice(3)`)).toEqual(6)
+    })
+    test('errors if a nested definition has the "export" qualifier', () => {
+      expect(() => run(`let x = (export let y = 4; y+1); x+3`)).toThrowError(
+        'non-top-level definition cannot be exported at (1:10..36) export let y = 4; y+1); x+3',
+      )
+    })
+  })
+  describe('unit', () => {
+    test('evaluates to an empty string if it contains only definitions', () => {
+      expect(run(`export let x = 5`)).toEqual('')
     })
   })
   test.todo('support file names in locations')
