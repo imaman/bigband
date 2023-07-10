@@ -186,7 +186,9 @@ export function show(ast: AstNode | AstNode[]): string {
     return `{${pairs.join(', ')}}`
   }
   if (ast.tag === 'topLevelExpression') {
-    const defs = ast.definitions.map(d => `let ${show(d.ident)} = ${show(d.value)}`).join('; ')
+    const defs = ast.definitions
+      .map(d => `${d.isExported ? 'export ' : ''}let ${show(d.ident)} = ${show(d.value)}`)
+      .join('; ')
     const sep = defs && ast.computation ? ' ' : ''
     return `${defs ? defs + ';' : ''}${sep}${ast.computation ? show(ast.computation) : ''}`
   }
