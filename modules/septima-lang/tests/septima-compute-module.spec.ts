@@ -25,6 +25,11 @@ describe('septima-compute-module', () => {
   test('can use exported definitions from another module', async () => {
     expect(await run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `export let eight = 8; {}` })).toEqual(11)
   })
+  test('errors if the imported definition is not qualified with "export"', async () => {
+    await expect(run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `let eight = 8; {}` })).rejects.toThrowError(
+      `Evaluated to sink: at (1:27..33) b.eight`,
+    )
+  })
   test('errors if the path to input from is not a string literal', async () => {
     await expect(run('a', { a: `import * as foo from 500` })).rejects.toThrowError(
       'Expected a string literal at (1:22..24) 500',
