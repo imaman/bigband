@@ -62,8 +62,10 @@ export class Parser {
         }
       }
       let start = this.scanner.consumeIf('let ')
+      let isExported = false
       if (!start && kind === 'TOP_LEVEL') {
         start = this.scanner.consumeIf('export let ')
+        isExported = true
       }
       if (!start) {
         return ret
@@ -71,7 +73,7 @@ export class Parser {
       const ident = this.identifier()
       this.scanner.consume('=')
       const value = this.lambda()
-      ret.push({ start, ident, value })
+      ret.push({ start, ident, value, isExported })
 
       this.scanner.consumeIf(';')
       if (this.scanner.headMatches('let ')) {

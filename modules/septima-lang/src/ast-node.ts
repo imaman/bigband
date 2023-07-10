@@ -3,7 +3,7 @@ import { Token } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
 import { switchOn } from './switch-on'
 
-export type Let = { start: Token; ident: Ident; value: AstNode }
+export type Let = { start: Token; ident: Ident; value: AstNode; isExported: boolean }
 
 export type Import = {
   start: Token
@@ -186,7 +186,9 @@ export function show(ast: AstNode | AstNode[]): string {
     return `{${pairs.join(', ')}}`
   }
   if (ast.tag === 'topLevelExpression') {
-    const defs = ast.definitions.map(d => `let ${show(d.ident)} = ${show(d.value)}`).join('; ')
+    const defs = ast.definitions
+      .map(d => `${d.isExported ? 'export ' : ''}let ${show(d.ident)} = ${show(d.value)}`)
+      .join('; ')
     const sep = defs && ast.computation ? ' ' : ''
     return `${defs ? defs + ';' : ''}${sep}${ast.computation ? show(ast.computation) : ''}`
   }

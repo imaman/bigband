@@ -19,6 +19,9 @@ describe('parser', () => {
       expect(show(parse(`let f = x => x*x; let g = n => n+1`))).toEqual(
         `let f = fun (x) (x * x); let g = fun (n) (n + 1);`,
       )
+      expect(show(parse(`export let a = 1; let b = 2; export let c = 3;`))).toEqual(
+        `export let a = 1; let b = 2; export let c = 3;`,
+      )
     })
   })
   describe('expression', () => {
