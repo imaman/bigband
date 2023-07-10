@@ -3,7 +3,7 @@ import { Token } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
 import { switchOn } from './switch-on'
 
-export type Let = { start: Token; ident: Ident; value: AstNode }
+export type Let = { start: Token; ident: Ident; value: AstNode; isExported: boolean }
 
 export type Import = {
   start: Token

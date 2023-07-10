@@ -4,7 +4,7 @@ import { failMe } from './fail-me'
 import { shouldNeverHappen } from './should-never-happen'
 import * as Stack from './stack'
 import { switchOn } from './switch-on'
-import { SymbolTable } from './symbol-table'
+import { SymbolTable, Visibility } from './symbol-table'
 import { Value } from './value'
 
 interface Placeholder {
@@ -12,7 +12,12 @@ interface Placeholder {
 }
 
 class SymbolFrame implements SymbolTable {
-  constructor(readonly symbol: string, readonly placeholder: Placeholder, private readonly earlier: SymbolTable) {}
+  constructor(
+    readonly symbol: string,
+    readonly placeholder: Placeholder,
+    private readonly earlier: SymbolTable,
+    private readonly visibility: Visibility,
+  ) {}
 
   lookup(sym: string): Value {
     if (this.symbol === sym) {
@@ -34,8 +39,16 @@ class SymbolFrame implements SymbolTable {
 
   exportValue(): Record<string, Value> {
     const ret = this.earlier.exportValue()
-    ret[this.symbol] = this.placeholder.destination ?? failMe(`Unbounded symbol: ${this.symbol}`)
-    return ret
+    if (this.visibility === 'INTERNAL') {
+      return ret
+    }
+
+    if (this.visibility === 'EXPORTED') {
+      ret[this.symbol] = this.placeholder.destination ?? failMe(`Unbounded symbol: ${this.symbol}`)
+      return ret
+    }
+
+    shouldNeverHappen(this.visibility)
   }
 }
 
@@ -71,14 +84,14 @@ export class Runtime {
     const keys = Value.foreign(o => o.keys())
     const entries = Value.foreign(o => o.entries())
     const fromEntries = Value.foreign(o => o.fromEntries())
-    let lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty)
+    let lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty, 'INTERNAL')
 
     if (generateTheArgsObject) {
-      lib = new SymbolFrame('args', { destination: Value.from(this.args) }, lib)
+      lib = new SymbolFrame('args', { destination: Value.from(this.args) }, lib, 'INTERNAL')
     }
 
     for (const [importName, importValue] of Object.entries(this.preimports)) {
-      lib = new SymbolFrame(importName, { destination: importValue }, lib)
+      lib = new SymbolFrame(importName, { destination: importValue }, lib, 'INTERNAL')
     }
     return lib
   }
@@ -159,7 +172,7 @@ export class Runtime {
       let newTable = table
       for (const imp of ast.imports) {
         const o = this.importDefinitions(imp.pathToImportFrom.text)
-        newTable = new SymbolFrame(imp.ident.t.text, { destination: o }, newTable)
+        newTable = new SymbolFrame(imp.ident.t.text, { destination: o }, newTable, 'INTERNAL')
       }
       return this.evalNode(ast.expression, newTable)
     }
@@ -168,7 +181,7 @@ export class Runtime {
       for (const def of ast.definitions) {
         const name = def.ident.t.text
         const placeholder: Placeholder = { destination: undefined }
-        newTable = new SymbolFrame(name, placeholder, newTable)
+        newTable = new SymbolFrame(name, placeholder, newTable, def.isExported ? 'EXPORTED' : 'INTERNAL')
         const v = this.evalNode(def.value, newTable)
         placeholder.destination = v
       }
@@ -363,7 +376,10 @@ export class Runtime {
       if (names.length > argValues.length) {
         throw new Error(`Arg list length mismatch: expected ${names.length} but got ${argValues.length}`)
       }
-      const newTable = names.reduce((t, n, i) => new SymbolFrame(n, { destination: argValues[i] }, t), lambdaTable)
+      const newTable = names.reduce(
+        (t, n, i) => new SymbolFrame(n, { destination: argValues[i] }, t, 'INTERNAL'),
+        lambdaTable,
+      )
       return this.evalNode(body, newTable)
     })
   }
