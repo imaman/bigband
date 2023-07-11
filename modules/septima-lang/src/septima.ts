@@ -68,7 +68,7 @@ export class Septima {
   }
 
   async load(fileName: string, readFile: (m: string) => Promise<string>): Promise<void> {
-    const pathFromSourceRoot = path.relative(this.sourceRoot, fileName)
+    const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
 
     if (this.unitByFileName.has(pathFromSourceRoot)) {
       return
@@ -83,7 +83,7 @@ export class Septima {
   }
 
   loadSync(fileName: string, readFile: (m: string) => string) {
-    const pathFromSourceRoot = path.relative(this.sourceRoot, fileName)
+    const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
     if (this.unitByFileName.has(pathFromSourceRoot)) {
       return
     }
@@ -96,27 +96,30 @@ export class Septima {
     }
   }
 
-  private loadFileContent(fromSourceRoot: string, content: string) {
+  private loadFileContent(pathFromSourceRoot: string, content: string) {
     // The following check is usually not needed. However, we did encounter situations where the an undefined made
     // its way into "content" (e.g., due to reckless usage of "as" in the "readFile" function) which resulted in hard
     // to debug errors. Thus, we are being defensive here.
     if (content === undefined) {
-      throw new Error(`Cannot find file '${fromSourceRoot}'`)
+      throw new Error(`Cannot find file '${pathFromSourceRoot}'`)
     }
     const sourceCode = new SourceCode(content)
     const scanner = new Scanner(sourceCode)
     const parser = new Parser(scanner)
     const unit = parse(parser)
 
-    this.unitByFileName.set(fromSourceRoot, { unit, sourceCode })
+    this.unitByFileName.set(pathFromSourceRoot, { unit, sourceCode })
 
-    return unit.imports.map(at => {
-      const a0 = fromSourceRoot
-      const a1 = at.pathToImportFrom.text
-      const a0a1 = path.join(path.dirname(a0), a1)
-      const p = path.relative(this.sourceRoot, a0a1)
-      return p
-    })
+    return unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text))
+  }
+
+  private getPathFromSourceRoot(startingPoint: string | undefined, relativePath: string) {
+    const joined = startingPoint === undefined ? relativePath : path.join(path.dirname(startingPoint), relativePath)
+    const ret = path.normalize(joined)
+    if (ret.startsWith('.')) {
+      throw new Error(`resolved path (${ret}) is pointing outside of source root (${this.sourceRoot})`)
+    }
+    return ret
   }
 
   private computeImpl(

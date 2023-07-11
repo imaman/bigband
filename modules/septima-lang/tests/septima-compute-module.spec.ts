@@ -4,8 +4,13 @@ import { shouldNeverHappen } from '../src/should-never-happen'
 /**
  * Runs a Septima program for testing purposes. Throws an error If the program evaluated to `sink`.
  */
-function run(mainFileName: string, inputs: Record<string, string>, args: Record<string, unknown> = {}) {
-  const septima = new Septima('')
+function run(
+  mainFileName: string,
+  inputs: Record<string, string>,
+  args: Record<string, unknown> = {},
+  sourceRoot = '',
+) {
+  const septima = new Septima(sourceRoot)
   const res = septima.computeModule(mainFileName, args, (m: string) => inputs[m])
   if (res.tag === 'ok') {
     return res.value
@@ -25,12 +30,20 @@ describe('septima-compute-module', () => {
   test('can use exported definitions from another module', () => {
     expect(run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `export let eight = 8; {}` })).toEqual(11)
   })
+  test('allows specifying a custom source root', () => {
+    expect(run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `export let eight = 8; {}` }, {}, 'p/q/r')).toEqual(11)
+  })
   test('provides a clear error message if source code was not found', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, c: `export let eight = 8; {}` })).toThrowError(
       `Cannot find file 'b'`,
     )
   })
   test.todo(`file not found error should include an import stack (a-la node's "require stack")`)
+  test('errors if a file tries to import a file outside of the source root tree', () => {
+    expect(() => run('a', { a: `import * as b from '../../../b'; 5` }, {}, 'dddd')).toThrowError(
+      `resolved path (../../../b) is pointing outside of source root (dddd)`,
+    )
+  })
   test('errors if the imported definition is not qualified with "export"', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `let eight = 8; {}` })).toThrowError(
       `Evaluated to sink: at (1:27..33) b.eight`,
