@@ -100,9 +100,7 @@ export class Septima {
       return
     }
 
-    const content =
-      readFile(fromSourceRoot) ??
-      failMe(`content is undefined for ${currFileName} (fileName=${fileName}, fromSourceRoot=${fromSourceRoot}`)
+    const content = readFile(fromSourceRoot)
     const sourceCode = new SourceCode(content)
     const scanner = new Scanner(sourceCode)
     const parser = new Parser(scanner)
