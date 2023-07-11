@@ -1,6 +1,7 @@
 import * as path from 'path'
 
 import { Unit } from './ast-node'
+import { failMe } from './fail-me'
 import { Parser } from './parser'
 import { Result, ResultSink, ResultSinkImpl } from './result'
 import { Runtime, Verbosity } from './runtime'
@@ -48,7 +49,7 @@ export class Septima {
     shouldNeverHappen(res)
   }
 
-  private readonly unitByFileName = new Map<string, Unit>()
+  private readonly unitByFileName = new Map<string, { unit: Unit; sourceCode: SourceCode }>()
 
   constructor(private readonly sourceRoot = '') {}
 
@@ -59,6 +60,7 @@ export class Septima {
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
+    // const {sourceCode} = this.unitByFileName.get(fileName) ?? failMe(`fileName not found: ${fileName}`)
     return new ResultSinkImpl(value, sourceCode)
   }
 
@@ -71,11 +73,12 @@ export class Septima {
       }
 
       const content = await readFile(fromSourceRoot)
-      const scanner = new Scanner(new SourceCode(content))
+      const sourceCode = new SourceCode(content)
+      const scanner = new Scanner(sourceCode)
       const parser = new Parser(scanner)
       const unit = parse(parser)
 
-      this.unitByFileName.set(fromSourceRoot, unit)
+      this.unitByFileName.set(fromSourceRoot, { unit, sourceCode })
 
       for (const at of unit.imports) {
         const p = path.relative(fromSourceRoot, at.pathToImportFrom.text)
@@ -94,12 +97,13 @@ export class Septima {
         return
       }
 
-      const content = readFile(fromSourceRoot)
-      const scanner = new Scanner(new SourceCode(content))
+      const content = readFile(fromSourceRoot) ?? failMe(`content is undefined for ${fromSourceRoot}`)
+      const sourceCode = new SourceCode(content)
+      const scanner = new Scanner(sourceCode)
       const parser = new Parser(scanner)
       const unit = parse(parser)
 
-      this.unitByFileName.set(fromSourceRoot, unit)
+      this.unitByFileName.set(fromSourceRoot, { unit, sourceCode })
 
       for (const at of unit.imports) {
         const p = path.relative(fromSourceRoot, at.pathToImportFrom.text)
@@ -158,6 +162,28 @@ export class Septima {
     }
 
     const runtime = new Runtime(ast, verbosity, lib, getAstOf, args)
+    const c = runtime.compute()
+
+    if (c.value) {
+      return c.value
+    }
+
+    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
+    throw new Error(runtimeErrorMessage)
+  }
+
+  private computeLoaded(mainFileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
+    const getAstOf = (fileName: string) => {
+      const ret = this.unitByFileName.get(fileName)
+      if (!ret) {
+        throw new Error(`file has not been loaded: ${fileName}`)
+      }
+      return ret
+    }
+
+    const { unit, sourceCode } = getAstOf(mainFileName)
+
+    const runtime = new Runtime(unit, verbosity, {}, fileName => getAstOf(fileName).unit, args)
     const c = runtime.compute()
 
     if (c.value) {
