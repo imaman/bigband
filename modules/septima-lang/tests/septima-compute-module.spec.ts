@@ -6,14 +6,7 @@ import { shouldNeverHappen } from '../src/should-never-happen'
  */
 function run(mainFileName: string, inputs: Record<string, string>, args: Record<string, unknown> = {}) {
   const septima = new Septima('')
-  const res = septima.computeModule(mainFileName, args, (m: string) => {
-    const ret = inputs[m]
-    if (ret) {
-      return ret
-    }
-
-    throw new Error(`cannot read content of <<${m}>>`)
-  })
+  const res = septima.computeModule(mainFileName, args, (m: string) => inputs[m])
   if (res.tag === 'ok') {
     return res.value
   }
@@ -31,6 +24,11 @@ describe('septima-compute-module', () => {
   })
   test('can use exported definitions from another module', () => {
     expect(run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `export let eight = 8; {}` })).toEqual(11)
+  })
+  test('provides a clear error message if source code was not found', () => {
+    expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, c: `export let eight = 8; {}` })).toThrowError(
+      `Cannot find file 'b'`,
+    )
   })
   test('errors if the imported definition is not qualified with "export"', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `let eight = 8; {}` })).toThrowError(

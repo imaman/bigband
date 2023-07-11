@@ -101,6 +101,13 @@ export class Septima {
     }
 
     const content = readFile(fromSourceRoot)
+
+    // The following check is usually not needed. However, we did encounter situations where the an undefined made
+    // its way into "content" (e.g., due to reckless usage of "as" in the "readFile" function) which resulted in hard
+    // to debug errors. Thus, we are being defensive here.
+    if (content === undefined) {
+      throw new Error(`Cannot find file '${fromSourceRoot}'`)
+    }
     const sourceCode = new SourceCode(content)
     const scanner = new Scanner(sourceCode)
     const parser = new Parser(scanner)
