@@ -4,9 +4,9 @@ import { shouldNeverHappen } from '../src/should-never-happen'
 /**
  * Runs a Septima program for testing purposes. Throws an error If the program evaluated to `sink`.
  */
-async function run(mainModule: string, inputs: Record<string, string>, args: Record<string, unknown> = {}) {
-  const septima = new Septima()
-  const res = septima.computeModule(mainModule, (m: string) => inputs[m], args)
+async function run(mainFileName: string, inputs: Record<string, string>, args: Record<string, unknown> = {}) {
+  const septima = new Septima('')
+  const res = septima.computeModule(mainFileName, args, (m: string) => inputs[m])
   if (res.tag === 'ok') {
     return res.value
   }

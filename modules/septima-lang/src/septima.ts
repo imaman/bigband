@@ -1,3 +1,5 @@
+import * as path from 'path'
+
 import { Unit } from './ast-node'
 import { Parser } from './parser'
 import { Result, ResultSink, ResultSinkImpl } from './result'
@@ -46,18 +48,47 @@ export class Septima {
     shouldNeverHappen(res)
   }
 
-  constructor() {}
+  private readonly unitByFileName = new Map<string, Unit>()
 
-  computeModule(moduleName: string, moduleReader: (m: string) => string, args: Record<string, unknown>): Result {
-    const input = moduleReader(moduleName)
+  constructor(private readonly sourceRoot = '') {}
+
+  computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string): Result {
+    const input = readFile(fileName)
     const sourceCode = new SourceCode(input)
-    const value = this.computeImpl(sourceCode, 'quiet', {}, moduleReader, args)
+    const value = this.computeImpl(sourceCode, 'quiet', {}, readFile, args)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
     return new ResultSinkImpl(value, sourceCode)
   }
 
+  async load(fileName: string, readFile: (m: string) => Promise<string>): Promise<void> {
+    const visit = async (currFileName: string) => {
+      const fromSourceRoot = path.relative(this.sourceRoot, currFileName)
+
+      if (this.unitByFileName.has(fromSourceRoot)) {
+        return
+      }
+
+      const content = await readFile(fromSourceRoot)
+      const scanner = new Scanner(new SourceCode(content))
+      const parser = new Parser(scanner)
+      const unit = parse(parser)
+
+      this.unitByFileName.set(fromSourceRoot, unit)
+
+      for (const at of unit.imports) {
+        const p = path.relative(fromSourceRoot, at.pathToImportFrom.text)
+        await visit(p)
+      }
+    }
+
+    await visit(fileName)
+  }
+
+  /**
+   * @deprecated
+   */
   compute(
     input: string,
     preimports: Record<string, string> = {},
