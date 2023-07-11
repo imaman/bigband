@@ -68,15 +68,15 @@ export class Septima {
   }
 
   async load(fileName: string, readFile: (m: string) => Promise<string>): Promise<void> {
-    const fromSourceRoot = path.relative(this.sourceRoot, fileName)
+    const pathFromSourceRoot = path.relative(this.sourceRoot, fileName)
 
-    if (this.unitByFileName.has(fromSourceRoot)) {
+    if (this.unitByFileName.has(pathFromSourceRoot)) {
       return
     }
 
-    const content = await readFile(fromSourceRoot)
+    const content = await readFile(pathFromSourceRoot)
 
-    const pathsToLoad = this.loadFileContent(fromSourceRoot, content)
+    const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
     for (const p of pathsToLoad) {
       await this.load(p, readFile)
     }
@@ -84,7 +84,6 @@ export class Septima {
 
   loadSync(fileName: string, readFile: (m: string) => string) {
     const pathFromSourceRoot = path.relative(this.sourceRoot, fileName)
-
     if (this.unitByFileName.has(pathFromSourceRoot)) {
       return
     }
