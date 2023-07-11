@@ -37,7 +37,11 @@ export class Septima {
       ((r: ResultSink) => {
         throw new Error(r.message)
       })
-    const res = new Septima().compute(input, {}, 'quiet', args)
+
+    const fileName = '<inline>'
+    const contentRec: Record<string, string> = { [fileName]: input }
+    const readFile = (m: string) => contentRec[m]
+    const res = new Septima().computeModule(fileName, args, readFile)
     if (res.tag === 'ok') {
       return res.value
     }
@@ -115,35 +119,6 @@ export class Septima {
       const p = path.relative(this.sourceRoot, a0a1)
       this.loadSync(p, readFile)
     }
-  }
-
-  /**
-   * @deprecated
-   */
-  compute(
-    input: string,
-    preimports: Record<string, string> = {},
-    verbosity: Verbosity = 'quiet',
-    args: Record<string, unknown>,
-  ): Result {
-    const lib: Record<string, Value> = {}
-    for (const [importName, importCode] of Object.entries(preimports)) {
-      const sourceCode = new SourceCode(importCode)
-      const value = this.computeImpl(sourceCode, verbosity, {}, undefined, {})
-      if (value.isSink()) {
-        // TODO(imaman): cover!
-        const r = new ResultSinkImpl(value, sourceCode)
-        throw new Error(`preimport (${importName}) evaluated to sink: ${r.message}`)
-      }
-      lib[importName] = value
-    }
-
-    const sourceCode = new SourceCode(input)
-    const value = this.computeImpl(sourceCode, verbosity, lib, undefined, args)
-    if (!value.isSink()) {
-      return { value: value.export(), tag: 'ok' }
-    }
-    return new ResultSinkImpl(value, sourceCode)
   }
 
   private computeImpl(
