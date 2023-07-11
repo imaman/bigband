@@ -93,8 +93,7 @@ export class Septima {
   }
 
   loadSync(fileName: string, readFile: (m: string) => string) {
-    const currFileName = fileName
-    const fromSourceRoot = path.relative(this.sourceRoot, currFileName)
+    const fromSourceRoot = path.relative(this.sourceRoot, fileName)
 
     if (this.unitByFileName.has(fromSourceRoot)) {
       return
@@ -102,6 +101,13 @@ export class Septima {
 
     const content = readFile(fromSourceRoot)
 
+    const pathsToLoad = this.loadFile(fromSourceRoot, content)
+    for (const p of pathsToLoad) {
+      this.loadSync(p, readFile)
+    }
+  }
+
+  private loadFile(fromSourceRoot: string, content: string) {
     // The following check is usually not needed. However, we did encounter situations where the an undefined made
     // its way into "content" (e.g., due to reckless usage of "as" in the "readFile" function) which resulted in hard
     // to debug errors. Thus, we are being defensive here.
@@ -115,13 +121,13 @@ export class Septima {
 
     this.unitByFileName.set(fromSourceRoot, { unit, sourceCode })
 
-    for (const at of unit.imports) {
+    return unit.imports.map(at => {
       const a0 = fromSourceRoot
       const a1 = at.pathToImportFrom.text
       const a0a1 = path.join(path.dirname(a0), a1)
       const p = path.relative(this.sourceRoot, a0a1)
-      this.loadSync(p, readFile)
-    }
+      return p
+    })
   }
 
   private computeImpl(
