@@ -44,10 +44,11 @@ describe('septima-compute-module', () => {
     )
   })
   test.todo(`file not found error should include an import stack (a-la node's "require stack")`)
-  test('errors if a file tries to import a file outside of the source root tree', () => {
-    expect(() => run('q', { 'd1/d2/q': `import * as r from "../r"; 5` }, {}, 'd1/d2')).toThrowError(
-      `resolved path (d1/r) is pointing outside of source root (d1/d2)`,
-    )
+  test('allows importing from the same directory via a relative path', () => {
+    expect(run('s', { s: `import * as t from "./t"; t.ten+5`, t: `export let ten = 10` }, {})).toEqual(15)
+  })
+  test('allows importing from a sub directories', () => {
+    expect(run('q', { q: `import * as t from "./r/s/t"; t.ten+5`, 'r/s/t': `export let ten = 10` }, {})).toEqual(15)
   })
   test('allows a relative path to climb up as long as it is below source root', () => {
     expect(
@@ -58,6 +59,11 @@ describe('septima-compute-module', () => {
         'd1/d2',
       ),
     ).toEqual(15)
+  })
+  test('errors if a file tries to import a file outside of the source root tree', () => {
+    expect(() => run('q', { 'd1/d2/q': `import * as r from "../r"; 5` }, {}, 'd1/d2')).toThrowError(
+      `resolved path (d1/r) is pointing outside of source root (d1/d2)`,
+    )
   })
   test('errors if the imported definition is not qualified with "export"', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `let eight = 8; {}` })).toThrowError(
