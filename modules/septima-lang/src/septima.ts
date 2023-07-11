@@ -76,28 +76,28 @@ export class Septima {
 
     const content = await readFile(fromSourceRoot)
 
-    const pathsToLoad = this.loadFile(fromSourceRoot, content)
+    const pathsToLoad = this.loadFileContent(fromSourceRoot, content)
     for (const p of pathsToLoad) {
       await this.load(p, readFile)
     }
   }
 
   loadSync(fileName: string, readFile: (m: string) => string) {
-    const fromSourceRoot = path.relative(this.sourceRoot, fileName)
+    const pathFromSourceRoot = path.relative(this.sourceRoot, fileName)
 
-    if (this.unitByFileName.has(fromSourceRoot)) {
+    if (this.unitByFileName.has(pathFromSourceRoot)) {
       return
     }
 
-    const content = readFile(fromSourceRoot)
+    const content = readFile(pathFromSourceRoot)
 
-    const pathsToLoad = this.loadFile(fromSourceRoot, content)
+    const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
     for (const p of pathsToLoad) {
       this.loadSync(p, readFile)
     }
   }
 
-  private loadFile(fromSourceRoot: string, content: string) {
+  private loadFileContent(fromSourceRoot: string, content: string) {
     // The following check is usually not needed. However, we did encounter situations where the an undefined made
     // its way into "content" (e.g., due to reckless usage of "as" in the "readFile" function) which resulted in hard
     // to debug errors. Thus, we are being defensive here.
