@@ -15,8 +15,11 @@ function run(input: string) {
  * @param input the Septima program to run
  */
 function runSink(input: string) {
-  const septima = new Septima()
-  const res = septima.compute(input, {}, 'quiet', {})
+  const fileName = '<test-file>'
+  const contentRec: Record<string, string> = { [fileName]: input }
+  const readFile = (m: string) => contentRec[m]
+
+  const res = new Septima().computeModule(fileName, {}, readFile)
 
   if (res.tag !== 'sink') {
     throw new Error(`Not a sink: ${res.value}`)
@@ -846,48 +849,22 @@ describe('septima', () => {
       expect(run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(330)`)).toEqual(330)
     })
   })
-  describe('preimport', () => {
-    test('definitions from a preimported file can be used', () => {
-      const septima = new Septima()
-
-      const input = `libA.plus10(4) + libA.plus20(2)`
-      const preimports = {
-        libA: `{ plus10: fun (n) n+10, plus20: fun (n) n+20}`,
-      }
-      expect(septima.compute(input, preimports, 'quiet', {})).toMatchObject({ value: 36 })
-    })
-    test('supports multiple preimports', () => {
-      const septima = new Septima()
-
-      const input = `a.calc(4) + b.calc(1)`
-      const preimports = {
-        a: `{ calc: fun (n) n+10 }`,
-        b: `{ calc: fun (n) n+20 }`,
-      }
-      expect(septima.compute(input, preimports, 'quiet', {})).toMatchObject({ value: 35 })
-    })
-  })
   describe('args', () => {
     test('are bounded at runtime to a special variable called "args"', () => {
-      const septima = new Septima()
       expect(
-        septima.compute(`args.a + '_' + args.color[0] + '_' + args.b + '_' + args.color[1]`, {}, 'quiet', {
-          a: 'Sunday',
-          b: 'Monday',
-          color: ['Red', 'Green'],
-        }),
-      ).toMatchObject({ value: 'Sunday_Red_Monday_Green' })
+        Septima.run(
+          `args.a + '_' + args.color[0] + '_' + args.b + '_' + args.color[1]`,
+          {},
+          {
+            a: 'Sunday',
+            b: 'Monday',
+            color: ['Red', 'Green'],
+          },
+        ),
+      ).toEqual('Sunday_Red_Monday_Green')
     })
     test('are shadowed by a program-defined "args" symbol', () => {
-      const septima = new Septima()
-      expect(
-        septima.compute(`let args = {color: 'Green' }; args.color`, {}, 'quiet', {
-          color: 'Red',
-        }),
-      ).toMatchObject({ value: 'Green' })
-    })
-    test('are supported also via the Septima.run() API', () => {
-      expect(Septima.run(`args.a + args.b`, undefined, { a: 100, b: 2 })).toEqual(102)
+      expect(Septima.run(`let args = {color: 'Green' }; args.color`, {}, { color: 'Red' })).toEqual('Green')
     })
   })
   describe('export', () => {
