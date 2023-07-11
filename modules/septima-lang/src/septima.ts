@@ -74,7 +74,7 @@ export class Septima {
       return
     }
 
-    const content = await readFile(pathFromSourceRoot)
+    const content = await readFile(path.join(this.sourceRoot, pathFromSourceRoot))
 
     const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
     for (const p of pathsToLoad) {
@@ -88,7 +88,7 @@ export class Septima {
       return
     }
 
-    const content = readFile(pathFromSourceRoot)
+    const content = readFile(path.join(this.sourceRoot, pathFromSourceRoot))
 
     const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
     for (const p of pathsToLoad) {
@@ -117,7 +117,9 @@ export class Septima {
     const joined = startingPoint === undefined ? relativePath : path.join(path.dirname(startingPoint), relativePath)
     const ret = path.normalize(joined)
     if (ret.startsWith('.')) {
-      throw new Error(`resolved path (${ret}) is pointing outside of source root (${this.sourceRoot})`)
+      throw new Error(
+        `resolved path (${path.join(this.sourceRoot, ret)}) is pointing outside of source root (${this.sourceRoot})`,
+      )
     }
     return ret
   }
