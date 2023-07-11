@@ -54,6 +54,7 @@ export class Septima {
   constructor(private readonly sourceRoot = '') {}
 
   computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string): Result {
+    this.loadSync(fileName, readFile)
     const input = readFile(fileName)
     const sourceCode = new SourceCode(input)
     const value = this.computeImpl(sourceCode, 'quiet', {}, readFile, args)
