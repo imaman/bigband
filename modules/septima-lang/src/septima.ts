@@ -55,7 +55,7 @@ export class Septima {
 
   computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string): Result {
     try {
-      // this.loadSync(fileName, readFile)
+      this.loadSync(fileName, readFile)
     } catch(e) {
       console.log(`e=${e}`)
       throw new Error(`L>61!!!! ${e}`)
@@ -125,7 +125,7 @@ export class Septima {
       }
     }
 
-    visit(fileName)
+    // visit(fileName)
   }
 
   /**
