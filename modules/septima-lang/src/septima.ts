@@ -148,26 +148,4 @@ export class Septima {
     const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
     throw new Error(runtimeErrorMessage)
   }
-
-  private computeLoaded(mainFileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
-    const getAstOf = (fileName: string) => {
-      const ret = this.unitByFileName.get(fileName)
-      if (!ret) {
-        throw new Error(`file has not been loaded: ${fileName}`)
-      }
-      return ret
-    }
-
-    const { unit, sourceCode } = getAstOf(mainFileName)
-
-    const runtime = new Runtime(unit, verbosity, {}, fileName => getAstOf(fileName).unit, args)
-    const c = runtime.compute()
-
-    if (c.value) {
-      return c.value
-    }
-
-    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
-    throw new Error(runtimeErrorMessage)
-  }
 }
