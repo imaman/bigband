@@ -59,13 +59,11 @@ export class Septima {
 
   computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string): Result {
     this.loadSync(fileName, readFile)
-    const input = readFile(fileName)
-    const sourceCode = new SourceCode(input)
-    const value = this.computeImpl(sourceCode, 'quiet', {}, readFile, args)
+    const value = this.computeImpl(fileName, 'quiet', {}, readFile, args)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
-    // const {sourceCode} = this.unitByFileName.get(fileName) ?? failMe(`fileName not found: ${fileName}`)
+    const { sourceCode } = this.unitByFileName.get(fileName) ?? failMe(`fileName not found: ${fileName}`)
     return new ResultSinkImpl(value, sourceCode)
   }
 
@@ -122,30 +120,26 @@ export class Septima {
   }
 
   private computeImpl(
-    sourceCode: SourceCode,
+    fileName: string,
     verbosity: Verbosity,
     lib: Record<string, Value>,
     moduleReader: undefined | ((m: string) => string),
     args: Record<string, unknown>,
   ) {
-    const scanner = new Scanner(sourceCode)
-    const parser = new Parser(scanner)
-    const ast = parse(parser)
-
     const getAstOf = (fileName: string) => {
-      if (!moduleReader) {
-        throw new Error(`cannot read modules`)
-      }
-      return parse(moduleReader(fileName))
+      const { unit } = this.unitByFileName.get(fileName) ?? failMe(`file has not been loaded (file name: ${fileName})`)
+      return unit
     }
 
-    const runtime = new Runtime(ast, verbosity, lib, getAstOf, args)
+    const runtime = new Runtime(getAstOf(fileName), verbosity, lib, getAstOf, args)
     const c = runtime.compute()
 
     if (c.value) {
       return c.value
     }
 
+    const { sourceCode } =
+      this.unitByFileName.get(fileName) ?? failMe(`sourceCode object was not found (file name: ${fileName})`)
     const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
     throw new Error(runtimeErrorMessage)
   }
