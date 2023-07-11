@@ -8,7 +8,6 @@ import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
 import { SourceCode } from './source-code'
-import { Value } from './value'
 
 interface Options {
   /**
@@ -59,7 +58,7 @@ export class Septima {
 
   computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string): Result {
     this.loadSync(fileName, readFile)
-    const value = this.computeImpl(fileName, 'quiet', {}, args)
+    const value = this.computeImpl(fileName, 'quiet', args)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
@@ -124,19 +123,14 @@ export class Septima {
     return ret
   }
 
-  private computeImpl(
-    fileName: string,
-    verbosity: Verbosity,
-    lib: Record<string, Value>,
-    args: Record<string, unknown>,
-  ) {
+  private computeImpl(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
     const getAstOf = (importerPathFromSourceRoot: string | undefined, relativePath: string) => {
       const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
       const { unit } = this.unitByFileName.get(p) ?? failMe(`file has not been loaded (file name: ${fileName})`)
       return unit
     }
 
-    const runtime = new Runtime(getAstOf(undefined, fileName), verbosity, lib, getAstOf, args)
+    const runtime = new Runtime(getAstOf(undefined, fileName), verbosity, getAstOf, args)
     const c = runtime.compute()
 
     if (c.value) {

@@ -73,7 +73,6 @@ export class Runtime {
   constructor(
     private readonly root: AstNode,
     private readonly verbosity: Verbosity = 'quiet',
-    private readonly preimports: Record<string, Value>,
     private readonly getAstOf: (pathFromSourceRoot: string, relativePath: string) => Unit,
     private readonly args: Record<string, unknown>,
   ) {}
@@ -90,9 +89,6 @@ export class Runtime {
       lib = new SymbolFrame('args', { destination: Value.from(this.args) }, lib, 'INTERNAL')
     }
 
-    for (const [importName, importValue] of Object.entries(this.preimports)) {
-      lib = new SymbolFrame(importName, { destination: importValue }, lib, 'INTERNAL')
-    }
     return lib
   }
 
