@@ -54,12 +54,12 @@ export class Septima {
   constructor(private readonly sourceRoot = '') {}
 
   computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string): Result {
-    try {
-      this.loadSync(fileName, readFile)
-    } catch(e) {
-      console.log(`e=${e}`)
-      throw new Error(`L>61!!!! ${e}`)
-    }
+    // try {
+    //   this.loadSync(fileName, readFile)
+    // } catch(e) {
+    //   console.log(`e=${e}`)
+    //   throw new Error(`L>61!!!! ${e}`)
+    // }
     const input = readFile(fileName)
     const sourceCode = new SourceCode(input)
     const value = this.computeImpl(sourceCode, 'quiet', {}, readFile, args)
