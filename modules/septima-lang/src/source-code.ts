@@ -2,11 +2,7 @@ import { AstNode, span } from './ast-node'
 import { Location, Location2d, Span } from './location'
 
 export class SourceCode {
-  constructor(readonly input: string) {
-    if (input === undefined) {
-      throw new Error(`undefined!!!!`)
-    }
-  }
+  constructor(readonly input: string) {}
 
   formatTrace(trace: AstNode[]): string {
     const spacer = '  '

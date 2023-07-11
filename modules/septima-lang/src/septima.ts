@@ -1,7 +1,4 @@
-import * as path from 'path'
-
 import { Unit } from './ast-node'
-import { failMe } from './fail-me'
 import { Parser } from './parser'
 import { Result, ResultSink, ResultSinkImpl } from './result'
 import { Runtime, Verbosity } from './runtime'
@@ -49,88 +46,18 @@ export class Septima {
     shouldNeverHappen(res)
   }
 
-  private readonly unitByFileName = new Map<string, { unit: Unit; sourceCode: SourceCode }>()
+  constructor() {}
 
-  constructor(private readonly sourceRoot = '') {}
-
-  computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string): Result {
-    try {
-      this.loadSync(fileName, readFile)
-    } catch(e) {
-      console.log(`e=${e}`)
-      throw new Error(`L>61!!!! ${e}`)
-    }
-    const input = readFile(fileName)
+  computeModule(moduleName: string, moduleReader: (m: string) => string, args: Record<string, unknown>): Result {
+    const input = moduleReader(moduleName)
     const sourceCode = new SourceCode(input)
-    const value = this.computeImpl(sourceCode, 'quiet', {}, readFile, args)
+    const value = this.computeImpl(sourceCode, 'quiet', {}, moduleReader, args)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
-    // const {sourceCode} = this.unitByFileName.get(fileName) ?? failMe(`fileName not found: ${fileName}`)
     return new ResultSinkImpl(value, sourceCode)
   }
 
-  async load(fileName: string, readFile: (m: string) => Promise<string>): Promise<void> {
-    const visit = async (currFileName: string) => {
-      const fromSourceRoot = path.relative(this.sourceRoot, currFileName)
-
-      if (this.unitByFileName.has(fromSourceRoot)) {
-        return
-      }
-
-      const content = await readFile(fromSourceRoot)
-      const sourceCode = new SourceCode(content)
-      const scanner = new Scanner(sourceCode)
-      const parser = new Parser(scanner)
-      const unit = parse(parser)
-
-      this.unitByFileName.set(fromSourceRoot, { unit, sourceCode })
-
-      for (const at of unit.imports) {
-        const p = path.relative(fromSourceRoot, at.pathToImportFrom.text)
-        await visit(p)
-      }
-    }
-
-    await visit(fileName)
-  }
-
-  async loadSync(fileName: string, readFile: (m: string) => string) {
-    const visit = (currFileName: string) => {
-      console.log(`currFileName=${currFileName}`)
-      const fromSourceRoot = path.relative(this.sourceRoot, currFileName)
-      
-      if (this.unitByFileName.has(fromSourceRoot)) {
-        return
-      }
-      
-      const content = readFile(fromSourceRoot) ?? failMe(`content is undefined for ${currFileName} (fileName=${fileName}, fromSourceRoot=${fromSourceRoot}`)  
-      const sourceCode = new SourceCode(content)
-      const scanner = new Scanner(sourceCode)
-      const parser = new Parser(scanner)
-      console.log(`about to parse: ${fileName}`)
-      // console.log(`about to parse: ${fileName}: ${content}`)
-      const unit = parse(parser)
-
-      this.unitByFileName.set(fromSourceRoot, { unit, sourceCode })
-
-      for (const at of unit.imports) {
-        const a0 = fromSourceRoot
-        const a1 = at.pathToImportFrom.text
-        const a0a1 = path.join(path.dirname(a0), a1)
-        const p = path.relative(fromSourceRoot, a0a1)
-        // const p = path.relative(this.sourceRoot, a0a1)
-        console.log(JSON.stringify({a0, a1, a0a1, p}))
-        visit(p)
-      }
-    }
-
-    visit(fileName)
-  }
-
-  /**
-   * @deprecated
-   */
   compute(
     input: string,
     preimports: Record<string, string> = {},
@@ -176,28 +103,6 @@ export class Septima {
     }
 
     const runtime = new Runtime(ast, verbosity, lib, getAstOf, args)
-    const c = runtime.compute()
-
-    if (c.value) {
-      return c.value
-    }
-
-    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
-    throw new Error(runtimeErrorMessage)
-  }
-
-  private computeLoaded(mainFileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
-    const getAstOf = (fileName: string) => {
-      const ret = this.unitByFileName.get(fileName)
-      if (!ret) {
-        throw new Error(`file has not been loaded: ${fileName}`)
-      }
-      return ret
-    }
-
-    const { unit, sourceCode } = getAstOf(mainFileName)
-
-    const runtime = new Runtime(unit, verbosity, {}, fileName => getAstOf(fileName).unit, args)
     const c = runtime.compute()
 
     if (c.value) {
