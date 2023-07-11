@@ -24,7 +24,7 @@ function runSink(input: string) {
   return res
 }
 
-describe.skip('septima', () => {
+describe('septima', () => {
   test('basics', () => {
     expect(run(`5`)).toEqual(5)
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (1:3..5) 789`)
