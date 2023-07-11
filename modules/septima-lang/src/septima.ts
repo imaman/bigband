@@ -59,7 +59,7 @@ export class Septima {
 
   computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string): Result {
     this.loadSync(fileName, readFile)
-    const value = this.computeImpl(fileName, 'quiet', {}, readFile, args)
+    const value = this.computeImpl(fileName, 'quiet', {}, args)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
@@ -123,7 +123,6 @@ export class Septima {
     fileName: string,
     verbosity: Verbosity,
     lib: Record<string, Value>,
-    moduleReader: undefined | ((m: string) => string),
     args: Record<string, unknown>,
   ) {
     const getAstOf = (fileName: string) => {
