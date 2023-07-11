@@ -74,7 +74,7 @@ export class Runtime {
     private readonly root: AstNode,
     private readonly verbosity: Verbosity = 'quiet',
     private readonly preimports: Record<string, Value>,
-    private readonly getAstOf: (fileName: string) => Unit,
+    private readonly getAstOf: (pathFromSourceRoot: string, relativePath: string) => Unit,
     private readonly args: Record<string, unknown>,
   ) {}
 
@@ -131,8 +131,8 @@ export class Runtime {
     return ret
   }
 
-  private importDefinitions(pathToImportFrom: string): Value {
-    const ast = this.getAstOf(pathToImportFrom)
+  private importDefinitions(importer: string, relativePath: string): Value {
+    const ast = this.getAstOf(importer, relativePath)
     const exp = ast.expression
     const imports = ast.imports
     if (
@@ -160,6 +160,7 @@ export class Runtime {
         tag: 'unit',
         imports,
         expression: { tag: 'topLevelExpression', definitions: exp.definitions, computation: { tag: 'export*' } },
+        pathFromSourceRoot: importer,
       }
       return this.evalNode(unit, this.buildInitialSymbolTable(false))
     }
@@ -171,7 +172,7 @@ export class Runtime {
     if (ast.tag === 'unit') {
       let newTable = table
       for (const imp of ast.imports) {
-        const o = this.importDefinitions(imp.pathToImportFrom.text)
+        const o = this.importDefinitions(ast.pathFromSourceRoot, imp.pathToImportFrom.text)
         newTable = new SymbolFrame(imp.ident.t.text, { destination: o }, newTable, 'INTERNAL')
       }
       return this.evalNode(ast.expression, newTable)

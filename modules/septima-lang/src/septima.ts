@@ -101,12 +101,12 @@ export class Septima {
     // its way into "content" (e.g., due to reckless usage of "as" in the "readFile" function) which resulted in hard
     // to debug errors. Thus, we are being defensive here.
     if (content === undefined) {
-      throw new Error(`Cannot find file '${pathFromSourceRoot}'`)
+      throw new Error(`Cannot find file '${path.join(this.sourceRoot, pathFromSourceRoot)}'`)
     }
-    const sourceCode = new SourceCode(content)
+    const sourceCode = new SourceCode(content, pathFromSourceRoot)
     const scanner = new Scanner(sourceCode)
     const parser = new Parser(scanner)
-    const unit = parse(parser)
+    const unit = parser.parse()
 
     this.unitByFileName.set(pathFromSourceRoot, { unit, sourceCode })
 
@@ -130,12 +130,13 @@ export class Septima {
     lib: Record<string, Value>,
     args: Record<string, unknown>,
   ) {
-    const getAstOf = (fileName: string) => {
-      const { unit } = this.unitByFileName.get(fileName) ?? failMe(`file has not been loaded (file name: ${fileName})`)
+    const getAstOf = (importerPathFromSourceRoot: string | undefined, relativePath: string) => {
+      const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
+      const { unit } = this.unitByFileName.get(p) ?? failMe(`file has not been loaded (file name: ${fileName})`)
       return unit
     }
 
-    const runtime = new Runtime(getAstOf(fileName), verbosity, lib, getAstOf, args)
+    const runtime = new Runtime(getAstOf(undefined, fileName), verbosity, lib, getAstOf, args)
     const c = runtime.compute()
 
     if (c.value) {
@@ -169,15 +170,4 @@ export class Septima {
     const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
     throw new Error(runtimeErrorMessage)
   }
-}
-
-/**
- * Parses the given input and returns an AST.
- * @param arg the source code to parse (string) or a Parser object (configured with the source code to parse).
- * @returns
- */
-export function parse(arg: string | Parser): Unit {
-  const parser = typeof arg === 'string' ? new Parser(new Scanner(new SourceCode(arg))) : arg
-  const ast = parser.parse()
-  return ast
 }

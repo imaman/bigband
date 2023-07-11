@@ -1,5 +1,13 @@
 import { show } from '../src/ast-node'
-import { parse } from '../src/septima'
+import { Parser } from '../src/parser'
+import { Scanner } from '../src/scanner'
+import { SourceCode } from '../src/source-code'
+
+function parse(arg: string) {
+  const parser = new Parser(new Scanner(new SourceCode(arg, '<test-file>')))
+  const ast = parser.parse()
+  return ast
+}
 
 describe('parser', () => {
   test('show()', () => {
