@@ -30,6 +30,7 @@ describe('septima-compute-module', () => {
       `Cannot find file 'b'`,
     )
   })
+  test.todo(`file not found error should include an import stack (a-la node's "require stack")`)
   test('errors if the imported definition is not qualified with "export"', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `let eight = 8; {}` })).toThrowError(
       `Evaluated to sink: at (1:27..33) b.eight`,
