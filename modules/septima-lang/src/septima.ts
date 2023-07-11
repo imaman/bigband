@@ -68,28 +68,18 @@ export class Septima {
   }
 
   async load(fileName: string, readFile: (m: string) => Promise<string>): Promise<void> {
-    const visit = async (currFileName: string) => {
-      const fromSourceRoot = path.relative(this.sourceRoot, currFileName)
+    const fromSourceRoot = path.relative(this.sourceRoot, fileName)
 
-      if (this.unitByFileName.has(fromSourceRoot)) {
-        return
-      }
-
-      const content = await readFile(fromSourceRoot)
-      const sourceCode = new SourceCode(content)
-      const scanner = new Scanner(sourceCode)
-      const parser = new Parser(scanner)
-      const unit = parse(parser)
-
-      this.unitByFileName.set(fromSourceRoot, { unit, sourceCode })
-
-      for (const at of unit.imports) {
-        const p = path.relative(fromSourceRoot, at.pathToImportFrom.text)
-        await visit(p)
-      }
+    if (this.unitByFileName.has(fromSourceRoot)) {
+      return
     }
 
-    await visit(fileName)
+    const content = await readFile(fromSourceRoot)
+
+    const pathsToLoad = this.loadFile(fromSourceRoot, content)
+    for (const p of pathsToLoad) {
+      await this.load(p, readFile)
+    }
   }
 
   loadSync(fileName: string, readFile: (m: string) => string) {
