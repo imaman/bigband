@@ -54,12 +54,7 @@ export class Septima {
   constructor(private readonly sourceRoot = '') {}
 
   computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string): Result {
-    try {
-      this.loadSync(fileName, readFile)
-    } catch(e) {
-      console.log(`e=${e}`)
-      throw new Error(`L>61!!!! ${e}`)
-    }
+    this.loadSync(fileName, readFile)
     const input = readFile(fileName)
     const sourceCode = new SourceCode(input)
     const value = this.computeImpl(sourceCode, 'quiet', {}, readFile, args)
@@ -95,21 +90,20 @@ export class Septima {
     await visit(fileName)
   }
 
-  async loadSync(fileName: string, readFile: (m: string) => string) {
+  loadSync(fileName: string, readFile: (m: string) => string) {
     const currFileName = fileName
-    console.log(`currFileName=${currFileName}`)
     const fromSourceRoot = path.relative(this.sourceRoot, currFileName)
-    
+
     if (this.unitByFileName.has(fromSourceRoot)) {
       return
     }
-    
-    const content = readFile(fromSourceRoot) ?? failMe(`content is undefined for ${currFileName} (fileName=${fileName}, fromSourceRoot=${fromSourceRoot}`)  
+
+    const content =
+      readFile(fromSourceRoot) ??
+      failMe(`content is undefined for ${currFileName} (fileName=${fileName}, fromSourceRoot=${fromSourceRoot}`)
     const sourceCode = new SourceCode(content)
     const scanner = new Scanner(sourceCode)
     const parser = new Parser(scanner)
-    console.log(`about to parse: ${fileName}`)
-    // console.log(`about to parse: ${fileName}: ${content}`)
     const unit = parse(parser)
 
     this.unitByFileName.set(fromSourceRoot, { unit, sourceCode })
@@ -118,9 +112,7 @@ export class Septima {
       const a0 = fromSourceRoot
       const a1 = at.pathToImportFrom.text
       const a0a1 = path.join(path.dirname(a0), a1)
-      const p = path.relative(fromSourceRoot, a0a1)
-      // const p = path.relative(this.sourceRoot, a0a1)
-      console.log(JSON.stringify({a0, a1, a0a1, p}))
+      const p = path.relative(this.sourceRoot, a0a1)
       this.loadSync(p, readFile)
     }
   }
