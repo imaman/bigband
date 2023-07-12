@@ -79,6 +79,27 @@ describe('septima-compute-module', () => {
       `resolved path (d1/q) is pointing outside of source root (d1/d2)`,
     )
   })
+  describe('disallow absolute paths', () => {
+    test('for specifying the main file', () => {
+      expect(() => run('/q', { 'd1/d2/q': `300` }, {}, 'd1/d2')).toThrowError(
+        `An absolute path is not allowed for referencing a septima source file (got: /q)`,
+      )
+    })
+    test('for specifying an imported file', () => {
+      expect(() => run('q', { 'd1/d2/q': 'import * as r from "/d1/d2/r"; 300' }, {}, 'd1/d2')).toThrowError(
+        `An absolute path is not allowed for referencing a septima source file (got: /d1/d2/r)`,
+      )
+      expect(() => run('q', { 'd1/d2/q': 'import * as r from "/r"; 300' }, {}, 'd1/d2')).toThrowError(
+        `An absolute path is not allowed for referencing a septima source file (got: /r)`,
+      )
+      expect(() => run('q', { q: 'import * as r from "/r"; 300' }, {}, '')).toThrowError(
+        `An absolute path is not allowed for referencing a septima source file (got: /r)`,
+      )
+      expect(() =>
+        run('q', { q: 'import * as r from "./r"; r.foo', r: 'import * as s from "/s"' }, {}, ''),
+      ).toThrowError(`An absolute path is not allowed for referencing a septima source file (got: /s)`)
+    })
+  })
   test('provides a clear error message when a file is not found', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight` })).toThrowError(`Cannot find file 'b'`)
   })

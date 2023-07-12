@@ -110,6 +110,9 @@ export class Septima {
   }
 
   private getPathFromSourceRoot(startingPoint: string | undefined, relativePath: string) {
+    if (path.isAbsolute(relativePath)) {
+      throw new Error(`An absolute path is not allowed for referencing a septima source file (got: ${relativePath})`)
+    }
     const joined = startingPoint === undefined ? relativePath : path.join(path.dirname(startingPoint), relativePath)
     const ret = path.normalize(joined)
     if (ret.startsWith('.')) {
