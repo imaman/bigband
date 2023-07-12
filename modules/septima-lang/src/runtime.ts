@@ -73,7 +73,10 @@ export class Runtime {
   constructor(
     private readonly root: AstNode,
     private readonly verbosity: Verbosity = 'quiet',
-    private readonly getAstOf: (pathFromSourceRoot: string, relativePath: string) => Unit,
+    private readonly getAstOf: (
+      pathFromSourceRoot: string,
+      relativePath: string,
+    ) => { unit: Unit; pathFromSourceRoot: string },
     private readonly args: Record<string, unknown>,
   ) {}
 
@@ -128,9 +131,9 @@ export class Runtime {
   }
 
   private importDefinitions(importer: string, relativePath: string): Value {
-    const ast = this.getAstOf(importer, relativePath)
-    const exp = ast.expression
-    const imports = ast.imports
+    const { unit, pathFromSourceRoot } = this.getAstOf(importer, relativePath)
+    const exp = unit.expression
+    const imports = unit.imports
     if (
       exp.tag === 'arrayLiteral' ||
       exp.tag === 'binaryOperator' ||
@@ -156,7 +159,7 @@ export class Runtime {
         tag: 'unit',
         imports,
         expression: { tag: 'topLevelExpression', definitions: exp.definitions, computation: { tag: 'export*' } },
-        pathFromSourceRoot: importer,
+        pathFromSourceRoot,
       }
       return this.evalNode(unit, this.buildInitialSymbolTable(false))
     }
