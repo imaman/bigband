@@ -30,41 +30,6 @@ describe('septima-compute-module', () => {
   test('can use exported definitions from another module', () => {
     expect(run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `export let eight = 8; {}` })).toEqual(11)
   })
-  test('allows specifying a custom source root', () => {
-    expect(
-      run('a', { 'p/q/r/a': `import * as b from 'b'; 3+b.eight`, 'p/q/r/b': `export let eight = 8; {}` }, {}, 'p/q/r'),
-    ).toEqual(11)
-  })
-  test('provides a clear error message if source code was not found', () => {
-    expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, c: `export let eight = 8; {}` })).toThrowError(
-      `Cannot find file 'b'`,
-    )
-    expect(() => run('a', { 'p/q/r/a': `import * as b from 's/b'; 3+b.eight` }, {}, 'p/q/r')).toThrowError(
-      `Cannot find file 'p/q/r/s/b'`,
-    )
-  })
-  test.todo(`file not found error should include an import stack (a-la node's "require stack")`)
-  test('allows importing from the same directory via a relative path', () => {
-    expect(run('s', { s: `import * as t from "./t"; t.ten+5`, t: `export let ten = 10` }, {})).toEqual(15)
-  })
-  test('allows importing from a sub directories', () => {
-    expect(run('q', { q: `import * as t from "./r/s/t"; t.ten+5`, 'r/s/t': `export let ten = 10` }, {})).toEqual(15)
-  })
-  test('allows a relative path to climb up as long as it is below source root', () => {
-    expect(
-      run(
-        'q/r/s',
-        { 'd1/d2/q/r/s': `import * as t from "../t"; t.ten+5`, 'd1/d2/q/t': `export let ten = 10` },
-        {},
-        'd1/d2',
-      ),
-    ).toEqual(15)
-  })
-  test('errors if a file tries to import a file outside of the source root tree', () => {
-    expect(() => run('q', { 'd1/d2/q': `import * as r from "../r"; 5` }, {}, 'd1/d2')).toThrowError(
-      `resolved path (d1/r) is pointing outside of source root (d1/d2)`,
-    )
-  })
   test('errors if the imported definition is not qualified with "export"', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `let eight = 8; {}` })).toThrowError(
       `Evaluated to sink: at (1:27..33) b.eight`,
@@ -75,6 +40,49 @@ describe('septima-compute-module', () => {
       'Expected a string literal at (1:22..24) 500',
     )
   })
+  test('allows specifying a custom source root', () => {
+    expect(
+      run('a', { 'p/q/r/a': `import * as b from 'b'; 3+b.eight`, 'p/q/r/b': `export let eight = 8; {}` }, {}, 'p/q/r'),
+    ).toEqual(11)
+  })
+  test('allows importing from the same directory via a relative path', () => {
+    expect(run('s', { s: `import * as t from "./t"; t.ten+5`, t: `export let ten = 10` }, {})).toEqual(15)
+  })
+  test('allows importing from sub directories', () => {
+    expect(run('q', { q: `import * as t from "./r/s/t"; t.ten+5`, 'r/s/t': `export let ten = 10` }, {})).toEqual(15)
+    expect(
+      run('q', {
+        q: `import * as t from './r/s/t'; t.ten * t.ten`,
+        'r/s/t': `import * as f from './d/e/f'; export let ten = f.five*2`,
+        'r/s/d/e/f': `export let five = 5`,
+      }),
+    ).toEqual(100)
+  })
+  test('allows a relative path to climb up as long as it is below source root', () => {
+    expect(
+      run(
+        'p/q/r/s',
+        { 'd1/d2/p/q/r/s': `import * as t from "../../t"; t.ten+5`, 'd1/d2/p/t': `export let ten = 10` },
+        {},
+        'd1/d2',
+      ),
+    ).toEqual(15)
+  })
+  test('errors if a file tries to import a(nother) file which is outside of the source root tree', () => {
+    expect(() => run('q', { 'd1/d2/q': `import * as r from "../r"; 5` }, {}, 'd1/d2')).toThrowError(
+      `resolved path (d1/r) is pointing outside of source root (d1/d2)`,
+    )
+  })
+  test.todo('cannot go up above the sourceroot with the main file path')
+  test('provides a clear erorr message when a file is not found', () => {
+    expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight` })).toThrowError(`Cannot find file 'b'`)
+  })
+  test('the file-not-found error message includes the resolved path (i.e., with the source root)', () => {
+    expect(() => run('a', { 'p/q/r/a': `import * as b from 's/b'; 3+b.eight` }, {}, 'p/q/r')).toThrowError(
+      `Cannot find file 'p/q/r/s/b'`,
+    )
+  })
+  test.todo(`file not found error should include an import stack (a-la node's "require stack")`)
   test('support the passing of args into the runtime', () => {
     expect(run('a', { a: `args.x * args.y` }, { x: 5, y: 9 })).toEqual(45)
   })
