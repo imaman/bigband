@@ -17,7 +17,7 @@ export type Result =
     }
   | ResultSink
 
-export class ResultSinkImpl {
+export class ResultSinkImpl implements ResultSink {
   readonly tag = 'sink'
   constructor(private readonly sink: Value, private readonly sourceCode: SourceCode) {}
 

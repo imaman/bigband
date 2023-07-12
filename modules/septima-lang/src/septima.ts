@@ -61,7 +61,7 @@ export class Septima {
     return this.getExecutableFor(fileName).execute(args)
   }
 
-  async load(fileName: string, readFile: (m: string) => Promise<string|undefined>): Promise<void> {
+  async load(fileName: string, readFile: (m: string) => Promise<string | undefined>): Promise<void> {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
 
     if (this.unitByFileName.has(pathFromSourceRoot)) {
@@ -75,7 +75,7 @@ export class Septima {
       await this.load(p, readFile)
     }
   }
-  
+
   private loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
     if (this.unitByFileName.has(pathFromSourceRoot)) {
@@ -83,7 +83,7 @@ export class Septima {
     }
 
     const content = readFile(path.join(this.sourceRoot, pathFromSourceRoot))
-    
+
     const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
     for (const p of pathsToLoad) {
       this.loadSync(p, readFile)
@@ -94,20 +94,23 @@ export class Septima {
     await this.load(fileName, readFile)
     return this.getExecutableFor(fileName)
   }
-  
-  getExecutableFor(fileName: string) {    
+
+  getExecutableFor(fileName: string) {
     // Verify that a unit for the main file exists
     this.unitOf(undefined, fileName)
-    
+
     return {
       execute: (args: Record<string, unknown>) => {
         const value = this.computeImpl(fileName, 'quiet', args)
+        let ret: Result
         if (!value.isSink()) {
-          return { value: value.export(), tag: 'ok' }
+          ret = { value: value.export(), tag: 'ok' }
+        } else {
+          const { sourceCode } = this.unitByFileName.get(fileName) ?? failMe(`fileName not found: ${fileName}`)
+          ret = new ResultSinkImpl(value, sourceCode)
         }
-        const { sourceCode } = this.unitByFileName.get(fileName) ?? failMe(`fileName not found: ${fileName}`)
-        return new ResultSinkImpl(value, sourceCode)    
-      }
+        return ret
+      },
     }
   }
 
