@@ -73,10 +73,7 @@ export class Runtime {
   constructor(
     private readonly root: AstNode,
     private readonly verbosity: Verbosity = 'quiet',
-    private readonly getAstOf: (
-      pathFromSourceRoot: string,
-      relativePath: string,
-    ) => { unit: Unit; pathFromSourceRoot: string },
+    private readonly getAstOf: (pathFromSourceRoot: string, relativePath: string) => Unit,
     private readonly args: Record<string, unknown>,
   ) {}
 
@@ -131,7 +128,7 @@ export class Runtime {
   }
 
   private importDefinitions(importer: string, relativePath: string): Value {
-    const { unit, pathFromSourceRoot } = this.getAstOf(importer, relativePath)
+    const unit = this.getAstOf(importer, relativePath)
     const exp = unit.expression
     const imports = unit.imports
     if (
@@ -155,13 +152,13 @@ export class Runtime {
     }
 
     if (exp.tag === 'topLevelExpression') {
-      const unit: AstNode = {
+      const subUnit: AstNode = {
         tag: 'unit',
         imports,
         expression: { tag: 'topLevelExpression', definitions: exp.definitions, computation: { tag: 'export*' } },
-        pathFromSourceRoot,
+        pathFromSourceRoot: unit.pathFromSourceRoot,
       }
-      return this.evalNode(unit, this.buildInitialSymbolTable(false))
+      return this.evalNode(subUnit, this.buildInitialSymbolTable(false))
     }
 
     shouldNeverHappen(exp)

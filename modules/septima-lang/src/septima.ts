@@ -127,10 +127,10 @@ export class Septima {
     const getAstOf = (importerPathFromSourceRoot: string | undefined, relativePath: string) => {
       const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
       const { unit } = this.unitByFileName.get(p) ?? failMe(`file has not been loaded (file name: ${p})`)
-      return { unit, pathFromSourceRoot: p }
+      return unit
     }
 
-    const runtime = new Runtime(getAstOf(undefined, fileName).unit, verbosity, getAstOf, args)
+    const runtime = new Runtime(getAstOf(undefined, fileName), verbosity, getAstOf, args)
     const c = runtime.compute()
 
     if (c.value) {
