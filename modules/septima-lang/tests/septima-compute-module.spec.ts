@@ -40,7 +40,6 @@ describe('septima-compute-module', () => {
       'Expected a string literal at (1:22..24) 500',
     )
   })
-  test.todo('load async')
   test('allows specifying a custom source root', () => {
     expect(
       run('a', { 'p/q/r/a': `import * as b from 'b'; 3+b.eight`, 'p/q/r/b': `export let eight = 8; {}` }, {}, 'p/q/r'),
