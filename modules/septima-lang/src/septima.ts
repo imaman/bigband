@@ -123,7 +123,8 @@ export class Septima {
   private computeImpl(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
     const getAstOf = (importerPathFromSourceRoot: string | undefined, relativePath: string) => {
       const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
-      const { unit } = this.unitByFileName.get(p) ?? failMe(`file has not been loaded (file name: ${p})`)
+      const { unit } =
+        this.unitByFileName.get(p) ?? failMe(`Encluntered a file which has not been loaded (file name: ${p})`)
       return unit
     }
 
