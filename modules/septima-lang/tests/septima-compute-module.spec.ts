@@ -59,7 +59,7 @@ describe('septima-compute-module', () => {
       }),
     ).toEqual(100)
   })
-  test('allows a relative path to climb up as long as it is below source root', () => {
+  test('allows a relative path to climb up (as long as it is below source root)', () => {
     expect(
       run(
         'p/q/r/s',
@@ -79,7 +79,7 @@ describe('septima-compute-module', () => {
       `resolved path (d1/q) is pointing outside of source root (d1/d2)`,
     )
   })
-  test('provides a clear erorr message when a file is not found', () => {
+  test('provides a clear error message when a file is not found', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight` })).toThrowError(`Cannot find file 'b'`)
   })
   test('the file-not-found error message includes the resolved path (i.e., with the source root)', () => {
