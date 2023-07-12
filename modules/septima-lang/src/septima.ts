@@ -79,7 +79,7 @@ export class Septima {
     }
   }
 
-  private loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
+  private loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined, acc: string[]) {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
     if (this.unitByFileName.has(pathFromSourceRoot)) {
       return
@@ -88,9 +88,7 @@ export class Septima {
     const content = readFile(path.join(this.sourceRoot, pathFromSourceRoot))
 
     const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
-    for (const p of pathsToLoad) {
-      this.loadSync(p, readFile)
-    }
+    acc.push(...pathsToLoad)
   }
 
   async compile(fileName: string, readFile: (resolvedPath: string) => Promise<string | undefined>) {
@@ -99,8 +97,20 @@ export class Septima {
   }
 
   compileSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
-    this.loadSync(fileName, readFile)
+    const acc = [fileName]
+    this.pumpSync(acc, readFile)
     return this.getExecutableFor(fileName)
+  }
+
+  private pumpSync(acc: string[], readFile: (resolvedPath: string) => string | undefined) {
+    while (true) {
+      const curr = acc.pop()
+      if (!curr) {
+        return
+      }
+
+      this.loadSync(curr, readFile, acc)
+    }
   }
 
   getExecutableFor(fileName: string): Executable {
