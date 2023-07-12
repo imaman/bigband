@@ -127,10 +127,9 @@ export class Runtime {
     return ret
   }
 
-  private importDefinitions(importer: string, relativePath: string): Value {
-    const unit = this.getAstOf(importer, relativePath)
-    const exp = unit.expression
-    const imports = unit.imports
+  private importDefinitions(importerAsPathFromSourceRoot: string, relativePath: string): Value {
+    const importee = this.getAstOf(importerAsPathFromSourceRoot, relativePath)
+    const exp = importee.expression
     if (
       exp.tag === 'arrayLiteral' ||
       exp.tag === 'binaryOperator' ||
@@ -152,13 +151,16 @@ export class Runtime {
     }
 
     if (exp.tag === 'topLevelExpression') {
-      const subUnit: AstNode = {
+      // Construct a syntehtic unit which is similar to importedUnit but override its expression such that it bundles
+      // its definition in a single object and evaluate it. This is the trick that allows the importer to gain access
+      // to the importee's definition.
+      const exporStarUnit: AstNode = {
         tag: 'unit',
-        imports,
+        imports: importee.imports,
         expression: { tag: 'topLevelExpression', definitions: exp.definitions, computation: { tag: 'export*' } },
-        pathFromSourceRoot: unit.pathFromSourceRoot,
+        pathFromSourceRoot: importee.pathFromSourceRoot,
       }
-      return this.evalNode(subUnit, this.buildInitialSymbolTable(false))
+      return this.evalNode(exporStarUnit, this.buildInitialSymbolTable(false))
     }
 
     shouldNeverHappen(exp)
