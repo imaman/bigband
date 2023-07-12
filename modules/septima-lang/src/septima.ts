@@ -89,19 +89,13 @@ export class Septima {
 
   private loadSync(fileName: string, readFile: SyncCodeReader, acc: string[]) {
     const p = this.toResolvedPath(fileName)
-    if (!p) {
-      return
-    }
-    const content = readFile(p)
+    const content = p && readFile(p)
     this.loadFileContent(p, content, acc)
   }
 
   private async load(fileName: string, readFile: CodeReader, acc: string[]): Promise<void> {
     const p = this.toResolvedPath(fileName)
-    if (!p) {
-      return
-    }
-    const content = await readFile(p)
+    const content = p && (await readFile(p))
     this.loadFileContent(p, content, acc)
   }
 
@@ -146,7 +140,10 @@ export class Septima {
     }
   }
 
-  private loadFileContent(resolvedPath: string, content: string | undefined, acc: string[]) {
+  private loadFileContent(resolvedPath: string | undefined, content: string | undefined, acc: string[]) {
+    if (resolvedPath === undefined) {
+      return
+    }
     const pathFromSourceRoot = path.relative(this.sourceRoot, resolvedPath)
     if (content === undefined) {
       throw new Error(`Cannot find file '${path.join(this.sourceRoot, pathFromSourceRoot)}'`)
