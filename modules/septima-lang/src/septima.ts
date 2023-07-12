@@ -79,24 +79,30 @@ export class Septima {
     return this.getExecutableFor(fileName)
   }
 
-  private loadSync(fileName: string, readFile: SyncCodeReader, acc: string[]) {
+  private foo(fileName: string) {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
     if (this.unitByFileName.has(pathFromSourceRoot)) {
+      return undefined
+    }
+    return path.join(this.sourceRoot, pathFromSourceRoot)
+  }
+
+  private loadSync(fileName: string, readFile: SyncCodeReader, acc: string[]) {
+    const p = this.foo(fileName)
+    if (!p) {
       return
     }
-
-    const content = readFile(path.join(this.sourceRoot, pathFromSourceRoot))
-    this.loadFileContent(pathFromSourceRoot, content, acc)
+    const content = readFile(p)
+    this.loadFileContent(path.relative(this.sourceRoot, p), content, acc)
   }
 
   private async load(fileName: string, readFile: CodeReader, acc: string[]): Promise<void> {
-    const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
-    if (this.unitByFileName.has(pathFromSourceRoot)) {
+    const p = this.foo(fileName)
+    if (!p) {
       return
     }
-
-    const content = await readFile(path.join(this.sourceRoot, pathFromSourceRoot))
-    this.loadFileContent(pathFromSourceRoot, content, acc)
+    const content = await readFile(p)
+    this.loadFileContent(path.relative(this.sourceRoot, p), content, acc)
   }
 
   private pumpSync(acc: string[], readFile: SyncCodeReader) {
