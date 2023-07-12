@@ -1,17 +1,8 @@
-import { Septima } from '../src/septima'
+import { Executable, Septima } from '../src/septima'
 import { shouldNeverHappen } from '../src/should-never-happen'
 
-/**
- * Runs a Septima program for testing purposes. Throws an error If the program evaluated to `sink`.
- */
-function run(
-  mainFileName: string,
-  inputs: Record<string, string>,
-  args: Record<string, unknown> = {},
-  sourceRoot = '',
-) {
-  const septima = new Septima(sourceRoot)
-  const res = septima.computeModule(mainFileName, args, (m: string) => inputs[m])
+function runExecutable(executable: Executable, args: Record<string, unknown>) {
+  const res = executable.execute(args)
   if (res.tag === 'ok') {
     return res.value
   }
@@ -22,26 +13,31 @@ function run(
 
   shouldNeverHappen(res)
 }
-
-function runPromise(
+/**
+ * Runs a Septima program for testing purposes. Throws an error If the program evaluated to `sink`.
+ */
+function run(
   mainFileName: string,
   inputs: Record<string, string>,
   args: Record<string, unknown> = {},
   sourceRoot = '',
 ) {
   const septima = new Septima(sourceRoot)
-  septima.load(mainFileName, (m: string) => Promise.resolve(inputs[m]))
+  return runExecutable(
+    septima.compileSync(mainFileName, (m: string) => inputs[m]),
+    args,
+  )
+}
 
-  const res = septima.computeModule(mainFileName, args, (m: string) => Promise.resolve(inputs[m]))
-  if (res.tag === 'ok') {
-    return res.value
-  }
-
-  if (res.tag === 'sink') {
-    throw new Error(res.message)
-  }
-
-  shouldNeverHappen(res)
+async function runPromise(
+  mainFileName: string,
+  inputs: Record<string, string>,
+  args: Record<string, unknown> = {},
+  sourceRoot = '',
+) {
+  const septima = new Septima(sourceRoot)
+  const executable = await septima.compile(mainFileName, (m: string) => Promise.resolve(inputs[m]))
+  return runExecutable(executable, args)
 }
 
 describe('septima-compute-module', () => {
@@ -136,5 +132,39 @@ describe('septima-compute-module', () => {
     expect(() =>
       run('a', { a: `import * as b from 'b'; args.x + '_' + b.foo`, b: `let foo = args.x ?? 'N/A'; {}` }, { x: 'Red' }),
     ).toThrowError(/Symbol args was not found when evaluating/)
+  })
+  describe('async compilation', () => {
+    test('can use exported definitions from another module', async () => {
+      expect(await runPromise('a', { a: `import * as b from 'b'; 3+b.eight`, b: `export let eight = 8; {}` })).toEqual(
+        11,
+      )
+    })
+    test('allows specifying a custom source root', async () => {
+      expect(
+        await runPromise(
+          'a',
+          { 'p/q/r/a': `import * as b from 'b'; 3+b.eight`, 'p/q/r/b': `export let eight = 8; {}` },
+          {},
+          'p/q/r',
+        ),
+      ).toEqual(11)
+    })
+    test('allows importing from the same directory via a relative path', async () => {
+      expect(await runPromise('s', { s: `import * as t from "./t"; t.ten+5`, t: `export let ten = 10` }, {})).toEqual(
+        15,
+      )
+    })
+    test('allows importing from sub directories', async () => {
+      expect(
+        await runPromise('q', { q: `import * as t from "./r/s/t"; t.ten+5`, 'r/s/t': `export let ten = 10` }, {}),
+      ).toEqual(15)
+      expect(
+        await runPromise('q', {
+          q: `import * as t from './r/s/t'; t.ten * t.ten`,
+          'r/s/t': `import * as f from './d/e/f'; export let ten = f.five*2`,
+          'r/s/d/e/f': `export let five = 5`,
+        }),
+      ).toEqual(100)
+    })
   })
 })

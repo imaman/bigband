@@ -18,6 +18,10 @@ interface Options {
   onSink?: (res: ResultSink) => unknown
 }
 
+export interface Executable {
+  execute(args: Record<string, unknown>): Result
+}
+
 export class Septima {
   /**
    * Runs a Septima program and returns the value it evaluates to. If it evaluates to `sink`, returns the value computed
@@ -99,7 +103,7 @@ export class Septima {
     return this.getExecutableFor(fileName)
   }
 
-  getExecutableFor(fileName: string) {
+  getExecutableFor(fileName: string): Executable {
     // Verify that a unit for the main file exists
     this.unitOf(undefined, fileName)
 
