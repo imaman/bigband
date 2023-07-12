@@ -40,6 +40,7 @@ describe('septima-compute-module', () => {
       'Expected a string literal at (1:22..24) 500',
     )
   })
+  test.todo('load async')
   test('allows specifying a custom source root', () => {
     expect(
       run('a', { 'p/q/r/a': `import * as b from 'b'; 3+b.eight`, 'p/q/r/b': `export let eight = 8; {}` }, {}, 'p/q/r'),
@@ -73,7 +74,11 @@ describe('septima-compute-module', () => {
       `resolved path (d1/r) is pointing outside of source root (d1/d2)`,
     )
   })
-  test.todo('cannot go up above the sourceroot with the main file path')
+  test('errors if the main file is outside of the source root tree', () => {
+    expect(() => run('../q', { 'd1/q': `300` }, {}, 'd1/d2')).toThrowError(
+      `resolved path (d1/q) is pointing outside of source root (d1/d2)`,
+    )
+  })
   test('provides a clear erorr message when a file is not found', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight` })).toThrowError(`Cannot find file 'b'`)
   })
