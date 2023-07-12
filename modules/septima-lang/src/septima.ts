@@ -58,7 +58,7 @@ export class Septima {
 
   computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string | undefined): Result {
     this.loadSync(fileName, readFile)
-    this.getExecutableFor(fileName).execute(args)
+    return this.getExecutableFor(fileName).execute(args)
   }
 
   async load(fileName: string, readFile: (m: string) => Promise<string|undefined>): Promise<void> {
