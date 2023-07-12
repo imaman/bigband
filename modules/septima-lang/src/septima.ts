@@ -161,9 +161,9 @@ export class Septima {
   // loadSync() need to be kept in sync with load(), ditto pumpSync() w/ pump(). There is deep testing coverage for the
   // sync variant but only partial coverage for the async variant.
   // An extra effort was taken in order to reduce the duplication between the two variants. This attempt achieved its
-  // goal (to some extent) but resulted in a somewhat unnatural code (like using an external pump algorithm instead of
-  // a plain recursion). Perhaps a better approach is to have a contract test and run it twice thus equally testing
-  // the two variants.
+  // goal (to some extent) but resulted in a somewhat unnatural code (like using an "acc" parameter to collect items,
+  // instead of returning an array, having an external "pump" logic instead of a plain recursion). Perhaps a better
+  // approach is to have a contract test and run it twice thus equally testing the two variants.
 
   private loadSync(fileName: string, readFile: SyncCodeReader, acc: string[]) {
     const p = this.computeResolvedPathToRead(fileName)
