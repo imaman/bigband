@@ -64,6 +64,28 @@ export class Septima {
     return this.compileSync(fileName, readFile).execute(args)
   }
 
+  compileSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
+    const acc = [fileName]
+    this.pumpSync(acc, readFile)
+    return this.getExecutableFor(fileName)
+  }
+
+  async compile(fileName: string, readFile: (resolvedPath: string) => Promise<string | undefined>) {
+    await this.load(fileName, readFile)
+    return this.getExecutableFor(fileName)
+  }
+
+  private loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined, acc: string[]) {
+    const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
+    if (this.unitByFileName.has(pathFromSourceRoot)) {
+      return
+    }
+
+    const content = readFile(path.join(this.sourceRoot, pathFromSourceRoot))
+
+    this.loadFileContent(pathFromSourceRoot, content, acc)
+  }
+
   async load(fileName: string, readFile: (m: string) => Promise<string | undefined>): Promise<void> {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
 
@@ -78,28 +100,6 @@ export class Septima {
     for (const p of acc) {
       await this.load(p, readFile)
     }
-  }
-
-  private loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined, acc: string[]) {
-    const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
-    if (this.unitByFileName.has(pathFromSourceRoot)) {
-      return
-    }
-
-    const content = readFile(path.join(this.sourceRoot, pathFromSourceRoot))
-
-    this.loadFileContent(pathFromSourceRoot, content, acc)
-  }
-
-  async compile(fileName: string, readFile: (resolvedPath: string) => Promise<string | undefined>) {
-    await this.load(fileName, readFile)
-    return this.getExecutableFor(fileName)
-  }
-
-  compileSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
-    const acc = [fileName]
-    this.pumpSync(acc, readFile)
-    return this.getExecutableFor(fileName)
   }
 
   private pumpSync(acc: string[], readFile: (resolvedPath: string) => string | undefined) {
