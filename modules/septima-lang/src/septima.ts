@@ -74,7 +74,8 @@ export class Septima {
   }
 
   async compile(fileName: string, readFile: CodeReader) {
-    await this.load(fileName, readFile)
+    const acc = [fileName]
+    await this.pump(acc, readFile)
     return this.getExecutableFor(fileName)
   }
 
@@ -85,24 +86,17 @@ export class Septima {
     }
 
     const content = readFile(path.join(this.sourceRoot, pathFromSourceRoot))
-
     this.loadFileContent(pathFromSourceRoot, content, acc)
   }
 
-  async load(fileName: string, readFile: CodeReader): Promise<void> {
+  private async load(fileName: string, readFile: CodeReader, acc: string[]): Promise<void> {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
-
     if (this.unitByFileName.has(pathFromSourceRoot)) {
       return
     }
 
     const content = await readFile(path.join(this.sourceRoot, pathFromSourceRoot))
-
-    const acc: string[] = []
     this.loadFileContent(pathFromSourceRoot, content, acc)
-    for (const p of acc) {
-      await this.load(p, readFile)
-    }
   }
 
   private pumpSync(acc: string[], readFile: SyncCodeReader) {
@@ -113,6 +107,17 @@ export class Septima {
       }
 
       this.loadSync(curr, readFile, acc)
+    }
+  }
+
+  private async pump(acc: string[], readFile: CodeReader) {
+    while (true) {
+      const curr = acc.pop()
+      if (!curr) {
+        return
+      }
+
+      await this.load(curr, readFile, acc)
     }
   }
 
