@@ -56,7 +56,7 @@ export class Septima {
 
   constructor(private readonly sourceRoot = '') {}
 
-  computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string): Result {
+  computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string | undefined): Result {
     this.loadSync(fileName, readFile)
     const value = this.computeImpl(fileName, 'quiet', args)
     if (!value.isSink()) {
@@ -81,7 +81,7 @@ export class Septima {
     }
   }
 
-  loadSync(fileName: string, readFile: (m: string) => string) {
+  loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
     if (this.unitByFileName.has(pathFromSourceRoot)) {
       return
@@ -95,10 +95,7 @@ export class Septima {
     }
   }
 
-  private loadFileContent(pathFromSourceRoot: string, content: string) {
-    // The following check is usually not needed. However, we did encounter situations where the an undefined made
-    // its way into "content" (e.g., due to reckless usage of "as" in the "readFile" function) which resulted in hard
-    // to debug errors. Thus, we are being defensive here.
+  private loadFileContent(pathFromSourceRoot: string, content: string | undefined) {
     if (content === undefined) {
       throw new Error(`Cannot find file '${path.join(this.sourceRoot, pathFromSourceRoot)}'`)
     }
