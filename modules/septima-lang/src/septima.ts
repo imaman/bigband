@@ -75,18 +75,6 @@ export class Septima {
     return this.getExecutableFor(fileName)
   }
 
-  /**
-   * Translates the filename into a resolved path (to be read) if it has not been read yet. If it has been read,
-   * returns undefined
-   */
-  private computeResolvedPathToRead(fileName: string) {
-    const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
-    if (this.unitByFileName.has(pathFromSourceRoot)) {
-      return undefined
-    }
-    return path.join(this.sourceRoot, pathFromSourceRoot)
-  }
-
   private getExecutableFor(fileName: string): Executable {
     // Verify that a unit for the main file exists
     this.unitOf(undefined, fileName)
@@ -106,6 +94,32 @@ export class Septima {
     }
   }
 
+  private execute(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
+    const runtime = new Runtime(this.unitOf(undefined, fileName), verbosity, (a, b) => this.unitOf(a, b), args)
+    const c = runtime.compute()
+
+    if (c.value) {
+      return c.value
+    }
+
+    const { sourceCode } =
+      this.unitByFileName.get(fileName) ?? failMe(`sourceCode object was not found (file name: ${fileName})`)
+    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
+    throw new Error(runtimeErrorMessage)
+  }
+
+  /**
+   * Translates the filename into a resolved path (to be read) if it has not been read yet. If it has been read,
+   * returns undefined
+   */
+  private computeResolvedPathToRead(fileName: string) {
+    const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
+    if (this.unitByFileName.has(pathFromSourceRoot)) {
+      return undefined
+    }
+    return path.join(this.sourceRoot, pathFromSourceRoot)
+  }
+
   private loadFileContent(resolvedPath: string | undefined, content: string | undefined, acc: string[]) {
     if (resolvedPath === undefined) {
       return
@@ -121,20 +135,6 @@ export class Septima {
 
     this.unitByFileName.set(pathFromSourceRoot, { unit, sourceCode })
     acc.push(...unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text)))
-  }
-
-  private execute(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
-    const runtime = new Runtime(this.unitOf(undefined, fileName), verbosity, (a, b) => this.unitOf(a, b), args)
-    const c = runtime.compute()
-
-    if (c.value) {
-      return c.value
-    }
-
-    const { sourceCode } =
-      this.unitByFileName.get(fileName) ?? failMe(`sourceCode object was not found (file name: ${fileName})`)
-    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
-    throw new Error(runtimeErrorMessage)
   }
 
   private unitOf(importerPathFromSourceRoot: string | undefined, relativePath: string) {
