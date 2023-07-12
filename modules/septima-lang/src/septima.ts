@@ -79,7 +79,11 @@ export class Septima {
     return this.getExecutableFor(fileName)
   }
 
-  private toResolvedPath(fileName: string) {
+  /**
+   * Translates the filename into a resolved path (to be read) if it has not been read yet. If it has been read,
+   * returns undefined
+   */
+  private computeResolvedPathToRead(fileName: string) {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
     if (this.unitByFileName.has(pathFromSourceRoot)) {
       return undefined
@@ -88,13 +92,13 @@ export class Septima {
   }
 
   private loadSync(fileName: string, readFile: SyncCodeReader, acc: string[]) {
-    const p = this.toResolvedPath(fileName)
+    const p = this.computeResolvedPathToRead(fileName)
     const content = p && readFile(p)
     this.loadFileContent(p, content, acc)
   }
 
   private async load(fileName: string, readFile: CodeReader, acc: string[]): Promise<void> {
-    const p = this.toResolvedPath(fileName)
+    const p = this.computeResolvedPathToRead(fileName)
     const content = p && (await readFile(p))
     this.loadFileContent(p, content, acc)
   }
