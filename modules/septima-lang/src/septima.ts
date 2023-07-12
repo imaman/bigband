@@ -128,20 +128,6 @@ export class Septima {
     return unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text))
   }
 
-  private getPathFromSourceRoot(startingPoint: string | undefined, relativePath: string) {
-    if (path.isAbsolute(relativePath)) {
-      throw new Error(`An absolute path is not allowed for referencing a septima source file (got: ${relativePath})`)
-    }
-    const joined = startingPoint === undefined ? relativePath : path.join(path.dirname(startingPoint), relativePath)
-    const ret = path.normalize(joined)
-    if (ret.startsWith('.')) {
-      throw new Error(
-        `resolved path (${path.join(this.sourceRoot, ret)}) is pointing outside of source root (${this.sourceRoot})`,
-      )
-    }
-    return ret
-  }
-
   private computeImpl(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
     const runtime = new Runtime(this.unitOf(undefined, fileName), verbosity, (a, b) => this.unitOf(a, b), args)
     const c = runtime.compute()
@@ -161,5 +147,19 @@ export class Septima {
     const { unit } =
       this.unitByFileName.get(p) ?? failMe(`Encluntered a file which has not been loaded (file name: ${p})`)
     return unit
+  }
+
+  private getPathFromSourceRoot(startingPoint: string | undefined, relativePath: string) {
+    if (path.isAbsolute(relativePath)) {
+      throw new Error(`An absolute path is not allowed for referencing a septima source file (got: ${relativePath})`)
+    }
+    const joined = startingPoint === undefined ? relativePath : path.join(path.dirname(startingPoint), relativePath)
+    const ret = path.normalize(joined)
+    if (ret.startsWith('.')) {
+      throw new Error(
+        `resolved path (${path.join(this.sourceRoot, ret)}) is pointing outside of source root (${this.sourceRoot})`,
+      )
+    }
+    return ret
   }
 }
