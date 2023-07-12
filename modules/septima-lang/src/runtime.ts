@@ -151,9 +151,9 @@ export class Runtime {
     }
 
     if (exp.tag === 'topLevelExpression') {
-      // Construct a syntehtic unit which is similar to importedUnit but override its expression such that it bundles
-      // its definition in a single object and evaluate it. This is the trick that allows the importer to gain access
-      // to the importee's definition.
+      // Construct a syntehtic unit which is similar to importedUnit but override its expression with an expression that
+      // just returns the importee's definitions bundled in a single object (an export* expression), and evaluate it.
+      // This is the trick that allows the importer to gain access to the importee's own stuff.
       const exporStarUnit: AstNode = {
         tag: 'unit',
         imports: importee.imports,
