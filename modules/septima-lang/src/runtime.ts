@@ -157,8 +157,8 @@ export class Runtime {
       const exporStarUnit: AstNode = {
         tag: 'unit',
         imports: importee.imports,
-        expression: { tag: 'topLevelExpression', definitions: exp.definitions, computation: { tag: 'export*' } },
         pathFromSourceRoot: importee.pathFromSourceRoot,
+        expression: { tag: 'topLevelExpression', definitions: exp.definitions, computation: { tag: 'export*' } },
       }
       return this.evalNode(exporStarUnit, this.buildInitialSymbolTable(false))
     }
