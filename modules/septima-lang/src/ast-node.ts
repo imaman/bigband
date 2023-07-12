@@ -40,6 +40,7 @@ export type Unit = {
   tag: 'unit'
   imports: Import[]
   expression: AstNode
+  pathFromSourceRoot: string
 }
 
 export type AstNode =

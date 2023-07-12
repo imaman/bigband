@@ -1,11 +1,13 @@
+import * as path from 'path'
+
 import { Unit } from './ast-node'
+import { failMe } from './fail-me'
 import { Parser } from './parser'
 import { Result, ResultSink, ResultSinkImpl } from './result'
 import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
 import { SourceCode } from './source-code'
-import { Value } from './value'
 
 interface Options {
   /**
@@ -34,7 +36,11 @@ export class Septima {
       ((r: ResultSink) => {
         throw new Error(r.message)
       })
-    const res = new Septima().compute(input, {}, 'quiet', args)
+
+    const fileName = '<inline>'
+    const contentRec: Record<string, string> = { [fileName]: input }
+    const readFile = (m: string) => contentRec[m]
+    const res = new Septima().computeModule(fileName, args, readFile)
     if (res.tag === 'ok') {
       return res.value
     }
@@ -46,81 +52,80 @@ export class Septima {
     shouldNeverHappen(res)
   }
 
-  constructor() {}
+  private readonly unitByFileName = new Map<string, { unit: Unit; sourceCode: SourceCode }>()
 
-  computeModule(moduleName: string, moduleReader: (m: string) => string, args: Record<string, unknown>): Result {
-    const input = moduleReader(moduleName)
-    const sourceCode = new SourceCode(input)
-    const value = this.computeImpl(sourceCode, 'quiet', {}, moduleReader, args)
+  constructor(private readonly sourceRoot = '') {}
+
+  computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string | undefined): Result {
+    this.loadSync(fileName, readFile)
+    const value = this.computeImpl(fileName, 'quiet', args)
     if (!value.isSink()) {
       return { value: value.export(), tag: 'ok' }
     }
+    const { sourceCode } = this.unitByFileName.get(fileName) ?? failMe(`fileName not found: ${fileName}`)
     return new ResultSinkImpl(value, sourceCode)
   }
 
-  compute(
-    input: string,
-    preimports: Record<string, string> = {},
-    verbosity: Verbosity = 'quiet',
-    args: Record<string, unknown>,
-  ): Result {
-    const lib: Record<string, Value> = {}
-    for (const [importName, importCode] of Object.entries(preimports)) {
-      const sourceCode = new SourceCode(importCode)
-      const value = this.computeImpl(sourceCode, verbosity, {}, undefined, {})
-      if (value.isSink()) {
-        // TODO(imaman): cover!
-        const r = new ResultSinkImpl(value, sourceCode)
-        throw new Error(`preimport (${importName}) evaluated to sink: ${r.message}`)
-      }
-      lib[importName] = value
+  loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
+    const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
+    if (this.unitByFileName.has(pathFromSourceRoot)) {
+      return
     }
 
-    const sourceCode = new SourceCode(input)
-    const value = this.computeImpl(sourceCode, verbosity, lib, undefined, args)
-    if (!value.isSink()) {
-      return { value: value.export(), tag: 'ok' }
+    const content = readFile(path.join(this.sourceRoot, pathFromSourceRoot))
+
+    const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
+    for (const p of pathsToLoad) {
+      this.loadSync(p, readFile)
     }
-    return new ResultSinkImpl(value, sourceCode)
   }
 
-  private computeImpl(
-    sourceCode: SourceCode,
-    verbosity: Verbosity,
-    lib: Record<string, Value>,
-    moduleReader: undefined | ((m: string) => string),
-    args: Record<string, unknown>,
-  ) {
+  private loadFileContent(pathFromSourceRoot: string, content: string | undefined) {
+    if (content === undefined) {
+      throw new Error(`Cannot find file '${path.join(this.sourceRoot, pathFromSourceRoot)}'`)
+    }
+    const sourceCode = new SourceCode(content, pathFromSourceRoot)
     const scanner = new Scanner(sourceCode)
     const parser = new Parser(scanner)
-    const ast = parse(parser)
+    const unit = parser.parse()
 
-    const getAstOf = (fileName: string) => {
-      if (!moduleReader) {
-        throw new Error(`cannot read modules`)
-      }
-      return parse(moduleReader(fileName))
+    this.unitByFileName.set(pathFromSourceRoot, { unit, sourceCode })
+
+    return unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text))
+  }
+
+  private getPathFromSourceRoot(startingPoint: string | undefined, relativePath: string) {
+    if (path.isAbsolute(relativePath)) {
+      throw new Error(`An absolute path is not allowed for referencing a septima source file (got: ${relativePath})`)
+    }
+    const joined = startingPoint === undefined ? relativePath : path.join(path.dirname(startingPoint), relativePath)
+    const ret = path.normalize(joined)
+    if (ret.startsWith('.')) {
+      throw new Error(
+        `resolved path (${path.join(this.sourceRoot, ret)}) is pointing outside of source root (${this.sourceRoot})`,
+      )
+    }
+    return ret
+  }
+
+  private computeImpl(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
+    const getAstOf = (importerPathFromSourceRoot: string | undefined, relativePath: string) => {
+      const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
+      const { unit } =
+        this.unitByFileName.get(p) ?? failMe(`Encluntered a file which has not been loaded (file name: ${p})`)
+      return unit
     }
 
-    const runtime = new Runtime(ast, verbosity, lib, getAstOf, args)
+    const runtime = new Runtime(getAstOf(undefined, fileName), verbosity, getAstOf, args)
     const c = runtime.compute()
 
     if (c.value) {
       return c.value
     }
 
+    const { sourceCode } =
+      this.unitByFileName.get(fileName) ?? failMe(`sourceCode object was not found (file name: ${fileName})`)
     const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
     throw new Error(runtimeErrorMessage)
   }
-}
-
-/**
- * Parses the given input and returns an AST.
- * @param arg the source code to parse (string) or a Parser object (configured with the source code to parse).
- * @returns
- */
-export function parse(arg: string | Parser): Unit {
-  const parser = typeof arg === 'string' ? new Parser(new Scanner(new SourceCode(arg))) : arg
-  const ast = parser.parse()
-  return ast
 }

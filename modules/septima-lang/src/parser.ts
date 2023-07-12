@@ -16,7 +16,7 @@ export class Parser {
   unit(): Unit {
     const imports = this.imports()
     const expression = this.expression('TOP_LEVEL')
-    return { tag: 'unit', imports, expression }
+    return { tag: 'unit', imports, expression, pathFromSourceRoot: this.scanner.sourceCode.pathFromSourceRoot }
   }
 
   imports(): Import[] {

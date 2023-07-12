@@ -73,8 +73,7 @@ export class Runtime {
   constructor(
     private readonly root: AstNode,
     private readonly verbosity: Verbosity = 'quiet',
-    private readonly preimports: Record<string, Value>,
-    private readonly getAstOf: (fileName: string) => Unit,
+    private readonly getAstOf: (importerAsPathFromSourceRoot: string, relativePathFromImporter: string) => Unit,
     private readonly args: Record<string, unknown>,
   ) {}
 
@@ -90,9 +89,6 @@ export class Runtime {
       lib = new SymbolFrame('args', { destination: Value.from(this.args) }, lib, 'INTERNAL')
     }
 
-    for (const [importName, importValue] of Object.entries(this.preimports)) {
-      lib = new SymbolFrame(importName, { destination: importValue }, lib, 'INTERNAL')
-    }
     return lib
   }
 
@@ -131,10 +127,9 @@ export class Runtime {
     return ret
   }
 
-  private importDefinitions(pathToImportFrom: string): Value {
-    const ast = this.getAstOf(pathToImportFrom)
-    const exp = ast.expression
-    const imports = ast.imports
+  private importDefinitions(importerAsPathFromSourceRoot: string, relativePathFromImporter: string): Value {
+    const importee = this.getAstOf(importerAsPathFromSourceRoot, relativePathFromImporter)
+    const exp = importee.expression
     if (
       exp.tag === 'arrayLiteral' ||
       exp.tag === 'binaryOperator' ||
@@ -156,12 +151,16 @@ export class Runtime {
     }
 
     if (exp.tag === 'topLevelExpression') {
-      const unit: AstNode = {
+      // Construct a syntehtic unit which is similar to importedUnit but override its expression with an expression that
+      // just returns the importee's definitions bundled in a single object (an export* expression), and evaluate it.
+      // This is the trick that allows the importer to gain access to the importee's own stuff.
+      const exporStarUnit: AstNode = {
         tag: 'unit',
-        imports,
+        imports: importee.imports,
+        pathFromSourceRoot: importee.pathFromSourceRoot,
         expression: { tag: 'topLevelExpression', definitions: exp.definitions, computation: { tag: 'export*' } },
       }
-      return this.evalNode(unit, this.buildInitialSymbolTable(false))
+      return this.evalNode(exporStarUnit, this.buildInitialSymbolTable(false))
     }
 
     shouldNeverHappen(exp)
@@ -171,7 +170,7 @@ export class Runtime {
     if (ast.tag === 'unit') {
       let newTable = table
       for (const imp of ast.imports) {
-        const o = this.importDefinitions(imp.pathToImportFrom.text)
+        const o = this.importDefinitions(ast.pathFromSourceRoot, imp.pathToImportFrom.text)
         newTable = new SymbolFrame(imp.ident.t.text, { destination: o }, newTable, 'INTERNAL')
       }
       return this.evalNode(ast.expression, newTable)
