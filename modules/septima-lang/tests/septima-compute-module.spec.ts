@@ -166,5 +166,10 @@ describe('septima-compute-module', () => {
         }),
       ).toEqual(100)
     })
+    test('errors if a file tries to import a(nother) file which is outside of the source root tree', async () => {
+      await expect(runPromise('q', { 'd1/d2/q': `import * as r from "../r"; 5` }, {}, 'd1/d2')).rejects.toThrowError(
+        `resolved path (d1/r) is pointing outside of source root (d1/d2)`,
+      )
+    })
   })
 })
