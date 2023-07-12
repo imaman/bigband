@@ -172,4 +172,9 @@ describe('unit-importing', () => {
       )
     })
   })
+  describe('errors in imported files', () => {
+    test('foo', () => {
+      expect(() => run('a', { a: `let a = {}; a.b.c` })).toThrowError('Expected a string literal at (1:22..24) 500')
+    })
+  })
 })
