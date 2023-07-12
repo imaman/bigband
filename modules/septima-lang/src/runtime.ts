@@ -73,7 +73,7 @@ export class Runtime {
   constructor(
     private readonly root: AstNode,
     private readonly verbosity: Verbosity = 'quiet',
-    private readonly getAstOf: (pathFromSourceRoot: string, relativePath: string) => Unit,
+    private readonly getAstOf: (importerAsPathFromSourceRoot: string, relativePathFromImporter: string) => Unit,
     private readonly args: Record<string, unknown>,
   ) {}
 
@@ -127,8 +127,8 @@ export class Runtime {
     return ret
   }
 
-  private importDefinitions(importerAsPathFromSourceRoot: string, relativePath: string): Value {
-    const importee = this.getAstOf(importerAsPathFromSourceRoot, relativePath)
+  private importDefinitions(importerAsPathFromSourceRoot: string, relativePathFromImporter: string): Value {
+    const importee = this.getAstOf(importerAsPathFromSourceRoot, relativePathFromImporter)
     const exp = importee.expression
     if (
       exp.tag === 'arrayLiteral' ||
