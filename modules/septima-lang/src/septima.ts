@@ -73,8 +73,9 @@ export class Septima {
 
     const content = await readFile(path.join(this.sourceRoot, pathFromSourceRoot))
 
-    const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
-    for (const p of pathsToLoad) {
+    const acc: string[] = []
+    this.loadFileContent(pathFromSourceRoot, content, acc)
+    for (const p of acc) {
       await this.load(p, readFile)
     }
   }
@@ -87,8 +88,7 @@ export class Septima {
 
     const content = readFile(path.join(this.sourceRoot, pathFromSourceRoot))
 
-    const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
-    acc.push(...pathsToLoad)
+    this.loadFileContent(pathFromSourceRoot, content, acc)
   }
 
   async compile(fileName: string, readFile: (resolvedPath: string) => Promise<string | undefined>) {
@@ -132,7 +132,7 @@ export class Septima {
     }
   }
 
-  private loadFileContent(pathFromSourceRoot: string, content: string | undefined) {
+  private loadFileContent(pathFromSourceRoot: string, content: string | undefined, acc: string[]) {
     if (content === undefined) {
       throw new Error(`Cannot find file '${path.join(this.sourceRoot, pathFromSourceRoot)}'`)
     }
@@ -142,8 +142,7 @@ export class Septima {
     const unit = parser.parse()
 
     this.unitByFileName.set(pathFromSourceRoot, { unit, sourceCode })
-
-    return unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text))
+    acc.push(...unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text)))
   }
 
   private computeImpl(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
