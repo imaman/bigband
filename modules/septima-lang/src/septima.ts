@@ -22,6 +22,9 @@ export interface Executable {
   execute(args: Record<string, unknown>): Result
 }
 
+type SyncCodeReader = (resolvePath: string) => string | undefined
+type CodeReader = (resolvePath: string) => Promise<string | undefined>
+
 export class Septima {
   /**
    * Runs a Septima program and returns the value it evaluates to. If it evaluates to `sink`, returns the value computed
@@ -60,22 +63,22 @@ export class Septima {
 
   constructor(private readonly sourceRoot = '') {}
 
-  computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string | undefined): Result {
+  computeModule(fileName: string, args: Record<string, unknown>, readFile: SyncCodeReader): Result {
     return this.compileSync(fileName, readFile).execute(args)
   }
 
-  compileSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
+  compileSync(fileName: string, readFile: SyncCodeReader) {
     const acc = [fileName]
     this.pumpSync(acc, readFile)
     return this.getExecutableFor(fileName)
   }
 
-  async compile(fileName: string, readFile: (resolvedPath: string) => Promise<string | undefined>) {
+  async compile(fileName: string, readFile: CodeReader) {
     await this.load(fileName, readFile)
     return this.getExecutableFor(fileName)
   }
 
-  private loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined, acc: string[]) {
+  private loadSync(fileName: string, readFile: SyncCodeReader, acc: string[]) {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
     if (this.unitByFileName.has(pathFromSourceRoot)) {
       return
@@ -86,7 +89,7 @@ export class Septima {
     this.loadFileContent(pathFromSourceRoot, content, acc)
   }
 
-  async load(fileName: string, readFile: (m: string) => Promise<string | undefined>): Promise<void> {
+  async load(fileName: string, readFile: CodeReader): Promise<void> {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
 
     if (this.unitByFileName.has(pathFromSourceRoot)) {
@@ -102,7 +105,7 @@ export class Septima {
     }
   }
 
-  private pumpSync(acc: string[], readFile: (resolvedPath: string) => string | undefined) {
+  private pumpSync(acc: string[], readFile: SyncCodeReader) {
     while (true) {
       const curr = acc.pop()
       if (!curr) {
