@@ -87,40 +87,6 @@ export class Septima {
     return path.join(this.sourceRoot, pathFromSourceRoot)
   }
 
-  private loadSync(fileName: string, readFile: SyncCodeReader, acc: string[]) {
-    const p = this.computeResolvedPathToRead(fileName)
-    const content = p && readFile(p)
-    this.loadFileContent(p, content, acc)
-  }
-
-  private async load(fileName: string, readFile: CodeReader, acc: string[]): Promise<void> {
-    const p = this.computeResolvedPathToRead(fileName)
-    const content = p && (await readFile(p))
-    this.loadFileContent(p, content, acc)
-  }
-
-  private pumpSync(acc: string[], readFile: SyncCodeReader) {
-    while (true) {
-      const curr = acc.pop()
-      if (!curr) {
-        return
-      }
-
-      this.loadSync(curr, readFile, acc)
-    }
-  }
-
-  private async pump(acc: string[], readFile: CodeReader) {
-    while (true) {
-      const curr = acc.pop()
-      if (!curr) {
-        return
-      }
-
-      await this.load(curr, readFile, acc)
-    }
-  }
-
   private getExecutableFor(fileName: string): Executable {
     // Verify that a unit for the main file exists
     this.unitOf(undefined, fileName)
@@ -190,5 +156,46 @@ export class Septima {
       )
     }
     return ret
+  }
+
+  // loadSync() need to be kept in sync with load(), ditto pumpSync() w/ pump(). There is deep testing coverage for the
+  // sync variant but only partial coverage for the async variant.
+  // An extra effort was taken in order to reduce the duplication between the two variants. This attempt achieved its
+  // goal (to some extent) but resulted in a somewhat unnatural code (like using an external pump algorithm instead of
+  // a plain recursion). Perhaps a better approach is to have a contract test and run it twice thus equally testing
+  // the two variants.
+
+  private loadSync(fileName: string, readFile: SyncCodeReader, acc: string[]) {
+    const p = this.computeResolvedPathToRead(fileName)
+    const content = p && readFile(p)
+    this.loadFileContent(p, content, acc)
+  }
+
+  private async load(fileName: string, readFile: CodeReader, acc: string[]): Promise<void> {
+    const p = this.computeResolvedPathToRead(fileName)
+    const content = p && (await readFile(p))
+    this.loadFileContent(p, content, acc)
+  }
+
+  private pumpSync(acc: string[], readFile: SyncCodeReader) {
+    while (true) {
+      const curr = acc.pop()
+      if (!curr) {
+        return
+      }
+
+      this.loadSync(curr, readFile, acc)
+    }
+  }
+
+  private async pump(acc: string[], readFile: CodeReader) {
+    while (true) {
+      const curr = acc.pop()
+      if (!curr) {
+        return
+      }
+
+      await this.load(curr, readFile, acc)
+    }
   }
 }
