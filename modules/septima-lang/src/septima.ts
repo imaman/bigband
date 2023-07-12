@@ -66,21 +66,6 @@ export class Septima {
     return new ResultSinkImpl(value, sourceCode)
   }
 
-  async load(fileName: string, readFile: (m: string) => Promise<string>): Promise<void> {
-    const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
-
-    if (this.unitByFileName.has(pathFromSourceRoot)) {
-      return
-    }
-
-    const content = await readFile(path.join(this.sourceRoot, pathFromSourceRoot))
-
-    const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
-    for (const p of pathsToLoad) {
-      await this.load(p, readFile)
-    }
-  }
-
   loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
     if (this.unitByFileName.has(pathFromSourceRoot)) {
