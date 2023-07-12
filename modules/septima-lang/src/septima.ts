@@ -47,7 +47,7 @@ export class Septima {
     const fileName = '<inline>'
     const contentRec: Record<string, string> = { [fileName]: input }
     const readFile = (m: string) => contentRec[m]
-    const res = new Septima().computeModule(fileName, args, readFile)
+    const res = new Septima().compileSync(fileName, readFile).execute(args)
     if (res.tag === 'ok') {
       return res.value
     }
@@ -62,10 +62,6 @@ export class Septima {
   private readonly unitByFileName = new Map<string, { unit: Unit; sourceCode: SourceCode }>()
 
   constructor(private readonly sourceRoot = '') {}
-
-  computeModule(fileName: string, args: Record<string, unknown>, readFile: SyncCodeReader): Result {
-    return this.compileSync(fileName, readFile).execute(args)
-  }
 
   compileSync(fileName: string, readFile: SyncCodeReader) {
     const acc = [fileName]
@@ -125,7 +121,7 @@ export class Septima {
     }
   }
 
-  getExecutableFor(fileName: string): Executable {
+  private getExecutableFor(fileName: string): Executable {
     // Verify that a unit for the main file exists
     this.unitOf(undefined, fileName)
 

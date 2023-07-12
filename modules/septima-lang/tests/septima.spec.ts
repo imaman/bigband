@@ -19,7 +19,7 @@ function runSink(input: string) {
   const contentRec: Record<string, string> = { [fileName]: input }
   const readFile = (m: string) => contentRec[m]
 
-  const res = new Septima().computeModule(fileName, {}, readFile)
+  const res = new Septima().compileSync(fileName, readFile).execute({})
 
   if (res.tag !== 'sink') {
     throw new Error(`Not a sink: ${res.value}`)
