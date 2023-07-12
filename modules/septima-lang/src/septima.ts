@@ -93,7 +93,7 @@ export class Septima {
 
     return {
       execute: (args: Record<string, unknown>) => {
-        const value = this.computeImpl(fileName, 'quiet', args)
+        const value = this.execute(fileName, 'quiet', args)
         let ret: Result
         if (!value.isSink()) {
           ret = { value: value.export(), tag: 'ok' }
@@ -123,7 +123,7 @@ export class Septima {
     acc.push(...unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text)))
   }
 
-  private computeImpl(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
+  private execute(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
     const runtime = new Runtime(this.unitOf(undefined, fileName), verbosity, (a, b) => this.unitOf(a, b), args)
     const c = runtime.compute()
 
