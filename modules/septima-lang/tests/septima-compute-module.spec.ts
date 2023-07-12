@@ -23,6 +23,27 @@ function run(
   shouldNeverHappen(res)
 }
 
+function runPromise(
+  mainFileName: string,
+  inputs: Record<string, string>,
+  args: Record<string, unknown> = {},
+  sourceRoot = '',
+) {
+  const septima = new Septima(sourceRoot)
+  septima.load(mainFileName, (m: string) => Promise.resolve(inputs[m]))
+
+  const res = septima.computeModule(mainFileName, args, (m: string) => Promise.resolve(inputs[m]))
+  if (res.tag === 'ok') {
+    return res.value
+  }
+
+  if (res.tag === 'sink') {
+    throw new Error(res.message)
+  }
+
+  shouldNeverHappen(res)
+}
+
 describe('septima-compute-module', () => {
   test('fetches the content of the module to compute from the given callback function', () => {
     expect(run('a', { a: `3+8` })).toEqual(11)

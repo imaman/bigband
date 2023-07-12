@@ -58,15 +58,10 @@ export class Septima {
 
   computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string | undefined): Result {
     this.loadSync(fileName, readFile)
-    const value = this.computeImpl(fileName, 'quiet', args)
-    if (!value.isSink()) {
-      return { value: value.export(), tag: 'ok' }
-    }
-    const { sourceCode } = this.unitByFileName.get(fileName) ?? failMe(`fileName not found: ${fileName}`)
-    return new ResultSinkImpl(value, sourceCode)
+    this.getExecutableFor(fileName).execute(args)
   }
 
-  async load(fileName: string, readFile: (m: string) => Promise<string>): Promise<void> {
+  async load(fileName: string, readFile: (m: string) => Promise<string|undefined>): Promise<void> {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
 
     if (this.unitByFileName.has(pathFromSourceRoot)) {
@@ -80,18 +75,39 @@ export class Septima {
       await this.load(p, readFile)
     }
   }
-
-  loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
+  
+  private loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
     if (this.unitByFileName.has(pathFromSourceRoot)) {
       return
     }
 
     const content = readFile(path.join(this.sourceRoot, pathFromSourceRoot))
-
+    
     const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
     for (const p of pathsToLoad) {
       this.loadSync(p, readFile)
+    }
+  }
+
+  async compile(fileName: string, readFile: (resolvedPath: string) => Promise<string | undefined>) {
+    await this.load(fileName, readFile)
+    return this.getExecutableFor(fileName)
+  }
+  
+  getExecutableFor(fileName: string) {    
+    // Verify that a unit for the main file exists
+    this.unitOf(undefined, fileName)
+    
+    return {
+      execute: (args: Record<string, unknown>) => {
+        const value = this.computeImpl(fileName, 'quiet', args)
+        if (!value.isSink()) {
+          return { value: value.export(), tag: 'ok' }
+        }
+        const { sourceCode } = this.unitByFileName.get(fileName) ?? failMe(`fileName not found: ${fileName}`)
+        return new ResultSinkImpl(value, sourceCode)    
+      }
     }
   }
 
@@ -124,14 +140,7 @@ export class Septima {
   }
 
   private computeImpl(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
-    const getAstOf = (importerPathFromSourceRoot: string | undefined, relativePath: string) => {
-      const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
-      const { unit } =
-        this.unitByFileName.get(p) ?? failMe(`Encluntered a file which has not been loaded (file name: ${p})`)
-      return unit
-    }
-
-    const runtime = new Runtime(getAstOf(undefined, fileName), verbosity, getAstOf, args)
+    const runtime = new Runtime(this.unitOf(undefined, fileName), verbosity, (a, b) => this.unitOf(a, b), args)
     const c = runtime.compute()
 
     if (c.value) {
@@ -142,5 +151,12 @@ export class Septima {
       this.unitByFileName.get(fileName) ?? failMe(`sourceCode object was not found (file name: ${fileName})`)
     const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
     throw new Error(runtimeErrorMessage)
+  }
+
+  private unitOf(importerPathFromSourceRoot: string | undefined, relativePath: string) {
+    const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
+    const { unit } =
+      this.unitByFileName.get(p) ?? failMe(`Encluntered a file which has not been loaded (file name: ${p})`)
+    return unit
   }
 }
