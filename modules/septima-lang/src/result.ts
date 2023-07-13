@@ -2,7 +2,6 @@ import { AstNode } from './ast-node'
 import { failMe } from './fail-me'
 import { Span } from './location'
 import { SourceUnit } from './septima'
-import { SourceCode } from './source-code'
 import { Value } from './value'
 
 export type ResultSink = {
@@ -19,33 +18,6 @@ export type Result =
       value: unknown
     }
   | ResultSink
-
-export class ResultSinkImpl implements ResultSink {
-  readonly tag = 'sink'
-  constructor(private readonly sink: Value, private readonly sourceCode: SourceCode) {}
-
-  get where(): Span | undefined {
-    return this.sink.where()?.span
-  }
-
-  get trace() {
-    const trace = this.sink.trace()
-    if (trace) {
-      return this.sourceCode.formatTrace(trace)
-    }
-
-    return undefined
-  }
-
-  get symbols() {
-    return this.sink.symbols()?.export()
-  }
-
-  get message(): string {
-    const at = this.trace ?? this.sourceCode.sourceRef(this.where)
-    return `Evaluated to sink: ${at}`
-  }
-}
 
 export function createResultSink(sink: Value, unitByFileName: Map<string, SourceUnit>): ResultSink {
   if (!sink.isSink()) {
