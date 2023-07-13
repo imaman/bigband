@@ -14,6 +14,10 @@ export class SourceCode {
     return `${spacer}${formatted}`
   }
 
+  formatAst(ast: AstNode): string {
+    return this.sourceRef(span(ast))
+  }
+
   sourceRefOfLocation(loc: Location) {
     return this.sourceRef(this.expandToEndOfLine(loc))
   }
