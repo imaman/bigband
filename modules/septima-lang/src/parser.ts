@@ -5,6 +5,10 @@ import { switchOn } from './switch-on'
 export class Parser {
   constructor(private readonly scanner: Scanner) {}
 
+  private get unitId() {
+    return this.scanner.sourceCode.pathFromSourceRoot
+  }
+
   parse(): Unit {
     const ret = this.unit()
     if (!this.scanner.eof()) {
@@ -16,7 +20,7 @@ export class Parser {
   unit(): Unit {
     const imports = this.imports()
     const expression = this.expression('TOP_LEVEL')
-    return { tag: 'unit', imports, expression, pathFromSourceRoot: this.scanner.sourceCode.pathFromSourceRoot }
+    return { tag: 'unit', imports, expression, unitId: this.scanner.sourceCode.pathFromSourceRoot }
   }
 
   imports(): Import[] {
@@ -47,7 +51,7 @@ export class Parser {
         'sink!': notString,
         'sink!!': notString,
       })
-      ret.push({ start, ident, pathToImportFrom: pathToImportFrom.t })
+      ret.push({ start, ident, pathToImportFrom: pathToImportFrom.t, unitId: this.unitId })
 
       this.scanner.consumeIf(';')
     }
@@ -90,7 +94,7 @@ export class Parser {
   expression(kind: 'TOP_LEVEL' | 'NESTED' = 'NESTED'): AstNode {
     const definitions = this.definitions(kind)
     if (kind === 'TOP_LEVEL' && this.scanner.eof()) {
-      return { tag: 'topLevelExpression', definitions }
+      return { tag: 'topLevelExpression', definitions, unitId: this.unitId }
     }
     this.scanner.consumeIf('return')
     const computation = this.lambda()
@@ -99,7 +103,7 @@ export class Parser {
       return computation
     }
 
-    return { tag: 'topLevelExpression', definitions, computation }
+    return { tag: 'topLevelExpression', definitions, computation, unitId: this.unitId }
   }
 
   lambda(): AstNode {
@@ -126,22 +130,24 @@ export class Parser {
     }
 
     const body = this.expression()
-    return { tag: 'lambda', start, formalArgs: args, body }
+    return { tag: 'lambda', start, formalArgs: args, body, unitId: this.unitId }
   }
 
   arrowFunction(): AstNode {
+    const unitId = this.unitId
+
     if (this.scanner.headMatches('(', ')', '=>')) {
       const start = this.scanner.consume('(')
       this.scanner.consume(')')
       this.scanner.consume('=>')
       const body = this.lambdaBody()
-      return { tag: 'lambda', start, formalArgs: [], body }
+      return { tag: 'lambda', start, formalArgs: [], body, unitId }
     }
     if (this.scanner.headMatches(IDENT_PATTERN, '=>')) {
       const ident = this.identifier()
       this.scanner.consume('=>')
       const body = this.lambdaBody()
-      return { tag: 'lambda', start: ident.t, formalArgs: [ident], body }
+      return { tag: 'lambda', start: ident.t, formalArgs: [ident], body, unitId }
     }
     if (this.scanner.headMatches('(', IDENT_PATTERN, ')', '=>')) {
       const start = this.scanner.consume('(')
@@ -149,7 +155,7 @@ export class Parser {
       this.scanner.consume(')')
       this.scanner.consume('=>')
       const body = this.lambdaBody()
-      return { tag: 'lambda', start, formalArgs: [ident], body }
+      return { tag: 'lambda', start, formalArgs: [ident], body, unitId }
     }
     if (this.scanner.headMatches('(', IDENT_PATTERN, ',')) {
       const start = this.scanner.consume('(')
@@ -167,7 +173,7 @@ export class Parser {
 
       this.scanner.consume('=>')
       const body = this.lambdaBody()
-      return { tag: 'lambda', start, formalArgs, body }
+      return { tag: 'lambda', start, formalArgs, body, unitId }
     }
 
     return this.ifExpression()
@@ -198,7 +204,7 @@ export class Parser {
 
     const negative = this.expression()
 
-    return { tag: 'if', condition, positive, negative }
+    return { tag: 'if', condition, positive, negative, unitId: this.unitId }
   }
 
   ternary(): AstNode {
@@ -215,13 +221,13 @@ export class Parser {
     this.scanner.consume(':')
     const negative = this.expression()
 
-    return { tag: 'ternary', condition, positive, negative }
+    return { tag: 'ternary', condition, positive, negative, unitId: this.unitId }
   }
 
   unsink(): AstNode {
     const lhs = this.or()
     if (this.scanner.consumeIf('??')) {
-      return { tag: 'binaryOperator', operator: '??', lhs, rhs: this.unsink() }
+      return { tag: 'binaryOperator', operator: '??', lhs, rhs: this.unsink(), unitId: this.unitId }
     }
     return lhs
   }
@@ -229,7 +235,7 @@ export class Parser {
   or(): AstNode {
     const lhs = this.and()
     if (this.scanner.consumeIf('||')) {
-      return { tag: 'binaryOperator', operator: '||', lhs, rhs: this.or() }
+      return { tag: 'binaryOperator', operator: '||', lhs, rhs: this.or(), unitId: this.unitId }
     }
     return lhs
   }
@@ -237,7 +243,7 @@ export class Parser {
   and(): AstNode {
     const lhs = this.equality()
     if (this.scanner.consumeIf('&&')) {
-      return { tag: 'binaryOperator', operator: '&&', lhs, rhs: this.and() }
+      return { tag: 'binaryOperator', operator: '&&', lhs, rhs: this.and(), unitId: this.unitId }
     }
     return lhs
   }
@@ -245,10 +251,10 @@ export class Parser {
   equality(): AstNode {
     const lhs = this.comparison()
     if (this.scanner.consumeIf('==')) {
-      return { tag: 'binaryOperator', operator: '==', lhs, rhs: this.equality() }
+      return { tag: 'binaryOperator', operator: '==', lhs, rhs: this.equality(), unitId: this.unitId }
     }
     if (this.scanner.consumeIf('!=')) {
-      return { tag: 'binaryOperator', operator: '!=', lhs, rhs: this.equality() }
+      return { tag: 'binaryOperator', operator: '!=', lhs, rhs: this.equality(), unitId: this.unitId }
     }
     return lhs
   }
@@ -256,16 +262,16 @@ export class Parser {
   comparison(): AstNode {
     const lhs = this.addition()
     if (this.scanner.consumeIf('>=')) {
-      return { tag: 'binaryOperator', operator: '>=', lhs, rhs: this.comparison() }
+      return { tag: 'binaryOperator', operator: '>=', lhs, rhs: this.comparison(), unitId: this.unitId }
     }
     if (this.scanner.consumeIf('<=')) {
-      return { tag: 'binaryOperator', operator: '<=', lhs, rhs: this.comparison() }
+      return { tag: 'binaryOperator', operator: '<=', lhs, rhs: this.comparison(), unitId: this.unitId }
     }
     if (this.scanner.consumeIf('>')) {
-      return { tag: 'binaryOperator', operator: '>', lhs, rhs: this.comparison() }
+      return { tag: 'binaryOperator', operator: '>', lhs, rhs: this.comparison(), unitId: this.unitId }
     }
     if (this.scanner.consumeIf('<')) {
-      return { tag: 'binaryOperator', operator: '<', lhs, rhs: this.comparison() }
+      return { tag: 'binaryOperator', operator: '<', lhs, rhs: this.comparison(), unitId: this.unitId }
     }
     return lhs
   }
@@ -273,10 +279,10 @@ export class Parser {
   addition(): AstNode {
     const lhs = this.multiplication()
     if (this.scanner.consumeIf('+')) {
-      return { tag: 'binaryOperator', operator: '+', lhs, rhs: this.addition() }
+      return { tag: 'binaryOperator', operator: '+', lhs, rhs: this.addition(), unitId: this.unitId }
     }
     if (this.scanner.consumeIf('-')) {
-      return { tag: 'binaryOperator', operator: '-', lhs, rhs: this.addition() }
+      return { tag: 'binaryOperator', operator: '-', lhs, rhs: this.addition(), unitId: this.unitId }
     }
     return lhs
   }
@@ -284,13 +290,13 @@ export class Parser {
   multiplication(): AstNode {
     const lhs = this.power()
     if (this.scanner.consumeIf('*')) {
-      return { tag: 'binaryOperator', operator: '*', lhs, rhs: this.multiplication() }
+      return { tag: 'binaryOperator', operator: '*', lhs, rhs: this.multiplication(), unitId: this.unitId }
     }
     if (this.scanner.consumeIf('/')) {
-      return { tag: 'binaryOperator', operator: '/', lhs, rhs: this.multiplication() }
+      return { tag: 'binaryOperator', operator: '/', lhs, rhs: this.multiplication(), unitId: this.unitId }
     }
     if (this.scanner.consumeIf('%')) {
-      return { tag: 'binaryOperator', operator: '%', lhs, rhs: this.multiplication() }
+      return { tag: 'binaryOperator', operator: '%', lhs, rhs: this.multiplication(), unitId: this.unitId }
     }
     return lhs
   }
@@ -298,7 +304,7 @@ export class Parser {
   power(): AstNode {
     const lhs = this.unary()
     if (this.scanner.consumeIf('**')) {
-      return { tag: 'binaryOperator', operator: '**', lhs, rhs: this.power() }
+      return { tag: 'binaryOperator', operator: '**', lhs, rhs: this.power(), unitId: this.unitId }
     }
     return lhs
   }
@@ -306,15 +312,15 @@ export class Parser {
   unary(): AstNode {
     let operatorToken = this.scanner.consumeIf('!')
     if (operatorToken) {
-      return { tag: 'unaryOperator', operand: this.unary(), operator: '!', operatorToken }
+      return { tag: 'unaryOperator', operand: this.unary(), operator: '!', operatorToken, unitId: this.unitId }
     }
     operatorToken = this.scanner.consumeIf('+')
     if (operatorToken) {
-      return { tag: 'unaryOperator', operand: this.unary(), operator: '+', operatorToken }
+      return { tag: 'unaryOperator', operand: this.unary(), operator: '+', operatorToken, unitId: this.unitId }
     }
     operatorToken = this.scanner.consumeIf('-')
     if (operatorToken) {
-      return { tag: 'unaryOperator', operand: this.unary(), operator: '-', operatorToken }
+      return { tag: 'unaryOperator', operand: this.unary(), operator: '-', operatorToken, unitId: this.unitId }
     }
 
     return this.call()
@@ -328,7 +334,7 @@ export class Parser {
     }
 
     const { actualArgs, end } = this.actualArgList()
-    return { tag: 'functionCall', actualArgs, callee, end }
+    return { tag: 'functionCall', actualArgs, callee, end, unitId: this.unitId }
   }
 
   private actualArgList() {
@@ -359,19 +365,19 @@ export class Parser {
 
     while (true) {
       if (this.scanner.consumeIf('.')) {
-        ret = { tag: 'dot', receiver: ret, ident: this.identifier() }
+        ret = { tag: 'dot', receiver: ret, ident: this.identifier(), unitId: this.unitId }
         continue
       }
 
       if (this.scanner.consumeIf('[')) {
-        ret = { tag: 'indexAccess', receiver: ret, index: this.expression() }
+        ret = { tag: 'indexAccess', receiver: ret, index: this.expression(), unitId: this.unitId }
         this.scanner.consume(']')
         continue
       }
 
       if (this.scanner.consumeIf('(')) {
         const { actualArgs, end } = this.actualArgList()
-        ret = { tag: 'functionCall', actualArgs, callee: ret, end }
+        ret = { tag: 'functionCall', actualArgs, callee: ret, end, unitId: this.unitId }
         continue
       }
 
@@ -404,45 +410,45 @@ export class Parser {
   maybePrimitiveLiteral(): Literal | undefined {
     let t = this.scanner.consumeIf('sink!!') || this.scanner.consumeIf('undefined!!')
     if (t) {
-      return { tag: 'literal', type: 'sink!!', t }
+      return { tag: 'literal', type: 'sink!!', t, unitId: this.unitId }
     }
 
     t = this.scanner.consumeIf('sink!') || this.scanner.consumeIf('undefined!')
     if (t) {
-      return { tag: 'literal', type: 'sink!', t }
+      return { tag: 'literal', type: 'sink!', t, unitId: this.unitId }
     }
 
     t = this.scanner.consumeIf('sink') || this.scanner.consumeIf('undefined')
     if (t) {
-      return { tag: 'literal', type: 'sink', t }
+      return { tag: 'literal', type: 'sink', t, unitId: this.unitId }
     }
 
     t = this.scanner.consumeIf('true')
     if (t) {
-      return { tag: 'literal', type: 'bool', t }
+      return { tag: 'literal', type: 'bool', t, unitId: this.unitId }
     }
     t = this.scanner.consumeIf('false')
     if (t) {
-      return { tag: 'literal', type: 'bool', t }
+      return { tag: 'literal', type: 'bool', t, unitId: this.unitId }
     }
 
     t = this.scanner.consumeIf(/([0-9]*[.])?[0-9]+/)
     if (t) {
-      return { tag: 'literal', type: 'num', t }
+      return { tag: 'literal', type: 'num', t, unitId: this.unitId }
     }
 
     // double-quotes-enclosd string
     if (this.scanner.consumeIf(`"`, false)) {
       t = this.scanner.consume(/[^"]*/)
       this.scanner.consume(`"`)
-      return { tag: 'literal', type: 'str', t }
+      return { tag: 'literal', type: 'str', t, unitId: this.unitId }
     }
 
     // single-quotes-enclosd string
     if (this.scanner.consumeIf(`'`, false)) {
       t = this.scanner.consume(/[^']*/)
       this.scanner.consume(`'`)
-      return { tag: 'literal', type: 'str', t }
+      return { tag: 'literal', type: 'str', t, unitId: this.unitId }
     }
 
     return undefined
@@ -470,7 +476,7 @@ export class Parser {
     const t = this.scanner.consumeIf(']')
     if (t) {
       // an empty array literal
-      return { tag: 'arrayLiteral', start, parts: [], end: t }
+      return { tag: 'arrayLiteral', start, parts: [], end: t, unitId: this.unitId }
     }
 
     const parts: ArrayLiteralPart[] = []
@@ -478,7 +484,7 @@ export class Parser {
       if (this.scanner.consumeIf(',')) {
         const end = this.scanner.consumeIf(']')
         if (end) {
-          return { tag: 'arrayLiteral', start, parts, end }
+          return { tag: 'arrayLiteral', start, parts, end, unitId: this.unitId }
         }
         continue
       }
@@ -491,13 +497,13 @@ export class Parser {
 
       let end = this.scanner.consumeIf(']')
       if (end) {
-        return { tag: 'arrayLiteral', start, parts, end }
+        return { tag: 'arrayLiteral', start, parts, end, unitId: this.unitId }
       }
 
       this.scanner.consume(',')
       end = this.scanner.consumeIf(']')
       if (end) {
-        return { tag: 'arrayLiteral', start, parts, end }
+        return { tag: 'arrayLiteral', start, parts, end, unitId: this.unitId }
       }
     }
   }
@@ -510,7 +516,7 @@ export class Parser {
     const t = this.scanner.consumeIf('}')
     if (t) {
       // an empty array literal
-      return { tag: 'objectLiteral', start, parts: [], end: t }
+      return { tag: 'objectLiteral', start, parts: [], end: t, unitId: this.unitId }
     }
 
     const parts: ObjectLiteralPart[] = []
@@ -532,13 +538,13 @@ export class Parser {
 
       let end = this.scanner.consumeIf('}')
       if (end) {
-        return { tag: 'objectLiteral', start, parts, end }
+        return { tag: 'objectLiteral', start, parts, end, unitId: this.unitId }
       }
 
       this.scanner.consume(',')
       end = this.scanner.consumeIf('}')
       if (end) {
-        return { tag: 'objectLiteral', start, parts, end }
+        return { tag: 'objectLiteral', start, parts, end, unitId: this.unitId }
       }
     }
   }
@@ -555,7 +561,7 @@ export class Parser {
   private maybeIdentifier(): Ident | undefined {
     const t = this.scanner.consumeIf(IDENT_PATTERN)
     if (t) {
-      return { tag: 'ident', t }
+      return { tag: 'ident', t, unitId: this.unitId }
     }
 
     return undefined
