@@ -1,17 +1,8 @@
-import { Septima } from '../src/septima'
+import { Executable, Septima } from '../src/septima'
 import { shouldNeverHappen } from '../src/should-never-happen'
 
-/**
- * Runs a Septima program for testing purposes. Throws an error If the program evaluated to `sink`.
- */
-function run(
-  mainFileName: string,
-  inputs: Record<string, string>,
-  args: Record<string, unknown> = {},
-  sourceRoot = '',
-) {
-  const septima = new Septima(sourceRoot)
-  const res = septima.computeModule(mainFileName, args, (m: string) => inputs[m])
+function runExecutable(executable: Executable, args: Record<string, unknown>) {
+  const res = executable.execute(args)
   if (res.tag === 'ok') {
     return res.value
   }
@@ -22,8 +13,34 @@ function run(
 
   shouldNeverHappen(res)
 }
+/**
+ * Runs a Septima program for testing purposes. Throws an error If the program evaluated to `sink`.
+ */
+function run(
+  mainFileName: string,
+  inputs: Record<string, string>,
+  args: Record<string, unknown> = {},
+  sourceRoot = '',
+) {
+  const septima = new Septima(sourceRoot)
+  return runExecutable(
+    septima.compileSync(mainFileName, (m: string) => inputs[m]),
+    args,
+  )
+}
 
-describe('septima-compute-module', () => {
+async function runPromise(
+  mainFileName: string,
+  inputs: Record<string, string>,
+  args: Record<string, unknown> = {},
+  sourceRoot = '',
+) {
+  const septima = new Septima(sourceRoot)
+  const executable = await septima.compile(mainFileName, (m: string) => Promise.resolve(inputs[m]))
+  return runExecutable(executable, args)
+}
+
+describe('unit-importing', () => {
   test('fetches the content of the module to compute from the given callback function', () => {
     expect(run('a', { a: `3+8` })).toEqual(11)
   })
@@ -32,12 +49,12 @@ describe('septima-compute-module', () => {
   })
   test('errors if the imported definition is not qualified with "export"', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `let eight = 8; {}` })).toThrowError(
-      `Evaluated to sink: at (1:27..33) b.eight`,
+      `Evaluated to sink: at (a:1:27..33) b.eight`,
     )
   })
   test('errors if the path to input from is not a string literal', () => {
     expect(() => run('a', { a: `import * as foo from 500` })).toThrowError(
-      'Expected a string literal at (1:22..24) 500',
+      'Expected a string literal at (a:1:22..24) 500',
     )
   })
   test('allows specifying a custom source root', () => {
@@ -115,5 +132,51 @@ describe('septima-compute-module', () => {
     expect(() =>
       run('a', { a: `import * as b from 'b'; args.x + '_' + b.foo`, b: `let foo = args.x ?? 'N/A'; {}` }, { x: 'Red' }),
     ).toThrowError(/Symbol args was not found when evaluating/)
+  })
+  describe('async compilation', () => {
+    test('can use exported definitions from another module', async () => {
+      expect(await runPromise('a', { a: `import * as b from 'b'; 3+b.eight`, b: `export let eight = 8; {}` })).toEqual(
+        11,
+      )
+    })
+    test('allows specifying a custom source root', async () => {
+      expect(
+        await runPromise(
+          'a',
+          { 'p/q/r/a': `import * as b from 'b'; 3+b.eight`, 'p/q/r/b': `export let eight = 8; {}` },
+          {},
+          'p/q/r',
+        ),
+      ).toEqual(11)
+    })
+    test('allows importing from the same directory via a relative path', async () => {
+      expect(await runPromise('s', { s: `import * as t from "./t"; t.ten+5`, t: `export let ten = 10` }, {})).toEqual(
+        15,
+      )
+    })
+    test('allows importing from sub directories', async () => {
+      expect(
+        await runPromise('q', { q: `import * as t from "./r/s/t"; t.ten+5`, 'r/s/t': `export let ten = 10` }, {}),
+      ).toEqual(15)
+      expect(
+        await runPromise('q', {
+          q: `import * as t from './r/s/t'; t.ten * t.ten`,
+          'r/s/t': `import * as f from './d/e/f'; export let ten = f.five*2`,
+          'r/s/d/e/f': `export let five = 5`,
+        }),
+      ).toEqual(100)
+    })
+    test('errors if a file tries to import a(nother) file which is outside of the source root tree', async () => {
+      await expect(runPromise('q', { 'd1/d2/q': `import * as r from "../r"; 5` }, {}, 'd1/d2')).rejects.toThrowError(
+        `resolved path (d1/r) is pointing outside of source root (d1/d2)`,
+      )
+    })
+  })
+  describe('errors in imported files', () => {
+    test('foo', () => {
+      expect(() =>
+        run('q', { q: `import * as r from './r'; r.foo()`, r: `let a = {}; export let foo = () => a.b.c` }),
+      ).toThrowError('Evaluated to sink: at (r:1:36..38) a.b')
+    })
   })
 })

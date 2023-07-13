@@ -14,25 +14,25 @@ export class SourceCode {
     return `${spacer}${formatted}`
   }
 
-  sourceRefOfLocation(loc: Location) {
-    return this.sourceRef(this.expandToEndOfLine(loc))
+  formatAst(ast: AstNode): string {
+    return this.sourceRef(span(ast))
   }
 
   sourceRef(span: Span | undefined) {
     if (!span) {
       return `at <unknown location>`
     }
-    return `at ${this.formatSpan(span)} ${this.interestingPart(span)}`
+    return `at (${this.pathFromSourceRoot}:${this.formatSpan(span)}) ${this.interestingPart(span)}`
   }
 
-  formatSpan(span: Span) {
+  private formatSpan(span: Span) {
     const f = this.resolveLocation(span.from)
     const t = this.resolveLocation(span.to)
     if (f.line === t.line) {
-      return `(${f.line + 1}:${f.col + 1}..${t.col + 1})`
+      return `${f.line + 1}:${f.col + 1}..${t.col + 1}`
     }
 
-    return `(${f.line + 1}:${f.col + 1}..${t.line + 1}:${t.col + 1})`
+    return `${f.line + 1}:${f.col + 1}..${t.line + 1}:${t.col + 1}`
   }
 
   private interestingPart(span: Span) {
@@ -54,7 +54,7 @@ export class SourceCode {
     return `${stripped.substring(0, limit)}...`
   }
 
-  resolveLocation(loc: Location): Location2d {
+  private resolveLocation(loc: Location): Location2d {
     const prefix = this.input.slice(0, loc.offset)
     let line = 0
     for (let i = 0; i < prefix.length; ++i) {
@@ -88,7 +88,7 @@ export class SourceCode {
     return { from: loc, to: { offset: endOfLine } }
   }
 
-  lineAt(loc: Location) {
+  private lineAt(loc: Location) {
     const precedingNewline = this.input.lastIndexOf('\n', loc.offset)
     // add a + 1 to skip over the '\n' character (it is not part of the line). Also works if precedingNewLine is -1 (no
     // preceding newline exists)

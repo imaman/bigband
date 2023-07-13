@@ -1,9 +1,9 @@
 import * as path from 'path'
 
-import { Unit } from './ast-node'
+import { Unit, UnitId } from './ast-node'
 import { failMe } from './fail-me'
 import { Parser } from './parser'
-import { Result, ResultSink, ResultSinkImpl } from './result'
+import { createResultSink, formatTrace, Result, ResultSink } from './result'
 import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
@@ -16,6 +16,18 @@ interface Options {
    * to `undefined`. The default behavior is to throw an error.
    */
   onSink?: (res: ResultSink) => unknown
+}
+
+export interface Executable {
+  execute(args: Record<string, unknown>): Result
+}
+
+type SyncCodeReader = (resolvePath: string) => string | undefined
+type CodeReader = (resolvePath: string) => Promise<string | undefined>
+
+export interface SourceUnit {
+  sourceCode: SourceCode
+  unit: Unit
 }
 
 export class Septima {
@@ -40,7 +52,7 @@ export class Septima {
     const fileName = '<inline>'
     const contentRec: Record<string, string> = { [fileName]: input }
     const readFile = (m: string) => contentRec[m]
-    const res = new Septima().computeModule(fileName, args, readFile)
+    const res = new Septima().compileSync(fileName, readFile).execute(args)
     if (res.tag === 'ok') {
       return res.value
     }
@@ -52,35 +64,69 @@ export class Septima {
     shouldNeverHappen(res)
   }
 
-  private readonly unitByFileName = new Map<string, { unit: Unit; sourceCode: SourceCode }>()
+  private readonly unitByUnitId = new Map<UnitId, SourceUnit>()
 
   constructor(private readonly sourceRoot = '') {}
 
-  computeModule(fileName: string, args: Record<string, unknown>, readFile: (m: string) => string | undefined): Result {
-    this.loadSync(fileName, readFile)
-    const value = this.computeImpl(fileName, 'quiet', args)
-    if (!value.isSink()) {
-      return { value: value.export(), tag: 'ok' }
-    }
-    const { sourceCode } = this.unitByFileName.get(fileName) ?? failMe(`fileName not found: ${fileName}`)
-    return new ResultSinkImpl(value, sourceCode)
+  compileSync(fileName: string, readFile: SyncCodeReader) {
+    const acc = [fileName]
+    this.pumpSync(acc, readFile)
+    return this.getExecutableFor(fileName)
   }
 
-  loadSync(fileName: string, readFile: (resolvedPath: string) => string | undefined) {
+  async compile(fileName: string, readFile: CodeReader) {
+    const acc = [fileName]
+    await this.pump(acc, readFile)
+    return this.getExecutableFor(fileName)
+  }
+
+  private getExecutableFor(fileName: string): Executable {
+    // Verify that a unit for the main file exists
+    this.unitOf(undefined, fileName)
+
+    return {
+      execute: (args: Record<string, unknown>) => {
+        const value = this.execute(fileName, 'quiet', args)
+        let ret: Result
+        if (!value.isSink()) {
+          ret = { value: value.export(), tag: 'ok' }
+        } else {
+          ret = createResultSink(value, this.unitByUnitId)
+        }
+        return ret
+      },
+    }
+  }
+
+  private execute(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
+    const runtime = new Runtime(this.unitOf(undefined, fileName), verbosity, (a, b) => this.unitOf(a, b), args)
+    const c = runtime.compute()
+
+    if (c.value) {
+      return c.value
+    }
+
+    const formatted = formatTrace(c.expressionTrace, this.unitByUnitId)
+    throw new Error(`${c.errorMessage} when evaluating:\n${formatted}`)
+  }
+
+  /**
+   * Translates the filename into a resolved path (to be read) if it has not been read yet. If it has been read,
+   * returns undefined
+   */
+  private computeResolvedPathToRead(fileName: string) {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
-    if (this.unitByFileName.has(pathFromSourceRoot)) {
+    if (this.unitByUnitId.has(pathFromSourceRoot)) {
+      return undefined
+    }
+    return path.join(this.sourceRoot, pathFromSourceRoot)
+  }
+
+  private loadFileContent(resolvedPath: string | undefined, content: string | undefined, acc: string[]) {
+    if (resolvedPath === undefined) {
       return
     }
-
-    const content = readFile(path.join(this.sourceRoot, pathFromSourceRoot))
-
-    const pathsToLoad = this.loadFileContent(pathFromSourceRoot, content)
-    for (const p of pathsToLoad) {
-      this.loadSync(p, readFile)
-    }
-  }
-
-  private loadFileContent(pathFromSourceRoot: string, content: string | undefined) {
+    const pathFromSourceRoot = path.relative(this.sourceRoot, resolvedPath)
     if (content === undefined) {
       throw new Error(`Cannot find file '${path.join(this.sourceRoot, pathFromSourceRoot)}'`)
     }
@@ -89,9 +135,15 @@ export class Septima {
     const parser = new Parser(scanner)
     const unit = parser.parse()
 
-    this.unitByFileName.set(pathFromSourceRoot, { unit, sourceCode })
+    this.unitByUnitId.set(pathFromSourceRoot, { unit, sourceCode })
+    acc.push(...unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text)))
+  }
 
-    return unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text))
+  private unitOf(importerPathFromSourceRoot: string | undefined, relativePath: string) {
+    const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
+    const { unit } =
+      this.unitByUnitId.get(p) ?? failMe(`Encluntered a file which has not been loaded (file name: ${p})`)
+    return unit
   }
 
   private getPathFromSourceRoot(startingPoint: string | undefined, relativePath: string) {
@@ -108,24 +160,44 @@ export class Septima {
     return ret
   }
 
-  private computeImpl(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
-    const getAstOf = (importerPathFromSourceRoot: string | undefined, relativePath: string) => {
-      const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
-      const { unit } =
-        this.unitByFileName.get(p) ?? failMe(`Encluntered a file which has not been loaded (file name: ${p})`)
-      return unit
+  // loadSync() need to be kept in sync with load(), ditto pumpSync() w/ pump(). There is deep testing coverage for the
+  // sync variant but only partial coverage for the async variant.
+  // An extra effort was taken in order to reduce the duplication between the two variants. This attempt achieved its
+  // goal (to some extent) but resulted in a somewhat unnatural code (like using an "acc" parameter to collect items,
+  // instead of returning an array, having an external "pump" logic instead of a plain recursion). Perhaps a better
+  // approach is to have a contract test and run it twice thus equally testing the two variants.
+
+  private loadSync(fileName: string, readFile: SyncCodeReader, acc: string[]) {
+    const p = this.computeResolvedPathToRead(fileName)
+    const content = p && readFile(p)
+    this.loadFileContent(p, content, acc)
+  }
+
+  private async load(fileName: string, readFile: CodeReader, acc: string[]): Promise<void> {
+    const p = this.computeResolvedPathToRead(fileName)
+    const content = p && (await readFile(p))
+    this.loadFileContent(p, content, acc)
+  }
+
+  private pumpSync(acc: string[], readFile: SyncCodeReader) {
+    while (true) {
+      const curr = acc.pop()
+      if (!curr) {
+        return
+      }
+
+      this.loadSync(curr, readFile, acc)
     }
+  }
 
-    const runtime = new Runtime(getAstOf(undefined, fileName), verbosity, getAstOf, args)
-    const c = runtime.compute()
+  private async pump(acc: string[], readFile: CodeReader) {
+    while (true) {
+      const curr = acc.pop()
+      if (!curr) {
+        return
+      }
 
-    if (c.value) {
-      return c.value
+      await this.load(curr, readFile, acc)
     }
-
-    const { sourceCode } =
-      this.unitByFileName.get(fileName) ?? failMe(`sourceCode object was not found (file name: ${fileName})`)
-    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
-    throw new Error(runtimeErrorMessage)
   }
 }

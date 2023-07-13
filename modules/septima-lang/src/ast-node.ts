@@ -5,16 +5,20 @@ import { switchOn } from './switch-on'
 
 export type Let = { start: Token; ident: Ident; value: AstNode; isExported: boolean }
 
+export type UnitId = string
+
 export type Import = {
   start: Token
   ident: Ident
   pathToImportFrom: Token
+  unitId: UnitId
 }
 
 export type Literal = {
   tag: 'literal'
   type: 'str' | 'bool' | 'num' | 'sink' | 'sink!' | 'sink!!'
   t: Token
+  unitId: UnitId
 }
 
 export type ObjectLiteralPart =
@@ -27,6 +31,7 @@ export type ArrayLiteralPart = { tag: 'element'; v: AstNode } | { tag: 'spread';
 export type Ident = {
   tag: 'ident'
   t: Token
+  unitId: UnitId
 }
 
 export type Lambda = {
@@ -34,13 +39,14 @@ export type Lambda = {
   start: Token
   formalArgs: Ident[]
   body: AstNode
+  unitId: UnitId
 }
 
 export type Unit = {
   tag: 'unit'
   imports: Import[]
   expression: AstNode
-  pathFromSourceRoot: string
+  unitId: UnitId
 }
 
 export type AstNode =
@@ -52,29 +58,34 @@ export type AstNode =
       tag: 'arrayLiteral'
       parts: ArrayLiteralPart[]
       end: Token
+      unitId: UnitId
     }
   | {
       start: Token
       tag: 'objectLiteral'
       parts: ObjectLiteralPart[]
       end: Token
+      unitId: UnitId
     }
   | {
       tag: 'binaryOperator'
       operator: '+' | '-' | '*' | '/' | '**' | '%' | '&&' | '||' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '??'
       lhs: AstNode
       rhs: AstNode
+      unitId: UnitId
     }
   | {
       tag: 'unaryOperator'
       operatorToken: Token
       operator: '+' | '-' | '!'
       operand: AstNode
+      unitId: UnitId
     }
   | {
       tag: 'topLevelExpression'
       definitions: Let[]
       computation?: AstNode
+      unitId: UnitId
     }
   | Lambda
   | {
@@ -82,40 +93,47 @@ export type AstNode =
       condition: AstNode
       positive: AstNode
       negative: AstNode
+      unitId: UnitId
     }
   | {
       tag: 'functionCall'
       actualArgs: AstNode[]
       callee: AstNode
       end: Token
+      unitId: UnitId
     }
   | {
       tag: 'if'
       condition: AstNode
       positive: AstNode
       negative: AstNode
+      unitId: UnitId
     }
   | {
       tag: 'dot'
       receiver: AstNode
       ident: Ident
+      unitId: UnitId
     }
   | {
       tag: 'indexAccess'
       receiver: AstNode
       index: AstNode
+      unitId: UnitId
     }
   | {
-      // A sepcial AST node meant to be generated internally (needed for exporting definition from one unit to another).
+      // A special AST node meant to be generated internally (needed for exporting definition from one unit to another).
       // Not intended to be parsed from source code. Hence, it is effectively empty, and its location cannot be
       // determined.
       tag: 'export*'
+      unitId: UnitId
     }
 
 export function show(ast: AstNode | AstNode[]): string {
   if (Array.isArray(ast)) {
     return ast.map(curr => show(curr)).join(', ')
   }
+
   if (ast.tag === 'arrayLiteral') {
     const parts = ast.parts.map(p => {
       if (p.tag === 'element') {

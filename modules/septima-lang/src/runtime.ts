@@ -1,4 +1,4 @@
-import { AstNode, show, span, Unit } from './ast-node'
+import { AstNode, show, span, Unit, UnitId } from './ast-node'
 import { extractMessage } from './extract-message'
 import { failMe } from './fail-me'
 import { shouldNeverHappen } from './should-never-happen'
@@ -113,8 +113,8 @@ export class Runtime {
   private evalNode(ast: AstNode, table: SymbolTable): Value {
     this.stack = Stack.push(ast, this.stack)
     let ret = this.evalNodeImpl(ast, table)
-    if (ret.isSink() && !ret.span()) {
-      ret = ret.bindToSpan(span(ast))
+    if (ret.isSink() && !ret.where()) {
+      ret = ret.bindToSpan(span(ast), ast.unitId)
     }
     switchOn(this.verbosity, {
       quiet: () => {},
@@ -127,7 +127,7 @@ export class Runtime {
     return ret
   }
 
-  private importDefinitions(importerAsPathFromSourceRoot: string, relativePathFromImporter: string): Value {
+  private importDefinitions(importerAsPathFromSourceRoot: UnitId, relativePathFromImporter: string): Value {
     const importee = this.getAstOf(importerAsPathFromSourceRoot, relativePathFromImporter)
     const exp = importee.expression
     if (
@@ -157,8 +157,13 @@ export class Runtime {
       const exporStarUnit: AstNode = {
         tag: 'unit',
         imports: importee.imports,
-        pathFromSourceRoot: importee.pathFromSourceRoot,
-        expression: { tag: 'topLevelExpression', definitions: exp.definitions, computation: { tag: 'export*' } },
+        unitId: importee.unitId,
+        expression: {
+          tag: 'topLevelExpression',
+          definitions: exp.definitions,
+          unitId: importee.unitId,
+          computation: { tag: 'export*', unitId: importee.unitId },
+        },
       }
       return this.evalNode(exporStarUnit, this.buildInitialSymbolTable(false))
     }
@@ -170,7 +175,7 @@ export class Runtime {
     if (ast.tag === 'unit') {
       let newTable = table
       for (const imp of ast.imports) {
-        const o = this.importDefinitions(ast.pathFromSourceRoot, imp.pathToImportFrom.text)
+        const o = this.importDefinitions(ast.unitId, imp.pathToImportFrom.text)
         newTable = new SymbolFrame(imp.ident.t.text, { destination: o }, newTable, 'INTERNAL')
       }
       return this.evalNode(ast.expression, newTable)
