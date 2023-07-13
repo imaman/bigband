@@ -26,17 +26,17 @@ export class SourceCode {
     if (!span) {
       return `at <unknown location>`
     }
-    return `at ${this.formatSpan(span)} ${this.interestingPart(span)}`
+    return `at (${this.pathFromSourceRoot}:${this.formatSpan(span)}) ${this.interestingPart(span)}`
   }
 
-  formatSpan(span: Span) {
+  private formatSpan(span: Span) {
     const f = this.resolveLocation(span.from)
     const t = this.resolveLocation(span.to)
     if (f.line === t.line) {
-      return `(${f.line + 1}:${f.col + 1}..${t.col + 1})`
+      return `${f.line + 1}:${f.col + 1}..${t.col + 1}`
     }
 
-    return `(${f.line + 1}:${f.col + 1}..${t.line + 1}:${t.col + 1})`
+    return `${f.line + 1}:${f.col + 1}..${t.line + 1}:${t.col + 1}`
   }
 
   private interestingPart(span: Span) {

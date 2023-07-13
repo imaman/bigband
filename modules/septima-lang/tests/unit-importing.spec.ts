@@ -49,12 +49,12 @@ describe('unit-importing', () => {
   })
   test('errors if the imported definition is not qualified with "export"', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `let eight = 8; {}` })).toThrowError(
-      `Evaluated to sink: at (1:27..33) b.eight`,
+      `Evaluated to sink: at (a:1:27..33) b.eight`,
     )
   })
   test('errors if the path to input from is not a string literal', () => {
     expect(() => run('a', { a: `import * as foo from 500` })).toThrowError(
-      'Expected a string literal at (1:22..24) 500',
+      'Expected a string literal at (a:1:22..24) 500',
     )
   })
   test('allows specifying a custom source root', () => {
@@ -176,7 +176,7 @@ describe('unit-importing', () => {
     test('foo', () => {
       expect(() =>
         run('q', { q: `import * as r from './r'; r.foo()`, r: `let a = {}; export let foo = () => a.b.c` }),
-      ).toThrowError('Evaluated to sink: at (1:36..38) a.b')
+      ).toThrowError('Evaluated to sink: at (r:1:36..38) a.b')
     })
   })
 })
