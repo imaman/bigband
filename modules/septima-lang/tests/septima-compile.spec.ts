@@ -40,7 +40,7 @@ async function runPromise(
   return runExecutable(executable, args)
 }
 
-describe('unit-importing', () => {
+describe('septima-compile', () => {
   test('fetches the content of the module to compute from the given callback function', () => {
     expect(run('a', { a: `3+8` })).toEqual(11)
   })
