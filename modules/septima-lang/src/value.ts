@@ -311,12 +311,12 @@ export class Value {
     return inner.symbols
   }
 
-  span() {
+  where() {
     const inner = this.inner
     if (inner.tag !== 'sink') {
       return undefined
     }
-    return inner.span
+    return { span: inner.span, unitId: inner.unitId }
   }
 
   or(that: () => Value) {
