@@ -18,10 +18,6 @@ export class SourceCode {
     return this.sourceRef(span(ast))
   }
 
-  sourceRefOfLocation(loc: Location) {
-    return this.sourceRef(this.expandToEndOfLine(loc))
-  }
-
   sourceRef(span: Span | undefined) {
     if (!span) {
       return `at <unknown location>`
@@ -58,7 +54,7 @@ export class SourceCode {
     return `${stripped.substring(0, limit)}...`
   }
 
-  resolveLocation(loc: Location): Location2d {
+  private resolveLocation(loc: Location): Location2d {
     const prefix = this.input.slice(0, loc.offset)
     let line = 0
     for (let i = 0; i < prefix.length; ++i) {
@@ -92,7 +88,7 @@ export class SourceCode {
     return { from: loc, to: { offset: endOfLine } }
   }
 
-  lineAt(loc: Location) {
+  private lineAt(loc: Location) {
     const precedingNewline = this.input.lastIndexOf('\n', loc.offset)
     // add a + 1 to skip over the '\n' character (it is not part of the line). Also works if precedingNewLine is -1 (no
     // preceding newline exists)
