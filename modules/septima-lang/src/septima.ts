@@ -3,7 +3,7 @@ import * as path from 'path'
 import { Unit, UnitId } from './ast-node'
 import { failMe } from './fail-me'
 import { Parser } from './parser'
-import { createResultSink, Result, ResultSink } from './result'
+import { createResultSink, formatTrace, Result, ResultSink } from './result'
 import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
@@ -106,9 +106,10 @@ export class Septima {
       return c.value
     }
 
-    const { sourceCode } =
-      this.unitByUnitId.get(fileName) ?? failMe(`sourceCode object was not found (file name: ${fileName})`)
-    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
+    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${formatTrace(
+      c.expressionTrace,
+      this.unitByUnitId,
+    )}`
     throw new Error(runtimeErrorMessage)
   }
 
