@@ -1,4 +1,4 @@
-import { AstNode } from './ast-node'
+import { AstNode, UnitId } from './ast-node'
 import { failMe } from './fail-me'
 import { Span } from './location'
 import { SourceUnit } from './septima'
@@ -19,27 +19,34 @@ export type Result =
     }
   | ResultSink
 
-export function createResultSink(sink: Value, unitByFileName: Map<string, SourceUnit>): ResultSink {
+const sourceCode = (unitId: string, unitByUnitId: Map<UnitId, SourceUnit>) =>
+  (unitByUnitId.get(unitId) ?? failMe(`source code not found for ${unitId}`)).sourceCode
+
+export function formatTrace(trace: AstNode[] | undefined, unitByUnitId: Map<UnitId, SourceUnit>) {
+  if (!trace) {
+    return undefined
+  }
+  const format = (ast: AstNode) => sourceCode(ast.unitId, unitByUnitId).formatAst(ast)
+
+  const spacer = '  '
+  const joined = trace
+    .map(at => format(at))
+    .reverse()
+    .join(`\n${spacer}`)
+  return joined ? `${spacer}${joined}` : undefined
+}
+
+export function createResultSink(sink: Value, unitByUnitId: Map<UnitId, SourceUnit>): ResultSink {
   if (!sink.isSink()) {
     throw new Error(`not a sink! (${sink})`)
   }
 
-  const sourceCode = (unitId: string) =>
-    (unitByFileName.get(unitId) ?? failMe(`source code not found for ${unitId}`)).sourceCode
-  const format = (ast: AstNode) => sourceCode(ast.unitId).formatAst(ast)
-
-  const spacer = '  '
-  const joined = sink
-    .trace()
-    ?.map(at => format(at))
-    .reverse()
-    .join(`\n${spacer}`)
-  const trace = joined ? `${spacer}${joined}` : undefined
+  const trace = formatTrace(sink.trace(), unitByUnitId)
 
   const w = sink.where()
   let message = trace
   if (!message && w?.span && w?.unitId) {
-    message = sourceCode(w.unitId).sourceRef(w.span)
+    message = sourceCode(w.unitId, unitByUnitId).sourceRef(w.span)
   }
   message = `Evaluated to sink: ${message}`
 
