@@ -69,15 +69,25 @@ export class Septima {
   constructor(private readonly sourceRoot = '') {}
 
   compileSync(fileName: string, readFile: SyncCodeReader) {
+    fileName = this.relativize(fileName)
     const acc = [fileName]
     this.pumpSync(acc, readFile)
     return this.getExecutableFor(fileName)
   }
 
   async compile(fileName: string, readFile: CodeReader) {
+    fileName = this.relativize(fileName)
     const acc = [fileName]
     await this.pump(acc, readFile)
     return this.getExecutableFor(fileName)
+  }
+
+  private relativize(fileName: string) {
+    if (path.isAbsolute(fileName)) {
+      return path.relative(this.sourceRoot, fileName)
+    }
+
+    return fileName
   }
 
   private getExecutableFor(fileName: string): Executable {
@@ -148,7 +158,7 @@ export class Septima {
 
   private getPathFromSourceRoot(startingPoint: string | undefined, relativePath: string) {
     if (path.isAbsolute(relativePath)) {
-      throw new Error(`An absolute path is not allowed for referencing a septima source file (got: ${relativePath})`)
+      throw new Error(`An absolute path is not allowed in import (got: ${relativePath})`)
     }
     const joined = startingPoint === undefined ? relativePath : path.join(path.dirname(startingPoint), relativePath)
     const ret = path.normalize(joined)
