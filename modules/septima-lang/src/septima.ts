@@ -1,9 +1,9 @@
 import * as path from 'path'
 
-import { Unit } from './ast-node'
+import { Unit, UnitId } from './ast-node'
 import { failMe } from './fail-me'
 import { Parser } from './parser'
-import { Result, ResultSink, ResultSinkImpl } from './result'
+import { createResultSink, Result, ResultSink } from './result'
 import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
@@ -24,6 +24,11 @@ export interface Executable {
 
 type SyncCodeReader = (resolvePath: string) => string | undefined
 type CodeReader = (resolvePath: string) => Promise<string | undefined>
+
+export interface SourceUnit {
+  sourceCode: SourceCode
+  unit: Unit
+}
 
 export class Septima {
   /**
@@ -59,7 +64,7 @@ export class Septima {
     shouldNeverHappen(res)
   }
 
-  private readonly unitByFileName = new Map<string, { unit: Unit; sourceCode: SourceCode }>()
+  private readonly unitByUnitId = new Map<UnitId, SourceUnit>()
 
   constructor(private readonly sourceRoot = '') {}
 
@@ -86,8 +91,7 @@ export class Septima {
         if (!value.isSink()) {
           ret = { value: value.export(), tag: 'ok' }
         } else {
-          const { sourceCode } = this.unitByFileName.get(fileName) ?? failMe(`fileName not found: ${fileName}`)
-          ret = new ResultSinkImpl(value, sourceCode)
+          ret = createResultSink(value, this.unitByUnitId)
         }
         return ret
       },
@@ -103,7 +107,7 @@ export class Septima {
     }
 
     const { sourceCode } =
-      this.unitByFileName.get(fileName) ?? failMe(`sourceCode object was not found (file name: ${fileName})`)
+      this.unitByUnitId.get(fileName) ?? failMe(`sourceCode object was not found (file name: ${fileName})`)
     const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${sourceCode.formatTrace(c.expressionTrace)}`
     throw new Error(runtimeErrorMessage)
   }
@@ -114,7 +118,7 @@ export class Septima {
    */
   private computeResolvedPathToRead(fileName: string) {
     const pathFromSourceRoot = this.getPathFromSourceRoot(undefined, fileName)
-    if (this.unitByFileName.has(pathFromSourceRoot)) {
+    if (this.unitByUnitId.has(pathFromSourceRoot)) {
       return undefined
     }
     return path.join(this.sourceRoot, pathFromSourceRoot)
@@ -133,14 +137,14 @@ export class Septima {
     const parser = new Parser(scanner)
     const unit = parser.parse()
 
-    this.unitByFileName.set(pathFromSourceRoot, { unit, sourceCode })
+    this.unitByUnitId.set(pathFromSourceRoot, { unit, sourceCode })
     acc.push(...unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text)))
   }
 
   private unitOf(importerPathFromSourceRoot: string | undefined, relativePath: string) {
     const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
     const { unit } =
-      this.unitByFileName.get(p) ?? failMe(`Encluntered a file which has not been loaded (file name: ${p})`)
+      this.unitByUnitId.get(p) ?? failMe(`Encluntered a file which has not been loaded (file name: ${p})`)
     return unit
   }
 
