@@ -1,4 +1,4 @@
-import { AstNode, Lambda, show } from './ast-node'
+import { AstNode, Lambda, show, UnitId } from './ast-node'
 import { failMe } from './fail-me'
 import { CallEvaluator, findArrayMethod } from './find-array-method'
 import { findStringMethod } from './find-string-method'
@@ -17,7 +17,7 @@ type Inner =
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
   | { tag: 'num'; val: number }
   | { tag: 'obj'; val: Record<string, Value> }
-  | { tag: 'sink'; val: undefined; span?: Span; trace?: Stack.T; symbols?: SymbolTable }
+  | { tag: 'sink'; val: undefined; span?: Span; trace?: Stack.T; symbols?: SymbolTable; unitId?: UnitId }
   | { tag: 'str'; val: string }
 
 type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
@@ -144,13 +144,14 @@ export class Value {
    * (iv) in `||` and `&&` expressions, the evaluation of the right hand side can be skipped. Specifically,
    *    `true || sink` evaluates to `true` and `false && sink` evaluates to `false`.
    */
-  static sink(span?: Span, trace?: Stack.T, symbols?: SymbolTable): Value {
+  static sink(span?: Span, trace?: Stack.T, symbols?: SymbolTable, unitId?: UnitId): Value {
     return new Value({
       val: undefined,
       tag: 'sink',
       ...(span ? { span } : {}),
       ...(trace ? { trace } : {}),
       ...(symbols ? { symbols } : {}),
+      ...(unitId ? { unitId } : {}),
     })
   }
   static str(val: string): Value {
@@ -279,13 +280,13 @@ export class Value {
     })
   }
 
-  bindToSpan(span: Span) {
+  bindToSpan(span: Span, unitId?: UnitId) {
     const inner = this.inner
     if (inner.tag !== 'sink') {
       throw new Error(`Not supported on type ${this.inner.tag}`)
     }
 
-    return Value.sink(span, inner.trace, inner.symbols)
+    return Value.sink(span, inner.trace, inner.symbols, unitId)
   }
 
   trace() {
