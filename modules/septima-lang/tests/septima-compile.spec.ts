@@ -170,6 +170,12 @@ describe('septima-compile', () => {
         `resolved path (d1/r) is pointing outside of source root (d1/d2)`,
       )
     })
+    test('allows the main file to be specified via an absolute path if it points to a file under source root', async () => {
+      expect(await runPromise('/p/q/r/a', { '/p/q/r/a': `"apollo 11"` }, {}, '/p/q/r')).toEqual('apollo 11')
+      await expect(runPromise('/p/q/x', { '/p/q/x': `"apollo 11"` }, {}, '/p/q/r')).rejects.toThrowError(
+        'resolved path (/p/q/x) is pointing outside of source root (/p/q/r)',
+      )
+    })
   })
   describe('errors in imported files', () => {
     test('stack trace includes the name of the imported and a correct snippet from it', () => {
