@@ -106,11 +106,8 @@ export class Septima {
       return c.value
     }
 
-    const runtimeErrorMessage = `${c.errorMessage} when evaluating:\n${formatTrace(
-      c.expressionTrace,
-      this.unitByUnitId,
-    )}`
-    throw new Error(runtimeErrorMessage)
+    const formatted = formatTrace(c.expressionTrace, this.unitByUnitId)
+    throw new Error(`${c.errorMessage} when evaluating:\n${formatted}`)
   }
 
   /**
