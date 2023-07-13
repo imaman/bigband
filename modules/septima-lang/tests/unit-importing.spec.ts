@@ -174,9 +174,9 @@ describe('unit-importing', () => {
   })
   describe('errors in imported files', () => {
     test('foo', () => {
-      run('q', { q: `import * as r from './r'; r.foo()`, r: `let a = {}; export let foo = () => a.b.c` })
-      expect(5).toEqual(5)
-      // expect(() => ).toThrowError('Evaluated to sink: at (1:13..15) a.b')
+      expect(() =>
+        run('q', { q: `import * as r from './r'; r.foo()`, r: `let a = {}; export let foo = () => a.b.c` }),
+      ).toThrowError('Evaluated to sink: at (1:36..38) a.b')
     })
   })
 })

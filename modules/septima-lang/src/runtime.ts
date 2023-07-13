@@ -113,7 +113,7 @@ export class Runtime {
   private evalNode(ast: AstNode, table: SymbolTable): Value {
     this.stack = Stack.push(ast, this.stack)
     let ret = this.evalNodeImpl(ast, table)
-    if (ret.isSink() && !ret.span()) {
+    if (ret.isSink() && !ret.where()) {
       ret = ret.bindToSpan(span(ast), ast.unitId)
     }
     switchOn(this.verbosity, {

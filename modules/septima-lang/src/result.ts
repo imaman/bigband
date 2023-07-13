@@ -60,7 +60,8 @@ export function createResultSink(sink: Value, unitByFileName: Map<string, Source
   const joined = sink
     .trace()
     ?.map(at => format(at))
-    .join(spacer)
+    .reverse()
+    .join(`\n${spacer}`)
   const trace = joined ? `${spacer}${joined}` : undefined
 
   const w = sink.where()

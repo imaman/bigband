@@ -316,7 +316,11 @@ export class Value {
     if (inner.tag !== 'sink') {
       return undefined
     }
-    return { span: inner.span, unitId: inner.unitId }
+
+    if (inner.span && inner.unitId) {
+      return { span: inner.span, unitId: inner.unitId }
+    }
+    return undefined
   }
 
   or(that: () => Value) {
