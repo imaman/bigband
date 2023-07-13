@@ -30,7 +30,7 @@ function runSink(input: string) {
 describe('septima', () => {
   test('basics', () => {
     expect(run(`5`)).toEqual(5)
-    expect(() => run(`6 789`)).toThrowError(`Loitering input at (1:3..5) 789`)
+    expect(() => run(`6 789`)).toThrowError(`Loitering input at (<inline>:1:3..5) 789`)
     expect(run(`3.14`)).toEqual(3.14)
   })
   test('an optional return keyword can be placed before the result', () => {
@@ -86,10 +86,10 @@ describe('septima', () => {
 
     const expected = [
       `value type error: expected num but found "zxcvbnm" when evaluating:`,
-      `  at (1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
-      `  at (1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
-      `  at (1:5..21) 8 * 'zxcvbnm' * 7`,
-      `  at (1:10..21) zxcvbnm' * 7`,
+      `  at (<inline>:1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
+      `  at (<inline>:1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
+      `  at (<inline>:1:5..21) 8 * 'zxcvbnm' * 7`,
+      `  at (<inline>:1:10..21) zxcvbnm' * 7`,
     ].join('\n')
 
     expect(() => run(`9 * 8 * 'zxcvbnm' * 7`)).toThrowError(expected)
@@ -306,7 +306,7 @@ describe('septima', () => {
         expect(run(`{a: "A", b: "B", c: "CCC",}`)).toEqual({ a: 'A', b: 'B', c: 'CCC' })
       })
       test('a dangling comma in an empty object is not allowed', () => {
-        expect(() => run(`{,}`)).toThrowError('Expected an identifier at (1:2..3) ,}')
+        expect(() => run(`{,}`)).toThrowError('Expected an identifier at (<inline>:1:2..3) ,}')
       })
       test('supports computed attributes names via the [<expression>]: <value> notation', () => {
         expect(run(`{["a" + 'b']: 'a-and-b'}`)).toEqual({ ab: 'a-and-b' })
@@ -521,12 +521,12 @@ describe('septima', () => {
     })
     test('expression trace on error', () => {
       const expected = [
-        '  at (1:1..88) let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(...',
-        '  at (1:85..88) a(5)',
-        '  at (1:79..82) b(x)',
-        '  at (1:58..61) c(x)',
-        '  at (1:36..39) d(x)',
-        '  at (1:17..18) x2',
+        '  at (<inline>:1:1..88) let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(...',
+        '  at (<inline>:1:85..88) a(5)',
+        '  at (<inline>:1:79..82) b(x)',
+        '  at (<inline>:1:58..61) c(x)',
+        '  at (<inline>:1:36..39) d(x)',
+        '  at (<inline>:1:17..18) x2',
       ].join('\n')
 
       expect(() =>
@@ -647,7 +647,7 @@ describe('septima', () => {
     })
     test(`the .message attribure of the result provides a human readable summary`, () => {
       expect(runSink(`1000 + 2000\n+ 3000 + sink + 5000 + 6000`).message).toEqual(
-        'Evaluated to sink: at (2:10..13) sink',
+        'Evaluated to sink: at (<test-file>:2:10..13) sink',
       )
     })
   })
@@ -655,19 +655,21 @@ describe('septima', () => {
     test(`captures the expression trace at runtime`, () => {
       expect(runSink(`1000 + 2000 + 3000 + sink!`).trace).toEqual(
         [
-          `  at (1:1..26) 1000 + 2000 + 3000 + sink!`,
-          `  at (1:1..26) 1000 + 2000 + 3000 + sink!`,
-          `  at (1:8..26) 2000 + 3000 + sink!`,
-          `  at (1:15..26) 3000 + sink!`,
-          `  at (1:22..26) sink!`,
+          `  at (<test-file>:1:1..26) 1000 + 2000 + 3000 + sink!`,
+          `  at (<test-file>:1:1..26) 1000 + 2000 + 3000 + sink!`,
+          `  at (<test-file>:1:8..26) 2000 + 3000 + sink!`,
+          `  at (<test-file>:1:15..26) 3000 + sink!`,
+          `  at (<test-file>:1:22..26) sink!`,
         ].join('\n'),
       )
     })
     test(`can also appear in code as undefined!`, () => {
       expect(runSink(`1000 + undefined!`).trace).toEqual(
-        [`  at (1:1..17) 1000 + undefined!`, `  at (1:1..17) 1000 + undefined!`, `  at (1:8..17) undefined!`].join(
-          '\n',
-        ),
+        [
+          `  at (<test-file>:1:1..17) 1000 + undefined!`,
+          `  at (<test-file>:1:1..17) 1000 + undefined!`,
+          `  at (<test-file>:1:8..17) undefined!`,
+        ].join('\n'),
       )
     })
   })
@@ -683,13 +685,13 @@ describe('septima', () => {
       expect(Object.keys(actual.symbols ?? {})).toEqual(['Object', 'args', 'a', 'f', 'x', 'y'])
       expect(actual.trace).toEqual(
         [
-          `  at (1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
-          `  at (1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
-          `  at (1:50..58) f(30, 40)`,
-          `  at (1:30..47) x * y * sink!! * a`,
-          `  at (1:34..47) y * sink!! * a`,
-          `  at (1:38..47) sink!! * a`,
-          `  at (1:38..43) sink!!`,
+          `  at (<test-file>:1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
+          `  at (<test-file>:1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
+          `  at (<test-file>:1:50..58) f(30, 40)`,
+          `  at (<test-file>:1:30..47) x * y * sink!! * a`,
+          `  at (<test-file>:1:34..47) y * sink!! * a`,
+          `  at (<test-file>:1:38..47) sink!! * a`,
+          `  at (<test-file>:1:38..43) sink!!`,
         ].join('\n'),
       )
     })
@@ -879,7 +881,7 @@ describe('septima', () => {
     })
     test('errors if a nested definition has the "export" qualifier', () => {
       expect(() => run(`let x = (export let y = 4; y+1); x+3`)).toThrowError(
-        'non-top-level definition cannot be exported at (1:10..36) export let y = 4; y+1); x+3',
+        'non-top-level definition cannot be exported at (<inline>:1:10..36) export let y = 4; y+1); x+3',
       )
     })
   })
