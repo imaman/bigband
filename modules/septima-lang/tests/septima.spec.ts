@@ -302,7 +302,10 @@ describe('septima', () => {
       })
       test('attribute names can be double quoted', () => {
         expect(run(`{"a": 1}`)).toEqual({ a: 1 })
-        expect(run(`{"the quick brown": "fox", "jump over": "the"}`)).toEqual({ a: 1, b: 2 })
+        expect(run(`{"the quick brown": "fox", "jumps over": "the"}`)).toEqual({
+          'the quick brown': 'fox',
+          'jumps over': 'the',
+        })
       })
       test('allow a dangling comma', () => {
         expect(run(`{a: 1,}`)).toEqual({ a: 1 })

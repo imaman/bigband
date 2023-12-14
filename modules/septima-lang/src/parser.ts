@@ -544,6 +544,15 @@ export class Parser {
         parts.push({ tag: 'computedName', k, v })
         return
       }
+
+      const stringLiteral = this.maybeStringLiteral()
+      if (stringLiteral) {
+        this.scanner.consume(':')
+        const v = this.expression()
+        parts.push({ tag: 'quotedString', k: stringLiteral, v })
+        return
+      }
+
       const k = this.identifier()
       this.scanner.consume(':')
       const v = this.expression()

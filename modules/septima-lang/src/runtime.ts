@@ -324,6 +324,9 @@ export class Runtime {
         if (at.tag === 'hardName') {
           return [[at.k.t.text, this.evalNode(at.v, table)]]
         }
+        if (at.tag === 'quotedString') {
+          return [[at.k.t.text, this.evalNode(at.v, table)]]
+        }
         if (at.tag === 'computedName') {
           return [[this.evalNode(at.k, table).assertStr(), this.evalNode(at.v, table)]]
         }
