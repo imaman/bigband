@@ -300,9 +300,10 @@ describe('septima', () => {
         expect(run(`{a: 1, b: 2}`)).toEqual({ a: 1, b: 2 })
         expect(run(`{a: "A", b: "B", c: "CCC"}`)).toEqual({ a: 'A', b: 'B', c: 'CCC' })
       })
-      test('attribute names can be double quoted', () => {
+      test('attribute names can be double/single quoted', () => {
         expect(run(`{"a": 1}`)).toEqual({ a: 1 })
-        expect(run(`{"the quick brown": "fox", "jumps over": "the"}`)).toEqual({
+        expect(run(`{'b': 2}`)).toEqual({ b: 2 })
+        expect(run(`{"the quick brown": "fox", 'jumps over': "the"}`)).toEqual({
           'the quick brown': 'fox',
           'jumps over': 'the',
         })
