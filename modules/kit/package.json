@@ -14,7 +14,7 @@
     "preset": "../../jest.preset.js"
   },
   "dependencies": {
-    "zod": "^3.17.9"
+    "zod": "^3.22.3"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
