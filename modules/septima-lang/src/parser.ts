@@ -529,22 +529,29 @@ export class Parser {
     }
 
     const parts: ObjectLiteralPart[] = []
-    while (true) {
+
+    const f = () => {
       if (this.scanner.consumeIf('...')) {
         parts.push({ tag: 'spread', o: this.expression() })
-      } else if (this.scanner.consumeIf('[')) {
+        return
+      }
+
+      if (this.scanner.consumeIf('[')) {
         const k = this.expression()
         this.scanner.consume(']')
         this.scanner.consume(':')
         const v = this.expression()
         parts.push({ tag: 'computedName', k, v })
-      } else {
-        const k = this.identifier()
-        this.scanner.consume(':')
-        const v = this.expression()
-        parts.push({ tag: 'hardName', k, v })
+        return
       }
+      const k = this.identifier()
+      this.scanner.consume(':')
+      const v = this.expression()
+      parts.push({ tag: 'hardName', k, v })
+    }
 
+    while (true) {
+      f()
       let end = this.scanner.consumeIf('}')
       if (end) {
         return { tag: 'objectLiteral', start, parts, end, unitId: this.unitId }
