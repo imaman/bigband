@@ -530,7 +530,7 @@ export class Parser {
 
     const parts: ObjectLiteralPart[] = []
 
-    const f = () => {
+    const consumePart = () => {
       if (this.scanner.consumeIf('...')) {
         parts.push({ tag: 'spread', o: this.expression() })
         return
@@ -560,7 +560,7 @@ export class Parser {
     }
 
     while (true) {
-      f()
+      consumePart()
       let end = this.scanner.consumeIf('}')
       if (end) {
         return { tag: 'objectLiteral', start, parts, end, unitId: this.unitId }
