@@ -437,16 +437,25 @@ export class Parser {
       return { tag: 'literal', type: 'num', t, unitId: this.unitId }
     }
 
+    const stringLiteral = this.maybeStringLiteral()
+    if (stringLiteral) {
+      return stringLiteral
+    }
+
+    return undefined
+  }
+
+  maybeStringLiteral(): Literal | undefined {
     // double-quotes-enclosd string
     if (this.scanner.consumeIf(`"`, false)) {
-      t = this.scanner.consume(/[^"]*/)
+      const t = this.scanner.consume(/[^"]*/)
       this.scanner.consume(`"`)
       return { tag: 'literal', type: 'str', t, unitId: this.unitId }
     }
 
     // single-quotes-enclosd string
     if (this.scanner.consumeIf(`'`, false)) {
-      t = this.scanner.consume(/[^']*/)
+      const t = this.scanner.consume(/[^']*/)
       this.scanner.consume(`'`)
       return { tag: 'literal', type: 'str', t, unitId: this.unitId }
     }
