@@ -23,6 +23,7 @@ export type Literal = {
 
 export type ObjectLiteralPart =
   | { tag: 'hardName'; k: Ident; v: AstNode }
+  | { tag: 'quotedString'; k: Literal; v: AstNode }
   | { tag: 'computedName'; k: AstNode; v: AstNode }
   | { tag: 'spread'; o: AstNode }
 
@@ -193,6 +194,10 @@ export function show(ast: AstNode | AstNode[]): string {
       }
 
       if (p.tag === 'hardName') {
+        return `${show(p.k)}: ${show(p.v)}`
+      }
+
+      if (p.tag === 'quotedString') {
         return `${show(p.k)}: ${show(p.v)}`
       }
 

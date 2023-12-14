@@ -437,16 +437,25 @@ export class Parser {
       return { tag: 'literal', type: 'num', t, unitId: this.unitId }
     }
 
+    const stringLiteral = this.maybeStringLiteral()
+    if (stringLiteral) {
+      return stringLiteral
+    }
+
+    return undefined
+  }
+
+  maybeStringLiteral(): Literal | undefined {
     // double-quotes-enclosd string
     if (this.scanner.consumeIf(`"`, false)) {
-      t = this.scanner.consume(/[^"]*/)
+      const t = this.scanner.consume(/[^"]*/)
       this.scanner.consume(`"`)
       return { tag: 'literal', type: 'str', t, unitId: this.unitId }
     }
 
     // single-quotes-enclosd string
     if (this.scanner.consumeIf(`'`, false)) {
-      t = this.scanner.consume(/[^']*/)
+      const t = this.scanner.consume(/[^']*/)
       this.scanner.consume(`'`)
       return { tag: 'literal', type: 'str', t, unitId: this.unitId }
     }
@@ -520,22 +529,38 @@ export class Parser {
     }
 
     const parts: ObjectLiteralPart[] = []
-    while (true) {
+
+    const consumePart = () => {
       if (this.scanner.consumeIf('...')) {
         parts.push({ tag: 'spread', o: this.expression() })
-      } else if (this.scanner.consumeIf('[')) {
+        return
+      }
+
+      if (this.scanner.consumeIf('[')) {
         const k = this.expression()
         this.scanner.consume(']')
         this.scanner.consume(':')
         const v = this.expression()
         parts.push({ tag: 'computedName', k, v })
-      } else {
-        const k = this.identifier()
-        this.scanner.consume(':')
-        const v = this.expression()
-        parts.push({ tag: 'hardName', k, v })
+        return
       }
 
+      const stringLiteral = this.maybeStringLiteral()
+      if (stringLiteral) {
+        this.scanner.consume(':')
+        const v = this.expression()
+        parts.push({ tag: 'quotedString', k: stringLiteral, v })
+        return
+      }
+
+      const k = this.identifier()
+      this.scanner.consume(':')
+      const v = this.expression()
+      parts.push({ tag: 'hardName', k, v })
+    }
+
+    while (true) {
+      consumePart()
       let end = this.scanner.consumeIf('}')
       if (end) {
         return { tag: 'objectLiteral', start, parts, end, unitId: this.unitId }
