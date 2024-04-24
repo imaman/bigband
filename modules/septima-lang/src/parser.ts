@@ -554,9 +554,12 @@ export class Parser {
       }
 
       const k = this.identifier()
-      this.scanner.consume(':')
-      const v = this.expression()
-      parts.push({ tag: 'hardName', k, v })
+      if (this.scanner.consumeIf(':')) {
+        const v = this.expression()
+        parts.push({ tag: 'hardName', k, v })
+      } else {
+        parts.push({ tag: 'hardName', k, v: k })
+      }
     }
 
     while (true) {
