@@ -1,10 +1,8 @@
-import { AstNode, Lambda, show, UnitId } from './ast-node'
+import { AstNode, Lambda, show } from './ast-node'
 import { failMe } from './fail-me'
 import { CallEvaluator, findArrayMethod } from './find-array-method'
 import { findStringMethod } from './find-string-method'
-import { Span } from './location'
 import { shouldNeverHappen } from './should-never-happen'
-import * as Stack from './stack'
 import { switchOn } from './switch-on'
 import { SymbolTable } from './symbol-table'
 
@@ -17,7 +15,6 @@ type Inner =
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
   | { tag: 'num'; val: number }
   | { tag: 'obj'; val: Record<string, Value> }
-  | { tag: 'sink'; val: undefined; span?: Span; trace?: Stack.T; symbols?: SymbolTable; unitId?: UnitId }
   | { tag: 'str'; val: string }
 
 type InferTag<Q> = Q extends { tag: infer B } ? (B extends string ? B : never) : never
@@ -33,11 +30,7 @@ interface Cases<R> {
   str: (arg: string, tag: Tag, v: Value) => R
 }
 
-type RawCases<R> = Cases<R> & {
-  // The arguments passed to the sink() function are essentially useless as they are awlays the following:
-  // `undefined, 'sink', Value.sink()`. Yet, we define them for consistency.
-  sink?: (arg: undefined, tag: Tag, v: Value) => R
-}
+type RawCases<R> = Cases<R>
 
 function inspectValue(u: unknown) {
   return JSON.stringify(u)
@@ -59,8 +52,6 @@ const badType =
  * Allows the caller to "see" the native value held by a Value object. The caller supplies the `cases` object
  * which maps a function for each possible Value tag. Returns the return value of the function associated with the tag
  * of `v`.
- *
- * In the code we should perfer to use `select()` over this one as it provides better handling of `sink` values.
  *
  * @param v the Value object to look into
  * @param cases an object which maps Tag values to functions
@@ -86,15 +77,6 @@ function selectRaw<R>(v: Value, cases: RawCases<R>): R {
   if (inner.tag === 'obj') {
     return cases.obj(inner.val, inner.tag, v)
   }
-  if (inner.tag === 'sink') {
-    // For sink we provide a default behavior of throwing an exception. Yet, the caller is encouraged to explicitly
-    // provide a `sink` case as there is broader context at the caller's side which makes it possible to provide more
-    // meaningful error messages.
-    if (!cases.sink) {
-      throw new Error(`Cannot evaluate a sink value`)
-    }
-    return cases.sink(inner.val, inner.tag, v)
-  }
   if (inner.tag === 'str') {
     return cases.str(inner.val, inner.tag, v)
   }
@@ -107,17 +89,11 @@ function selectRaw<R>(v: Value, cases: RawCases<R>): R {
  * which maps a function for each possible Value tag. Returns the return value of the function associated with the tag
  * of `v`.
  *
- * if `select()` is invoked on sink value (i.e., `Value.sink()`) it returns the sink value itself. This realizes the
- * behavior that an expression involving a sink value evaluates to sink.
- *
  * @param v the Value object to look into
  * @param cases an object which maps Tag values to functions
  * @returns the return value of the function mapped to the tag of `v`
  */
 function select<R>(v: Value, cases: Cases<R>): Value {
-  if (v.isSink()) {
-    return v
-  }
   return Value.from(selectRaw(v, cases))
 }
 
@@ -129,30 +105,6 @@ export class Value {
   }
   static num(val: number): Value {
     return new Value({ val, tag: 'num' })
-  }
-  /**
-   * Returns a Value which is essentially a "sink": (almost) every computation involving a sink evaluates to sink. A few
-   * quick examples: `5+sink`, `sink.x`, `sink()`, `Object.keys(sink)`, `if (sink) 4 else 8` all evaluate to `sink`. The
-   * raitonale is that once an expression evaluates to `sink` all expressions depending on it also evaluate to `sink`.
-   *
-   * There are however a few (intentional) exemptions:
-   * (i) a sink can be passed as an actual parameter in a function call. Hence `(fun (x,y) y)(sink, 5)` will evaluate
-   *    to `5`.
-   * (ii) a sink can be compared with itself.
-   * (iii) in `if()` expressions, only one of the branches is evlauated (based on the condition's value). As a result,
-   *    evluation of a sink-producing branch can be skipping. Specifically, `if (true) 5 else sink` evaluates to `5`.
-   * (iv) in `||` and `&&` expressions, the evaluation of the right hand side can be skipped. Specifically,
-   *    `true || sink` evaluates to `true` and `false && sink` evaluates to `false`.
-   */
-  static sink(span?: Span, trace?: Stack.T, symbols?: SymbolTable, unitId?: UnitId): Value {
-    return new Value({
-      val: undefined,
-      tag: 'sink',
-      ...(span ? { span } : {}),
-      ...(trace ? { trace } : {}),
-      ...(symbols ? { symbols } : {}),
-      ...(unitId ? { unitId } : {}),
-    })
   }
   static str(val: string): Value {
     return new Value({ val, tag: 'str' })
@@ -171,10 +123,6 @@ export class Value {
     return new Value({ tag: 'foreign', val: f })
   }
 
-  isSink() {
-    return this.inner.tag === 'sink'
-  }
-
   unwrap(): unknown {
     return this.inner.val
   }
@@ -188,7 +136,6 @@ export class Value {
       lambda: err,
       num: err,
       obj: err,
-      sink: err,
       str: err,
     })
   }
@@ -202,7 +149,6 @@ export class Value {
       lambda: err,
       num: a => a,
       obj: err,
-      sink: err,
       str: err,
     })
   }
@@ -216,7 +162,6 @@ export class Value {
       lambda: err,
       num: err,
       obj: err,
-      sink: err,
       str: a => a,
     })
   }
@@ -230,7 +175,6 @@ export class Value {
       lambda: err,
       num: err,
       obj: err,
-      sink: err,
       str: err,
     })
   }
@@ -244,7 +188,6 @@ export class Value {
       lambda: err,
       num: err,
       obj: a => a,
-      sink: err,
       str: err,
     })
   }
@@ -258,7 +201,6 @@ export class Value {
       lambda: a => a,
       num: err,
       obj: err,
-      sink: err,
       str: err,
     })
   }
@@ -280,48 +222,48 @@ export class Value {
     })
   }
 
-  bindToSpan(span: Span, unitId?: UnitId) {
-    const inner = this.inner
-    if (inner.tag !== 'sink') {
-      throw new Error(`Not supported on type ${this.inner.tag}`)
-    }
+  // bindToSpan(span: Span, unitId?: UnitId) {
+  //   const inner = this.inner
+  //   if (inner.tag !== 'sink') {
+  //     throw new Error(`Not supported on type ${this.inner.tag}`)
+  //   }
 
-    return Value.sink(span, inner.trace, inner.symbols, unitId)
-  }
+  //   return Value.sink(span, inner.trace, inner.symbols, unitId)
+  // }
 
-  trace() {
-    const inner = this.inner
-    if (inner.tag !== 'sink') {
-      return undefined
-    }
+  // trace() {
+  //   const inner = this.inner
+  //   if (inner.tag !== 'sink') {
+  //     return undefined
+  //   }
 
-    const ret: AstNode[] = []
-    for (let curr = inner.trace; curr !== undefined; curr = curr?.next) {
-      ret.push(curr.ast)
-    }
-    return ret.length === 0 ? undefined : ret
-  }
+  //   const ret: AstNode[] = []
+  //   for (let curr = inner.trace; curr !== undefined; curr = curr?.next) {
+  //     ret.push(curr.ast)
+  //   }
+  //   return ret.length === 0 ? undefined : ret
+  // }
 
-  symbols() {
-    const inner = this.inner
-    if (inner.tag !== 'sink') {
-      return undefined
-    }
+  // symbols() {
+  //   const inner = this.inner
+  //   if (inner.tag !== 'sink') {
+  //     return undefined
+  //   }
 
-    return inner.symbols
-  }
+  //   return inner.symbols
+  // }
 
-  where() {
-    const inner = this.inner
-    if (inner.tag !== 'sink') {
-      return undefined
-    }
+  // where() {
+  //   const inner = this.inner
+  //   if (inner.tag !== 'sink') {
+  //     return undefined
+  //   }
 
-    if (inner.span && inner.unitId) {
-      return { span: inner.span, unitId: inner.unitId }
-    }
-    return undefined
-  }
+  //   if (inner.span && inner.unitId) {
+  //     return { span: inner.span, unitId: inner.unitId }
+  //   }
+  //   return undefined
+  // }
 
   or(that: () => Value) {
     const err = badType('bool')
@@ -368,14 +310,6 @@ export class Value {
       str: err,
     })
   }
-  unsink(that: () => Value) {
-    if (this.isSink()) {
-      return that()
-    }
-
-    return this
-  }
-
   equalsTo(that: Value) {
     if (this.inner.tag !== that.inner.tag) {
       return Value.bool(false)
@@ -501,7 +435,6 @@ export class Value {
       lambda: err,
       num: err,
       obj: err,
-      sink: err,
       str: err,
     })
   }
@@ -515,7 +448,6 @@ export class Value {
       lambda: err,
       num: n => n === 0,
       obj: err,
-      sink: err,
       str: err,
     })
   }
@@ -585,7 +517,6 @@ export class Value {
       lambda: err,
       num: a => a,
       obj: err,
-      sink: err,
       str: a => a,
     })
   }
@@ -674,7 +605,6 @@ export class Value {
               lambda: err,
               num: err,
               obj: err,
-              sink: err,
               str: err,
             }),
           ),
@@ -701,7 +631,6 @@ export class Value {
         lambda: a => show(a.ast),
         num: a => a,
         obj: a => Object.fromEntries(Object.entries(a).map(([k, x]) => [k, copy(x)])),
-        sink: () => undefined,
         str: a => a,
       })
     }
@@ -733,10 +662,6 @@ function from(u: unknown): Value {
   }
   if (Array.isArray(u)) {
     return Value.arr(u.map(curr => from(curr)))
-  }
-
-  if (typeof u === 'undefined') {
-    return Value.sink()
   }
 
   if (u && typeof u === 'object') {
