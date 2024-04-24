@@ -3,7 +3,7 @@ import * as path from 'path'
 import { Unit, UnitId } from './ast-node'
 import { failMe } from './fail-me'
 import { Parser } from './parser'
-import { createResultSink, formatTrace, Result, ResultSink } from './result'
+import { formatTrace, Result, ResultSink } from './result'
 import { Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
@@ -97,12 +97,7 @@ export class Septima {
     return {
       execute: (args: Record<string, unknown>) => {
         const value = this.execute(fileName, 'quiet', args)
-        let ret: Result
-        if (!value.isSink()) {
-          ret = { value: value.export(), tag: 'ok' }
-        } else {
-          ret = createResultSink(value, this.unitByUnitId)
-        }
+        const ret: Result = { value: value.export(), tag: 'ok' }
         return ret
       },
     }
