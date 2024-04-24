@@ -269,6 +269,19 @@ describe('septima', () => {
     })
   })
 
+  describe('semicolons before the expression', () => {
+    test('are allowed', () => {
+      expect(run(`let a = 5; ;;;;4.8`)).toEqual(4.8)
+      expect(run(`;;;"abc"`)).toEqual('abc')
+      expect(run(`;4.8`)).toEqual(4.8)
+    })
+    test('can be interleaved with whitspace', () => {
+      expect(run(`let a = 5; ;; ;; 4.8`)).toEqual(4.8)
+      expect(run(`;; ;   "abc"`)).toEqual('abc')
+      expect(run(` ;\n4.8`)).toEqual(4.8)
+    })
+  })
+
   describe('arrays', () => {
     test('array literals are specified via the enclosing brackets notation ([])', () => {
       expect(run(`["ab", 5]`)).toEqual(['ab', 5])
@@ -318,6 +331,9 @@ describe('septima', () => {
       })
       test('supports computed attributes names via the [<expression>]: <value> notation', () => {
         expect(run(`{["a" + 'b']: 'a-and-b'}`)).toEqual({ ab: 'a-and-b' })
+      })
+      test('supports shorthand notation for initializing an attribute from an identifier', () => {
+        expect(run(`let a = 'A'; let b = 42; {a, b}`)).toEqual({ a: 'A', b: 42 })
       })
     })
     describe('attributes', () => {
