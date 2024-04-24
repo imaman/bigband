@@ -1,4 +1,4 @@
-import { AstNode, show, span, Unit, UnitId } from './ast-node'
+import { AstNode, show, Unit, UnitId } from './ast-node'
 import { extractMessage } from './extract-message'
 import { failMe } from './fail-me'
 import { shouldNeverHappen } from './should-never-happen'
@@ -112,10 +112,7 @@ export class Runtime {
 
   private evalNode(ast: AstNode, table: SymbolTable): Value {
     this.stack = Stack.push(ast, this.stack)
-    let ret = this.evalNodeImpl(ast, table)
-    if (ret.isSink() && !ret.where()) {
-      ret = ret.bindToSpan(span(ast), ast.unitId)
-    }
+    const ret = this.evalNodeImpl(ast, table)
     switchOn(this.verbosity, {
       quiet: () => {},
       trace: () => {
@@ -210,10 +207,6 @@ export class Runtime {
         return lhs.and(() => this.evalNode(ast.rhs, table))
       }
 
-      if (ast.operator === '??') {
-        return lhs.unsink(() => this.evalNode(ast.rhs, table))
-      }
-
       const rhs = this.evalNode(ast.rhs, table)
       if (ast.operator === '!=') {
         return lhs.equalsTo(rhs).not()
@@ -287,15 +280,6 @@ export class Runtime {
       }
       if (ast.type === 'num') {
         return Value.num(Number(ast.t.text))
-      }
-      if (ast.type === 'sink!!') {
-        return Value.sink(undefined, this.stack, table)
-      }
-      if (ast.type === 'sink!') {
-        return Value.sink(undefined, this.stack)
-      }
-      if (ast.type === 'sink') {
-        return Value.sink()
       }
       if (ast.type === 'str') {
         return Value.str(ast.t.text)
