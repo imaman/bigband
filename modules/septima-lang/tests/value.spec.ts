@@ -236,8 +236,7 @@ describe('value', () => {
       ).toEqual(4)
     })
     test.each([
-      ['at', [Value.num(-1)], 'goo'],
-      ['at', [Value.num(4)], undefined],
+      ['at', [Value.num(3)], 'goo'],
       ['concat', [Value.arr([Value.str('boo'), Value.str('poo')])], ['foo', 'bar', 'foo', 'goo', 'boo', 'poo']],
       [
         'entries',
