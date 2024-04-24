@@ -60,6 +60,9 @@ export class Parser {
   definitions(kind: 'TOP_LEVEL' | 'NESTED'): Let[] {
     const ret: Let[] = []
     while (true) {
+      if (this.scanner.consumeIf(';')) {
+        continue
+      }
       if (kind === 'NESTED') {
         if (this.scanner.headMatches('export ')) {
           throw new Error(`non-top-level definition cannot be exported ${this.scanner.sourceRef}`)
@@ -79,7 +82,9 @@ export class Parser {
       const value = this.lambda()
       ret.push({ start, ident, value, isExported })
 
-      this.scanner.consumeIf(';')
+      if (this.scanner.headMatches(';')) {
+        continue
+      }
       if (this.scanner.headMatches('let ')) {
         continue
       }
