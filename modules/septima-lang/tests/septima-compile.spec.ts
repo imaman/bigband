@@ -49,7 +49,7 @@ describe('septima-compile', () => {
   })
   test('errors if the imported definition is not qualified with "export"', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `let eight = 8; {}` })).toThrowError(
-      `Evaluated to sink: at (a:1:27..33) b.eight`,
+      'at (a:1:27..33) b.eight',
     )
   })
   test('errors if the path to input from is not a string literal', () => {
@@ -129,8 +129,8 @@ describe('septima-compile', () => {
   })
   test('the args object is available only at the main module', () => {
     expect(() =>
-      run('a', { a: `import * as b from 'b'; args.x + '_' + b.foo`, b: `let foo = args.x ?? 'N/A'; {}` }, { x: 'Red' }),
-    ).toThrowError(/Symbol args was not found when evaluating/)
+      run('a', { a: `import * as b from 'b'; args.x + '_' + b.foo`, b: `let foo = args.x; {}` }, { x: 'Red' }),
+    ).toThrowError('at (b:1:11..16) args.x')
   })
   describe('async compilation', () => {
     test('can use exported definitions from another module', async () => {
@@ -181,7 +181,7 @@ describe('septima-compile', () => {
     test('stack trace includes the name of the imported and a correct snippet from it', () => {
       expect(() =>
         run('q', { q: `import * as r from './r'; r.foo()`, r: `let a = {}; export let foo = () => a.b.c` }),
-      ).toThrowError('Evaluated to sink: at (r:1:36..38) a.b')
+      ).toThrowError('at (r:1:36..38) a.b')
     })
   })
 })
