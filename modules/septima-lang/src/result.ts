@@ -2,7 +2,6 @@ import { AstNode, UnitId } from './ast-node'
 import { failMe } from './fail-me'
 import { Span } from './location'
 import { SourceUnit } from './septima'
-import { Value } from './value'
 
 export type ResultSink = {
   tag: 'sink'
@@ -34,29 +33,6 @@ export function formatTrace(trace: AstNode[] | undefined, unitByUnitId: Map<Unit
     .reverse()
     .join(`\n${spacer}`)
   return joined ? `${spacer}${joined}` : undefined
-}
-
-export function createResultSink(sink: Value, unitByUnitId: Map<UnitId, SourceUnit>): ResultSink {
-  if (!sink.isSink()) {
-    throw new Error(`not a sink! (${sink})`)
-  }
-
-  const trace = formatTrace(sink.trace(), unitByUnitId)
-
-  const w = sink.where()
-  let message = trace
-  if (!message && w?.span && w?.unitId) {
-    message = sourceCode(w.unitId, unitByUnitId).sourceRef(w.span)
-  }
-  message = `Evaluated to sink: ${message}`
-
-  return {
-    tag: 'sink',
-    where: sink.where()?.span,
-    trace,
-    symbols: sink.symbols()?.export(),
-    message,
-  }
 }
 
 // TODO(imaman): generate a stack trace that is similar to node's a-la:
