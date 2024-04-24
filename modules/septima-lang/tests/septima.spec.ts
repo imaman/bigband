@@ -319,6 +319,9 @@ describe('septima', () => {
       test('supports computed attributes names via the [<expression>]: <value> notation', () => {
         expect(run(`{["a" + 'b']: 'a-and-b'}`)).toEqual({ ab: 'a-and-b' })
       })
+      test('supports shorthand notation for initializing an attribute from an identifier', () => {
+        expect(run(`let a = 'A'; let b = 42; {a, b}`)).toEqual({ a: 'A', b: 42 })
+      })
     })
     describe('attributes', () => {
       test('can be accessed via the .<ident> notation', () => {
