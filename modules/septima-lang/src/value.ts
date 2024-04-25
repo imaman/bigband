@@ -14,6 +14,7 @@ type Inner =
   | { tag: 'foreign'; val: (...args: Value[]) => unknown }
   | { tag: 'lambda'; val: { ast: Lambda; table: SymbolTable } }
   | { tag: 'num'; val: number }
+  | { tag: 'undef'; val: undefined }
   | { tag: 'obj'; val: Record<string, Value> }
   | { tag: 'str'; val: string }
 
@@ -26,6 +27,7 @@ interface Cases<R> {
   foreign: (arg: (...args: Value[]) => unknown, tag: Tag, v: Value) => R
   lambda: (arg: { ast: Lambda; table: SymbolTable }, tag: Tag, v: Value) => R
   num: (arg: number, tag: Tag, v: Value) => R
+  undef: (arg: unknown, tag: Tag, v: Value) => R
   obj: (arg: Record<string, Value>, tag: Tag, v: Value) => R
   str: (arg: string, tag: Tag, v: Value) => R
 }
@@ -74,6 +76,9 @@ function selectRaw<R>(v: Value, cases: RawCases<R>): R {
   if (inner.tag === 'num') {
     return cases.num(inner.val, inner.tag, v)
   }
+  if (inner.tag === 'undef') {
+    return cases.undef(undefined, inner.tag, v)
+  }
   if (inner.tag === 'obj') {
     return cases.obj(inner.val, inner.tag, v)
   }
@@ -109,6 +114,9 @@ export class Value {
   static str(val: string): Value {
     return new Value({ val, tag: 'str' })
   }
+  static undef(): Value {
+    return new Value({ tag: 'undef', val: undefined })
+  }
   static arr(val: Value[]): Value {
     return new Value({ val, tag: 'arr' })
   }
@@ -135,6 +143,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -148,6 +157,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: a => a,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -161,6 +171,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: err,
       str: a => a,
     })
@@ -174,6 +185,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -187,6 +199,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: a => a,
       str: err,
     })
@@ -200,6 +213,7 @@ export class Value {
       foreign: err,
       lambda: a => a,
       num: err,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -217,6 +231,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -277,12 +292,14 @@ export class Value {
           foreign: err,
           lambda: err,
           num: err,
+          undef: err,
           obj: err,
           str: err,
         }),
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -300,12 +317,14 @@ export class Value {
           foreign: err,
           lambda: err,
           num: err,
+          undef: err,
           obj: err,
           str: err,
         }),
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -328,6 +347,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -347,9 +367,11 @@ export class Value {
           foreign: err,
           lambda: err,
           num: rhs => f(lhs, rhs),
+          undef: err,
           obj: err,
           str: err,
         }),
+      undef: err,
       obj: err,
       str: err,
     })
@@ -369,9 +391,11 @@ export class Value {
           foreign: errNum,
           lambda: errNum,
           num: rhs => lhs + rhs,
+          undef: errNum,
           obj: errNum,
           str: errNum,
         }),
+      undef: errNum,
       obj: errNum,
       str: lhs =>
         select(that, {
@@ -380,6 +404,7 @@ export class Value {
           foreign: rhs => lhs + rhs,
           lambda: rhs => lhs + rhs,
           num: rhs => lhs + rhs,
+          undef: errNum,
           obj: rhs => lhs + rhs,
           str: rhs => lhs + rhs,
         }),
@@ -421,6 +446,7 @@ export class Value {
           '>=': () => Value.bool(n >= 0),
           '>': () => Value.bool(n > 0),
         }),
+      undef: err,
       obj: err,
       str: err,
     })
@@ -434,6 +460,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -447,6 +474,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: n => n === 0,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -494,6 +522,7 @@ export class Value {
         const d = this.minus(that).assertNum()
         return d < 0 ? -1 : d > 0 ? 1 : 0
       },
+      undef: err,
       obj: err,
       str: a => {
         const rhs = that.assertStr()
@@ -516,6 +545,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: a => a,
+      undef: err,
       obj: err,
       str: a => a,
     })
@@ -540,6 +570,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: o => o[Value.toStringOrNumber(indexValue)],
       str: s => findStringMethod(s, indexValue),
     })
@@ -558,6 +589,7 @@ export class Value {
           l.table,
         ),
       num: err,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -571,6 +603,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: a => Object.keys(a),
       str: err,
     })
@@ -584,6 +617,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: a => Object.entries(a),
       str: err,
     })
@@ -604,6 +638,7 @@ export class Value {
               foreign: err,
               lambda: err,
               num: err,
+              undef: err,
               obj: err,
               str: err,
             }),
@@ -613,6 +648,7 @@ export class Value {
       foreign: err,
       lambda: err,
       num: err,
+      undef: err,
       obj: err,
       str: err,
     })
@@ -630,6 +666,7 @@ export class Value {
         foreign: a => a.toString(),
         lambda: a => show(a.ast),
         num: a => a,
+        undef: () => undefined,
         obj: a => Object.fromEntries(Object.entries(a).map(([k, x]) => [k, copy(x)])),
         str: a => a,
       })
@@ -656,6 +693,9 @@ function from(u: unknown): Value {
   }
   if (typeof u === 'number') {
     return Value.num(u)
+  }
+  if (typeof u === 'undefined') {
+    return Value.undef()
   }
   if (typeof u === 'string') {
     return Value.str(u)
