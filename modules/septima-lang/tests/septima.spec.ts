@@ -729,6 +729,13 @@ describe('septima', () => {
     })
   })
   describe('undefined', () => {
+    // We want to verify that attributes with an undefined values do not exist in the object. To verify that we look
+    // at the keys of the object.
+    const keysOf = (u: unknown) => {
+      const casted = u as Record<string, unknown> // eslint-disable-line @typescript-eslint/consistent-type-assertions
+      return Object.keys(casted)
+    }
+
     test(`the 'undefined' literal evaluates to (a JS) undefined`, () => {
       expect(run(`let x = undefined; x`)).toBe(undefined)
     })
@@ -742,14 +749,12 @@ describe('septima', () => {
       expect(run(`['a', undefined, 'c']`)).toEqual(['a', undefined, 'c'])
     })
     test('an object attribute with a value of undefined is dropped from the object', () => {
-      // We want to verify that attributes with an undefined values do not exist in the object. To verify that we look
-      // at the keys of the object.
-      const keysOf = (u: unknown) => {
-        const casted = u as Record<string, unknown> // eslint-disable-line @typescript-eslint/consistent-type-assertions
-        return Object.keys(casted)
-      }
       expect(keysOf(run(`{n: 42, o: undefined, p: 'poo'}`))).toEqual(['n', 'p'])
       expect(keysOf(run(`Object.fromEntries([['n', 42], ['o', undefined], ['p', 'poo']])`))).toEqual(['n', 'p'])
+    })
+    test.todo('decide how overwriting with undefined works')
+    test('spreading an undefined in object is a no-op', () => {
+      expect(run(`{n: 42, ...undefined, p: 'poo'}`)).toEqual({ n: 42, p: 'poo' })
     })
     test('produces a full trace when an undefined-reference-error is fired', () => {
       let message
@@ -794,8 +799,6 @@ describe('septima', () => {
         expect(run(`'Han' ?? 'Luke'`)).toEqual('Han')
       })
     })
-    test.todo('spread operator with undefined')
-    test.todo('decide how overwriting with undefined works')
   })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')

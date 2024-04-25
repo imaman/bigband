@@ -324,6 +324,9 @@ export class Runtime {
         }
         if (at.tag === 'spread') {
           const o = this.evalNode(at.o, table)
+          if (o.isUndefined()) {
+            return []
+          }
           return Object.entries(o.assertObj())
         }
 
