@@ -728,6 +728,11 @@ describe('septima', () => {
       expect(run(`export let x = 5`)).toEqual('')
     })
   })
+  describe('undefined', () => {
+    test('evaluates to (a JS) undefined', () => {
+      expect(run(`let x = undefined; x`)).toBe(undefined)
+    })
+  })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')
