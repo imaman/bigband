@@ -284,6 +284,10 @@ export class Runtime {
       if (ast.type === 'str') {
         return Value.str(ast.t.text)
       }
+
+      if (ast.type === 'undef') {
+        return Value.undef()
+      }
       shouldNeverHappen(ast.type)
     }
 
