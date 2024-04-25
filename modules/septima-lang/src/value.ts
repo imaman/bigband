@@ -686,6 +686,19 @@ export class Value {
     })
   }
 
+  toBoolean() {
+    return selectRaw(this, {
+      arr: () => true,
+      bool: a => a,
+      num: a => Boolean(a),
+      str: a => Boolean(a),
+      lambda: () => true,
+      foreign: () => true,
+      obj: () => true,
+      undef: () => false,
+    })
+  }
+
   toJSON(): unknown {
     const copy: (v: Value) => unknown = (v: Value) => {
       return selectRaw<unknown>(v, {
