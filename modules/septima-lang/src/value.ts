@@ -414,17 +414,7 @@ export class Value {
         }),
       undef: errNum,
       obj: errNum,
-      str: lhs =>
-        select(that, {
-          arr: rhs => lhs + rhs,
-          bool: rhs => lhs + rhs,
-          foreign: rhs => lhs + rhs,
-          lambda: rhs => lhs + rhs,
-          num: rhs => lhs + rhs,
-          undef: errNum,
-          obj: rhs => lhs + rhs,
-          str: rhs => lhs + rhs,
-        }),
+      str: lhs => Value.str(lhs + that.toString()),
     })
   }
   minus(that: Value) {
