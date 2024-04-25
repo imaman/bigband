@@ -414,17 +414,7 @@ export class Value {
         }),
       undef: errNum,
       obj: errNum,
-      str: lhs =>
-        select(that, {
-          arr: rhs => lhs + rhs,
-          bool: rhs => lhs + rhs,
-          foreign: rhs => lhs + rhs,
-          lambda: rhs => lhs + rhs,
-          num: rhs => lhs + rhs,
-          undef: errNum,
-          obj: rhs => lhs + rhs,
-          str: rhs => lhs + rhs,
-        }),
+      str: lhs => Value.str(lhs + that.toString()),
     })
   }
   minus(that: Value) {
@@ -674,7 +664,42 @@ export class Value {
   }
 
   toString() {
-    return this.inner.val?.toString() ?? 'sink'
+    return selectRaw(this, {
+      arr: a => JSON.stringify(a),
+      bool: a => String(a),
+      num: a => String(a),
+      str: a => a,
+      lambda: a => String(a),
+      foreign: a => String(a),
+      obj: a => JSON.stringify(a),
+      undef: () => 'undefined',
+    })
+  }
+
+  toBoolean() {
+    return selectRaw(this, {
+      arr: () => true,
+      bool: a => a,
+      num: a => Boolean(a),
+      str: a => Boolean(a),
+      lambda: () => true,
+      foreign: () => true,
+      obj: () => true,
+      undef: () => false,
+    })
+  }
+
+  toNumber() {
+    return selectRaw(this, {
+      arr: () => NaN,
+      bool: a => (a ? 1 : 0),
+      num: a => a,
+      str: a => Number(a),
+      lambda: () => NaN,
+      foreign: () => NaN,
+      obj: () => NaN,
+      undef: () => NaN,
+    })
   }
 
   toJSON(): unknown {

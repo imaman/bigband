@@ -84,6 +84,9 @@ export class Runtime {
     const entries = Value.foreign(o => o.entries())
     const fromEntries = Value.foreign(o => o.fromEntries())
     let lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty, 'INTERNAL')
+    lib = new SymbolFrame('String', { destination: Value.foreign(o => Value.str(o.toString())) }, lib, 'INTERNAL')
+    lib = new SymbolFrame('Boolean', { destination: Value.foreign(o => Value.bool(o.toBoolean())) }, lib, 'INTERNAL')
+    lib = new SymbolFrame('Number', { destination: Value.foreign(o => Value.num(o.toNumber())) }, lib, 'INTERNAL')
 
     if (generateTheArgsObject) {
       lib = new SymbolFrame('args', { destination: Value.from(this.args) }, lib, 'INTERNAL')
@@ -302,6 +305,9 @@ export class Runtime {
           arr.push(this.evalNode(curr.v, table))
         } else if (curr.tag === 'spread') {
           const v = this.evalNode(curr.v, table)
+          if (v.isUndefined()) {
+            continue
+          }
           arr.push(...v.assertArr())
         } else {
           shouldNeverHappen(curr)
@@ -324,6 +330,9 @@ export class Runtime {
         }
         if (at.tag === 'spread') {
           const o = this.evalNode(at.o, table)
+          if (o.isUndefined()) {
+            return []
+          }
           return Object.entries(o.assertObj())
         }
 
