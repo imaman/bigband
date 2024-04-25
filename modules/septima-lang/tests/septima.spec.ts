@@ -806,6 +806,12 @@ describe('septima', () => {
   describe('Casting functions', () => {
     test('String()', () => {
       expect(run(`String(42)`)).toEqual('42')
+      expect(run(`String("abc")`)).toEqual('abc')
+      expect(run(`String(true)`)).toEqual('true')
+      expect(run(`String(false)`)).toEqual('false')
+      expect(run(`String(undefined)`)).toEqual('undefined')
+      expect(run(`String({a: "alpha", b: [3,1,4], n: 42})`)).toEqual('{"a":"alpha","b":[3,1,4],"n":42}')
+      expect(run(`String(["abc", 3.14159, false, true, undefined])`)).toEqual('["abc",3.14159,false,true,null]')
     })
   })
   test.todo('support file names in locations')

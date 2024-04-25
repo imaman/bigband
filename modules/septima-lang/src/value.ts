@@ -674,7 +674,16 @@ export class Value {
   }
 
   toString() {
-    return this.inner.val?.toString() ?? 'undefined'
+    return selectRaw(this, {
+      arr: a => JSON.stringify(a),
+      bool: a => String(a),
+      num: a => String(a),
+      str: a => a,
+      lambda: a => String(a),
+      foreign: a => String(a),
+      obj: a => JSON.stringify(a),
+      undef: () => 'undefined',
+    })
   }
 
   toJSON(): unknown {
