@@ -700,7 +700,7 @@ function from(u: unknown): Value {
   if (typeof u === 'number') {
     return Value.num(u)
   }
-  if (typeof u === 'undefined') {
+  if (typeof u === 'undefined' || u === null) {
     return Value.undef()
   }
   if (typeof u === 'string') {
