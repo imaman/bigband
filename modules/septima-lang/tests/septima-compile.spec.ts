@@ -49,7 +49,7 @@ describe('septima-compile', () => {
   })
   test('errors if the imported definition is not qualified with "export"', () => {
     expect(() => run('a', { a: `import * as b from 'b'; 3+b.eight`, b: `let eight = 8; {}` })).toThrowError(
-      'at (a:1:27..33) b.eight',
+      'at (a:1:25..33) 3+b.eight',
     )
   })
   test('errors if the path to input from is not a string literal', () => {
@@ -181,7 +181,7 @@ describe('septima-compile', () => {
     test('stack trace includes the name of the imported and a correct snippet from it', () => {
       expect(() =>
         run('q', { q: `import * as r from './r'; r.foo()`, r: `let a = {}; export let foo = () => a.b.c` }),
-      ).toThrowError('at (r:1:36..38) a.b')
+      ).toThrowError('at (r:1:36..40) a.b.c')
     })
   })
 })

@@ -250,6 +250,10 @@ export class Runtime {
         return lhs.over(rhs)
       }
 
+      if (ast.operator === '??') {
+        return lhs.coalesce(() => this.evalNode(ast.rhs, table))
+      }
+
       shouldNeverHappen(ast.operator)
     }
 
@@ -283,6 +287,10 @@ export class Runtime {
       }
       if (ast.type === 'str') {
         return Value.str(ast.t.text)
+      }
+
+      if (ast.type === 'undef') {
+        return Value.undef()
       }
       shouldNeverHappen(ast.type)
     }
@@ -323,7 +331,7 @@ export class Runtime {
       })
 
       // TODO(imaman): verify type of all keys (strings, maybe also numbers)
-      return Value.obj(Object.fromEntries(entries))
+      return Value.obj(Object.fromEntries(entries.filter(([_, v]) => !v.isUndefined())))
     }
 
     if (ast.tag === 'lambda') {

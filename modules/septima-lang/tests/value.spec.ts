@@ -275,6 +275,14 @@ describe('value', () => {
       expect(actual.export()).toEqual(['a', 'b', 'c'])
     })
   })
+  describe('undefined', () => {
+    test('can be constructed from either undefined or null', () => {
+      expect(Value.from(undefined).isUndefined()).toBe(true)
+      expect(Value.from(null).isUndefined()).toBe(true)
+      expect(Value.from(42).isUndefined()).toBe(false)
+      expect(Value.from('abc').isUndefined()).toBe(false)
+    })
+  })
 
   test.todo('array.sort()')
   test.todo('what happens when we get an undefined from a foreign call (like Array.get())')

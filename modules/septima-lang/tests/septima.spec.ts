@@ -728,6 +728,75 @@ describe('septima', () => {
       expect(run(`export let x = 5`)).toEqual('')
     })
   })
+  describe('undefined', () => {
+    test(`the 'undefined' literal evaluates to (a JS) undefined`, () => {
+      expect(run(`let x = undefined; x`)).toBe(undefined)
+    })
+    test('accessing a non-existing attribute evaulates to undefined', () => {
+      expect(run(`let x = {a: 42}; [x.a, x.b]`)).toEqual([42, undefined])
+    })
+    test('.at() method returns undefined when the index is out of range', () => {
+      expect(run(`let x = ['a', 'b', 'c']; [x.at(0), x.at(2), x.at(3)]`)).toEqual(['a', 'c', undefined])
+    })
+    test('can be stored in an array', () => {
+      expect(run(`['a', undefined, 'c']`)).toEqual(['a', undefined, 'c'])
+    })
+    test('an object attribute with a value of undefined is dropped from the object', () => {
+      // We want to verify that attributes with an undefined values do not exist in the object. To verify that we look
+      // at the keys of the object.
+      const keysOf = (u: unknown) => {
+        const casted = u as Record<string, unknown> // eslint-disable-line @typescript-eslint/consistent-type-assertions
+        return Object.keys(casted)
+      }
+      expect(keysOf(run(`{n: 42, o: undefined, p: 'poo'}`))).toEqual(['n', 'p'])
+      expect(keysOf(run(`Object.fromEntries([['n', 42], ['o', undefined], ['p', 'poo']])`))).toEqual(['n', 'p'])
+    })
+    test('produces a full trace when an undefined-reference-error is fired', () => {
+      let message
+      try {
+        run(`let x = undefined; x.a`)
+      } catch (e) {
+        message = String(e)
+      }
+
+      expect(message?.split('\n')).toEqual([
+        'Error: value type error: expected either str, arr or obj but found undefined when evaluating:',
+        '  at (<inline>:1:1..22) let x = undefined; x.a',
+        '  at (<inline>:1:1..22) let x = undefined; x.a',
+        '  at (<inline>:1:20..22) x.a',
+      ])
+    })
+    test('errors when calling a method on undefined', () => {
+      expect(() => run(`let x = undefined; x.a()`)).toThrowError('at (<inline>:1:20..24) x.a()')
+    })
+    test('errors when using undefined in arithmetic expressions', () => {
+      expect(() => run(`4 + undefined`)).toThrowError('at (<inline>:1:1..13) 4 + undefined')
+      expect(() => run(`4 - undefined`)).toThrowError('at (<inline>:1:1..13) 4 - undefined')
+      expect(() => run(`4 * undefined`)).toThrowError('at (<inline>:1:1..13) 4 * undefined')
+      expect(() => run(`4 / undefined`)).toThrowError('at (<inline>:1:1..13) 4 / undefined')
+      expect(() => run(`undefined + 4`)).toThrowError('at (<inline>:1:1..13) undefined + 4')
+      expect(() => run(`undefined - 4`)).toThrowError('at (<inline>:1:1..13) undefined - 4')
+      expect(() => run(`undefined * 4`)).toThrowError('at (<inline>:1:1..13) undefined * 4')
+      expect(() => run(`undefined / 4`)).toThrowError('at (<inline>:1:1..13) undefined / 4')
+    })
+    describe('??', () => {
+      test('if the lhs is undefined evaluates to the rhs', () => {
+        expect(run(`undefined ?? 42`)).toEqual(42)
+        expect(run(`undefined ?? 900`)).toEqual(900)
+        expect(run(`undefined ?? 'Luke'`)).toEqual('Luke')
+      })
+      test('if the lhs is not undefined evaluates to the lhs', () => {
+        expect(run(`43 ?? 42`)).toEqual(43)
+        expect(run(`43 ?? 900`)).toEqual(43)
+        expect(run(`43 ?? 'Luke'`)).toEqual(43)
+        expect(run(`'Han' ?? 42`)).toEqual('Han')
+        expect(run(`'Han' ?? 900`)).toEqual('Han')
+        expect(run(`'Han' ?? 'Luke'`)).toEqual('Han')
+      })
+    })
+    test.todo('spread operator with undefined')
+    test.todo('decide how overwriting with undefined works')
+  })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')
