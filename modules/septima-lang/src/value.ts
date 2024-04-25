@@ -223,6 +223,10 @@ export class Value {
     return this.inner.tag === 'lambda'
   }
 
+  isUndefined() {
+    return this.inner.tag === 'undef'
+  }
+
   ifElse(positive: () => Value, negative: () => Value) {
     const err = badType('bool')
     return select(this, {
@@ -628,21 +632,23 @@ export class Value {
     return select(this, {
       arr: a =>
         Object.fromEntries(
-          a.map(x =>
-            selectRaw(x, {
-              arr: pair => {
-                pair.length === 2 || failMe(`each entry must be a [key, value] pair`)
-                return [pair[0].assertStr(), pair[1]]
-              },
-              bool: err,
-              foreign: err,
-              lambda: err,
-              num: err,
-              undef: err,
-              obj: err,
-              str: err,
-            }),
-          ),
+          a
+            .map(x =>
+              selectRaw(x, {
+                arr: pair => {
+                  pair.length === 2 || failMe(`each entry must be a [key, value] pair`)
+                  return [pair[0].assertStr(), pair[1]]
+                },
+                bool: err,
+                foreign: err,
+                lambda: err,
+                num: err,
+                undef: err,
+                obj: err,
+                str: err,
+              }),
+            )
+            .filter(([_, v]) => !Value.from(v).isUndefined()),
         ),
       bool: err,
       foreign: err,

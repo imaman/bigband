@@ -327,7 +327,7 @@ export class Runtime {
       })
 
       // TODO(imaman): verify type of all keys (strings, maybe also numbers)
-      return Value.obj(Object.fromEntries(entries))
+      return Value.obj(Object.fromEntries(entries.filter(([_, v]) => !v.isUndefined())))
     }
 
     if (ast.tag === 'lambda') {
