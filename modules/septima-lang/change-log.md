@@ -15,5 +15,5 @@
 
 ### PR/165
 
-- speading `undefined` in an array is a no-op: `[42, ...undefined, 'poo']` is `[42, 'poo']`
-- speading `undefined` in an object is a no-op: `{n: 42, ...undefined, p: 'poo'}` is `{n: 42, p: 'poo'}`
+- spreading `undefined` in an array is a no-op: `[42, ...undefined, 'poo']` is `[42, 'poo']`
+- spreading `undefined` in an object is a no-op: `{n: 42, ...undefined, p: 'poo'}` is `{n: 42, p: 'poo'}`
