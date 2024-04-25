@@ -674,7 +674,7 @@ export class Value {
   }
 
   toString() {
-    return this.inner.val?.toString() ?? 'sink'
+    return this.inner.val?.toString() ?? 'undefined'
   }
 
   toJSON(): unknown {

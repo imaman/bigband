@@ -803,6 +803,11 @@ describe('septima', () => {
       })
     })
   })
+  describe('Casting functions', () => {
+    test('String()', () => {
+      expect(run(`String(42)`)).toEqual('42')
+    })
+  })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')
