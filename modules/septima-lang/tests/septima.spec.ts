@@ -779,6 +779,21 @@ describe('septima', () => {
       expect(() => run(`undefined * 4`)).toThrowError('at (<inline>:1:1..13) undefined * 4')
       expect(() => run(`undefined / 4`)).toThrowError('at (<inline>:1:1..13) undefined / 4')
     })
+    describe('??', () => {
+      test('if the lhs is undefined evaluates to the rhs', () => {
+        expect(run(`undefined ?? 42`)).toEqual(42)
+        expect(run(`undefined ?? 900`)).toEqual(900)
+        expect(run(`undefined ?? 'Luke'`)).toEqual('Luke')
+      })
+      test('if the lhs is not undefined evaluates to the lhs', () => {
+        expect(run(`43 ?? 42`)).toEqual(43)
+        expect(run(`43 ?? 900`)).toEqual(43)
+        expect(run(`43 ?? 'Luke'`)).toEqual(43)
+        expect(run(`'Han' ?? 42`)).toEqual('Han')
+        expect(run(`'Han' ?? 900`)).toEqual('Han')
+        expect(run(`'Han' ?? 'Luke'`)).toEqual('Han_')
+      })
+    })
   })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
