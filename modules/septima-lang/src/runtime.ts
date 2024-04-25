@@ -250,6 +250,10 @@ export class Runtime {
         return lhs.over(rhs)
       }
 
+      if (ast.operator === '??') {
+        return lhs.coalesce(() => this.evalNode(ast.rhs, table))
+      }
+
       shouldNeverHappen(ast.operator)
     }
 

@@ -211,7 +211,7 @@ export class Parser {
   }
 
   ternary(): AstNode {
-    const condition = this.or()
+    const condition = this.undefinedCoallesing()
     if (this.scanner.headMatches('??')) {
       return condition
     }
@@ -225,6 +225,14 @@ export class Parser {
     const negative = this.expression()
 
     return { tag: 'ternary', condition, positive, negative, unitId: this.unitId }
+  }
+
+  undefinedCoallesing(): AstNode {
+    const lhs = this.or()
+    if (this.scanner.consumeIf('??')) {
+      return { tag: 'binaryOperator', operator: '??', lhs, rhs: this.undefinedCoallesing(), unitId: this.unitId }
+    }
+    return lhs
   }
 
   or(): AstNode {

@@ -284,6 +284,19 @@ export class Value {
   //   return undefined
   // }
 
+  coalesce(that: () => Value): Value {
+    return select(this, {
+      arr: () => this,
+      bool: () => this,
+      foreign: () => this,
+      lambda: () => this,
+      num: () => this,
+      undef: () => that(),
+      obj: () => this,
+      str: () => this,
+    })
+  }
+
   or(that: () => Value) {
     const err = badType('bool')
     return select(this, {
