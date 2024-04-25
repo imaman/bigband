@@ -699,6 +699,19 @@ export class Value {
     })
   }
 
+  toNumber() {
+    return selectRaw(this, {
+      arr: () => NaN,
+      bool: a => (a ? 1 : 0),
+      num: a => a,
+      str: a => Number(a),
+      lambda: () => NaN,
+      foreign: () => NaN,
+      obj: () => NaN,
+      undef: () => NaN,
+    })
+  }
+
   toJSON(): unknown {
     const copy: (v: Value) => unknown = (v: Value) => {
       return selectRaw<unknown>(v, {
