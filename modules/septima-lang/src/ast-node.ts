@@ -16,7 +16,7 @@ export type Import = {
 
 export type Literal = {
   tag: 'literal'
-  type: 'str' | 'bool' | 'num' | 'sink' | 'sink!' | 'sink!!'
+  type: 'str' | 'bool' | 'num'
   t: Token
   unitId: UnitId
 }
@@ -70,7 +70,7 @@ export type AstNode =
     }
   | {
       tag: 'binaryOperator'
-      operator: '+' | '-' | '*' | '/' | '**' | '%' | '&&' | '||' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '??'
+      operator: '+' | '-' | '*' | '/' | '**' | '%' | '&&' | '||' | '>' | '<' | '>=' | '<=' | '==' | '!='
       lhs: AstNode
       rhs: AstNode
       unitId: UnitId
@@ -181,9 +181,6 @@ export function show(ast: AstNode | AstNode[]): string {
     return switchOn(ast.type, {
       bool: () => ast.t.text,
       num: () => ast.t.text,
-      sink: () => 'sink',
-      'sink!': () => 'sink!',
-      'sink!!': () => 'sink!!',
       str: () => `'${ast.t.text}'`,
     })
   }

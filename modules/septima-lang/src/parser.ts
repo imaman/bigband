@@ -47,9 +47,6 @@ export class Parser {
         bool: notString,
         num: notString,
         str: () => {},
-        sink: notString,
-        'sink!': notString,
-        'sink!!': notString,
       })
       ret.push({ start, ident, pathToImportFrom: pathToImportFrom.t, unitId: this.unitId })
 
@@ -213,7 +210,7 @@ export class Parser {
   }
 
   ternary(): AstNode {
-    const condition = this.unsink()
+    const condition = this.or()
     if (this.scanner.headMatches('??')) {
       return condition
     }
@@ -227,14 +224,6 @@ export class Parser {
     const negative = this.expression()
 
     return { tag: 'ternary', condition, positive, negative, unitId: this.unitId }
-  }
-
-  unsink(): AstNode {
-    const lhs = this.or()
-    if (this.scanner.consumeIf('??')) {
-      return { tag: 'binaryOperator', operator: '??', lhs, rhs: this.unsink(), unitId: this.unitId }
-    }
-    return lhs
   }
 
   or(): AstNode {
@@ -413,22 +402,7 @@ export class Parser {
   }
 
   maybePrimitiveLiteral(): Literal | undefined {
-    let t = this.scanner.consumeIf('sink!!') || this.scanner.consumeIf('undefined!!')
-    if (t) {
-      return { tag: 'literal', type: 'sink!!', t, unitId: this.unitId }
-    }
-
-    t = this.scanner.consumeIf('sink!') || this.scanner.consumeIf('undefined!')
-    if (t) {
-      return { tag: 'literal', type: 'sink!', t, unitId: this.unitId }
-    }
-
-    t = this.scanner.consumeIf('sink') || this.scanner.consumeIf('undefined')
-    if (t) {
-      return { tag: 'literal', type: 'sink', t, unitId: this.unitId }
-    }
-
-    t = this.scanner.consumeIf('true')
+    let t = this.scanner.consumeIf('true')
     if (t) {
       return { tag: 'literal', type: 'bool', t, unitId: this.unitId }
     }

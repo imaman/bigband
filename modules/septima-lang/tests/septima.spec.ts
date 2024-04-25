@@ -9,24 +9,6 @@ function run(input: string) {
   return Septima.run(input, { onSink: () => undefined })
 }
 
-/**
- * Runs a Septima program for testing purposes. The program is expected to evaluate to `sink`. Throws an exception if
- * this expectation is not met.
- * @param input the Septima program to run
- */
-function runSink(input: string) {
-  const fileName = '<test-file>'
-  const contentRec: Record<string, string> = { [fileName]: input }
-  const readFile = (m: string) => contentRec[m]
-
-  const res = new Septima().compileSync(fileName, readFile).execute({})
-
-  if (res.tag !== 'sink') {
-    throw new Error(`Not a sink: ${res.value}`)
-  }
-  return res
-}
-
 describe('septima', () => {
   test('basics', () => {
     expect(run(`5`)).toEqual(5)
@@ -567,170 +549,6 @@ describe('septima', () => {
       expect(run(`let sum = fun(a) fun(b) fun(c) a+b+c; let plusOne = sum(1); plusOne(600)(20)`)).toEqual(621)
     })
   })
-
-  describe('sink', () => {
-    test('specified via the "sink" literal', () => {
-      expect(run(`sink`)).toEqual(undefined)
-    })
-    test('access to non-existing attribute of an object evalutes to a sink', () => {
-      expect(run(`{a: 1}.b`)).toEqual(undefined)
-      expect(runSink(`6\n+ 7\n+ 8\n+ 9 + 10 + 11 + {a: 9000}.b`).where).toEqual({
-        from: { offset: 26 },
-        to: { offset: 36 },
-      })
-    })
-    test('an expression involving a sink evaluates to sink', () => {
-      expect(run(`5+8+9+sink+20+30`)).toEqual(undefined)
-      expect(run(`let x = sink; 5+8+9+x+20+30`)).toEqual(undefined)
-      expect(run(`let f = fun (a) if (a > 0) a else sink; 2+f(-1)+4`)).toEqual(undefined)
-      expect(run(`let f = fun (a) if (a > 0) a else sink; 2+f(3)+4`)).toEqual(9)
-    })
-    test('the "undefined" literal is an alias for "sink"', () => {
-      expect(run(`let x = sink; 5+8+9+x+20+30`)).toEqual(undefined)
-    })
-    test('an array can hold a sink without becoming a sink itself', () => {
-      expect(run(`let f = fun (a) if (a > 0) a else sink; [f(1), f(-1), f(8)]`)).toEqual([1, undefined, 8])
-    })
-    test('an object can hold a sink without becoming a sink itself', () => {
-      expect(run(`{a: 5, b: sink, c: 20}`)).toEqual({ a: 5, b: undefined, c: 20 })
-    })
-    test('an if() expression an have a sink positive/negative branch without becoming a sink itself', () => {
-      expect(run(`if (true) 5 else sink`)).toEqual(5)
-      expect(run(`if (false) sink else 5`)).toEqual(5)
-    })
-    test('an if() expression becomes a sink itself if the branch dictated by the condition evaluates to sink', () => {
-      expect(run(`if (false) 5 else sink`)).toEqual(undefined)
-      expect(run(`if (true) sink else 5`)).toEqual(undefined)
-    })
-    test('an if() expression becomes a sink itself if the the condition expression evaluates to sink', () => {
-      expect(run(`if (sink) 5 else 7`)).toEqual(undefined)
-    })
-    test('an && expression with sinks', () => {
-      expect(run(`sink && false`)).toEqual(undefined)
-      expect(run(`sink && true`)).toEqual(undefined)
-      expect(run(`false && sink`)).toEqual(false)
-      expect(run(`true && sink`)).toEqual(undefined)
-    })
-    test('an || expression with sinks', () => {
-      expect(run(`sink || false`)).toEqual(undefined)
-      expect(run(`sink || true`)).toEqual(undefined)
-      expect(run(`false || sink`)).toEqual(undefined)
-      expect(run(`true || sink`)).toEqual(true)
-    })
-    test('access to an attribute of a sink evaluates to sink', () => {
-      expect(run(`sink.x`)).toEqual(undefined)
-    })
-    test('calling a sink evaluates to sink', () => {
-      expect(run(`sink()`)).toEqual(undefined)
-    })
-    test('a sink compared with itself evaluates to true', () => {
-      expect(run(`sink == sink`)).toEqual(true)
-      expect(run(`sink != sink`)).toEqual(false)
-    })
-    test('a sink compared with other types evaluates to false', () => {
-      expect(run(`sink == []`)).toEqual(false)
-      expect(run(`sink == false`)).toEqual(false)
-      expect(run(`sink == true`)).toEqual(false)
-      expect(run(`sink == (fun () sink)`)).toEqual(false)
-      expect(run(`sink == 0`)).toEqual(false)
-      expect(run(`sink == 5`)).toEqual(false)
-      expect(run(`sink == {}`)).toEqual(false)
-      expect(run(`sink == ''`)).toEqual(false)
-      expect(run(`sink == 'x'`)).toEqual(false)
-    })
-    test('errors when a sink is ordered with other types', () => {
-      expect(() => run(`sink < []`)).toThrowError('Cannot compare a sink value with a value of another type')
-      expect(() => run(`sink < false`)).toThrowError('Cannot compare a sink value with a value of another type')
-      expect(() => run(`sink < true`)).toThrowError('Cannot compare a sink value with a value of another type')
-      expect(() => run(`sink < (fun () sink)`)).toThrowError('Cannot compare a sink value with a value of another type')
-      expect(() => run(`sink < 0`)).toThrowError('Cannot compare a sink value with a value of another type')
-      expect(() => run(`sink < 5`)).toThrowError('Cannot compare a sink value with a value of another type')
-      expect(() => run(`sink < {}`)).toThrowError('Cannot compare a sink value with a value of another type')
-      expect(() => run(`sink < ''`)).toThrowError('Cannot compare a sink value with a value of another type')
-      expect(() => run(`sink < 'x'`)).toThrowError('Cannot compare a sink value with a value of another type')
-    })
-    test(`the ?? operator evaluates to its right-hand-side if its left-hand-side is a sink`, () => {
-      expect(run(`sink ?? 1`)).toEqual(1)
-    })
-    test(`the ?? operator evaluates to its left-hand-side if it is a non-sink`, () => {
-      expect(run(`0 ?? 1`)).toEqual(0)
-    })
-    test(`the .where attribure of the result holds the source code of the sink`, () => {
-      expect(runSink(`1000 + 2000 + 3000 + sink + 5000 + sink`).where).toEqual({
-        from: { offset: 21 },
-        to: { offset: 24 },
-      })
-      expect(runSink(`1000 + 2000 + 3000 + 4000 + 5000 + sink`).where).toEqual({
-        from: { offset: 35 },
-        to: { offset: 38 },
-      })
-      expect(runSink(`1000\n + 2000\n + sink\n + 4000\n + 5000\n + sink`).where).toEqual({
-        from: { offset: 16 },
-        to: { offset: 19 },
-      })
-    })
-    test(`the .message attribure of the result provides a human readable summary`, () => {
-      expect(runSink(`1000 + 2000\n+ 3000 + sink + 5000 + 6000`).message).toEqual(
-        'Evaluated to sink: at (<test-file>:2:10..13) sink',
-      )
-    })
-  })
-  describe('sink!', () => {
-    test(`captures the expression trace at runtime`, () => {
-      expect(runSink(`1000 + 2000 + 3000 + sink!`).trace).toEqual(
-        [
-          `  at (<test-file>:1:1..26) 1000 + 2000 + 3000 + sink!`,
-          `  at (<test-file>:1:1..26) 1000 + 2000 + 3000 + sink!`,
-          `  at (<test-file>:1:8..26) 2000 + 3000 + sink!`,
-          `  at (<test-file>:1:15..26) 3000 + sink!`,
-          `  at (<test-file>:1:22..26) sink!`,
-        ].join('\n'),
-      )
-    })
-    test(`can also appear in code as undefined!`, () => {
-      expect(runSink(`1000 + undefined!`).trace).toEqual(
-        [
-          `  at (<test-file>:1:1..17) 1000 + undefined!`,
-          `  at (<test-file>:1:1..17) 1000 + undefined!`,
-          `  at (<test-file>:1:8..17) undefined!`,
-        ].join('\n'),
-      )
-    })
-  })
-  describe('sink!!', () => {
-    test(`captures the expression trace and the symbol-table at runtime`, () => {
-      const actual = runSink(`let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`)
-      expect(actual.symbols).toMatchObject({
-        f: 'fun (x, y) (x * (y * (sink!! * a)))',
-        a: 2,
-        x: 30,
-        y: 40,
-      })
-      expect(Object.keys(actual.symbols ?? {})).toEqual(['Object', 'args', 'a', 'f', 'x', 'y'])
-      expect(actual.trace).toEqual(
-        [
-          `  at (<test-file>:1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
-          `  at (<test-file>:1:1..58) let a = 2; let f = fun(x, y) x * y * sink!! * a; f(30, 40)`,
-          `  at (<test-file>:1:50..58) f(30, 40)`,
-          `  at (<test-file>:1:30..47) x * y * sink!! * a`,
-          `  at (<test-file>:1:34..47) y * sink!! * a`,
-          `  at (<test-file>:1:38..47) sink!! * a`,
-          `  at (<test-file>:1:38..43) sink!!`,
-        ].join('\n'),
-      )
-    })
-    test('can be used to recover values of definitions from a crash site', () => {
-      expect(runSink(`let f = fun (n) if (n >= 0) f(n-7) else (sink!! && [n].goo()); f(18)`).symbols).toMatchObject({
-        n: -3,
-      })
-    })
-    test(`can also appear in code as undefined!!`, () => {
-      expect(runSink(`let f = fun (n) undefined!!; f(18)`).symbols).toMatchObject({
-        n: 18,
-      })
-    })
-  })
-
   describe('array methods', () => {
     test('concat', () => {
       expect(run(`['foo', 'bar', 'goo'].concat(['zoo', 'poo'])`)).toEqual(['foo', 'bar', 'goo', 'zoo', 'poo'])
@@ -750,10 +568,6 @@ describe('septima', () => {
     test('find', () => {
       expect(run(`[10, 20, 30, 40].find(fun (item, i) item + i == 21)`)).toEqual(20)
       expect(run(`[8, 3, 7, 7, 6, 9].find(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(7)
-    })
-    test('find returns sink if no matching element exists', () => {
-      expect(run(`[3, 5, 7, 9].find(fun (x) x % 2 == 0)`)).toEqual(undefined)
-      expect(run(`[].find(fun () true)`)).toEqual(undefined)
     })
     test('findIndex', () => {
       expect(run(`[10, 20, 30, 40].findIndex(fun (item, i) item + i == 32)`)).toEqual(2)
