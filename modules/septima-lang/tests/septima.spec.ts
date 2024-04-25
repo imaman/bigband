@@ -756,6 +756,9 @@ describe('septima', () => {
     test('spreading an undefined in object is a no-op', () => {
       expect(run(`{n: 42, ...undefined, p: 'poo'}`)).toEqual({ n: 42, p: 'poo' })
     })
+    test('spreading an undefined in an array is a no-op', () => {
+      expect(run(`[42, ...undefined, 'poo']`)).toEqual([42, 'poo'])
+    })
     test('produces a full trace when an undefined-reference-error is fired', () => {
       let message
       try {

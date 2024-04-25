@@ -302,6 +302,9 @@ export class Runtime {
           arr.push(this.evalNode(curr.v, table))
         } else if (curr.tag === 'spread') {
           const v = this.evalNode(curr.v, table)
+          if (v.isUndefined()) {
+            continue
+          }
           arr.push(...v.assertArr())
         } else {
           shouldNeverHappen(curr)
