@@ -729,8 +729,42 @@ describe('septima', () => {
     })
   })
   describe('undefined', () => {
-    test('evaluates to (a JS) undefined', () => {
+    test(`the 'undefined' literal evaluates to (a JS) undefined`, () => {
       expect(run(`let x = undefined; x`)).toBe(undefined)
+    })
+    test('accessing a non-existing attribute evaulates to undefined', () => {
+      expect(run(`let x = {a: 42}; [x.a, x.b]`)).toEqual([42, undefined])
+    })
+    test('.at() method returns undefined when the index is out of range', () => {
+      expect(run(`let x = ['a', 'b', 'c']; [x.at(0), x.at(2), x.at(3)]`)).toEqual(['a', 'c', undefined])
+    })
+    test('produces a full trace when an undefined-reference-error is fired', () => {
+      let message
+      try {
+        run(`let x = undefined; x.a`)
+      } catch (e) {
+        message = String(e)
+      }
+
+      expect(message?.split('\n')).toEqual([
+        'Error: value type error: expected either str, arr or obj but found undefined when evaluating:',
+        '  at (<inline>:1:1..22) let x = undefined; x.a',
+        '  at (<inline>:1:1..22) let x = undefined; x.a',
+        '  at (<inline>:1:20..22) x.a',
+      ])
+    })
+    test('errors when calling a method on undefined', () => {
+      expect(() => run(`let x = undefined; x.a()`)).toThrowError('at (<inline>:1:20..24) x.a()')
+    })
+    test('errors when using undefined in arithmetic expressions', () => {
+      expect(() => run(`4 + undefined`)).toThrowError('at (<inline>:1:1..13) 4 + undefined')
+      expect(() => run(`4 - undefined`)).toThrowError('at (<inline>:1:1..13) 4 - undefined')
+      expect(() => run(`4 * undefined`)).toThrowError('at (<inline>:1:1..13) 4 * undefined')
+      expect(() => run(`4 / undefined`)).toThrowError('at (<inline>:1:1..13) 4 / undefined')
+      expect(() => run(`undefined + 4`)).toThrowError('at (<inline>:1:1..13) undefined + 4')
+      expect(() => run(`undefined - 4`)).toThrowError('at (<inline>:1:1..13) undefined - 4')
+      expect(() => run(`undefined * 4`)).toThrowError('at (<inline>:1:1..13) undefined * 4')
+      expect(() => run(`undefined / 4`)).toThrowError('at (<inline>:1:1..13) undefined / 4')
     })
   })
   test.todo('support file names in locations')
