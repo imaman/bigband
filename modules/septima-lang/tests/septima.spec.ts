@@ -285,6 +285,10 @@ describe('septima', () => {
         'sun',
       ])
     })
+    test('arrayness of a value can be tested via Array.isArry()', () => {
+      expect(run(`Array.isArray([1,2,'abc'])`)).toEqual(true)
+      expect(run(`Array.isArray('abc')`)).toEqual(false)
+    })
   })
 
   describe('objects', () => {
