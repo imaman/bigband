@@ -840,6 +840,30 @@ describe('septima', () => {
       expect(run(`Number([])`)).toEqual(NaN)
     })
   })
+  describe('console.log', () => {
+    const runLog = (input: string) => {
+      const lines: unknown[] = []
+      const result = Septima.run(input, { onSink: () => undefined, consoleLog: u => lines.push(u) })
+      return { lines, result }
+    }
+    test('prints its input', () => {
+      expect(runLog(`console.log(2*2*2*2)`).lines).toEqual(['16'])
+      expect(runLog(`console.log({a: 1, b: 2, c: ['d', 'e']})`).lines).toEqual(['{"a":1,"b":2,"c":["d","e"]}'])
+    })
+    test('a program can have multiple console.log() calls', () => {
+      expect(runLog(`["red", "green", "blue"].map(at => console.log(at))`).lines).toEqual([
+        '"red"',
+        '"green"',
+        '"blue"',
+      ])
+    })
+    test('returns its input', () => {
+      expect(runLog(`32*console.log(8)`)).toEqual({
+        result: 256,
+        lines: ['8'],
+      })
+    })
+  })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')
