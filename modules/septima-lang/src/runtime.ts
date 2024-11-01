@@ -67,6 +67,7 @@ class EmptySymbolTable implements SymbolTable {
 }
 
 export type Verbosity = 'quiet' | 'trace'
+export type Outputter = (u: unknown) => void
 
 export class Runtime {
   private stack: Stack.T = undefined
@@ -75,7 +76,13 @@ export class Runtime {
     private readonly verbosity: Verbosity = 'quiet',
     private readonly getAstOf: (importerAsPathFromSourceRoot: string, relativePathFromImporter: string) => Unit,
     private readonly args: Record<string, unknown>,
+    private readonly consoleLog?: Outputter,
   ) {}
+
+  private output(v: Value) {
+    const logger = this.consoleLog ?? console.log // eslint-disable-line no-console
+    logger(JSON.stringify(v))
+  }
 
   private buildInitialSymbolTable(generateTheArgsObject: boolean) {
     const empty = new EmptySymbolTable()
@@ -83,10 +90,18 @@ export class Runtime {
     const keys = Value.foreign(o => o.keys())
     const entries = Value.foreign(o => o.entries())
     const fromEntries = Value.foreign(o => o.fromEntries())
+    const isArray = Value.foreign(o => o.isArray())
+    const log = Value.foreign(o => {
+      this.output(o)
+      return o
+    })
+
     let lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty, 'INTERNAL')
     lib = new SymbolFrame('String', { destination: Value.foreign(o => Value.str(o.toString())) }, lib, 'INTERNAL')
     lib = new SymbolFrame('Boolean', { destination: Value.foreign(o => Value.bool(o.toBoolean())) }, lib, 'INTERNAL')
     lib = new SymbolFrame('Number', { destination: Value.foreign(o => Value.num(o.toNumber())) }, lib, 'INTERNAL')
+    lib = new SymbolFrame('Array', { destination: Value.obj({ isArray }) }, lib, 'INTERNAL')
+    lib = new SymbolFrame('console', { destination: Value.obj({ log }) }, lib, 'INTERNAL')
 
     if (generateTheArgsObject) {
       lib = new SymbolFrame('args', { destination: Value.from(this.args) }, lib, 'INTERNAL')

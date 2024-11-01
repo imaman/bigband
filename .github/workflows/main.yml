@@ -22,7 +22,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.5.0
@@ -76,7 +76,7 @@ jobs:
           s3_cache: ${{ secrets.S3_CACHE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Archive artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: antelope-${{ github.run_number }}

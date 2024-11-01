@@ -4,7 +4,7 @@ import { Unit, UnitId } from './ast-node'
 import { failMe } from './fail-me'
 import { Parser } from './parser'
 import { formatTrace, Result, ResultSink } from './result'
-import { Runtime, Verbosity } from './runtime'
+import { Outputter, Runtime, Verbosity } from './runtime'
 import { Scanner } from './scanner'
 import { shouldNeverHappen } from './should-never-happen'
 import { SourceCode } from './source-code'
@@ -16,6 +16,10 @@ interface Options {
    * to `undefined`. The default behavior is to throw an error.
    */
   onSink?: (res: ResultSink) => unknown
+  /**
+   * A custom output function that will receive the values that are passed to console.log() calls in the septima code.
+   */
+  consoleLog?: Outputter
 }
 
 export interface Executable {
@@ -52,7 +56,7 @@ export class Septima {
     const fileName = '<inline>'
     const contentRec: Record<string, string> = { [fileName]: input }
     const readFile = (m: string) => contentRec[m]
-    const res = new Septima().compileSync(fileName, readFile).execute(args)
+    const res = new Septima(undefined, options?.consoleLog).compileSync(fileName, readFile).execute(args)
     if (res.tag === 'ok') {
       return res.value
     }
@@ -66,7 +70,7 @@ export class Septima {
 
   private readonly unitByUnitId = new Map<UnitId, SourceUnit>()
 
-  constructor(private readonly sourceRoot = '') {}
+  constructor(private readonly sourceRoot = '', private readonly consoleLog?: Outputter) {}
 
   compileSync(fileName: string, readFile: SyncCodeReader) {
     fileName = this.relativize(fileName)
@@ -104,7 +108,13 @@ export class Septima {
   }
 
   private execute(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
-    const runtime = new Runtime(this.unitOf(undefined, fileName), verbosity, (a, b) => this.unitOf(a, b), args)
+    const runtime = new Runtime(
+      this.unitOf(undefined, fileName),
+      verbosity,
+      (a, b) => this.unitOf(a, b),
+      args,
+      this.consoleLog,
+    )
     const c = runtime.compute()
 
     if (c.value) {

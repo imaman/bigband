@@ -223,6 +223,10 @@ export class Value {
     return this.inner.tag === 'lambda'
   }
 
+  isArray() {
+    return this.inner.tag === 'arr'
+  }
+
   isUndefined() {
     return this.inner.tag === 'undef'
   }
