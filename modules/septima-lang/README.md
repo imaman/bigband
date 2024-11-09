@@ -116,8 +116,6 @@ obj.a = 2 // Error: Objects are immutable
 
 ### Conversions
 
-### Conversions
-
 Unlike JavaScript's automatic type coercion, Septima requires explicit conversion between different types. It provides three conversion functions that closely mirror their JavaScript counterparts in behavior.
 
 The `String` function converts any value to its string representation:
