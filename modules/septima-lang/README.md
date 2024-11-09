@@ -21,8 +21,8 @@ Septima is a programming language that closely follows JavaScript, not just in s
   - [Conversions](#conversions)
 - [Coding in Septima](#coding-in-septima)
   - [Functions](#functions)
-  - [Built-in Methods](#built-in-methods)
   - [Extended Operators](#extended-operators)
+  - [Built-in Methods](#built-in-methods)
   - [Console Output](#console-output-for-debugging)
   - [Modules](#modules)
   - [Error Handling](#error-handling)
@@ -193,23 +193,6 @@ let obj = {
 }
 ```
 
-### Built-in Methods
-
-Septima provides many of the same array and string methods as JavaScript, but ensures they're pure functions that return new values rather than mutating existing ones.
-
-```javascript
-// Similar to JavaScript - immutable operations
-'hello'
-  .toUpperCase() // Returns "HELLO"
-
-  [(1, 2, 3)].map(x => x * 2) // Returns new array [2, 4, 6]
-
-// Different from JavaScript - no mutating methods
-let arr = [1, 2, 3]
-arr.push(4) // Error: No mutating methods
-arr.sort() // Error: No mutating methods
-```
-
 ### Extended Operators
 
 #### Spread Operator (...)
@@ -241,6 +224,74 @@ let host = config.host ?? 'default' // Returns 'localhost' (keeps defined value)
 ```
 
 Note: Unlike JavaScript, Septima doesn't have `null`, so the nullish coalescing operator only works with `undefined`.
+
+### Built-in Methods
+
+Septima provides common methods for working with arrays, strings, and objects. These methods follow JavaScript conventions while maintaining Septima's no-side-effects guarantee. As such, methods such as Array.push() are not supported.
+
+#### Modifying Arrays
+
+Instead of mutating methods like push(), use the spread operator to create new arrays:
+
+```javascript
+let nums = [1, 2, 3]
+nums.push(4)       // Error: Array.push is not supported
+[...nums, 4]       // Returns [1, 2, 3, 4]
+```
+
+#### Array and String Methods
+
+Transform strings and arrays using familiar methods:
+
+```javascript
+// String methods
+'hello'.toUpperCase() // Returns "HELLO"
+'hello_world'.split('_') // Returns ['hello', 'world']
+'  spaces  '
+  .trim() // Returns "spaces"
+
+  [
+    // Array methods
+    (1, 2, 3)
+  ].map(x => x * 2) // Returns [2, 4, 6]
+  [(19, 6, 8, 3, 10)].filter(x => x > 5) // Returns [19, 6, 8, 10]
+  [(1, 2, 3, 4)].reduce((a, b) => a + b, 0) // Returns 10
+```
+
+#### Object Methods
+
+Access and transform object properties and structure:
+
+```javascript
+let user = {
+  name: 'Sam',
+  role: 'admin',
+  active: true,
+}
+
+// Get object keys as array
+Object.keys(user) // Returns ['name', 'role', 'active']
+
+// Get key-value pairs as array
+Object.entries(user) // Returns [['name', 'Sam'], ['role', 'admin'], ['active', true]]
+
+// Create object from key-value pairs
+let pairs = [
+  ['name', 'Pat'],
+  ['role', 'user'],
+]
+Object.fromEntries(pairs) // Returns { name: 'Pat', role: 'user' }
+```
+
+#### Array.isArray()
+
+Checks whether the given input is an array:
+
+```javascript
+Array.isArray([1, 2, 3]) // Returns true
+Array.isArray('not array') // Returns false
+Array.isArray({ key: 'val' }) // Returns false
+```
 
 ### Console Output for Debugging
 
