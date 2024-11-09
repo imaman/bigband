@@ -255,7 +255,7 @@ Transform strings and arrays using familiar methods (non-exhaustive list):
     (1, 2, 3)
   ].map(x => x * 2) // Returns [2, 4, 6]
   [(19, 6, 8, 3, 10)].filter(x => x > 5) // Returns [19, 6, 8, 10]
-  [(1, 2, 3, 4)].reduce((a, b) => a + b, 0) // Returns 10
+  [('1', '2', '3', '4')].reduce((a, b) => a + b, 0) // Returns 10
 ```
 
 #### Object Methods
