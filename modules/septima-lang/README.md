@@ -1,14 +1,14 @@
-# Septima Programming Language
+# A Quick Overview of Programming in Septima
 
-Septima is a modern programming language that closely follows JavaScript, not just in syntax but also in behavior. If you're familiar with JavaScript, you'll feel right at home with Septima's objects, arrays, functions, and built-in methods. However, Septima makes some deliberate departures from JavaScript to promote cleaner, more predictable code:
+Septima is a programming language that closely follows JavaScript, not just in syntax but also in behavior. If you're familiar with JavaScript, you'll feel right at home with Septima's objects, arrays, functions, and built-in methods. However, Septima makes some deliberate departures from JavaScript to promote cleaner, more predictable code:
 
-- It's immutable by default - variables cannot be reassigned after definition
+- It is immutable - variables cannot be reassigned after definition
+- Side effect free - a computation is only affected by its inputs. The only "trace" that a computation leaves is the value that it computed.
 - All expressions, including `if...else`, return values
 - There are no `null` values - only `undefined`
 - There's no automatic type coercion
-- Side effects are minimized - the language promotes pure functional programming
 - No global scope or `var` keyword - only lexical block scoping with `let`
-- No classes or prototypes - object composition is preferred
+- No classes or prototypes - You can create objects using JavaScript's standard object notation (`{a: 'foo'}`).
 
 ## Table of Contents
 
