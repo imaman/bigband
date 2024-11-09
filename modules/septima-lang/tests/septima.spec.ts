@@ -82,6 +82,10 @@ describe('septima', () => {
     expect(run(`3==3`)).toEqual(true)
     expect(run(`3!=4`)).toEqual(true)
     expect(run(`3!=3`)).toEqual(false)
+    expect(run(`{x: 1, y: {z: "ab".length}} == {x: 1, y: {z: 2}}`)).toEqual(true)
+    expect(run(`{x: 1, y: {z: "ab".length}} == {x: 1, y: {z: -2}}`)).toEqual(false)
+    expect(run(`[10, 30, 19, 500] == [10, 3*10, 20-1, 5*100]`)).toEqual(true)
+    expect(run(`[10, 30, 19, -500] == [10, 3*10, 20-1, 5*100]`)).toEqual(false)
   })
 
   test('comparison', () => {
@@ -607,6 +611,9 @@ describe('septima', () => {
       expect(run(`['a', 'xyz', 'bc'].some(fun (item, i) i == item.length)`)).toEqual(true)
       expect(run(`[8, 3, 7, 7, 6, 9].some(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(true)
     })
+    test('push is not allowed', () => {
+      expect(() => run(`let a = [1,2]; a.push(5)`)).toThrowError('Unrecognized array method: push')
+    })
   })
   describe('Object.keys()', () => {
     test('returns names of all attributes of the given object', () => {
@@ -864,6 +871,7 @@ describe('septima', () => {
       })
     })
   })
+  test.todo('sort') // expect(run(`[4, 10, 9, 256, 5, 300, 2, 70].sort()`)).toEqual('--')
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')
