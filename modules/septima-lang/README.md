@@ -12,14 +12,14 @@ Septima is a programming language that closely follows JavaScript, not just in s
 
 ## Table of Contents
 
-- [Basic Topics](#basic-started)
+- [Basic Topics](#basic-topics)
   - [Numbers and Arithmetic](#numbers-and-arithmetic)
   - [Booleans and Logic](#booleans-and-logic)
   - [Control Flow and Expressions](#control-flow-and-expressions)
   - [Variables and Immutability](#variables-and-immutability)
   - [Arrays and Objects](#arrays-and-objects)
-  - [Type Conversion](#type-conversion)
-- [Advanced Topics](#advanced-started)
+  - [Conversions](#conversions)
+- [Advanced Topics](#advanced-topics)
   - [Functions](#functions)
   - [Built-in Methods](#built-in-methods)
   - [Modern Features](#modern-features)
@@ -114,9 +114,9 @@ obj.c = 3 // Error: Objects are immutable
 obj.a = 2 // Error: Objects are immutable
 ```
 
-### Type Conversion
+### Conversions
 
-Unlike JavaScript's automatic type coercion, Septima requires explicit type conversion. It provides three main conversion functions that work almost identically to their JavaScript counterparts.
+Unlike JavaScript's automatic type coercion, Septima requires an explicit conversion from value of one type to another. It provides three main conversion functions that work almost identically to their JavaScript counterparts.
 
 The main difference is that applying `String()` to an array or an object produces its JSON represntation (just as if `JSON.strignfiy()` were applied to the argument).
 
