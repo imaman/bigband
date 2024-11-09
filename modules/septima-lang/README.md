@@ -252,21 +252,49 @@ console.log({ x: x, y: y, z: z }) // Or an object
 console.log('x=' + x + ', y=' + y) // Or string concatenation
 ```
 
-### Modules and Exports
+### Modules
 
-Septima's module system is simpler than JavaScript's, focusing only on exports.
+Septima provides a module system for organizing code across files, supporting exports and namespace imports.
+
+#### Exports
+
+Use the `export` keyword to expose values from a module:
 
 ```javascript
-// Similar to JavaScript - named exports
-export let x = 5
-export let double = x => x * 2
+// utils.septima.js
+export let capitalize = str => str.charAt(0).toUpperCase() + str.slice(1)
 
-// Different from JavaScript - no default exports
-export default x => x * 2 // Error: No default exports
-
-// Different from JavaScript - no imports
-import { x } from './module' // Not supported in this version
+// config.septima.js
+export let timeoutInSeconds = 30
+export let retries = 3
 ```
+
+Key points:
+
+- Only top-level definitions can be exported
+- Multiple exports per file are allowed
+- No default exports
+
+#### Imports
+
+Import using the namespace pattern:
+
+```javascript
+import * as utils from './utils.septima.js'
+import * as config from './config.septima.js'
+
+// Use imported values
+let result = utils.capitalize('hello')
+let timeoutInMillis = config.timeoutInSeconds * 1000
+```
+
+Key points:
+
+- Files must end with `.septima.js`
+- Only namespace imports (`* as`) supported
+- Imports must be at file top
+- Paths are relative to current file
+- No circular dependencies
 
 ### Error Handling
 
