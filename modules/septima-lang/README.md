@@ -24,7 +24,7 @@ Septima is a programming language that closely follows JavaScript, not just in s
   - [Built-in Methods](#built-in-methods)
   - [Modern Features](#modern-features)
   - [Console Output](#console-output-for-debugging)
-  - [Modules and Exports](#modules-and-exports)
+  - [Modules](#modules)
   - [Error Handling](#error-handling)
 
 ## Basic Topics
