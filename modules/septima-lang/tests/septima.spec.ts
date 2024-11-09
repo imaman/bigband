@@ -871,6 +871,7 @@ describe('septima', () => {
       })
     })
   })
+  test.todo('sort') // expect(run(`[4, 10, 9, 256, 5, 300, 2, 70].sort()`)).toEqual('--')
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('imports')
