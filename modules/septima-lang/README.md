@@ -116,7 +116,9 @@ obj.a = 2 // Error: Objects are immutable
 
 ### Type Conversion
 
-Unlike JavaScript's automatic type coercion, Septima requires explicit type conversion. It provides three main conversion functions that work similarly to their JavaScript counterparts, but with stricter rules.
+Unlike JavaScript's automatic type coercion, Septima requires explicit type conversion. It provides three main conversion functions that work almost identically to their JavaScript counterparts.
+
+The main difference is that applying `String()` to an array or an object produces its JSON represntation (just as if `JSON.strignfiy()` were applied to the argument).
 
 ```javascript
 // Number to String conversion
@@ -147,8 +149,7 @@ Number(undefined) // NaN
 // Different from JavaScript - no implicit conversion
 '42' + 7 // Error: Cannot add string and number
 7 + '42' // Error: Cannot add number and string
-if ('hello') {
-} // Error: Condition must be boolean
+let x = if ('hello') 1 else -1  // Error: Condition must be boolean
 ```
 
 ## Advanced Topics
