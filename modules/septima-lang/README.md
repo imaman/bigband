@@ -12,22 +12,22 @@ Septima is a programming language that closely follows JavaScript, not just in s
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
+- [Basic Topics](#basic-started)
   - [Numbers and Arithmetic](#numbers-and-arithmetic)
   - [Booleans and Logic](#booleans-and-logic)
   - [Control Flow and Expressions](#control-flow-and-expressions)
   - [Variables and Immutability](#variables-and-immutability)
   - [Arrays and Objects](#arrays-and-objects)
+  - [Type Conversion](#type-conversion)
+- [Advanced Topics](#advanced-started)
   - [Functions](#functions)
   - [Built-in Methods](#built-in-methods)
   - [Modern Features](#modern-features)
   - [Console Output](#console-output-for-debugging)
-  - [Type Conversion](#type-conversion)
   - [Modules and Exports](#modules-and-exports)
   - [Error Handling](#error-handling)
-- [Best Practices](#best-practices)
 
-## Getting Started
+## Basic Topics
 
 Like JavaScript, Septima works with familiar data types like numbers, strings, and booleans. However, its treatment of these types is more strict and predictable than JavaScript's loose type handling.
 
@@ -114,6 +114,45 @@ obj.c = 3 // Error: Objects are immutable
 obj.a = 2 // Error: Objects are immutable
 ```
 
+### Type Conversion
+
+Unlike JavaScript's automatic type coercion, Septima requires explicit type conversion. It provides three main conversion functions that work similarly to their JavaScript counterparts, but with stricter rules.
+
+```javascript
+// Number to String conversion
+String(42) // "42"
+String(3.14) // "3.14"
+String(true) // "true"
+String(undefined) // "undefined"
+String({ a: 1 }) // "{"a":1}"
+String([1, 2]) // "[1,2]"
+
+// Convert to Boolean
+Boolean(42) // true
+Boolean(0) // false
+Boolean('hello') // true
+Boolean('') // false
+Boolean(undefined) // false
+Boolean({}) // true
+Boolean([]) // true
+
+// String to Number conversion
+Number('42') // 42
+Number('3.14') // 3.14
+Number('abc') // NaN
+Number(true) // 1
+Number(false) // 0
+Number(undefined) // NaN
+
+// Different from JavaScript - no implicit conversion
+'42' + 7 // Error: Cannot add string and number
+7 + '42' // Error: Cannot add number and string
+if ('hello') {
+} // Error: Condition must be boolean
+```
+
+## Advanced Topics
+
 ### Functions
 
 Functions in Septima are similar to JavaScript arrow functions, but with some key differences in scope and purity.
@@ -147,8 +186,9 @@ Septima provides many of the same array and string methods as JavaScript, but en
 ```javascript
 // Similar to JavaScript - immutable operations
 'hello'
-  .toUpperCase() // Returns new string
-  [(1, 2, 3)].map(x => x * 2) // Returns new array
+  .toUpperCase() // Returns "HELLO"
+
+  [(1, 2, 3)].map(x => x * 2) // Returns new array [2, 4, 6]
 
 // Different from JavaScript - no mutating methods
 let arr = [1, 2, 3]
@@ -194,43 +234,6 @@ console.log(obj) // Prints: {"a":1,"b":2}
 console.log([x, y, z]) // Use an array
 console.log({ x: x, y: y, z: z }) // Or an object
 console.log('x=' + x + ', y=' + y) // Or string concatenation
-```
-
-### Type Conversion
-
-Unlike JavaScript's automatic type coercion, Septima requires explicit type conversion. It provides three main conversion functions that work similarly to their JavaScript counterparts, but with stricter rules.
-
-```javascript
-// Number to String conversion
-String(42) // "42"
-String(3.14) // "3.14"
-String(true) // "true"
-String(undefined) // "undefined"
-String({ a: 1 }) // "{"a":1}"
-String([1, 2]) // "[1,2]"
-
-// Convert to Boolean
-Boolean(42) // true
-Boolean(0) // false
-Boolean('hello') // true
-Boolean('') // false
-Boolean(undefined) // false
-Boolean({}) // true
-Boolean([]) // true
-
-// String to Number conversion
-Number('42') // 42
-Number('3.14') // 3.14
-Number('abc') // NaN
-Number(true) // 1
-Number(false) // 0
-Number(undefined) // NaN
-
-// Different from JavaScript - no implicit conversion
-'42' + 7 // Error: Cannot add string and number
-7 + '42' // Error: Cannot add number and string
-if ('hello') {
-} // Error: Condition must be boolean
 ```
 
 ### Modules and Exports
