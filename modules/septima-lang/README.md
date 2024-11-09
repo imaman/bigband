@@ -231,7 +231,7 @@ Septima provides common methods for working with arrays, strings, and objects. T
 
 #### Modifying Arrays
 
-Instead of mutating methods like push(), use the spread operator to create new arrays:
+Instead of mutating methods like `push()` use the spread operator to create new arrays:
 
 ```javascript
 let nums = [1, 2, 3]
@@ -241,14 +241,14 @@ nums.push(4)       // Error: Array.push is not supported
 
 #### Array and String Methods
 
-Transform strings and arrays using familiar methods:
+Transform strings and arrays using familiar methods (non-exhaustive list):
 
 ```javascript
 // String methods
 'hello'.toUpperCase() // Returns "HELLO"
 'hello_world'.split('_') // Returns ['hello', 'world']
-'  spaces  '
-  .trim() // Returns "spaces"
+'  piano  '
+  .trim() // Returns "piano"
 
   [
     // Array methods
