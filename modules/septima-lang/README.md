@@ -1,4 +1,4 @@
-# A Quick Overview of Programming in Septima
+# Septima: An Overview
 
 Septima is a programming language that closely follows JavaScript, not just in syntax but also in behavior. If you're familiar with JavaScript, you'll feel right at home with Septima's objects, arrays, functions, and built-in methods. However, Septima makes some deliberate departures from JavaScript to promote cleaner, more predictable code:
 
@@ -9,6 +9,37 @@ Septima is a programming language that closely follows JavaScript, not just in s
 - There's no automatic type coercion
 - No global scope or `var` keyword - only lexical block scoping with `let`
 - No classes or prototypes - You can create objects using JavaScript's standard object notation (`{a: 'foo'}`).
+
+## Why Septima?
+
+Septima excels in scenarios where you need to safely execute user-provided code within your application, particularly in backend systems. Common use cases include:
+
+- **Configuration as Code**: Allow users to write complex configuration logic using a familiar JavaScript-like syntax instead of being limited to static JSON or YAML files
+- **Business Rules Engines**: Enable domain experts to define and maintain business rules in a familiar syntax without risking system stability
+- **ETL Transformations**: Let users write data transformation logic that can safely process data without accessing external systems
+- **Plugin Systems**: Implement extensible architectures where third-party code can be safely executed in a controlled environment
+- **Customizable Workflows**: Allow users to define custom workflow logic while ensuring system security
+
+Key benefits that make Septima ideal for these scenarios:
+
+1. **Secured**:
+
+   - No file system or network access
+   - No `eval()` or dynamic code execution
+   - No access to system resources
+
+2. **Reliable**:
+
+   - Functional programming paradigm (no loops) makes code more robust
+   - Immutability and lack of side effects make code easier to reason about
+   - No type coercion reduces unexpected behavior
+   - Modules allow you to organize and manage large Septima codebases
+
+3. **Friendly**:
+   - JavaScript-like syntax reduces learning curve
+   - Highly compatible with JavaScript - code ports easily in both directions
+
+Unlike alternatives such as JavaScript's `vm` module or `eval()`, Septima provides a secure environment for running user-provided code without sacrificing expressiveness or ease of use. It strikes a balance between power and safety that makes it particularly well-suited for enterprise applications where reliability and security are paramount.
 
 ## Table of Contents
 
