@@ -116,20 +116,29 @@ obj.a = 2 // Error: Objects are immutable
 
 ### Conversions
 
+### Conversions
+
 Unlike JavaScript's automatic type coercion, Septima requires an explicit conversion from value of one type to another. It provides three main conversion functions that work almost identically to their JavaScript counterparts.
 
-The main difference is that applying `String()` to an array or an object produces its JSON represntation (just as if `JSON.strignfiy()` were applied to the argument).
+The `String` function converts any value to a string in a predictable way:
 
 ```javascript
-// Number to String conversion
 String(42) // "42"
 String(3.14) // "3.14"
 String(true) // "true"
 String(undefined) // "undefined"
+```
+
+When `String` is applied to an object or an array it produces the JSON representation of the argument:
+
+```javascript
 String({ a: 1 }) // "{"a":1}"
 String([1, 2]) // "[1,2]"
+```
 
-// Convert to Boolean
+The `Boolean` function follows standard truthiness rules, converting values to true or false:
+
+```javascript
 Boolean(42) // true
 Boolean(0) // false
 Boolean('hello') // true
@@ -137,19 +146,25 @@ Boolean('') // false
 Boolean(undefined) // false
 Boolean({}) // true
 Boolean([]) // true
+```
 
-// String to Number conversion
+The `Number` function attempts to parse numeric values, returning `NaN` when conversion isn't possible:
+
+```javascript
 Number('42') // 42
 Number('3.14') // 3.14
 Number('abc') // NaN
 Number(true) // 1
 Number(false) // 0
 Number(undefined) // NaN
+```
 
-// Different from JavaScript - no implicit conversion
-'42' + 7 // Error: Cannot add string and number
-7 + '42' // Error: Cannot add number and string
-let x = if ('hello') 1 else -1  // Error: Condition must be boolean
+Unlike JavaScript, Septima requires these explicit conversions - there is no automatic type coercion:
+
+```javascript
+"42" + 7                  // Error: Cannot add string and number
+7 + "42"                  // Error: Cannot add number and string
+let x = if ("hello") 1 else -1 // Error: Condition must be boolean
 ```
 
 ## Advanced Topics
