@@ -12,22 +12,22 @@ Septima is a programming language that closely follows JavaScript, not just in s
 
 ## Table of Contents
 
-- [Basic Topics](#basic-topics)
+- [Language Fundamentals](#language-fundamentals)
   - [Numbers and Arithmetic](#numbers-and-arithmetic)
   - [Booleans and Logic](#booleans-and-logic)
   - [Control Flow and Expressions](#control-flow-and-expressions)
   - [Variables and Immutability](#variables-and-immutability)
   - [Arrays and Objects](#arrays-and-objects)
   - [Conversions](#conversions)
-- [Advanced Topics](#advanced-topics)
+- [Coding in Septima](#coding-in-septima)
   - [Functions](#functions)
   - [Built-in Methods](#built-in-methods)
-  - [Modern Features](#modern-features)
+  - [Extended Operators](#extended-operators)
   - [Console Output](#console-output-for-debugging)
   - [Modules](#modules)
   - [Error Handling](#error-handling)
 
-## Basic Topics
+## Language Fundamentals
 
 Like JavaScript, Septima works with familiar data types like numbers, strings, and booleans. However, its treatment of these types is more strict and predictable than JavaScript's loose type handling.
 
@@ -165,7 +165,7 @@ Unlike JavaScript, Septima requires these explicit conversions and does not perf
 let x = if ("hello") 1 else -1 // Error: Condition must be boolean
 ```
 
-## Advanced Topics
+## Coding in Septima
 
 ### Functions
 
@@ -210,19 +210,37 @@ arr.push(4) // Error: No mutating methods
 arr.sort() // Error: No mutating methods
 ```
 
-### Modern Features
+### Extended Operators
 
-Septima includes many modern JavaScript features but implements them in a more consistent way.
+#### Spread Operator (...)
+
+The spread operator creates shallow copies of arrays and objects:
 
 ```javascript
-// Similar to JavaScript - spread operator
-let obj = { a: 1, b: 2 }
-let newObj = { ...obj, c: 3 }
+// Objects
+let user = { name: 'Sam', id: 123 }
+let userWithRole = { ...user, role: 'admin' } // { name: 'Sam', id: 123, role: 'admin' }
 
-// Different from JavaScript - nullish coalescing
-undefined ?? 42 // Returns 42
-null ?? 42 // Error: null doesn't exist in Septima
+// Arrays
+let numbers = [1, 2, 3]
+let moreNumbers = [...numbers, 4, 5] // [1, 2, 3, 4, 5]
 ```
+
+#### Nullish Coalescing (??)
+
+The nullish coalescing operator provides a way to handle undefined values:
+
+```javascript
+let config = {
+  port: undefined,
+  host: 'localhost',
+}
+
+let port = config.port ?? 8080 // Returns 8080 (fallback when undefined)
+let host = config.host ?? 'default' // Returns 'localhost' (keeps defined value)
+```
+
+Note: Unlike JavaScript, Septima doesn't have `null`, so the nullish coalescing operator only works with `undefined`.
 
 ### Console Output for Debugging
 
