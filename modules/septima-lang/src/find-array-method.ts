@@ -98,7 +98,13 @@ export function findArrayMethod(arr: unknown[], index: string, callEvaluator: Ca
     return Value.foreign(predicate => arr.some(adjustedPredicate(predicate)))
   }
   if (index === 'sort') {
-    return Value.foreign(() => [...arr].sort())
+    return Value.foreign(callback => {
+      if (callback) {
+        return [...arr].sort((a, b) => callEvaluator(callback, [Value.from(a), Value.from(b)]).assertNum())
+      } else {
+        return [...arr].sort()
+      }
+    })
   }
   throw new Error(`Unrecognized array method: ${index}`)
 }
