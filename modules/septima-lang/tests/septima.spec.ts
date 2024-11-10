@@ -773,6 +773,11 @@ describe('septima', () => {
         4000`),
       ).toEqual(4021)
     })
+    test(`errors if the block comment start but does not end`, () => {
+      expect(() => run(`1 + 20 + /* 300`)).toThrowError(
+        'Block comment that started at at (<inline>:1:12..15)  300 is missing its closing (*/)',
+      )
+    })
   })
   describe('evaluation stack', () => {
     test('max recursion depth', () => {

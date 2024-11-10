@@ -21,6 +21,20 @@ export class Scanner {
     return this.sourceCode.input.substring(this.offset)
   }
 
+  private eatBlockComment() {
+    const startedAt = this.sourceRef
+    while (true) {
+      if (this.eof()) {
+        throw new Error(`Block comment that started at ${startedAt} is missing its closing (*/)`)
+      }
+      if (this.consumeIf('*/')) {
+        return
+      }
+
+      this.consume(/./)
+    }
+  }
+
   private eatWhitespace() {
     while (true) {
       if (this.consumeIf(/\s*/, false)) {
@@ -28,6 +42,10 @@ export class Scanner {
       }
       if (this.consumeIf('//', false)) {
         this.consume(/[^\n]*/, false)
+        continue
+      }
+      if (this.consumeIf('/*', false)) {
+        this.eatBlockComment()
         continue
       }
 
