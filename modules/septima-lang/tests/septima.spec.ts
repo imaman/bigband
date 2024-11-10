@@ -660,6 +660,12 @@ describe('septima', () => {
           'Emilia',
         ])
       })
+      test('does not change the array when a custom sorting callback is used', () => {
+        expect(run(`let a = ['xx', 'y']; let b = a.sort((a, b) => a.length - b.length); {a,b}`)).toEqual({
+          a: ['xx', 'y'],
+          b: ['y', 'xx'],
+        })
+      })
     })
     test('push is not allowed', () => {
       expect(() => run(`let a = [1,2]; a.push(5)`)).toThrowError('Unrecognized array method: push')
