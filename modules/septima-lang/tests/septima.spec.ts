@@ -671,14 +671,19 @@ describe('septima', () => {
       expect(() => run(`let a = [1,2]; a.push(5)`)).toThrowError('Unrecognized array method: push')
     })
   })
-  test('reflection', () => {
-    expect(run('5.constructor.name')).toEqual('Number')
-    expect(run('true.constructor.name')).toEqual('Boolean')
-    expect(run('false.constructor.name')).toEqual('Boolean')
-    expect(run('"abc".constructor.name')).toEqual('String')
-    expect(run('[].constructor.name')).toEqual('Array')
-    expect(run('{}.constructor.name')).toEqual('Object')
-    expect(run('(() => 99).constructor.name')).toEqual('Function')
+  describe('constructor', () => {
+    test('.name reflects the type of the value', () => {
+      expect(run('5.constructor.name')).toEqual('Number')
+      expect(run('true.constructor.name')).toEqual('Boolean')
+      expect(run('false.constructor.name')).toEqual('Boolean')
+      expect(run('"abc".constructor.name')).toEqual('String')
+      expect(run('[].constructor.name')).toEqual('Array')
+      expect(run('{}.constructor.name')).toEqual('Object')
+      expect(run('(() => 99).constructor.name')).toEqual('Function')
+    })
+    test('works also if the attribute name is calculated', () => {
+      expect(run('5["const" + "ructor"].name')).toEqual('Number')
+    })
   })
   describe('Object.keys()', () => {
     test('returns names of all attributes of the given object', () => {

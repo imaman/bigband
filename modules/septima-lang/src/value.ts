@@ -618,7 +618,8 @@ export class Value {
   access(indexValue: string | Value, callEvaluator: CallEvaluator): Value {
     const err = badType('obj', 'str', 'arr')
 
-    if (indexValue === 'constructor') {
+    const ctor = 'constructor'
+    if ((typeof indexValue === 'object' && indexValue.toString() === ctor) || indexValue == ctor) {
       return Value.from({
         name: select(this, {
           arr: () => Value.from('Array'),
