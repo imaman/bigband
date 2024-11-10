@@ -767,16 +767,24 @@ describe('septima', () => {
   })
   describe('block comments', () => {
     test(`anything from '/*' up to the next '*/' is ignored`, () => {
+      expect(run(`1 + 20 + /* 300 */ 4000`)).toEqual(4021)
+    })
+    test(`can span multiple lines`, () => {
       expect(
         run(`
-        1 + 20 + /* 300 */
-        4000`),
-      ).toEqual(4021)
+        1 + /*
+        20 +
+        300 
+        */ 4000`),
+      ).toEqual(4001)
     })
     test(`errors if the block comment start but does not end`, () => {
       expect(() => run(`1 + 20 + /* 300`)).toThrowError(
         'Block comment that started at at (<inline>:1:12..15)  300 is missing its closing (*/)',
       )
+    })
+    test(`errors if a block comment closer does not have an opener`, () => {
+      expect(() => run(`1 + 20 + */ 300`)).toThrowError('Unparsable input at (<inline>:1:10..15) */ 300')
     })
   })
   describe('evaluation stack', () => {

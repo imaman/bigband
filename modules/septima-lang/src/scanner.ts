@@ -31,7 +31,8 @@ export class Scanner {
         return
       }
 
-      this.consume(/./)
+      // By default, the . symbol in regexp does _not_ match newline. we use /./s to override the default.
+      this.consume(/./s, false)
     }
   }
 
