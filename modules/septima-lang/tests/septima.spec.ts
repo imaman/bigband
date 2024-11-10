@@ -77,18 +77,27 @@ describe('septima', () => {
     expect(() => run(`9 * 8 * 'zxcvbnm' * 7`)).toThrowError(expected)
   })
 
-  test('equality', () => {
-    expect(run(`3==4`)).toEqual(false)
-    expect(run(`3==3`)).toEqual(true)
-    expect(run(`3!=4`)).toEqual(true)
-    expect(run(`3!=3`)).toEqual(false)
-    expect(run(`{x: 1, y: {z: "ab".length}} == {x: 1, y: {z: 2}}`)).toEqual(true)
-    expect(run(`{x: 1, y: {z: "ab".length}} == {x: 1, y: {z: -2}}`)).toEqual(false)
-    expect(run(`[10, 30, 19, 500] == [10, 3*10, 20-1, 5*100]`)).toEqual(true)
-    expect(run(`[10, 30, 19, -500] == [10, 3*10, 20-1, 5*100]`)).toEqual(false)
-  })
-  test('object equality is not sensitive to the order of the attributes', () => {
-    expect(run(`{x: 1, y: 2} == {y: 2, x: 1}`)).toEqual(true)
+  describe('equality', () => {
+    test('of numbers', () => {
+      expect(run(`3==4`)).toEqual(false)
+      expect(run(`3==3`)).toEqual(true)
+      expect(run(`3!=4`)).toEqual(true)
+      expect(run(`3!=3`)).toEqual(false)
+    })
+    test('of objects', () => {
+      expect(run(`{x: 1, y: {z: "ab".length}} == {x: 1, y: {z: 2}}`)).toEqual(true)
+      expect(run(`{x: 1, y: {z: "ab".length}} == {x: 1, y: {z: -2}}`)).toEqual(false)
+    })
+    test('object equality is not sensitive to the order of the attributes', () => {
+      expect(run(`{x: 1, y: 2} == {y: 2, x: 1}`)).toEqual(true)
+    })
+    test('of arrays', () => {
+      expect(run(`[10, 30, 19, 500] == [10, 3*10, 20-1, 5*100]`)).toEqual(true)
+      expect(run(`[10, 30, 19, -500] == [10, 3*10, 20-1, 5*100]`)).toEqual(false)
+    })
+    test('array equality is sensitive to the order of the items', () => {
+      expect(run(`['alpha', 'beta'] == ['beta', 'alpha']`)).toEqual(false)
+    })
   })
 
   test('comparison', () => {
