@@ -96,12 +96,15 @@ export class Runtime {
       return o
     })
 
+    const parse = Value.foreign(o => JSON.parse(o.toString()))
+
     let lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty, 'INTERNAL')
     lib = new SymbolFrame('String', { destination: Value.foreign(o => Value.str(o.toString())) }, lib, 'INTERNAL')
     lib = new SymbolFrame('Boolean', { destination: Value.foreign(o => Value.bool(o.toBoolean())) }, lib, 'INTERNAL')
     lib = new SymbolFrame('Number', { destination: Value.foreign(o => Value.num(o.toNumber())) }, lib, 'INTERNAL')
     lib = new SymbolFrame('Array', { destination: Value.obj({ isArray }) }, lib, 'INTERNAL')
     lib = new SymbolFrame('console', { destination: Value.obj({ log }) }, lib, 'INTERNAL')
+    lib = new SymbolFrame('JSON', { destination: Value.obj({ parse }) }, lib, 'INTERNAL')
 
     if (generateTheArgsObject) {
       lib = new SymbolFrame('args', { destination: Value.from(this.args) }, lib, 'INTERNAL')

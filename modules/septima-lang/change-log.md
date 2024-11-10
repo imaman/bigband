@@ -23,3 +23,9 @@
 
 - support `Array.isArray(x)`
 - support `console.log('my message')`
+
+### PR/172
+
+- supoort `JSON.parse(s)`
+- supoort sorting an array: `[97, 100, 50].sort()`, `['the', 'quick', 'brown', 'fox'].sort((a, b) => a.length - b.length)`
+- fix object comparsion

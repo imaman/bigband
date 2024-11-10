@@ -355,9 +355,62 @@ export class Value {
       return Value.bool(false)
     }
 
-    // TODO(imaman): much better comparison is needed here
-    const b = JSON.stringify(this.inner.val) === JSON.stringify(that.inner.val)
-    return Value.bool(b)
+    const no = () => Value.bool(false)
+    return select(this, {
+      str: () => Value.bool(this.inner.val === that.inner.val),
+      num: () => Value.bool(this.inner.val === that.inner.val),
+      bool: () => Value.bool(this.inner.val === that.inner.val),
+      undef: () => Value.bool(that.isUndefined()),
+      foreign: () => Value.bool(this.inner.val === that.inner.val),
+      lambda: () => Value.bool(this.inner.val === that.inner.val),
+      arr: lhs =>
+        select(that, {
+          bool: no,
+          num: no,
+          str: no,
+          lambda: no,
+          foreign: no,
+          undef: no,
+          obj: no,
+          arr: rhs => {
+            if (lhs.length !== rhs.length) {
+              return Value.bool(false)
+            }
+
+            for (let i = 0; i < lhs.length; ++i) {
+              if (!lhs[i].equalsTo(rhs[i]).isTrue()) {
+                return Value.bool(false)
+              }
+            }
+
+            return Value.bool(true)
+          },
+        }),
+      obj: lhs =>
+        select(that, {
+          bool: no,
+          num: no,
+          str: no,
+          lambda: no,
+          foreign: no,
+          undef: no,
+          arr: no,
+          obj: rhs => {
+            const ks = Object.keys(lhs)
+            if (ks.length !== Object.keys(rhs).length) {
+              return Value.bool(false)
+            }
+
+            for (const k of ks) {
+              if (!lhs[k].equalsTo(rhs[k]).isTrue()) {
+                return Value.bool(false)
+              }
+            }
+
+            return Value.bool(true)
+          },
+        }),
+    })
   }
 
   not() {

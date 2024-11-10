@@ -77,15 +77,46 @@ describe('septima', () => {
     expect(() => run(`9 * 8 * 'zxcvbnm' * 7`)).toThrowError(expected)
   })
 
-  test('equality', () => {
-    expect(run(`3==4`)).toEqual(false)
-    expect(run(`3==3`)).toEqual(true)
-    expect(run(`3!=4`)).toEqual(true)
-    expect(run(`3!=3`)).toEqual(false)
-    expect(run(`{x: 1, y: {z: "ab".length}} == {x: 1, y: {z: 2}}`)).toEqual(true)
-    expect(run(`{x: 1, y: {z: "ab".length}} == {x: 1, y: {z: -2}}`)).toEqual(false)
-    expect(run(`[10, 30, 19, 500] == [10, 3*10, 20-1, 5*100]`)).toEqual(true)
-    expect(run(`[10, 30, 19, -500] == [10, 3*10, 20-1, 5*100]`)).toEqual(false)
+  describe('equality', () => {
+    test('of numbers', () => {
+      expect(run(`3==4`)).toEqual(false)
+      expect(run(`3==3`)).toEqual(true)
+      expect(run(`3!=4`)).toEqual(true)
+      expect(run(`3!=3`)).toEqual(false)
+    })
+    test('of strings', () => {
+      expect(run(`'alpha' == 'beta'`)).toEqual(false)
+      expect(run(`'alpha' == 'alpha'`)).toEqual(true)
+    })
+    test('of boolean', () => {
+      expect(run(`false == false`)).toEqual(true)
+      expect(run(`false == true`)).toEqual(false)
+      expect(run(`true == false`)).toEqual(false)
+      expect(run(`true == true`)).toEqual(true)
+    })
+    test('of values of different types is always false', () => {
+      expect(run(`false == 5`)).toEqual(false)
+      expect(run(`'6' == 6`)).toEqual(false)
+      expect(run(`['alpha'] == 'alpha'`)).toEqual(false)
+      expect(run(`{} == []`)).toEqual(false)
+      expect(run(`((x) => (x+3)) == 6`)).toEqual(false)
+    })
+    test('of objects', () => {
+      expect(run(`{} == {}`)).toEqual(true)
+      expect(run(`{} == {a: 1}`)).toEqual(false)
+      expect(run(`{x: 1, y: {z: "ab".length}} == {x: 1, y: {z: 2}}`)).toEqual(true)
+      expect(run(`{x: 1, y: {z: "ab".length}} == {x: 1, y: {z: -2}}`)).toEqual(false)
+    })
+    test('object equality is not sensitive to the order of the attributes', () => {
+      expect(run(`{x: 1, y: 2} == {y: 2, x: 1}`)).toEqual(true)
+    })
+    test('of arrays', () => {
+      expect(run(`[10, 30, 19, 500] == [10, 3*10, 20-1, 5*100]`)).toEqual(true)
+      expect(run(`[10, 30, 19, -500] == [10, 3*10, 20-1, 5*100]`)).toEqual(false)
+    })
+    test('array equality is sensitive to the order of the items', () => {
+      expect(run(`['alpha', 'beta'] == ['beta', 'alpha']`)).toEqual(false)
+    })
   })
 
   test('comparison', () => {
@@ -611,6 +642,31 @@ describe('septima', () => {
       expect(run(`['a', 'xyz', 'bc'].some(fun (item, i) i == item.length)`)).toEqual(true)
       expect(run(`[8, 3, 7, 7, 6, 9].some(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(true)
     })
+    describe('sort', () => {
+      test('can sort numbers', () => {
+        expect(run(`[5, 9, 3, 8, 6, 4].sort()`)).toEqual([3, 4, 5, 6, 8, 9])
+      })
+      test('does not change the array', () => {
+        expect(run(`let a = [4,3]; let b = a.sort(); {a,b}`)).toEqual({ a: [4, 3], b: [3, 4] })
+      })
+      test('can sort strings', () => {
+        expect(run(`['Bob', 'Dan', 'Alice', 'Callie'].sort()`)).toEqual(['Alice', 'Bob', 'Callie', 'Dan'])
+      })
+      test('allows a custom sorting callback to be passed in', () => {
+        expect(run(`['John', 'Ben', 'Emilia', 'Alice'].sort((a, b) => a.length - b.length)`)).toEqual([
+          'Ben',
+          'John',
+          'Alice',
+          'Emilia',
+        ])
+      })
+      test('does not change the array when a custom sorting callback is used', () => {
+        expect(run(`let a = ['xx', 'y']; let b = a.sort((a, b) => a.length - b.length); {a,b}`)).toEqual({
+          a: ['xx', 'y'],
+          b: ['y', 'xx'],
+        })
+      })
+    })
     test('push is not allowed', () => {
       expect(() => run(`let a = [1,2]; a.push(5)`)).toThrowError('Unrecognized array method: push')
     })
@@ -871,6 +927,21 @@ describe('septima', () => {
       })
     })
   })
+  describe(`JSON.parse`, () => {
+    test('parses a string', () => {
+      expect(run(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
+    })
+    test('roundtrips a value that was converted to JSON', () => {
+      expect(run(`JSON.parse(String({"a": 1, "b": "beta", c: {arr: [100, 200]}}))`)).toEqual({
+        a: 1,
+        b: 'beta',
+        c: { arr: [100, 200] },
+      })
+    })
+    test('keeps non-string as-is', () => {
+      expect(run(`JSON.parse(5000)`)).toEqual(5000)
+    })
+  })
   test.todo('sort') // expect(run(`[4, 10, 9, 256, 5, 300, 2, 70].sort()`)).toEqual('--')
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
@@ -881,7 +952,6 @@ describe('septima', () => {
   test.todo('left associativity of +/-')
   test.todo('comparison of arrays')
   test.todo('comparison of lambdas?')
-  test.todo('deep equality of objects')
   test.todo('"abcdef"[1] == "b"')
   test.todo('an object literal cannot have a repeated attribute name that')
   test.todo('quoting of a ticks inside a string')
