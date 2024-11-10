@@ -23,3 +23,8 @@
 
 - support `Array.isArray(x)`
 - support `console.log('my message')`
+
+### PR/172
+
+- supoort `JSON.parse(s)`
+- fix object comparsion
