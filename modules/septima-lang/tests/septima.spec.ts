@@ -883,6 +883,11 @@ describe('septima', () => {
       })
     })
   })
+  describe(`JSON.parse`, () => {
+    test('parses a string', () => {
+      expect(run(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
+    })
+  })
   test.todo('sort') // expect(run(`[4, 10, 9, 256, 5, 300, 2, 70].sort()`)).toEqual('--')
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
