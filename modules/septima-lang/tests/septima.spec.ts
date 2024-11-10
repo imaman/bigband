@@ -642,6 +642,9 @@ describe('septima', () => {
       expect(run(`['a', 'xyz', 'bc'].some(fun (item, i) i == item.length)`)).toEqual(true)
       expect(run(`[8, 3, 7, 7, 6, 9].some(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(true)
     })
+    test('sort', () => {
+      expect(run(`[5, 9, 3, 8, 6, 4].sort()`)).toEqual([3, 4, 5, 6, 8, 9])
+    })
     test('push is not allowed', () => {
       expect(() => run(`let a = [1,2]; a.push(5)`)).toThrowError('Unrecognized array method: push')
     })
