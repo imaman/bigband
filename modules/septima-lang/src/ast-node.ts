@@ -177,7 +177,7 @@ export function show(ast: AstNode | AstNode[]): string {
     return ast.t.text
   }
   if (ast.tag === 'formaArg') {
-    return ast.defaultValue ? `${show(ast.ident)} = ${ast.defaultValue}` : show(ast.ident)
+    return ast.defaultValue ? `${show(ast.ident)} = ${show(ast.defaultValue)}` : show(ast.ident)
   }
   if (ast.tag === 'if') {
     return `if (${show(ast.condition)}) ${show(ast.positive)} else ${show(ast.negative)}`
