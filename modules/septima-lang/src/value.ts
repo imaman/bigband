@@ -618,6 +618,20 @@ export class Value {
   access(indexValue: string | Value, callEvaluator: CallEvaluator): Value {
     const err = badType('obj', 'str', 'arr')
 
+    if (indexValue === 'constructor') {
+      return Value.from({
+        name: select(this, {
+          arr: () => Value.from('Array'),
+          bool: () => Value.from('Boolean'),
+          foreign: () => Value.from('Foreign'),
+          lambda: () => Value.from('Function'),
+          num: () => Value.from('Number'),
+          obj: () => Value.from('Object'),
+          str: () => Value.from('String'),
+          undef: () => Value.from('Undefined'),
+        }),
+      })
+    }
     return select(this, {
       arr: a => {
         if (typeof indexValue === 'string') {
