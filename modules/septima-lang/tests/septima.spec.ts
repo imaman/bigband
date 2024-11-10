@@ -587,6 +587,11 @@ describe('septima', () => {
       expect(run(`let sum = fun(a) fun(b,c) a+b+c; let plusOne = sum(1); plusOne(600,20)`)).toEqual(621)
       expect(run(`let sum = fun(a) fun(b) fun(c) a+b+c; let plusOne = sum(1); plusOne(600)(20)`)).toEqual(621)
     })
+    describe('optional arguments', () => {
+      test.skip('foo', () => {
+        expect(run(`let sum = (a, b) => a+(b ?? 50); [sum(9), sum(9,1)]`)).toEqual([59, 10])    
+      })
+    })
   })
   describe('array methods', () => {
     test('concat', () => {

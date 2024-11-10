@@ -400,12 +400,15 @@ export class Runtime {
   call(callee: Value, argValues: Value[]) {
     return callee.call(argValues, (names, body, lambdaTable: SymbolTable) => {
       if (names.length > argValues.length) {
+        console.log(`callee=${JSON.stringify(callee, null, 2)}`)
         throw new Error(`Arg list length mismatch: expected ${names.length} but got ${argValues.length}`)
       }
-      const newTable = names.reduce(
-        (t, n, i) => new SymbolFrame(n, { destination: argValues[i] }, t, 'INTERNAL'),
-        lambdaTable,
-      )
+
+      let newTable = lambdaTable
+      for (let i = 0; i < names.length; ++i) {
+       const n = names[i]
+       newTable = new SymbolFrame(n, { destination: argValues[i] }, newTable, 'INTERNAL') 
+      }
       return this.evalNode(body, newTable)
     })
   }
