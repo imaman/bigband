@@ -738,7 +738,7 @@ describe('septima', () => {
       expect(() => run(`Object.fromEntries([[1, 'a']])`)).toThrowError('value type error: expected str but found 1')
     })
   })
-  describe('comments', () => {
+  describe('line comments', () => {
     test(`anything from '//' up to the end-of-line is ignored`, () => {
       expect(
         run(`
@@ -763,6 +763,15 @@ describe('septima', () => {
         // 20 +  // 300 +
         4000`),
       ).toEqual(4001)
+    })
+  })
+  describe('block comments', () => {
+    test(`anything from '/*' up to the next '*/' is ignored`, () => {
+      expect(
+        run(`
+        1 + 20 + /* 300 */
+        4000`),
+      ).toEqual(4021)
     })
   })
   describe('evaluation stack', () => {
