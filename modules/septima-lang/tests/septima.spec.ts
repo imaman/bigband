@@ -887,6 +887,16 @@ describe('septima', () => {
     test('parses a string', () => {
       expect(run(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
     })
+    test('roundtrips a value that was converted to JSON', () => {
+      expect(run(`JSON.parse(String({"a": 1, "b": "beta", c: {arr: [100, 200]}}))`)).toEqual({
+        a: 1,
+        b: 'beta',
+        c: { arr: [100, 200] },
+      })
+    })
+    test('keeps non-string as-is', () => {
+      expect(run(`JSON.parse(5000)`)).toEqual(5000)
+    })
   })
   test.todo('sort') // expect(run(`[4, 10, 9, 256, 5, 300, 2, 70].sort()`)).toEqual('--')
   test.todo('support file names in locations')
