@@ -87,6 +87,9 @@ describe('septima', () => {
     expect(run(`[10, 30, 19, 500] == [10, 3*10, 20-1, 5*100]`)).toEqual(true)
     expect(run(`[10, 30, 19, -500] == [10, 3*10, 20-1, 5*100]`)).toEqual(false)
   })
+  test('object equality is not sensitive to the order of the attributes', () => {
+    expect(run(`{x: 1, y: 2} == {y: 2, x: 1}`)).toEqual(true)
+  })
 
   test('comparison', () => {
     expect(run(`3>2`)).toEqual(true)
