@@ -378,7 +378,9 @@ export class Value {
             }
 
             for (let i = 0; i < lhs.length; ++i) {
-              if (!lhs[i].equalsTo(rhs[i]).isTrue()) return Value.bool(false)
+              if (!lhs[i].equalsTo(rhs[i]).isTrue()) {
+                return Value.bool(false)
+              }
             }
 
             return Value.bool(true)
