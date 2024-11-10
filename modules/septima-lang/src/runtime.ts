@@ -155,6 +155,7 @@ export class Runtime {
       exp.tag === 'export*' ||
       exp.tag === 'functionCall' ||
       exp.tag === 'ident' ||
+      exp.tag === 'formaArg' ||
       exp.tag === 'if' ||
       exp.tag === 'ternary' ||
       exp.tag === 'indexAccess' ||
@@ -298,6 +299,15 @@ export class Runtime {
     if (ast.tag === 'ident') {
       return table.lookup(ast.t.text)
     }
+
+    if (ast.tag === 'formaArg') {
+      if (ast.defaultValue) {
+        return this.evalNode(ast.defaultValue, table)
+      }
+
+      throw new Error(`no default value for ${ast}`)
+    }
+
     if (ast.tag === 'literal') {
       if (ast.type === 'bool') {
         // TODO(imaman): stricter checking of 'false'
@@ -398,16 +408,25 @@ export class Runtime {
   }
 
   call(callee: Value, argValues: Value[]) {
-    return callee.call(argValues, (names, body, lambdaTable: SymbolTable) => {
-      if (names.length > argValues.length) {
-        console.log(`callee=${JSON.stringify(callee, null, 2)}`)
-        throw new Error(`Arg list length mismatch: expected ${names.length} but got ${argValues.length}`)
-      }
-
+    return callee.call(argValues, (formals, body, lambdaTable: SymbolTable) => {
       let newTable = lambdaTable
-      for (let i = 0; i < names.length; ++i) {
-       const n = names[i]
-       newTable = new SymbolFrame(n, { destination: argValues[i] }, newTable, 'INTERNAL') 
+      for (let i = 0; i < formals.length; ++i) {
+        const n = formals[i]
+        if (i < argValues.length) {
+          newTable = new SymbolFrame(n.ident.t.text, { destination: argValues[i] }, newTable, 'INTERNAL')
+          continue
+        }
+
+        if (!n.defaultValue) {
+          throw new Error(`A value must be passed to formal argument: ${show(n.ident)}`)
+        }
+
+        newTable = new SymbolFrame(
+          n.ident.t.text,
+          { destination: this.evalNode(n.defaultValue, lambdaTable) },
+          newTable,
+          'INTERNAL',
+        )
       }
       return this.evalNode(body, newTable)
     })

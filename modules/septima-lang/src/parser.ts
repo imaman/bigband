@@ -1,4 +1,15 @@
-import { ArrayLiteralPart, AstNode, Ident, Import, Let, Literal, ObjectLiteralPart, span, Unit } from './ast-node'
+import {
+  ArrayLiteralPart,
+  AstNode,
+  FormalArg,
+  Ident,
+  Import,
+  Let,
+  Literal,
+  ObjectLiteralPart,
+  span,
+  Unit,
+} from './ast-node'
 import { Scanner, Token } from './scanner'
 import { switchOn } from './switch-on'
 
@@ -109,6 +120,16 @@ export class Parser {
     return { tag: 'topLevelExpression', definitions, computation, unitId: this.unitId }
   }
 
+  formalArg(): FormalArg {
+    const arg = this.identifier()
+    let defaultValue: AstNode | undefined = undefined
+
+    if (!this.scanner.headMatches('=>') && this.scanner.consumeIf('=')) {
+      defaultValue = this.expression()
+    }
+    return { tag: 'formaArg', ident: arg, defaultValue, unitId: this.unitId }
+  }
+
   lambda(): AstNode {
     const start = this.scanner.consumeIf('fun')
     if (!start) {
@@ -116,13 +137,13 @@ export class Parser {
     }
 
     this.scanner.consume('(')
-    const args: Ident[] = []
+    const args: FormalArg[] = []
 
     if (this.scanner.consumeIf(')')) {
       // no formal args
     } else {
       while (true) {
-        const arg = this.identifier()
+        const arg = this.formalArg()
         args.push(arg)
         if (this.scanner.consumeIf(')')) {
           break
@@ -147,25 +168,25 @@ export class Parser {
       return { tag: 'lambda', start, formalArgs: [], body, unitId }
     }
     if (this.scanner.headMatches(IDENT_PATTERN, '=>')) {
-      const ident = this.identifier()
+      const formal = this.formalArg()
       this.scanner.consume('=>')
       const body = this.lambdaBody()
-      return { tag: 'lambda', start: ident.t, formalArgs: [ident], body, unitId }
+      return { tag: 'lambda', start: formal.ident.t, formalArgs: [formal], body, unitId }
     }
     if (this.scanner.headMatches('(', IDENT_PATTERN, ')', '=>')) {
       const start = this.scanner.consume('(')
-      const ident = this.identifier()
+      const formal = this.formalArg()
       this.scanner.consume(')')
       this.scanner.consume('=>')
       const body = this.lambdaBody()
-      return { tag: 'lambda', start, formalArgs: [ident], body, unitId }
+      return { tag: 'lambda', start, formalArgs: [formal], body, unitId }
     }
     if (this.scanner.headMatches('(', IDENT_PATTERN, ',')) {
       const start = this.scanner.consume('(')
-      const formalArgs: Ident[] = []
+      const formalArgs: FormalArg[] = []
       while (true) {
-        const ident = this.identifier()
-        formalArgs.push(ident)
+        const formals = this.formalArg()
+        formalArgs.push(formals)
 
         if (this.scanner.consumeIf(')')) {
           break

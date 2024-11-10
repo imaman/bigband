@@ -548,7 +548,7 @@ describe('septima', () => {
     })
     test('errors on arg list mismatch', () => {
       expect(() => run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2)`)).toThrowError(
-        'Arg list length mismatch: expected 4 but got 3',
+        'A value must be passed to formal argument: d when evaluating',
       )
       expect(run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2,6)`)).toEqual(20)
     })
@@ -589,7 +589,7 @@ describe('septima', () => {
     })
     describe('optional arguments', () => {
       test.skip('foo', () => {
-        expect(run(`let sum = (a, b) => a+(b ?? 50); [sum(9), sum(9,1)]`)).toEqual([59, 10])    
+        expect(run(`let sum = (a, b = 50) => a + b; [sum(9), sum(9,1)]`)).toEqual([59, 10])
       })
     })
   })
