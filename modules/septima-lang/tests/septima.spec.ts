@@ -588,8 +588,18 @@ describe('septima', () => {
       expect(run(`let sum = fun(a) fun(b) fun(c) a+b+c; let plusOne = sum(1); plusOne(600)(20)`)).toEqual(621)
     })
     describe('optional arguments', () => {
-      test.skip('foo', () => {
+      test('takes the default value if no valu for that arg was not passed', () => {
         expect(run(`let sum = (a, b = 50) => a + b; [sum(9), sum(9,1)]`)).toEqual([59, 10])
+      })
+      test('the default value can be an arry or an object', () => {
+        expect(run(`let f = (i, vs = ['alpha', 'beta']) => vs[i]; [f(0), f(1)]`)).toEqual(['alpha', 'beta'])
+        expect(run(`let f = (s, vs = {a: 1, b: 2}) => vs[s]; [f('a'), f('b')]`)).toEqual([1, 2])
+      })
+      test('the default value can be an expression computed from other definision in the enclosing scope', () => {
+        expect(run(`let n = 100; let s = 'word'; f = (a, g = s + n) => g.toUpperCase(); f('_')`)).toEqual([
+          'alpha',
+          'beta',
+        ])
       })
     })
   })
