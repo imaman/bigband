@@ -155,7 +155,7 @@ export class Runtime {
       exp.tag === 'export*' ||
       exp.tag === 'functionCall' ||
       exp.tag === 'ident' ||
-      exp.tag === 'formaArg' ||
+      exp.tag === 'formalArg' ||
       exp.tag === 'if' ||
       exp.tag === 'ternary' ||
       exp.tag === 'indexAccess' ||
@@ -300,7 +300,7 @@ export class Runtime {
       return table.lookup(ast.t.text)
     }
 
-    if (ast.tag === 'formaArg') {
+    if (ast.tag === 'formalArg') {
       if (ast.defaultValue) {
         return this.evalNode(ast.defaultValue, table)
       }

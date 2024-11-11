@@ -127,7 +127,7 @@ export class Parser {
     if (!this.scanner.headMatches('=>') && this.scanner.consumeIf('=')) {
       defaultValue = this.expression()
     }
-    return { tag: 'formaArg', ident: arg, defaultValue, unitId: this.unitId }
+    return { tag: 'formalArg', ident: arg, defaultValue, unitId: this.unitId }
   }
 
   lambda(): AstNode {

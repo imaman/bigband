@@ -36,7 +36,7 @@ export type Ident = {
 }
 
 export type FormalArg = {
-  tag: 'formaArg'
+  tag: 'formalArg'
   ident: Ident
   defaultValue?: AstNode
   unitId: UnitId
@@ -176,7 +176,7 @@ export function show(ast: AstNode | AstNode[]): string {
   if (ast.tag === 'ident') {
     return ast.t.text
   }
-  if (ast.tag === 'formaArg') {
+  if (ast.tag === 'formalArg') {
     return ast.defaultValue ? `${show(ast.ident)} = ${show(ast.defaultValue)}` : show(ast.ident)
   }
   if (ast.tag === 'if') {
@@ -257,7 +257,7 @@ export function span(ast: AstNode): Span {
   if (ast.tag === 'ident') {
     return ofToken(ast.t)
   }
-  if (ast.tag === 'formaArg') {
+  if (ast.tag === 'formalArg') {
     if (ast.defaultValue) {
       return ofRange(span(ast.ident), span(ast.defaultValue))
     }
