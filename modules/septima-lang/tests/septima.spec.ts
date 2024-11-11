@@ -606,10 +606,12 @@ describe('septima', () => {
         )
       })
       test('errors if there is an argument without a default value after an arugument with a default value', () => {
-        expect(() => run(`let f = (a, b = 2000, c) => a+b+c`)).toThrowError('--')
+        expect(() => run(`let f = (a, b = 2000, c) => a+b+c`)).toThrowError(
+          'A required parameter cannot follow an optional parameter: at (<inline>:1:23..33) c) => a+b+c',
+        )
       })
       test('when undefined is passed to an arg with a default value, the default value is used', () => {
-        expect(() => run(`let f = (a, b = 2000, c = 3) => a+b+c; f(1, undefined, 5)`)).toEqual(2006)
+        expect(run(`let f = (a, b = 2000, c = 3) => a+b+c; f(1, undefined, 5)`)).toEqual(2006)
       })
     })
   })

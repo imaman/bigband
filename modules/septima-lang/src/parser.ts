@@ -184,9 +184,16 @@ export class Parser {
     if (this.scanner.headMatches('(', IDENT_PATTERN, { either: [',', '='], noneOf: ['=='] })) {
       const start = this.scanner.consume('(')
       const formalArgs: FormalArg[] = []
+      let defaultSeen = false
       while (true) {
-        const formals = this.formalArg()
-        formalArgs.push(formals)
+        const pos = this.scanner.sourceRef
+        const formal = this.formalArg()
+        if (defaultSeen && !formal.defaultValue) {
+          throw new Error(`A required parameter cannot follow an optional parameter: ${pos}`)
+        }
+
+        defaultSeen = defaultSeen || Boolean(formal.defaultValue)
+        formalArgs.push(formal)
 
         if (this.scanner.consumeIf(')')) {
           break

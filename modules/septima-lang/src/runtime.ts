@@ -407,26 +407,23 @@ export class Runtime {
     shouldNeverHappen(ast)
   }
 
-  call(callee: Value, argValues: Value[]) {
-    return callee.call(argValues, (formals, body, lambdaTable: SymbolTable) => {
+  call(callee: Value, actualValues: Value[]) {
+    return callee.call(actualValues, (formals, body, lambdaTable: SymbolTable) => {
       let newTable = lambdaTable
       for (let i = 0; i < formals.length; ++i) {
-        const n = formals[i]
-        if (i < argValues.length) {
-          newTable = new SymbolFrame(n.ident.t.text, { destination: argValues[i] }, newTable, 'INTERNAL')
-          continue
+        const formal = formals[i]
+        let actual = actualValues.at(i)
+        const useDefault = actual === undefined || (actual.isUndefined() && formal.defaultValue)
+
+        if (useDefault && formal.defaultValue) {
+          actual = this.evalNode(formal.defaultValue, lambdaTable)
         }
 
-        if (!n.defaultValue) {
-          throw new Error(`A value must be passed to formal argument: ${show(n.ident)}`)
+        if (actual === undefined) {
+          throw new Error(`A value must be passed to formal argument: ${show(formal.ident)}`)
         }
 
-        newTable = new SymbolFrame(
-          n.ident.t.text,
-          { destination: this.evalNode(n.defaultValue, lambdaTable) },
-          newTable,
-          'INTERNAL',
-        )
+        newTable = new SymbolFrame(formal.ident.t.text, { destination: actual }, newTable, 'INTERNAL')
       }
       return this.evalNode(body, newTable)
     })
