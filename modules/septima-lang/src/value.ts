@@ -1,4 +1,4 @@
-import { AstNode, Lambda, show } from './ast-node'
+import { AstNode, FormalArg, Lambda, show } from './ast-node'
 import { failMe } from './fail-me'
 import { CallEvaluator, findArrayMethod } from './find-array-method'
 import { findStringMethod } from './find-string-method'
@@ -6,7 +6,7 @@ import { shouldNeverHappen } from './should-never-happen'
 import { switchOn } from './switch-on'
 import { SymbolTable } from './symbol-table'
 
-type LambdaEvaluator = (names: string[], ast: AstNode, table: SymbolTable) => Value
+type LambdaEvaluator = (formals: FormalArg[], ast: AstNode, table: SymbolTable) => Value
 
 type Inner =
   | { tag: 'arr'; val: Value[] }
@@ -618,6 +618,21 @@ export class Value {
   access(indexValue: string | Value, callEvaluator: CallEvaluator): Value {
     const err = badType('obj', 'str', 'arr')
 
+    const ctor = 'constructor'
+    if ((typeof indexValue === 'object' && indexValue.toString() === ctor) || indexValue == ctor) {
+      return Value.from({
+        name: select(this, {
+          arr: () => Value.from('Array'),
+          bool: () => Value.from('Boolean'),
+          foreign: () => Value.from('Foreign'),
+          lambda: () => Value.from('Function'),
+          num: () => Value.from('Number'),
+          obj: () => Value.from('Object'),
+          str: () => Value.from('String'),
+          undef: () => Value.from('Undefined'),
+        }),
+      })
+    }
     return select(this, {
       arr: a => {
         if (typeof indexValue === 'string') {
@@ -646,12 +661,7 @@ export class Value {
       arr: err,
       bool: err,
       foreign: f => from(f(...args)),
-      lambda: l =>
-        evaluator(
-          l.ast.formalArgs.map(a => a.t.text),
-          l.ast.body,
-          l.table,
-        ),
+      lambda: l => evaluator(l.ast.formalArgs, l.ast.body, l.table),
       num: err,
       undef: err,
       obj: err,

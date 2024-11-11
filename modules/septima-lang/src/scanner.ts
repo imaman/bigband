@@ -6,6 +6,9 @@ export interface Token {
   readonly location: Location
 }
 
+type ConsumeIfBasicPattern = RegExp | string
+type ConsumeIfPattern = { either: ConsumeIfBasicPattern[]; noneOf: ConsumeIfBasicPattern[] }
+
 export class Scanner {
   constructor(readonly sourceCode: SourceCode, private offset = 0) {
     if (this.offset === 0) {
@@ -21,6 +24,21 @@ export class Scanner {
     return this.sourceCode.input.substring(this.offset)
   }
 
+  private eatBlockComment() {
+    const startedAt = this.sourceRef
+    while (true) {
+      if (this.eof()) {
+        throw new Error(`Block comment that started at ${startedAt} is missing its closing (*/)`)
+      }
+      if (this.consumeIf('*/')) {
+        return
+      }
+
+      // By default, the . symbol in regexp does _not_ match newline. we use /./s to override the default.
+      this.consume(/./s, false)
+    }
+  }
+
   private eatWhitespace() {
     while (true) {
       if (this.consumeIf(/\s*/, false)) {
@@ -28,6 +46,10 @@ export class Scanner {
       }
       if (this.consumeIf('//', false)) {
         this.consume(/[^\n]*/, false)
+        continue
+      }
+      if (this.consumeIf('/*', false)) {
+        this.eatBlockComment()
         continue
       }
 
@@ -52,7 +74,7 @@ export class Scanner {
     }
   }
 
-  headMatches(...patterns: (RegExp | string)[]): boolean {
+  headMatches(...patterns: (ConsumeIfPattern | ConsumeIfBasicPattern)[]): boolean {
     const alt = new Scanner(this.sourceCode, this.offset)
     for (const p of patterns) {
       const t = alt.consumeIf(p, true)
@@ -79,13 +101,17 @@ export class Scanner {
     return { location: { offset }, text }
   }
 
-  consumeIf(r: RegExp | string, eatWhitespace = true): Token | undefined {
-    const ret = this.match(r)
+  consumeIf(p: ConsumeIfBasicPattern | ConsumeIfPattern, eatWhitespace = true): Token | undefined {
+    const pattern = typeof p === 'string' ? { either: [p], noneOf: [] } : isRegExp(p) ? { either: [p], noneOf: [] } : p
+
+    const found = pattern.either.find(r => this.match(r))
+    const hasNegative = pattern.noneOf.some(r => this.match(r))
+    const ret = found && !hasNegative
     if (!ret) {
       return undefined
     }
 
-    return this.consume(r, eatWhitespace)
+    return this.consume(found, eatWhitespace)
   }
 
   private match(r: RegExp | string): string | undefined {
@@ -103,4 +129,8 @@ export class Scanner {
 
     return undefined
   }
+}
+
+function isRegExp(u: object): u is RegExp {
+  return u.constructor.name === 'RegExp'
 }

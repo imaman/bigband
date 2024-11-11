@@ -155,6 +155,7 @@ export class Runtime {
       exp.tag === 'export*' ||
       exp.tag === 'functionCall' ||
       exp.tag === 'ident' ||
+      exp.tag === 'formalArg' ||
       exp.tag === 'if' ||
       exp.tag === 'ternary' ||
       exp.tag === 'indexAccess' ||
@@ -298,6 +299,17 @@ export class Runtime {
     if (ast.tag === 'ident') {
       return table.lookup(ast.t.text)
     }
+
+    if (ast.tag === 'formalArg') {
+      if (ast.defaultValue) {
+        return this.evalNode(ast.defaultValue, table)
+      }
+
+      // This error should not be reached. The call flow should evaluate a formalArg node only when if it has
+      // a default value sud-node.
+      throw new Error(`no default value for ${ast}`)
+    }
+
     if (ast.tag === 'literal') {
       if (ast.type === 'bool') {
         // TODO(imaman): stricter checking of 'false'
@@ -397,15 +409,24 @@ export class Runtime {
     shouldNeverHappen(ast)
   }
 
-  call(callee: Value, argValues: Value[]) {
-    return callee.call(argValues, (names, body, lambdaTable: SymbolTable) => {
-      if (names.length > argValues.length) {
-        throw new Error(`Arg list length mismatch: expected ${names.length} but got ${argValues.length}`)
+  call(callee: Value, actualValues: Value[]) {
+    return callee.call(actualValues, (formals, body, lambdaTable: SymbolTable) => {
+      let newTable = lambdaTable
+      for (let i = 0; i < formals.length; ++i) {
+        const formal = formals[i]
+        let actual = actualValues.at(i)
+        const useDefault = actual === undefined || (actual.isUndefined() && formal.defaultValue)
+
+        if (useDefault && formal.defaultValue) {
+          actual = this.evalNode(formal.defaultValue, lambdaTable)
+        }
+
+        if (actual === undefined) {
+          throw new Error(`A value must be passed to formal argument: ${show(formal.ident)}`)
+        }
+
+        newTable = new SymbolFrame(formal.ident.t.text, { destination: actual }, newTable, 'INTERNAL')
       }
-      const newTable = names.reduce(
-        (t, n, i) => new SymbolFrame(n, { destination: argValues[i] }, t, 'INTERNAL'),
-        lambdaTable,
-      )
       return this.evalNode(body, newTable)
     })
   }

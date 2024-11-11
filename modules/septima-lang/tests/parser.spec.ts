@@ -41,4 +41,12 @@ describe('parser', () => {
       expect(show(parse(`(3+4 > 8) ? "above" : "below"`))).toEqual(`((3 + 4) > 8) ? 'above' : 'below'`)
     })
   })
+  describe('lambda', () => {
+    test('show', () => {
+      expect(show(parse(`(a) => a*2`))).toEqual(`fun (a) (a * 2)`)
+      expect(show(parse(`(a, b = {x: 1, y: ['bee', 'camel']}) => a*2 + b.x`))).toEqual(
+        `fun (a, b = {x: 1, y: ['bee', 'camel']}) ((a * 2) + b.x)`,
+      )
+    })
+  })
 })

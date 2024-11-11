@@ -35,10 +35,17 @@ export type Ident = {
   unitId: UnitId
 }
 
+export type FormalArg = {
+  tag: 'formalArg'
+  ident: Ident
+  defaultValue?: AstNode
+  unitId: UnitId
+}
+
 export type Lambda = {
   tag: 'lambda'
   start: Token
-  formalArgs: Ident[]
+  formalArgs: FormalArg[]
   body: AstNode
   unitId: UnitId
 }
@@ -52,6 +59,7 @@ export type Unit = {
 
 export type AstNode =
   | Ident
+  | FormalArg
   | Literal
   | Unit
   | {
@@ -168,6 +176,9 @@ export function show(ast: AstNode | AstNode[]): string {
   if (ast.tag === 'ident') {
     return ast.t.text
   }
+  if (ast.tag === 'formalArg') {
+    return ast.defaultValue ? `${show(ast.ident)} = ${show(ast.defaultValue)}` : show(ast.ident)
+  }
   if (ast.tag === 'if') {
     return `if (${show(ast.condition)}) ${show(ast.positive)} else ${show(ast.negative)}`
   }
@@ -246,6 +257,13 @@ export function span(ast: AstNode): Span {
   if (ast.tag === 'ident') {
     return ofToken(ast.t)
   }
+  if (ast.tag === 'formalArg') {
+    if (ast.defaultValue) {
+      return ofRange(span(ast.ident), span(ast.defaultValue))
+    }
+    return span(ast.ident)
+  }
+
   if (ast.tag === 'export*') {
     return { from: { offset: 0 }, to: { offset: 0 } }
   }
