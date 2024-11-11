@@ -596,10 +596,20 @@ describe('septima', () => {
         expect(run(`let f = (s, vs = {a: 1, b: 2}) => vs[s]; [f('a'), f('b')]`)).toEqual([1, 2])
       })
       test('the default value can be an expression computed from other definision in the enclosing scope', () => {
-        expect(run(`let n = 100; let s = 'word'; f = (a, g = s + n) => g.toUpperCase(); f('_')`)).toEqual([
-          'alpha',
-          'beta',
-        ])
+        expect(run(`let s = 'word'; let n = 100; let f = (a, g = s + n) => a + g.toUpperCase(); f('_')`)).toEqual(
+          '_WORD100',
+        )
+      })
+      test('a single argument arrow function can have a default value', () => {
+        expect(run(`let s = 'word'; let n = 100; let f = (a = s.toUpperCase()) => '%' + a + '%'; f()`)).toEqual(
+          '%WORD%',
+        )
+      })
+      test('errors if there is an argument without a default value after an arugument with a default value', () => {
+        expect(() => run(`let f = (a, b = 2000, c) => a+b+c`)).toThrowError('--')
+      })
+      test('when undefined is passed to an arg with a default value, the default value is used', () => {
+        expect(() => run(`let f = (a, b = 2000, c = 3) => a+b+c; f(1, undefined, 5)`)).toEqual(2006)
       })
     })
   })

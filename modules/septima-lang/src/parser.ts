@@ -181,7 +181,7 @@ export class Parser {
       const body = this.lambdaBody()
       return { tag: 'lambda', start, formalArgs: [formal], body, unitId }
     }
-    if (this.scanner.headMatches('(', IDENT_PATTERN, ',')) {
+    if (this.scanner.headMatches('(', IDENT_PATTERN, { either: [',', '='], noneOf: ['=='] })) {
       const start = this.scanner.consume('(')
       const formalArgs: FormalArg[] = []
       while (true) {
