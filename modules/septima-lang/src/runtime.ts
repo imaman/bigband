@@ -305,6 +305,8 @@ export class Runtime {
         return this.evalNode(ast.defaultValue, table)
       }
 
+      // This error should not be reached. The call flow should evaluate a formalArg node only when if it has
+      // a default value.
       throw new Error(`no default value for ${ast}`)
     }
 
