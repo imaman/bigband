@@ -181,10 +181,11 @@ export class Runtime {
           tag: 'topLevelExpression',
           definitions: exp.definitions,
           unitId: importee.unitId,
-          computation: { tag: 'export*', unitId: importee.unitId },
+          computation: { tag: 'export*', unitId: importee.unitId, unnamedExport: exp.computation },
         },
       }
-      return this.evalNode(exporStarUnit, this.buildInitialSymbolTable(false))
+      return this.evalNode(exp.computation ?? failMe(), this.buildInitialSymbolTable(false))
+      // return this.evalNode(exporStarUnit, this.buildInitialSymbolTable(false))
     }
 
     shouldNeverHappen(exp)

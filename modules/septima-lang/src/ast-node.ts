@@ -136,6 +136,7 @@ export type AstNode =
       // determined.
       tag: 'export*'
       unitId: UnitId
+      unnamedExport: AstNode|undefined
     }
 
 export function show(ast: AstNode | AstNode[]): string {
