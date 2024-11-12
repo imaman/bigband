@@ -541,6 +541,10 @@ describe('septima', () => {
         expect(run(`let five = () => { let two = 2; let three = 3; return three+two }; five()`)).toEqual(5)
         expect(run(`let concat = (a,b) => { let u = '_'; return u+a+b+u }; concat('a', 'b')`)).toEqual('_ab_')
       })
+      test('allows a dangling comma after last formal arg', () => {
+        expect(run(`let f = (a,) => a+1000; f(3)`)).toEqual(1003)
+        expect(run(`let f = (a,b,) => a+b+1000; f(5,900)`)).toEqual(1905)
+      })
     })
     test('can have no args', () => {
       expect(run(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)
@@ -612,6 +616,10 @@ describe('septima', () => {
       })
       test('when undefined is passed to an arg with a default value, the default value is used', () => {
         expect(run(`let f = (a, b = 2000, c = 3) => a+b+c; f(1, undefined, 5)`)).toEqual(2006)
+      })
+      test('a dangling comma is allowed after last default value', () => {
+        expect(run(`let f = (a, b = 2000,) => a+b; f(5)`)).toEqual(2005)
+        expect(run(`let f = (a, b = 2000,) => a+b; f(5,20)`)).toEqual(25)
       })
     })
   })
