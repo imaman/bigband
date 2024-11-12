@@ -886,6 +886,16 @@ describe('septima', () => {
       }
       expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [4, undefined] })
     })
+    test('can import from multiple files', () => {
+      const septima = new Septima()
+      const files: Partial<Record<string, string>> = {
+        a: `import * as b from './b';\nimport * as c from './c'\nimport * as d from './d'; [b.val, c.val, d.val]`,
+        b: `export let val = 100`,
+        c: `export let val = 20`,
+        d: `export let val = 3`,
+      }
+      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [100, 20, 3] })
+    })
   })
   describe('unit', () => {
     test('evaluates to an empty string if it contains only definitions', () => {
@@ -1042,8 +1052,6 @@ describe('septima', () => {
   test.todo('sort') // expect(run(`[4, 10, 9, 256, 5, 300, 2, 70].sort()`)).toEqual('--')
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
-  test.todo('imports')
-  test.todo('optional parameters')
   test.todo('optional type annotations?')
   test.todo('allow redundant commas')
   test.todo('left associativity of +/-')
