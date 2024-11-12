@@ -861,6 +861,32 @@ describe('septima', () => {
       )
     })
   })
+  describe('import', () => {
+    test('makes a definition from one file to be available in another file', () => {
+      const septima = new Septima()
+      const files: Partial<Record<string, string>> = {
+        a: `import * as b from './b'; 'sum=' + b.sum(5, 3)`,
+        b: `export let sum = (x,y) => x+y`,
+      }
+      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 'sum=8' })
+    })
+    test('all exported defintions are available at the import site', () => {
+      const septima = new Septima()
+      const files: Partial<Record<string, string>> = {
+        a: `import * as b from './b'; b.sum(b.four, b.six)`,
+        b: `export let sum = (x,y) => x+y; export let four = 4; export let six = 6`,
+      }
+      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 10 })
+    })
+    test('non-exported definitions become undefined', () => {
+      const septima = new Septima()
+      const files: Partial<Record<string, string>> = {
+        a: `import * as b from './b';\n[b.four,\nb.six]`,
+        b: `export let four = 4; let six = 6`,
+      }
+      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [4, undefined] })
+    })
+  })
   describe('unit', () => {
     test('evaluates to an empty string if it contains only definitions', () => {
       expect(run(`export let x = 5`)).toEqual('')
