@@ -39,3 +39,7 @@
 ### PR/174
 
 - allow a dangling comma after last formal arg of an arrow function `(a,b,) => a + b`
+
+### PR/175
+
+- .json files can be imported `import * as b from './b.json'; b.json`
