@@ -896,6 +896,14 @@ describe('septima', () => {
       }
       expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [100, 20, 3] })
     })
+    test('can import a JSON file', () => {
+      const septima = new Septima()
+      const files: Partial<Record<string, string>> = {
+        a: `import * as b from './b.json';b.json.map(x => x*x)`,
+        'b.json': JSON.stringify([4, 5, 7]),
+      }
+      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [16, 25, 49] })
+    })
   })
   describe('unit', () => {
     test('evaluates to an empty string if it contains only definitions', () => {

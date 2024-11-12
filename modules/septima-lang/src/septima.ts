@@ -145,6 +145,10 @@ export class Septima {
     if (content === undefined) {
       throw new Error(`Cannot find file '${path.join(this.sourceRoot, pathFromSourceRoot)}'`)
     }
+
+    if (resolvedPath.endsWith('.json')) {
+      content = `export let json = ${content}`
+    }
     const sourceCode = new SourceCode(content, pathFromSourceRoot)
     const scanner = new Scanner(sourceCode)
     const parser = new Parser(scanner)
