@@ -200,6 +200,9 @@ export class Parser {
         }
 
         this.scanner.consume(',')
+        if (this.scanner.consumeIf(')')) {
+          break
+        }
       }
 
       this.scanner.consume('=>')
