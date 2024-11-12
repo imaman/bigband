@@ -29,3 +29,13 @@
 - supoort `JSON.parse(s)`
 - supoort sorting an array: `[97, 100, 50].sort()`, `['the', 'quick', 'brown', 'fox'].sort((a, b) => a.length - b.length)`
 - fix object comparsion
+
+### PR/173
+
+- support block comments `4 + /* now five */ 5`
+- support default values for function args: `(a, b = 1000) => a + b`
+- inspect the runtime type of a value via `constructor.name`
+
+### PR/174
+
+- allow a dangling comma after last formal arg of an arrow function `(a,b,) => a + b`
