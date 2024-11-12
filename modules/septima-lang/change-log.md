@@ -29,3 +29,7 @@
 - supoort `JSON.parse(s)`
 - supoort sorting an array: `[97, 100, 50].sort()`, `['the', 'quick', 'brown', 'fox'].sort((a, b) => a.length - b.length)`
 - fix object comparsion
+
+### PR/173
+
+- allow a dangling comma after last formal arg of an arrow function `(a,b,) => a + b`
