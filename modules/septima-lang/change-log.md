@@ -30,7 +30,7 @@
 - supoort sorting an array: `[97, 100, 50].sort()`, `['the', 'quick', 'brown', 'fox'].sort((a, b) => a.length - b.length)`
 - fix object comparsion
 
-### #173
+### PR/#173
 
 - support block comments `4 + /* now five */ 5`
 - support default values for function args: `(a, b = 1000) => a + b`
