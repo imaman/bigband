@@ -1,3 +1,5 @@
+import crypto from 'crypto'
+
 import { AstNode, show, Unit, UnitId } from './ast-node'
 import { extractMessage } from './extract-message'
 import { failMe } from './fail-me'
@@ -97,6 +99,7 @@ export class Runtime {
     })
 
     const parse = Value.foreign(o => JSON.parse(o.toString()))
+    const hash = Value.foreign(o => crypto.createHash('sha224').update(JSON.stringify(o.unwrap())).digest('hex'))
 
     let lib = new SymbolFrame('Object', { destination: Value.obj({ keys, entries, fromEntries }) }, empty, 'INTERNAL')
     lib = new SymbolFrame('String', { destination: Value.foreign(o => Value.str(o.toString())) }, lib, 'INTERNAL')
@@ -105,6 +108,7 @@ export class Runtime {
     lib = new SymbolFrame('Array', { destination: Value.obj({ isArray }) }, lib, 'INTERNAL')
     lib = new SymbolFrame('console', { destination: Value.obj({ log }) }, lib, 'INTERNAL')
     lib = new SymbolFrame('JSON', { destination: Value.obj({ parse }) }, lib, 'INTERNAL')
+    lib = new SymbolFrame('crypto', { destination: Value.obj({ hash }) }, lib, 'INTERNAL')
 
     if (generateTheArgsObject) {
       lib = new SymbolFrame('args', { destination: Value.from(this.args) }, lib, 'INTERNAL')
