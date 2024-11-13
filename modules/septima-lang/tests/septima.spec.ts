@@ -1,3 +1,5 @@
+import crypto from 'crypto'
+
 import { Septima } from '../src/septima'
 
 /**
@@ -1011,6 +1013,22 @@ describe('septima', () => {
     })
     test('keeps non-string as-is', () => {
       expect(run(`JSON.parse(5000)`)).toEqual(5000)
+    })
+  })
+  describe('hash224', () => {
+    const hashOf = (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex')
+    test('can compute hash values of strings', () => {
+      expect(run(`crypto.hash224('A')`)).toEqual(hashOf('A'))
+    })
+    test('can compute hash values of complex objects', () => {
+      expect(run(`crypto.hash224({a: 1, b: [{x: 'X'}, ["Y"]]})`)).toEqual(hashOf({ a: 1, b: [{ x: 'X' }, ['Y']] }))
+    })
+    test('the hash changes when the input changes', () => {
+      expect(run(`crypto.hash224(110002)`)).toEqual(hashOf(110002))
+      expect(run(`crypto.hash224(110003)`)).toEqual(hashOf(110003))
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const [h1, h2] = run(`[crypto.hash224(110002), crypto.hash224(110003)]`) as string[]
+      expect(h1).not.toEqual(h2)
     })
   })
   test.todo('sort') // expect(run(`[4, 10, 9, 256, 5, 300, 2, 70].sort()`)).toEqual('--')

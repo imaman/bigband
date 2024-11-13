@@ -324,6 +324,27 @@ Array.isArray('not array') // Returns false
 Array.isArray({ key: 'val' }) // Returns false
 ```
 
+#### Cryptographic Hashing
+
+Septima provides a secure hashing function through the `crypto.hash224()` method, which computes SHA-224 hashes of any value. The method takes a single argument of any type and returns a hexadecimal string representing the hash.
+
+```javascript
+// Hash a simple string
+crypto.hash224('hello') // Returns a 56-character hex string
+
+// Hash numbers
+crypto.hash224(42) // Hashes the number 42
+
+// Hash complex objects
+crypto.hash224({ name: 'Alice', roles: ['admin', 'user'], settings: { theme: 'dark' } }) // Hashes the entire object structure
+
+// Hashes are deterministic but unique per input
+crypto.hash224('A') === crypto.hash224('A') // true (same input = same hash)
+crypto.hash224('A') !== crypto.hash224('B') // true (different input = different hash)
+```
+
+Note: Septima's `crypto` object is not intended to be compatible with Node.js's `crypto` module. It provides its own simplified cryptographic utilities specifically designed for Septima's use cases.
+
 ### Console Output for Debugging
 
 Like JavaScript, Septima provides `console.log()` for debugging and monitoring your code. However, unlike JavaScript's `console.log()` which can take multiple arguments, Septima's version accepts only a single argument. In keeping with Septima's functional nature, `console.log()` returns its argument, making it useful within expressions.
