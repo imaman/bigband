@@ -39,3 +39,7 @@
 ### PR/174
 
 - allow a dangling comma after last formal arg of an arrow function `(a,b,) => a + b`
+
+### PR/176
+
+- allow computing hash values: `crypto.hash224({a: 1, b: 2})`
