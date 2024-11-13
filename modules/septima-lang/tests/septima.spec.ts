@@ -1015,7 +1015,7 @@ describe('septima', () => {
       expect(run(`JSON.parse(5000)`)).toEqual(5000)
     })
   })
-  describe('hash', () => {
+  describe('hash224', () => {
     const hashOf = (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex')
     test('can compute hash values of strings', () => {
       expect(run(`crypto.hash224('A')`)).toEqual(hashOf('A'))
