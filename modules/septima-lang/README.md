@@ -324,14 +324,6 @@ Array.isArray('not array') // Returns false
 Array.isArray({ key: 'val' }) // Returns false
 ```
 
-# Septima: An Overview
-
-[Previous sections remain unchanged...]
-
-### Built-in Methods
-
-[Previous built-in methods content remains unchanged...]
-
 #### Cryptographic Hashing
 
 Septima provides a secure hashing function through the `crypto.hash224()` method, which computes SHA-224 hashes of any value. The method takes a single argument of any type and returns a hexadecimal string representing the hash.
