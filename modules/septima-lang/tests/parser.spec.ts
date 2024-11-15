@@ -40,6 +40,13 @@ describe('parser', () => {
       expect(show(parse(`if (3+4 > 8) "above" else "below"`))).toEqual(`if (((3 + 4) > 8)) 'above' else 'below'`)
       expect(show(parse(`(3+4 > 8) ? "above" : "below"`))).toEqual(`((3 + 4) > 8) ? 'above' : 'below'`)
     })
+    test('can have an optional throw token', () => {
+      expect(show(parse(`throw 'sunday'`))).toEqual(`throw 'sunday'`)
+      expect(show(parse(`let a = 8;throw 'sunday'`))).toEqual(`let a = 8; throw 'sunday'`)
+      expect(show(parse(`{a: [45 + 8*3 > 2 + (throw 'err')]}`))).toEqual(`{a: [((45 + (8 * 3)) > (2 + throw 'err'))]}`)
+      expect(show(parse(`if (5 > 8) 'yes' else throw 'no'`))).toEqual(`if ((5 > 8)) 'yes' else throw 'no'`)
+      expect(show(parse(`let f = x >= 0 ? x : throw 'negative'`))).toEqual(`let f = (x >= 0) ? x : throw 'negative';`)
+    })
   })
   describe('lambda', () => {
     test('show', () => {
