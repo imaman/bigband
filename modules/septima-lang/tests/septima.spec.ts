@@ -1067,6 +1067,11 @@ describe('septima', () => {
       expect(h1).not.toEqual(h2)
     })
   })
+  describe('throw', () => {
+    test('it raises an error that is propagated all the way out', () => {
+      expect(() => run(`throw "bo" + "om"`)).toThrowError('boom')
+    })
+  })
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
   test.todo('optional type annotations?')
