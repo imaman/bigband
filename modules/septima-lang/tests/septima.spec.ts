@@ -1070,6 +1070,17 @@ describe('septima', () => {
   describe('throw', () => {
     test('it raises an error that is propagated all the way out', () => {
       expect(() => run(`throw "bo" + "om"`)).toThrowError('boom')
+      let catpured
+      try {
+        run(`throw 'bo' + 'om'`)
+      } catch (e) {
+        catpured = e
+      }
+      expect(String(catpured)).toEqual(
+        'Error: "boom" when evaluating:\n' +
+          `  at (<inline>:1:8..16) bo' + 'om\n` +
+          `  at (<inline>:1:8..16) bo' + 'om`,
+      )
     })
   })
   test.todo('support file names in locations')

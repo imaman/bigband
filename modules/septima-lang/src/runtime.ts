@@ -213,11 +213,15 @@ export class Runtime {
         placeholder.destination = v
       }
 
-      if (ast.computation) {
-        return this.evalNode(ast.computation, newTable)
+      if (!ast.computation) {
+        return Value.str('')
+      }
+      const c = this.evalNode(ast.computation, newTable)
+      if (ast.throwToken) {
+        throw new Error(JSON.stringify(c))
       }
 
-      return Value.str('')
+      return c
     }
 
     if (ast.tag === 'export*') {
