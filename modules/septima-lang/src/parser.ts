@@ -114,7 +114,7 @@ export class Parser {
     this.scanner.consumeIf('return')
     const computation = this.lambda()
 
-    if (definitions.length === 0) {
+    if (definitions.length === 0 && !throwToken) {
       return computation
     }
 

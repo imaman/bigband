@@ -224,7 +224,9 @@ export function show(ast: AstNode | AstNode[]): string {
       .map(d => `${d.isExported ? 'export ' : ''}let ${show(d.ident)} = ${show(d.value)}`)
       .join('; ')
     const sep = defs && ast.computation ? ' ' : ''
-    return `${defs ? defs + ';' : ''}${sep}${ast.computation ? show(ast.computation) : ''}`
+    return `${defs ? defs + ';' : ''}${sep}${ast.throwToken ? ast.throwToken.text + ' ' : ''}${
+      ast.computation ? show(ast.computation) : ''
+    }`
   }
   if (ast.tag === 'unaryOperator') {
     return `${ast.operator}${show(ast.operand)}`
