@@ -1069,17 +1069,25 @@ describe('septima', () => {
   })
   describe('throw', () => {
     test('it raises an error that is propagated all the way out', () => {
-      expect(() => run(`throw "bo" + "om"`)).toThrowError('boom')
-      let catpured
-      try {
-        run(`throw 'bo' + 'om'`)
-      } catch (e) {
-        catpured = e
-      }
-      expect(String(catpured)).toEqual(
-        'Error: "boom" when evaluating:\n' +
-          `  at (<inline>:1:8..16) bo' + 'om\n` +
-          `  at (<inline>:1:8..16) bo' + 'om`,
+      expect(() => run(`throw "bo" + "om"`)).toThrowError(
+        `"boom" when evaluating:\n` + `  at (<inline>:1:8..16) bo" + "om\n` + `  at (<inline>:1:8..16) bo" + "om`,
+      )
+    })
+    test('the error message contains a septima stack trace that reflects the entire call chain', () => {
+      expect(() => run(`let g = (n) => throw "n=" + n;\nlet f = (n) => n > 0 ? f(n-1) : g(n);\nf(3)`)).toThrowError(
+        `"n=0" when evaluating:\n` +
+          `  at (<inline>:1:1..3:4) let g = (n) => throw \"n=\" + n;...\n` +
+          `  at (<inline>:1:1..3:4) let g = (n) => throw \"n=\" + n;...\n` +
+          `  at (<inline>:3:1..4) f(3)\n` +
+          `  at (<inline>:2:16..36) n > 0 ? f(n-1) : g(n)\n` +
+          `  at (<inline>:2:24..29) f(n-1)\n` +
+          `  at (<inline>:2:16..36) n > 0 ? f(n-1) : g(n)\n` +
+          `  at (<inline>:2:24..29) f(n-1)\n` +
+          `  at (<inline>:2:16..36) n > 0 ? f(n-1) : g(n)\n` +
+          `  at (<inline>:2:24..29) f(n-1)\n` +
+          `  at (<inline>:2:16..36) n > 0 ? f(n-1) : g(n)\n` +
+          `  at (<inline>:2:33..36) g(n)\n` +
+          `  at (<inline>:1:23..29) n=" + n`,
       )
     })
   })
