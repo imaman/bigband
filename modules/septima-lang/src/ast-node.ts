@@ -93,6 +93,7 @@ export type AstNode =
   | {
       tag: 'topLevelExpression'
       definitions: Let[]
+      throwToken?: Token
       computation?: AstNode
       unitId: UnitId
     }

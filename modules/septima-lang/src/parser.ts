@@ -110,6 +110,7 @@ export class Parser {
     if (kind === 'TOP_LEVEL' && this.scanner.eof()) {
       return { tag: 'topLevelExpression', definitions, unitId: this.unitId }
     }
+    const throwToken = this.scanner.consumeIf('throw')
     this.scanner.consumeIf('return')
     const computation = this.lambda()
 
@@ -117,7 +118,7 @@ export class Parser {
       return computation
     }
 
-    return { tag: 'topLevelExpression', definitions, computation, unitId: this.unitId }
+    return { tag: 'topLevelExpression', definitions, throwToken, computation, unitId: this.unitId }
   }
 
   formalArg(): FormalArg {
