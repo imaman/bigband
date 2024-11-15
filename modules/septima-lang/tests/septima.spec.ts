@@ -863,6 +863,42 @@ describe('septima', () => {
       )
     })
   })
+  describe('import', () => {
+    test('makes a definition from one file to be available in another file', () => {
+      const septima = new Septima()
+      const files: Partial<Record<string, string>> = {
+        a: `import * as b from './b'; 'sum=' + b.sum(5, 3)`,
+        b: `export let sum = (x,y) => x+y`,
+      }
+      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 'sum=8' })
+    })
+    test('all exported defintions are available at the import site', () => {
+      const septima = new Septima()
+      const files: Partial<Record<string, string>> = {
+        a: `import * as b from './b'; b.sum(b.four, b.six)`,
+        b: `export let sum = (x,y) => x+y; export let four = 4; export let six = 6`,
+      }
+      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 10 })
+    })
+    test('non-exported definitions become undefined', () => {
+      const septima = new Septima()
+      const files: Partial<Record<string, string>> = {
+        a: `import * as b from './b';\n[b.four,\nb.six]`,
+        b: `export let four = 4; let six = 6`,
+      }
+      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [4, undefined] })
+    })
+    test('can import from multiple files', () => {
+      const septima = new Septima()
+      const files: Partial<Record<string, string>> = {
+        a: `import * as b from './b';\nimport * as c from './c'\nimport * as d from './d'; [b.val, c.val, d.val]`,
+        b: `export let val = 100`,
+        c: `export let val = 20`,
+        d: `export let val = 3`,
+      }
+      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [100, 20, 3] })
+    })
+  })
   describe('unit', () => {
     test('evaluates to an empty string if it contains only definitions', () => {
       expect(run(`export let x = 5`)).toEqual('')
@@ -1031,11 +1067,8 @@ describe('septima', () => {
       expect(h1).not.toEqual(h2)
     })
   })
-  test.todo('sort') // expect(run(`[4, 10, 9, 256, 5, 300, 2, 70].sort()`)).toEqual('--')
   test.todo('support file names in locations')
   test.todo('string interpolation via `foo` strings')
-  test.todo('imports')
-  test.todo('optional parameters')
   test.todo('optional type annotations?')
   test.todo('allow redundant commas')
   test.todo('left associativity of +/-')
