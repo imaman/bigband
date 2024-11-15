@@ -43,3 +43,7 @@
 ### PR/176
 
 - allow computing hash values: `crypto.hash224({a: 1, b: 2})`
+
+### PR/177
+
+- support throwing: `throw "boom"`
