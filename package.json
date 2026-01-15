@@ -13,7 +13,7 @@
     "build": "build-raptor build --compact",
     "lint": "eslint --max-warnings 0 'modules/*/**/*.{ts,js,json,d.ts}'",
     "sort-package-json": "sort-package-json 'modules/*/package.json' 'package.json'",
-    "test": "build-raptor test --compact --test-reporting=tree"
+    "test": "build-raptor test"
   },
   "husky": {
     "hooks": {
