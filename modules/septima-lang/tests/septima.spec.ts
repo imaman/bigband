@@ -1110,7 +1110,135 @@ describe('septima', () => {
     })
   })
   test.todo('support file names in locations')
-  test.todo('string interpolation via `foo` strings')
+
+  describe('template literals', () => {
+    test('empty template literal', () => {
+      expect(run('``')).toEqual('')
+    })
+
+    test('template literal without interpolation', () => {
+      expect(run('`hello world`')).toEqual('hello world')
+    })
+
+    test('template literal with single variable interpolation', () => {
+      expect(run("let name = 'Alice'; `Hello ${name}`")).toEqual('Hello Alice')
+    })
+
+    test('template literal with multiple interpolations', () => {
+      expect(run("let first = 'John'; let last = 'Doe'; `${first} ${last}`")).toEqual('John Doe')
+    })
+
+    test('template literal with expression interpolation', () => {
+      expect(run('`The answer is ${40 + 2}`')).toEqual('The answer is 42')
+    })
+
+    test('template literal with complex expression', () => {
+      expect(run('`Result: ${(5 + 3) * 2}`')).toEqual('Result: 16')
+    })
+
+    test('template literal with function call', () => {
+      expect(run("let greet = (n) => 'Hello ' + n; `${greet('world')}`")).toEqual('Hello world')
+    })
+
+    test('template literal with object access', () => {
+      expect(run('let obj = {x: 5}; `Value: ${obj.x}`')).toEqual('Value: 5')
+    })
+
+    test('template literal with array access', () => {
+      expect(run("let arr = ['a', 'b', 'c']; `Item: ${arr[1]}`")).toEqual('Item: b')
+    })
+
+    test('template literal with boolean conversion', () => {
+      expect(run('`Is true: ${true}`')).toEqual('Is true: true')
+      expect(run('`Is false: ${false}`')).toEqual('Is false: false')
+    })
+
+    test('template literal with number conversion', () => {
+      expect(run('`Number: ${42}`')).toEqual('Number: 42')
+      expect(run('`Float: ${3.14}`')).toEqual('Float: 3.14')
+    })
+
+    test('template literal with undefined conversion', () => {
+      expect(run('`Value: ${undefined}`')).toEqual('Value: undefined')
+    })
+
+    test('template literal with array conversion', () => {
+      expect(run('`Array: ${[1, 2, 3]}`')).toEqual('Array: [1,2,3]')
+    })
+
+    test('template literal with object conversion', () => {
+      expect(run('`Object: ${{a: 1}}`')).toEqual('Object: {"a":1}')
+    })
+
+    test('template literal with adjacent interpolations', () => {
+      expect(run('`${1}${2}${3}`')).toEqual('123')
+    })
+
+    test('template literal with interpolation at start', () => {
+      expect(run('`${42} is the answer`')).toEqual('42 is the answer')
+    })
+
+    test('template literal with interpolation at end', () => {
+      expect(run('`The answer is ${42}`')).toEqual('The answer is 42')
+    })
+
+    test('template literal preserves whitespace', () => {
+      expect(run('`  spaces  `')).toEqual('  spaces  ')
+    })
+
+    test('template literal with escaped dollar sign', () => {
+      expect(run('`Cost: \\$100`')).toEqual('Cost: $100')
+    })
+
+    test('template literal with escaped backtick', () => {
+      expect(run('`This is a backtick: \\``')).toEqual('This is a backtick: `')
+    })
+
+    test('template literal with escaped backslash', () => {
+      expect(run('`Path: C:\\\\Users`')).toEqual('Path: C:\\Users')
+    })
+
+    test('template literal with newline escape', () => {
+      expect(run('`line1\\nline2`')).toEqual('line1\nline2')
+    })
+
+    test('template literal with tab escape', () => {
+      expect(run('`col1\\tcol2`')).toEqual('col1\tcol2')
+    })
+
+    test('template literal with dollar sign not followed by brace', () => {
+      expect(run('`Price: $50`')).toEqual('Price: $50')
+    })
+
+    test('template literal can be concatenated with regular strings', () => {
+      expect(run("let x = 5; `Value: ${x}` + ' done'")).toEqual('Value: 5 done')
+    })
+
+    test('template literal in ternary expression', () => {
+      expect(run('let x = true; x ? `yes` : `no`')).toEqual('yes')
+      expect(run('let x = false; x ? `yes` : `no`')).toEqual('no')
+    })
+
+    test('template literal with nested object expression', () => {
+      expect(run('let f = (o) => o.name; `Hello ${f({name: "World"})}`')).toEqual('Hello World')
+    })
+
+    test('template literal with nested braces in expression', () => {
+      expect(run('`Result: ${({a: 1}).a}`')).toEqual('Result: 1')
+    })
+
+    test('multiline template literal', () => {
+      expect(run('`line1\nline2\nline3`')).toEqual('line1\nline2\nline3')
+    })
+
+    test('nested template literals', () => {
+      expect(run('let inner = `world`; `Hello ${inner}!`')).toEqual('Hello world!')
+    })
+
+    test('deeply nested template literal in expression', () => {
+      expect(run('`outer ${`inner ${42}`}`')).toEqual('outer inner 42')
+    })
+  })
   test.todo('optional type annotations?')
   test.todo('allow redundant commas')
   test.todo('left associativity of +/-')

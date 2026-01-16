@@ -29,6 +29,8 @@ export type ObjectLiteralPart =
 
 export type ArrayLiteralPart = { tag: 'element'; v: AstNode } | { tag: 'spread'; v: AstNode }
 
+export type TemplatePart = { tag: 'string'; value: string } | { tag: 'expression'; expr: AstNode }
+
 export type Ident = {
   tag: 'ident'
   t: Token
@@ -138,6 +140,13 @@ export type AstNode =
       tag: 'export*'
       unitId: UnitId
     }
+  | {
+      tag: 'templateLiteral'
+      parts: TemplatePart[]
+      start: Token
+      end: Token
+      unitId: UnitId
+    }
 
 export function show(ast: AstNode | AstNode[]): string {
   if (Array.isArray(ast)) {
@@ -196,6 +205,20 @@ export function show(ast: AstNode | AstNode[]): string {
       undef: () => 'undefined',
       str: () => `'${ast.t.text}'`,
     })
+  }
+  if (ast.tag === 'templateLiteral') {
+    const partsStr = ast.parts
+      .map(p => {
+        if (p.tag === 'string') {
+          return p.value
+        }
+        if (p.tag === 'expression') {
+          return `\${${show(p.expr)}}`
+        }
+        shouldNeverHappen(p)
+      })
+      .join('')
+    return `\`${partsStr}\``
   }
   if (ast.tag === 'objectLiteral') {
     const pairs = ast.parts.map(p => {
@@ -284,6 +307,9 @@ export function span(ast: AstNode): Span {
   }
   if (ast.tag === 'literal') {
     return ofToken(ast.t)
+  }
+  if (ast.tag === 'templateLiteral') {
+    return ofRange(ofToken(ast.start), ofToken(ast.end))
   }
   if (ast.tag === 'objectLiteral') {
     return ofRange(ofToken(ast.start), ofToken(ast.end))

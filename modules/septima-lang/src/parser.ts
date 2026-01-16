@@ -8,6 +8,7 @@ import {
   Literal,
   ObjectLiteralPart,
   span,
+  TemplatePart,
   Unit,
 } from './ast-node'
 import { Scanner, Token } from './scanner'
@@ -439,7 +440,7 @@ export class Parser {
   }
 
   maybeLiteral(): AstNode | undefined {
-    return this.maybePrimitiveLiteral() ?? this.maybeCompositeLiteral()
+    return this.maybePrimitiveLiteral() ?? this.maybeTemplateLiteral() ?? this.maybeCompositeLiteral()
   }
 
   maybePrimitiveLiteral(): Literal | undefined {
@@ -485,6 +486,84 @@ export class Parser {
     }
 
     return undefined
+  }
+
+  maybeTemplateLiteral(): AstNode | undefined {
+    const start = this.scanner.consumeIf('`', false)
+    if (!start) {
+      return undefined
+    }
+
+    const parts: TemplatePart[] = []
+    let currentString = ''
+
+    while (true) {
+      // Consume any characters that are not `, $, or \
+      const text = this.scanner.consumeIf(/[^`$\\]+/, false)
+      if (text) {
+        currentString += text.text
+      }
+
+      // Check what we're looking at next
+      if (this.scanner.consumeIf('`', true)) {
+        // End of template literal
+        if (currentString.length > 0) {
+          parts.push({ tag: 'string', value: currentString })
+        }
+        // Create a synthetic end token for span calculation
+        const end: Token = { text: '`', location: { offset: start.location.offset + 1 } }
+        return { tag: 'templateLiteral', parts, start, end, unitId: this.unitId }
+      }
+
+      if (this.scanner.consumeIf('\\', false)) {
+        // Escape sequence
+        if (this.scanner.consumeIf('$', false)) {
+          currentString += '$'
+        } else if (this.scanner.consumeIf('\\', false)) {
+          currentString += '\\'
+        } else if (this.scanner.consumeIf('`', false)) {
+          currentString += '`'
+        } else if (this.scanner.consumeIf('n', false)) {
+          currentString += '\n'
+        } else if (this.scanner.consumeIf('t', false)) {
+          currentString += '\t'
+        } else if (this.scanner.consumeIf('r', false)) {
+          currentString += '\r'
+        } else {
+          // Unknown escape - keep both backslash and next char
+          const nextChar = this.scanner.consumeIf(/./, false)
+          currentString += '\\' + (nextChar?.text ?? '')
+        }
+        continue
+      }
+
+      if (this.scanner.consumeIf('${', true)) {
+        // Start of interpolation
+        if (currentString.length > 0) {
+          parts.push({ tag: 'string', value: currentString })
+          currentString = ''
+        }
+
+        // Parse the expression inside ${} - eat whitespace before expression
+        const expr = this.expression()
+        // Don't eat whitespace after } to preserve it in the template
+        this.scanner.consume('}', false)
+
+        parts.push({ tag: 'expression', expr })
+        continue
+      }
+
+      if (this.scanner.consumeIf('$', false)) {
+        // Just a dollar sign, not followed by {
+        currentString += '$'
+        continue
+      }
+
+      // If we get here and haven't consumed anything, we have an unterminated template literal
+      if (this.scanner.eof()) {
+        throw new Error(`Unterminated template literal ${this.scanner.sourceRef}`)
+      }
+    }
   }
 
   maybeCompositeLiteral(): AstNode | undefined {
