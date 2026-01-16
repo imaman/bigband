@@ -554,7 +554,7 @@ describe('septima', () => {
     })
     test('errors on arg list mismatch', () => {
       expect(() => run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2)`)).toThrowError(
-        'A value must be passed to formal argument: d when evaluating',
+        'Expected at least 4 argument(s) but got 3 when evaluating',
       )
       expect(run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2,6)`)).toEqual(20)
     })
@@ -622,6 +622,24 @@ describe('septima', () => {
       test('a dangling comma is allowed after last default value', () => {
         expect(run(`let f = (a, b = 2000,) => a+b; f(5)`)).toEqual(2005)
         expect(run(`let f = (a, b = 2000,) => a+b; f(5,20)`)).toEqual(25)
+      })
+      test('errors if too few arguments are passed', () => {
+        expect(() => run(`let f = (a, b) => a+b; f(1)`)).toThrowError('Expected at least 2 argument(s) but got 1')
+        expect(() => run(`let f = (a, b, c = 3) => a+b+c; f(1)`)).toThrowError(
+          'Expected at least 2 argument(s) but got 1',
+        )
+      })
+      test('extra arguments are silently ignored', () => {
+        expect(run(`let f = (a, b) => a+b; f(1, 2, 3)`)).toEqual(3)
+        expect(run(`let f = (a, b = 2) => a+b; f(1, 2, 3)`)).toEqual(3)
+        expect(run(`let f = () => 5; f(1)`)).toEqual(5)
+      })
+      test('accepts correct number of arguments at boundaries', () => {
+        expect(run(`let f = (a, b = 2) => a+b; f(1)`)).toEqual(3)
+        expect(run(`let f = (a, b = 2) => a+b; f(1, 10)`)).toEqual(11)
+        expect(run(`let f = (a = 1, b = 2) => a+b; f()`)).toEqual(3)
+        expect(run(`let f = (a = 1, b = 2) => a+b; f(10)`)).toEqual(12)
+        expect(run(`let f = (a = 1, b = 2) => a+b; f(10, 20)`)).toEqual(30)
       })
     })
   })

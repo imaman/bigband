@@ -419,6 +419,11 @@ export class Runtime {
 
   call(callee: Value, actualValues: Value[]) {
     return callee.call(actualValues, (formals, body, lambdaTable: SymbolTable) => {
+      const requiredCount = formals.filter(f => !f.defaultValue).length
+      if (actualValues.length < requiredCount) {
+        throw new Error(`Expected at least ${requiredCount} argument(s) but got ${actualValues.length}`)
+      }
+
       let newTable = lambdaTable
       for (let i = 0; i < formals.length; ++i) {
         const formal = formals[i]
