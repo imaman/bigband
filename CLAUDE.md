@@ -44,6 +44,8 @@ A secure, functional programming language designed for safely executing user-pro
 - `value.ts`: Tagged union representing runtime values (num, str, bool, arr, obj, lambda, foreign, undef)
 - `septima.ts`: Main entry point - `Septima.run()` for simple evaluation, `compile()` for multi-file programs
 
+**Adding new literal types:** `maybePrimitiveLiteral()` returns `Literal | undefined` and is called by `imports()` which accesses `.type` and `.t` properties. To add a non-`Literal` AST node (like template literals), add it to `maybeLiteral()` instead, not `maybePrimitiveLiteral()`.
+
 ### kit
 
 AWS CloudFormation infrastructure-as-code abstractions:
