@@ -498,20 +498,15 @@ export class Parser {
     let currentString = ''
 
     while (true) {
+      if (this.scanner.eof()) {
+        throw new Error(`Unterminated template literal ${this.scanner.sourceRef}`)
+      }
+
       // Consume any characters that are not `, $, or \
       const text = this.scanner.consumeIf(/[^`$\\]+/, false)
       if (text) {
         currentString += text.text
-      }
-
-      // Check what we're looking at next
-      const end = this.scanner.consumeIf('`', true)
-      if (end) {
-        // End of template literal
-        if (currentString.length > 0) {
-          parts.push({ tag: 'string', value: currentString })
-        }
-        return { tag: 'templateLiteral', parts, start, end, unitId: this.unitId }
+        continue
       }
 
       if (this.scanner.consumeIf('\\', false)) {
@@ -553,15 +548,17 @@ export class Parser {
       }
 
       if (this.scanner.consumeIf('$', false)) {
-        // Just a dollar sign, not followed by {
+        // Lone $ not followed by {
         currentString += '$'
         continue
       }
 
-      // If we get here and haven't consumed anything, we have an unterminated template literal
-      if (this.scanner.eof()) {
-        throw new Error(`Unterminated template literal ${this.scanner.sourceRef}`)
+      // End of template literal
+      const end = this.scanner.consume('`', true)
+      if (currentString.length > 0) {
+        parts.push({ tag: 'string', value: currentString })
       }
+      return { tag: 'templateLiteral', parts, start, end, unitId: this.unitId }
     }
   }
 
