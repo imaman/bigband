@@ -505,13 +505,12 @@ export class Parser {
       }
 
       // Check what we're looking at next
-      if (this.scanner.consumeIf('`', true)) {
+      const end = this.scanner.consumeIf('`', true)
+      if (end) {
         // End of template literal
         if (currentString.length > 0) {
           parts.push({ tag: 'string', value: currentString })
         }
-        // Create a synthetic end token for span calculation
-        const end: Token = { text: '`', location: { offset: start.location.offset + 1 } }
         return { tag: 'templateLiteral', parts, start, end, unitId: this.unitId }
       }
 

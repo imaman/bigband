@@ -64,8 +64,8 @@ describe('parser', () => {
       expect(show(parse('`start ${x + y} end`'))).toEqual('`start ${(x + y)} end`')
     })
     test('span', () => {
-      const ast = parse('`hello`')
-      expect(span(ast)).toEqual({ from: { offset: 0 }, to: { offset: 1 } })
+      expect(span(parse('`hello`'))).toEqual({ from: { offset: 0 }, to: { offset: 6 } })
+      expect(span(parse('`hi ${x} bye`'))).toEqual({ from: { offset: 0 }, to: { offset: 12 } })
     })
   })
 })
