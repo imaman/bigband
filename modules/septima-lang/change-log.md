@@ -47,3 +47,11 @@
 ### PR/177
 
 - support throwing: `throw "boom"`
+
+### PR/182
+
+- support template literals: `` `name is ${x}` ``
+
+### PR/183
+
+- support `const` keyword (behaves like `let`): `const x = 5`
