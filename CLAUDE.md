@@ -44,7 +44,21 @@ A secure, functional programming language designed for safely executing user-pro
 - `value.ts`: Tagged union representing runtime values (num, str, bool, arr, obj, lambda, foreign, undef)
 - `septima.ts`: Main entry point - `Septima.run()` for simple evaluation, `compile()` for multi-file programs
 
+**Adding new syntax:** The scanner has no token type enum - tokens are just `{text, location}` objects. New syntax (like template literals) is added at the parser level using pattern matching, not by defining new token types in the scanner.
+
 **Adding new literal types:** `maybePrimitiveLiteral()` returns `Literal | undefined` and is called by `imports()` which accesses `.type` and `.t` properties. To add a non-`Literal` AST node (like template literals), add it to `maybeLiteral()` instead, not `maybePrimitiveLiteral()`.
+
+**Adding new AST node types:** When adding a new AST node, update these locations:
+
+1. Add to `AstNode` union in `ast-node.ts`
+2. Handle in `evalNodeImpl()` in `runtime.ts`
+3. Handle in `importDefinitions()` in `runtime.ts` (for nodes that don't export)
+4. Extend `show()` and `span()` functions in `ast-node.ts`
+5. Add `show()`/`span()` tests in `parser.spec.ts`
+
+Both `evalNodeImpl()` and `importDefinitions()` use `shouldNeverHappen(ast)` with TypeScript's `never` type, so missing cases cause compile-time errors.
+
+**Scanner whitespace handling:** `scanner.consume()` and `consumeIf()` have an `eatWhitespace` parameter (default `true`). When parsing inside string/template literals, pass `false` to preserve whitespace in the content.
 
 ### kit
 
