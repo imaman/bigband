@@ -78,10 +78,10 @@ export class Parser {
           throw new Error(`non-top-level definition cannot be exported ${this.scanner.sourceRef}`)
         }
       }
-      let start = this.scanner.consumeIf('let ')
+      let start = this.scanner.consumeIf('let ') ?? this.scanner.consumeIf('const ')
       let isExported = false
       if (!start && kind === 'TOP_LEVEL') {
-        start = this.scanner.consumeIf('export let ')
+        start = this.scanner.consumeIf('export let ') ?? this.scanner.consumeIf('export const ')
         isExported = true
       }
       if (!start) {
@@ -95,7 +95,7 @@ export class Parser {
       if (this.scanner.headMatches(';')) {
         continue
       }
-      if (this.scanner.headMatches('let ')) {
+      if (this.scanner.headMatches('let ') || this.scanner.headMatches('const ')) {
         continue
       }
 
