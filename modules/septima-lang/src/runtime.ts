@@ -338,16 +338,17 @@ export class Runtime {
     }
 
     if (ast.tag === 'templateLiteral') {
-      let result = ''
-      for (const part of ast.parts) {
-        if (part.tag === 'string') {
-          result += part.value
-        } else if (part.tag === 'expression') {
-          result += this.evalNode(part.expr, table).toString()
-        } else {
+      const result = ast.parts
+        .map(part => {
+          if (part.tag === 'string') {
+            return part.value
+          }
+          if (part.tag === 'expression') {
+            return this.evalNode(part.expr, table).toString()
+          }
           shouldNeverHappen(part)
-        }
-      }
+        })
+        .join('')
       return Value.str(result)
     }
 

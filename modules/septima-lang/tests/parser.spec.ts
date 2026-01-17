@@ -1,4 +1,4 @@
-import { show } from '../src/ast-node'
+import { show, span } from '../src/ast-node'
 import { Parser } from '../src/parser'
 import { Scanner } from '../src/scanner'
 import { SourceCode } from '../src/source-code'
@@ -54,6 +54,18 @@ describe('parser', () => {
       expect(show(parse(`(a, b = {x: 1, y: ['bee', 'camel']}) => a*2 + b.x`))).toEqual(
         `fun (a, b = {x: 1, y: ['bee', 'camel']}) ((a * 2) + b.x)`,
       )
+    })
+  })
+  describe('template literal', () => {
+    test('show', () => {
+      expect(show(parse('`hello`'))).toEqual('`hello`')
+      expect(show(parse('`hello ${x} world`'))).toEqual('`hello ${x} world`')
+      expect(show(parse('`${a}${b}`'))).toEqual('`${a}${b}`')
+      expect(show(parse('`start ${x + y} end`'))).toEqual('`start ${(x + y)} end`')
+    })
+    test('span', () => {
+      const ast = parse('`hello`')
+      expect(span(ast)).toEqual({ from: { offset: 0 }, to: { offset: 1 } })
     })
   })
 })
