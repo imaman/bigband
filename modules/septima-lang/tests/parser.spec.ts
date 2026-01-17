@@ -67,5 +67,9 @@ describe('parser', () => {
       expect(span(parse('`hello`'))).toEqual({ from: { offset: 0 }, to: { offset: 6 } })
       expect(span(parse('`hi ${x} bye`'))).toEqual({ from: { offset: 0 }, to: { offset: 12 } })
     })
+    test('unterminated template literal', () => {
+      expect(() => parse('`hello')).toThrowError('Unterminated template literal')
+      expect(() => parse('`hello ${x}')).toThrowError('Unterminated template literal')
+    })
   })
 })
