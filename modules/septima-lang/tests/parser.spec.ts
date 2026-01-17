@@ -31,6 +31,12 @@ describe('parser', () => {
         `export let a = 1; let b = 2; export let c = 3;`,
       )
     })
+    test('const keyword', () => {
+      expect(show(parse(`const x = 5; x`))).toEqual(`let x = 5; x`)
+      expect(show(parse(`const f = x => x*x; f(2)`))).toEqual(`let f = fun (x) (x * x); f(2)`)
+      expect(show(parse(`const a = 1; let b = 2; const c = 3`))).toEqual(`let a = 1; let b = 2; let c = 3;`)
+      expect(show(parse(`export const a = 1;`))).toEqual(`export let a = 1;`)
+    })
   })
   describe('expression', () => {
     test('show', () => {
