@@ -166,6 +166,7 @@ export class Runtime {
       exp.tag === 'lambda' ||
       exp.tag === 'literal' ||
       exp.tag === 'objectLiteral' ||
+      exp.tag === 'templateLiteral' ||
       exp.tag === 'unaryOperator' ||
       exp.tag === 'unit'
     ) {
@@ -334,6 +335,21 @@ export class Runtime {
         return Value.undef()
       }
       shouldNeverHappen(ast.type)
+    }
+
+    if (ast.tag === 'templateLiteral') {
+      const result = ast.parts
+        .map(part => {
+          if (part.tag === 'string') {
+            return part.value
+          }
+          if (part.tag === 'expression') {
+            return this.evalNode(part.expr, table).toString()
+          }
+          shouldNeverHappen(part)
+        })
+        .join('')
+      return Value.str(result)
     }
 
     if (ast.tag === 'arrayLiteral') {

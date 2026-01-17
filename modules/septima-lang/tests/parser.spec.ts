@@ -1,4 +1,4 @@
-import { show } from '../src/ast-node'
+import { show, span } from '../src/ast-node'
 import { Parser } from '../src/parser'
 import { Scanner } from '../src/scanner'
 import { SourceCode } from '../src/source-code'
@@ -54,6 +54,22 @@ describe('parser', () => {
       expect(show(parse(`(a, b = {x: 1, y: ['bee', 'camel']}) => a*2 + b.x`))).toEqual(
         `fun (a, b = {x: 1, y: ['bee', 'camel']}) ((a * 2) + b.x)`,
       )
+    })
+  })
+  describe('template literal', () => {
+    test('show', () => {
+      expect(show(parse('`hello`'))).toEqual('`hello`')
+      expect(show(parse('`hello ${x} world`'))).toEqual('`hello ${x} world`')
+      expect(show(parse('`${a}${b}`'))).toEqual('`${a}${b}`')
+      expect(show(parse('`start ${x + y} end`'))).toEqual('`start ${(x + y)} end`')
+    })
+    test('span', () => {
+      expect(span(parse('`hello`'))).toEqual({ from: { offset: 0 }, to: { offset: 6 } })
+      expect(span(parse('`hi ${x} bye`'))).toEqual({ from: { offset: 0 }, to: { offset: 12 } })
+    })
+    test('unterminated template literal', () => {
+      expect(() => parse('`hello')).toThrowError('Unterminated template literal')
+      expect(() => parse('`hello ${x}')).toThrowError('Unterminated template literal')
     })
   })
 })
