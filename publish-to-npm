@@ -3,22 +3,24 @@
 set -e
 
 yarn test
-pushd modules/septima-lang
+# pushd modules/septima-lang
 rm -rf prepare-pack
-mkdir -p prepare-pack/dist
-cp package.json prepare-pack
-cp -r dist/src prepare-pack/dist/src
-cd prepare-pack
+mkdir -p prepare-pack
+yarn monocrate modules/septima-lang prepare-pack
+# cp package.json prepare-pack
+# cp -r dist/src prepare-pack/dist/src
+# cd prepare-pack
+
+pushd prepare-pack
 
 CURRENT_VERSION=$(npm info septima-lang version)
 npm pkg set "version=$CURRENT_VERSION"
-npm version patch
+npm version minor
 NEXT_VERSION=$(npm pkg get version | tr -d '"')
 echo "resolved new version: $NEXT_VERSION"
 
 npm publish
 popd
-
 
 T="published@$NEXT_VERSION"
 echo tagging "$T"
