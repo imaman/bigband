@@ -843,7 +843,7 @@ describe('septima', () => {
         'Block comment that started at at (<inline>:1:12..15)  300 is missing its closing (*/)',
       )
     })
-    test(`errors if a block comment closer does not have an opener`, () => {
+    test(`errors if a block comment closer does not have a matching opener`, () => {
       expect(() => run(`1 + 20 + */ 300`)).toThrowError('Unparsable input at (<inline>:1:10..15) */ 300')
     })
   })
