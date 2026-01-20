@@ -4422,14 +4422,15 @@ minipass@^7.1.2:
   resolved "https://registry.yarnpkg.com/minipass/-/minipass-7.1.2.tgz#93a9626ce5e5e66bd4db86849e7515e92340a707"
   integrity sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==
 
-monocrate@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/monocrate/-/monocrate-0.1.0.tgz#ff384a1e67ebf8ff8ab2d54cd02cb75c580a35cd"
-  integrity sha512-aD+UiP8mFbTFHO2EGw9naBAy7btB/K+KB4YvXfx9M3XdFDYXEkywUaI3F8K/OTb3uTRuutI3s6Pg7i9UmfWTaA==
+monocrate@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/monocrate/-/monocrate-0.4.0.tgz#9204a09a593eed2235be7705c3861c6ed8244b9a"
+  integrity sha512-8Prtog5otNjfCeJbgBrG79PNcJ1OIiFWjy8YNndRZfrcRbbK0QIBszhs5FGOA87u+txBa7CA5FaK9iQE/fbMwQ==
   dependencies:
     citty "^0.1.6"
     esbuild "^0.24.0"
     glob "^13.0.0"
+    resolve.exports "^2.0.3"
     ts-morph "^27.0.2"
     zod "^4.3.5"
 
@@ -4862,6 +4863,11 @@ resolve.exports@^2.0.0:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/resolve.exports/-/resolve.exports-2.0.2.tgz#f8c934b8e6a13f539e38b7098e2e36134f01e800"
   integrity sha512-X2UW6Nw3n/aMgDVy+0rSqgHlv39WZAlZrXCdnbyEiKm17DSqHX4MmQMaST3FbeWR5FTuRcUwYAziZajji0Y7mg==
+
+resolve.exports@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/resolve.exports/-/resolve.exports-2.0.3.tgz#41955e6f1b4013b7586f873749a635dea07ebe3f"
+  integrity sha512-OcXjMsGdhL4XnbShKpAcSqPMzQoYkYyhbEaeSko47MjRP9NfEQMhZkXL1DoFlt9LWQn4YttrdnV6X2OiyzBi+A==
 
 resolve@^1.20.0:
   version "1.22.2"
