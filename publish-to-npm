@@ -4,7 +4,7 @@ set -e
 
 yarn test
 # pushd modules/septima-lang
-yarn monocrate modules/septima-lang --publish=minor
+npx monocrate modules/septima-lang --publish=minor
 
 
 #T="published@$NEXT_VERSION"
