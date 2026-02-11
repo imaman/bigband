@@ -4388,10 +4388,10 @@ minimatch@^3.0.4, minimatch@^3.1.1, minimatch@^3.1.2:
   dependencies:
     brace-expansion "^1.1.7"
 
-monocrate@^0.14.1:
-  version "0.14.1"
-  resolved "https://registry.yarnpkg.com/monocrate/-/monocrate-0.14.1.tgz#bcb13f011b27d3e5f2e066e7e8b151d875419ccc"
-  integrity sha512-sI2Eioo67DXRJnqnicYda0IEX4I77A9bH5c8KLS/GATMrQmFbZ1rTiiiNMHGBeiywiLq0iEd5rWsjZpLADoCOg==
+monocrate@^0.14.2:
+  version "0.14.2"
+  resolved "https://registry.yarnpkg.com/monocrate/-/monocrate-0.14.2.tgz#ad1815a7c5257b0581bf7d2c73a83c0963e12155"
+  integrity sha512-ImMS5Z6FGvwYV5uCeolxqYTrbm0Yl5unjawChjOOBtVsRnLBrjQqJQeNYFjo+aiGgEdb0juGiDPPaCDzAB/jrA==
   dependencies:
     esbuild "^0.27.2"
     tinyexec "^1.0.2"
