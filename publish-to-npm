@@ -4,10 +4,10 @@ set -e
 
 yarn test
 # pushd modules/septima-lang
-npx monocrate modules/septima-lang --publish=minor
+V=$(npx monocrate modules/septima-lang --publish=minor)
 
 
-#T="published@$NEXT_VERSION"
-#echo tagging "$T"
-#git tag "$T"
-#git push --tags
+T="published@$V"
+echo tagging "$T"
+git tag "$T"
+git push --tags
