@@ -3,9 +3,12 @@
 set -e
 
 yarn test
-# pushd modules/septima-lang
-V=$(npx monocrate modules/septima-lang --bump=minor)
 
+REPORT_FILE=$(mktemp)
+# pushd modules/septima-lang
+npx monocrate modules/septima-lang --bump=minor --report=$REPORT_FILE
+
+V=$(head -n 1 "$REPORT_FILE")
 
 T="published@$V"
 echo tagging "$T"
