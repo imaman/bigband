@@ -6,7 +6,7 @@ yarn test
 
 REPORT_FILE=$(mktemp)
 # pushd modules/septima-lang
-npx monocrate modules/septima-lang --bump=minor --report=$REPORT_FILE
+npx monocrate modules/septima-lang --bump=patch --report=$REPORT_FILE
 
 V=$(head -n 1 "$REPORT_FILE")
 
