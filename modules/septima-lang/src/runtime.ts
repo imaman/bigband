@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-import { AstNode, show, Unit, UnitId } from './ast-node'
+import { ArrayLiteralPart, AstNode, ObjectLiteralPart, show, TemplatePart, Unit, UnitId } from './ast-node'
 import { extractMessage } from './extract-message'
 import { failMe } from './fail-me'
 import { shouldNeverHappen } from './should-never-happen'
@@ -12,6 +12,16 @@ import { Value } from './value'
 interface Placeholder {
   destination: undefined | Value
 }
+
+type Cont = (value: Value) => void
+
+type EvalTask = { type: 'eval'; ast: AstNode; table: SymbolTable; cont: Cont }
+type ContTask = { type: 'cont'; cont: Cont; value: Value }
+type CallTask = { type: 'call'; callee: Value; args: Value[]; cont: Cont }
+type Task = EvalTask | ContTask | CallTask
+
+type FunctionCallAst = Extract<AstNode, { tag: 'functionCall' }>
+type TopLevelAst = Extract<AstNode, { tag: 'topLevelExpression' }>
 
 class SymbolFrame implements SymbolTable {
   constructor(
@@ -135,18 +145,509 @@ export class Runtime {
     }
   }
 
+  private runLoop(initial: Task) {
+    const tasks: Task[] = [initial]
+
+    const pushEval = (ast: AstNode, table: SymbolTable, cont: Cont) => {
+      tasks.push({ type: 'eval', ast, table, cont })
+    }
+    const pushCont = (cont: Cont, value: Value) => {
+      tasks.push({ type: 'cont', cont, value })
+    }
+    const pushCall = (callee: Value, args: Value[], cont: Cont) => {
+      tasks.push({ type: 'call', callee, args, cont })
+    }
+
+    const scheduleArrayLiteral = (parts: ArrayLiteralPart[], table: SymbolTable, cont: Cont) => {
+      const acc: Value[] = []
+      const scheduleAt = (index: number) => {
+        if (index >= parts.length) {
+          pushCont(cont, Value.arr(acc))
+          return
+        }
+
+        const part = parts[index]
+        if (part.tag === 'element') {
+          const afterElement: Cont = value => {
+            acc.push(value)
+            scheduleAt(index + 1)
+          }
+          pushEval(part.v, table, afterElement)
+          return
+        }
+        if (part.tag === 'spread') {
+          const afterSpread: Cont = value => {
+            if (!value.isUndefined()) {
+              acc.push(...value.assertArr())
+            }
+            scheduleAt(index + 1)
+          }
+          pushEval(part.v, table, afterSpread)
+          return
+        }
+
+        shouldNeverHappen(part)
+      }
+
+      scheduleAt(0)
+    }
+
+    const scheduleObjectLiteral = (parts: ObjectLiteralPart[], table: SymbolTable, cont: Cont) => {
+      const entries: [string, Value][] = []
+      const scheduleAt = (index: number) => {
+        if (index >= parts.length) {
+          const filtered = entries.filter(([_, v]) => !v.isUndefined())
+          pushCont(cont, Value.obj(Object.fromEntries(filtered)))
+          return
+        }
+
+        const part = parts[index]
+        if (part.tag === 'hardName') {
+          const key = part.k.t.text
+          const afterValue: Cont = value => {
+            entries.push([key, value])
+            scheduleAt(index + 1)
+          }
+          pushEval(part.v, table, afterValue)
+          return
+        }
+        if (part.tag === 'quotedString') {
+          const key = part.k.t.text
+          const afterValue: Cont = value => {
+            entries.push([key, value])
+            scheduleAt(index + 1)
+          }
+          pushEval(part.v, table, afterValue)
+          return
+        }
+        if (part.tag === 'computedName') {
+          const afterKey: Cont = keyValue => {
+            const key = keyValue.assertStr()
+            const afterValue: Cont = value => {
+              entries.push([key, value])
+              scheduleAt(index + 1)
+            }
+            pushEval(part.v, table, afterValue)
+          }
+          pushEval(part.k, table, afterKey)
+          return
+        }
+        if (part.tag === 'spread') {
+          const afterSpread: Cont = value => {
+            if (!value.isUndefined()) {
+              entries.push(...Object.entries(value.assertObj()))
+            }
+            scheduleAt(index + 1)
+          }
+          pushEval(part.o, table, afterSpread)
+          return
+        }
+
+        shouldNeverHappen(part)
+      }
+
+      scheduleAt(0)
+    }
+
+    const scheduleTemplateLiteral = (parts: TemplatePart[], table: SymbolTable, cont: Cont) => {
+      let result = ''
+      const scheduleAt = (startIndex: number) => {
+        for (let index = startIndex; index < parts.length; index += 1) {
+          const part = parts[index]
+          if (part.tag === 'string') {
+            result += part.value
+            continue
+          }
+
+          const afterExpr: Cont = value => {
+            result += value.toString()
+            scheduleAt(index + 1)
+          }
+          pushEval(part.expr, table, afterExpr)
+          return
+        }
+
+        pushCont(cont, Value.str(result))
+      }
+
+      scheduleAt(0)
+    }
+
+    const scheduleFunctionCall = (ast: FunctionCallAst, table: SymbolTable, cont: Cont) => {
+      const args: Value[] = []
+      const evalArg = (index: number) => {
+        if (index >= ast.actualArgs.length) {
+          const afterCallee: Cont = callee => {
+            pushCall(callee, args, cont)
+          }
+          pushEval(ast.callee, table, afterCallee)
+          return
+        }
+
+        const afterArg: Cont = value => {
+          args.push(value)
+          evalArg(index + 1)
+        }
+        pushEval(ast.actualArgs[index], table, afterArg)
+      }
+
+      evalArg(0)
+    }
+
+    const scheduleTopLevel = (ast: TopLevelAst, table: SymbolTable, cont: Cont) => {
+      const defs = ast.definitions
+      const processDef = (index: number, currentTable: SymbolTable) => {
+        if (index >= defs.length) {
+          if (!ast.computation) {
+            pushCont(cont, Value.str(''))
+            return
+          }
+          const afterComp: Cont = value => {
+            if (ast.throwToken) {
+              throw new Error(JSON.stringify(value))
+            }
+            pushCont(cont, value)
+          }
+          pushEval(ast.computation, currentTable, afterComp)
+          return
+        }
+
+        const def = defs[index]
+        const name = def.ident.t.text
+        const placeholder: Placeholder = { destination: undefined }
+        const newTable = new SymbolFrame(name, placeholder, currentTable, def.isExported ? 'EXPORTED' : 'INTERNAL')
+        const afterDef: Cont = value => {
+          placeholder.destination = value
+          processDef(index + 1, newTable)
+        }
+        pushEval(def.value, newTable, afterDef)
+      }
+
+      processDef(0, table)
+    }
+
+    while (tasks.length > 0) {
+      const task = tasks.pop()
+      if (!task) {
+        continue
+      }
+      if (task.type === 'cont') {
+        task.cont(task.value)
+        continue
+      }
+      if (task.type === 'call') {
+        const { callee, args, cont } = task
+        if (!callee.isLambda()) {
+          const result = callee.call(args, () => failMe<Value>())
+          pushCont(cont, result)
+          continue
+        }
+
+        const { ast: lambda, table: lambdaTable } = callee.assertLambda()
+        const formals = lambda.formalArgs
+        const requiredCount = formals.filter(f => !f.defaultValue).length
+        if (args.length < requiredCount) {
+          throw new Error(`Expected at least ${requiredCount} argument(s) but got ${args.length}`)
+        }
+
+        const bindFormal = (index: number, newTable: SymbolTable) => {
+          if (index >= formals.length) {
+            pushEval(lambda.body, newTable, cont)
+            return
+          }
+
+          const formal = formals[index]
+          const actual = args.at(index)
+          const useDefault =
+            actual === undefined || (actual !== undefined && actual.isUndefined() && formal.defaultValue !== undefined)
+
+          if (useDefault && formal.defaultValue) {
+            const afterDefault: Cont = value => {
+              const tableWithArg = new SymbolFrame(formal.ident.t.text, { destination: value }, newTable, 'INTERNAL')
+              bindFormal(index + 1, tableWithArg)
+            }
+            pushEval(formal.defaultValue, lambdaTable, afterDefault)
+            return
+          }
+
+          if (actual === undefined) {
+            throw new Error(`A value must be passed to formal argument: ${show(formal.ident)}`)
+          }
+
+          const tableWithArg = new SymbolFrame(formal.ident.t.text, { destination: actual }, newTable, 'INTERNAL')
+          bindFormal(index + 1, tableWithArg)
+        }
+
+        bindFormal(0, lambdaTable)
+        continue
+      }
+
+      const ast = task.ast
+      const table = task.table
+      const outerCont = task.cont
+
+      this.stack = Stack.push(ast, this.stack)
+      const wrappedCont: Cont = value => {
+        switchOn(this.verbosity, {
+          quiet: () => {},
+          trace: () => {
+            // eslint-disable-next-line no-console
+            console.log(`output of <|${show(ast)}|> is ${JSON.stringify(value)}  // ${ast.tag}`)
+          },
+        })
+        this.stack = Stack.pop(this.stack)
+        pushCont(outerCont, value)
+      }
+
+      if (ast.tag === 'unit') {
+        let newTable = table
+        for (const imp of ast.imports) {
+          const o = this.importDefinitions(ast.unitId, imp.pathToImportFrom.text)
+          newTable = new SymbolFrame(imp.ident.t.text, { destination: o }, newTable, 'INTERNAL')
+        }
+        pushEval(ast.expression, newTable, wrappedCont)
+        continue
+      }
+      if (ast.tag === 'topLevelExpression') {
+        scheduleTopLevel(ast, table, wrappedCont)
+        continue
+      }
+      if (ast.tag === 'export*') {
+        pushCont(wrappedCont, Value.obj(table.exportValue()))
+        continue
+      }
+      if (ast.tag === 'binaryOperator') {
+        const operator = ast.operator
+        if (operator === '||') {
+          const afterLhs: Cont = lhs => {
+            const lhsBool = lhs.assertBool()
+            if (lhsBool) {
+              pushCont(wrappedCont, Value.bool(true))
+              return
+            }
+            const afterRhs: Cont = rhs => {
+              const rhsBool = rhs.assertBool()
+              pushCont(wrappedCont, Value.bool(rhsBool))
+            }
+            pushEval(ast.rhs, table, afterRhs)
+          }
+          pushEval(ast.lhs, table, afterLhs)
+          continue
+        }
+        if (operator === '&&') {
+          const afterLhs: Cont = lhs => {
+            const lhsBool = lhs.assertBool()
+            if (!lhsBool) {
+              pushCont(wrappedCont, Value.bool(false))
+              return
+            }
+            const afterRhs: Cont = rhs => {
+              const rhsBool = rhs.assertBool()
+              pushCont(wrappedCont, Value.bool(rhsBool))
+            }
+            pushEval(ast.rhs, table, afterRhs)
+          }
+          pushEval(ast.lhs, table, afterLhs)
+          continue
+        }
+        if (operator === '??') {
+          const afterLhs: Cont = lhs => {
+            if (!lhs.isUndefined()) {
+              pushCont(wrappedCont, lhs)
+              return
+            }
+            pushEval(ast.rhs, table, wrappedCont)
+          }
+          pushEval(ast.lhs, table, afterLhs)
+          continue
+        }
+
+        const afterLhs: Cont = lhs => {
+          const afterRhs: Cont = rhs => {
+            if (operator === '!=') {
+              pushCont(wrappedCont, lhs.equalsTo(rhs).not())
+              return
+            }
+            if (operator === '==') {
+              pushCont(wrappedCont, lhs.equalsTo(rhs))
+              return
+            }
+            if (operator === '<=') {
+              const comp = lhs.order(rhs)
+              pushCont(wrappedCont, comp.isToZero('<='))
+              return
+            }
+            if (operator === '<') {
+              const comp = lhs.order(rhs)
+              pushCont(wrappedCont, comp.isToZero('<'))
+              return
+            }
+            if (operator === '>=') {
+              const comp = lhs.order(rhs)
+              pushCont(wrappedCont, comp.isToZero('>='))
+              return
+            }
+            if (operator === '>') {
+              const comp = lhs.order(rhs)
+              pushCont(wrappedCont, comp.isToZero('>'))
+              return
+            }
+            if (operator === '%') {
+              pushCont(wrappedCont, lhs.modulo(rhs))
+              return
+            }
+            if (operator === '*') {
+              pushCont(wrappedCont, lhs.times(rhs))
+              return
+            }
+            if (operator === '**') {
+              pushCont(wrappedCont, lhs.power(rhs))
+              return
+            }
+            if (operator === '+') {
+              pushCont(wrappedCont, lhs.plus(rhs))
+              return
+            }
+            if (operator === '-') {
+              pushCont(wrappedCont, lhs.minus(rhs))
+              return
+            }
+            if (operator === '/') {
+              pushCont(wrappedCont, lhs.over(rhs))
+              return
+            }
+
+            shouldNeverHappen(operator)
+          }
+          pushEval(ast.rhs, table, afterRhs)
+        }
+        pushEval(ast.lhs, table, afterLhs)
+        continue
+      }
+      if (ast.tag === 'unaryOperator') {
+        const afterOperand: Cont = operand => {
+          if (ast.operator === '!') {
+            pushCont(wrappedCont, operand.not())
+            return
+          }
+          if (ast.operator === '+') {
+            pushCont(wrappedCont, Value.num(0).plus(operand))
+            return
+          }
+          if (ast.operator === '-') {
+            pushCont(wrappedCont, operand.negate())
+            return
+          }
+
+          shouldNeverHappen(ast.operator)
+        }
+        pushEval(ast.operand, table, afterOperand)
+        continue
+      }
+      if (ast.tag === 'ident') {
+        pushCont(wrappedCont, table.lookup(ast.t.text))
+        continue
+      }
+      if (ast.tag === 'formalArg') {
+        if (ast.defaultValue) {
+          pushEval(ast.defaultValue, table, wrappedCont)
+          continue
+        }
+
+        throw new Error(`no default value for ${ast}`)
+      }
+      if (ast.tag === 'literal') {
+        if (ast.type === 'bool') {
+          pushCont(wrappedCont, Value.bool(ast.t.text === 'true' ? true : false))
+          continue
+        }
+        if (ast.type === 'num') {
+          pushCont(wrappedCont, Value.num(Number(ast.t.text)))
+          continue
+        }
+        if (ast.type === 'str') {
+          pushCont(wrappedCont, Value.str(ast.t.text))
+          continue
+        }
+        if (ast.type === 'undef') {
+          pushCont(wrappedCont, Value.undef())
+          continue
+        }
+        shouldNeverHappen(ast.type)
+      }
+      if (ast.tag === 'templateLiteral') {
+        scheduleTemplateLiteral(ast.parts, table, wrappedCont)
+        continue
+      }
+      if (ast.tag === 'arrayLiteral') {
+        scheduleArrayLiteral(ast.parts, table, wrappedCont)
+        continue
+      }
+      if (ast.tag === 'objectLiteral') {
+        scheduleObjectLiteral(ast.parts, table, wrappedCont)
+        continue
+      }
+      if (ast.tag === 'lambda') {
+        pushCont(wrappedCont, Value.lambda(ast, table))
+        continue
+      }
+      if (ast.tag === 'functionCall') {
+        scheduleFunctionCall(ast, table, wrappedCont)
+        continue
+      }
+      if (ast.tag === 'if' || ast.tag === 'ternary') {
+        const afterCond: Cont = condition => {
+          const condBool = condition.assertBool()
+          if (condBool) {
+            pushEval(ast.positive, table, wrappedCont)
+            return
+          }
+          pushEval(ast.negative, table, wrappedCont)
+        }
+        pushEval(ast.condition, table, afterCond)
+        continue
+      }
+      if (ast.tag === 'dot') {
+        const afterReceiver: Cont = rec => {
+          if (rec === undefined || rec === null) {
+            throw new Error(`Cannot access attribute .${ast.ident.t.text} of ${rec}`)
+          }
+          const result = rec.access(ast.ident.t.text, (callee, args) => this.call(callee, args))
+          pushCont(wrappedCont, result)
+        }
+        pushEval(ast.receiver, table, afterReceiver)
+        continue
+      }
+      if (ast.tag === 'indexAccess') {
+        const afterReceiver: Cont = rec => {
+          const afterIndex: Cont = index => {
+            const result = rec.access(index, (callee, args) => this.call(callee, args))
+            pushCont(wrappedCont, result)
+          }
+          pushEval(ast.index, table, afterIndex)
+        }
+        pushEval(ast.receiver, table, afterReceiver)
+        continue
+      }
+
+      shouldNeverHappen(ast)
+    }
+  }
+
   private evalNode(ast: AstNode, table: SymbolTable): Value {
-    this.stack = Stack.push(ast, this.stack)
-    const ret = this.evalNodeImpl(ast, table)
-    switchOn(this.verbosity, {
-      quiet: () => {},
-      trace: () => {
-        // eslint-disable-next-line no-console
-        console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
+    let result: Value | undefined
+    this.runLoop({
+      type: 'eval',
+      ast,
+      table,
+      cont: value => {
+        result = value
       },
     })
-    this.stack = Stack.pop(this.stack)
-    return ret
+    if (result === undefined) {
+      throw new Error(`Evaluation did not produce a value`)
+    }
+    return result
   }
 
   private importDefinitions(importerAsPathFromSourceRoot: UnitId, relativePathFromImporter: string): Value {
@@ -195,268 +696,19 @@ export class Runtime {
     shouldNeverHappen(exp)
   }
 
-  private evalNodeImpl(ast: AstNode, table: SymbolTable): Value {
-    if (ast.tag === 'unit') {
-      let newTable = table
-      for (const imp of ast.imports) {
-        const o = this.importDefinitions(ast.unitId, imp.pathToImportFrom.text)
-        newTable = new SymbolFrame(imp.ident.t.text, { destination: o }, newTable, 'INTERNAL')
-      }
-      return this.evalNode(ast.expression, newTable)
-    }
-    if (ast.tag === 'topLevelExpression') {
-      let newTable = table
-      for (const def of ast.definitions) {
-        const name = def.ident.t.text
-        const placeholder: Placeholder = { destination: undefined }
-        newTable = new SymbolFrame(name, placeholder, newTable, def.isExported ? 'EXPORTED' : 'INTERNAL')
-        const v = this.evalNode(def.value, newTable)
-        placeholder.destination = v
-      }
-
-      if (!ast.computation) {
-        return Value.str('')
-      }
-      const c = this.evalNode(ast.computation, newTable)
-      if (ast.throwToken) {
-        throw new Error(JSON.stringify(c))
-      }
-
-      return c
-    }
-
-    if (ast.tag === 'export*') {
-      return Value.obj(table.exportValue())
-    }
-
-    if (ast.tag === 'binaryOperator') {
-      const lhs = this.evalNode(ast.lhs, table)
-      if (ast.operator === '||') {
-        return lhs.or(() => this.evalNode(ast.rhs, table))
-      }
-      if (ast.operator === '&&') {
-        return lhs.and(() => this.evalNode(ast.rhs, table))
-      }
-
-      const rhs = this.evalNode(ast.rhs, table)
-      if (ast.operator === '!=') {
-        return lhs.equalsTo(rhs).not()
-      }
-      if (ast.operator === '==') {
-        return lhs.equalsTo(rhs)
-      }
-
-      if (ast.operator === '<=') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('<=')
-      }
-      if (ast.operator === '<') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('<')
-      }
-      if (ast.operator === '>=') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('>=')
-      }
-      if (ast.operator === '>') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('>')
-      }
-      if (ast.operator === '%') {
-        return lhs.modulo(rhs)
-      }
-      if (ast.operator === '*') {
-        return lhs.times(rhs)
-      }
-      if (ast.operator === '**') {
-        return lhs.power(rhs)
-      }
-      if (ast.operator === '+') {
-        return lhs.plus(rhs)
-      }
-      if (ast.operator === '-') {
-        return lhs.minus(rhs)
-      }
-      if (ast.operator === '/') {
-        return lhs.over(rhs)
-      }
-
-      if (ast.operator === '??') {
-        return lhs.coalesce(() => this.evalNode(ast.rhs, table))
-      }
-
-      shouldNeverHappen(ast.operator)
-    }
-
-    if (ast.tag === 'unaryOperator') {
-      const operand = this.evalNode(ast.operand, table)
-      if (ast.operator === '!') {
-        return operand.not()
-      }
-      if (ast.operator === '+') {
-        // We intentionally do <0 + operand> instead of just <operand>. This is due to type-checking: the latter will
-        // evaluate to the operand as-is, making expression such as `+true` dynamically valid (which is not the desired
-        // behavior)
-        return Value.num(0).plus(operand)
-      }
-      if (ast.operator === '-') {
-        return operand.negate()
-      }
-
-      shouldNeverHappen(ast.operator)
-    }
-    if (ast.tag === 'ident') {
-      return table.lookup(ast.t.text)
-    }
-
-    if (ast.tag === 'formalArg') {
-      if (ast.defaultValue) {
-        return this.evalNode(ast.defaultValue, table)
-      }
-
-      // This error should not be reached. The call flow should evaluate a formalArg node only when if it has
-      // a default value sud-node.
-      throw new Error(`no default value for ${ast}`)
-    }
-
-    if (ast.tag === 'literal') {
-      if (ast.type === 'bool') {
-        // TODO(imaman): stricter checking of 'false'
-        return Value.bool(ast.t.text === 'true' ? true : false)
-      }
-      if (ast.type === 'num') {
-        return Value.num(Number(ast.t.text))
-      }
-      if (ast.type === 'str') {
-        return Value.str(ast.t.text)
-      }
-
-      if (ast.type === 'undef') {
-        return Value.undef()
-      }
-      shouldNeverHappen(ast.type)
-    }
-
-    if (ast.tag === 'templateLiteral') {
-      const result = ast.parts
-        .map(part => {
-          if (part.tag === 'string') {
-            return part.value
-          }
-          if (part.tag === 'expression') {
-            return this.evalNode(part.expr, table).toString()
-          }
-          shouldNeverHappen(part)
-        })
-        .join('')
-      return Value.str(result)
-    }
-
-    if (ast.tag === 'arrayLiteral') {
-      const arr: Value[] = []
-      for (const curr of ast.parts) {
-        if (curr.tag === 'element') {
-          arr.push(this.evalNode(curr.v, table))
-        } else if (curr.tag === 'spread') {
-          const v = this.evalNode(curr.v, table)
-          if (v.isUndefined()) {
-            continue
-          }
-          arr.push(...v.assertArr())
-        } else {
-          shouldNeverHappen(curr)
-        }
-      }
-
-      return Value.arr(arr)
-    }
-
-    if (ast.tag === 'objectLiteral') {
-      const entries: [string, Value][] = ast.parts.flatMap(at => {
-        if (at.tag === 'hardName') {
-          return [[at.k.t.text, this.evalNode(at.v, table)]]
-        }
-        if (at.tag === 'quotedString') {
-          return [[at.k.t.text, this.evalNode(at.v, table)]]
-        }
-        if (at.tag === 'computedName') {
-          return [[this.evalNode(at.k, table).assertStr(), this.evalNode(at.v, table)]]
-        }
-        if (at.tag === 'spread') {
-          const o = this.evalNode(at.o, table)
-          if (o.isUndefined()) {
-            return []
-          }
-          return Object.entries(o.assertObj())
-        }
-
-        shouldNeverHappen(at)
-      })
-
-      // TODO(imaman): verify type of all keys (strings, maybe also numbers)
-      return Value.obj(Object.fromEntries(entries.filter(([_, v]) => !v.isUndefined())))
-    }
-
-    if (ast.tag === 'lambda') {
-      return Value.lambda(ast, table)
-    }
-
-    if (ast.tag === 'functionCall') {
-      const argValues = ast.actualArgs.map(a => this.evalNode(a, table))
-      const callee = this.evalNode(ast.callee, table)
-
-      return this.call(callee, argValues)
-    }
-
-    if (ast.tag === 'if' || ast.tag === 'ternary') {
-      const c = this.evalNode(ast.condition, table)
-      return c.ifElse(
-        () => this.evalNode(ast.positive, table),
-        () => this.evalNode(ast.negative, table),
-      )
-    }
-
-    if (ast.tag === 'dot') {
-      const rec = this.evalNode(ast.receiver, table)
-      if (rec === undefined || rec === null) {
-        throw new Error(`Cannot access attribute .${ast.ident.t.text} of ${rec}`)
-      }
-      return rec.access(ast.ident.t.text, (callee, args) => this.call(callee, args))
-    }
-
-    if (ast.tag === 'indexAccess') {
-      const rec = this.evalNode(ast.receiver, table)
-      const index = this.evalNode(ast.index, table)
-      return rec.access(index, (callee, args) => this.call(callee, args))
-    }
-
-    shouldNeverHappen(ast)
-  }
-
   call(callee: Value, actualValues: Value[]) {
-    return callee.call(actualValues, (formals, body, lambdaTable: SymbolTable) => {
-      const requiredCount = formals.filter(f => !f.defaultValue).length
-      if (actualValues.length < requiredCount) {
-        throw new Error(`Expected at least ${requiredCount} argument(s) but got ${actualValues.length}`)
-      }
-
-      let newTable = lambdaTable
-      for (let i = 0; i < formals.length; ++i) {
-        const formal = formals[i]
-        let actual = actualValues.at(i)
-        const useDefault = actual === undefined || (actual.isUndefined() && formal.defaultValue)
-
-        if (useDefault && formal.defaultValue) {
-          actual = this.evalNode(formal.defaultValue, lambdaTable)
-        }
-
-        if (actual === undefined) {
-          throw new Error(`A value must be passed to formal argument: ${show(formal.ident)}`)
-        }
-
-        newTable = new SymbolFrame(formal.ident.t.text, { destination: actual }, newTable, 'INTERNAL')
-      }
-      return this.evalNode(body, newTable)
+    let result: Value | undefined
+    this.runLoop({
+      type: 'call',
+      callee,
+      args: actualValues,
+      cont: value => {
+        result = value
+      },
     })
+    if (result === undefined) {
+      throw new Error(`Call did not produce a value`)
+    }
+    return result
   }
 }
