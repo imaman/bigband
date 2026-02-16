@@ -213,8 +213,12 @@ export class Runtime {
     shouldNeverHappen(exp)
   }
 
-  private mkFrame(ast: AstNode, table: SymbolTable, outer: ExecFrame, slotName: string): ExecFrame {
-    return { ast, table, outer, slotName, slots: {} }
+  private mkFrame(ast: AstNode, table: SymbolTable, outer: ExecFrame, slotName: string): StepResult {
+    return [undefined, { ast, table, outer, slotName, slots: {} }]
+  }
+
+  private done(value: Value): StepResult {
+    return [value, undefined]
   }
 
   private readSlot(frame: ExecFrame, slotName: string): Value {
@@ -281,9 +285,9 @@ export class Runtime {
       const slotName = 'expression'
       const cached = frame.slots[slotName]
       if (cached === undefined) {
-        return [undefined, this.mkFrame(ast.expression, state.table, frame, slotName)]
+        return this.mkFrame(ast.expression, state.table, frame, slotName)
       }
-      return [cached, undefined]
+      return this.done(cached)
     }
 
     if (ast.tag === 'topLevelExpression') {
@@ -317,7 +321,7 @@ export class Runtime {
         const v = frame.slots[pending.slotName]
         if (v === undefined) {
           const def = ast.definitions[state.nextDefinitionIndex]
-          return [undefined, this.mkFrame(def.value, pending.table, frame, pending.slotName)]
+          return this.mkFrame(def.value, pending.table, frame, pending.slotName)
         }
 
         pending.placeholder.destination = v
@@ -327,108 +331,108 @@ export class Runtime {
       }
 
       if (!ast.computation) {
-        return [Value.str(''), undefined]
+        return this.done(Value.str(''))
       }
 
       const slotName = 'computation'
       const c = frame.slots[slotName]
       if (c === undefined) {
-        return [undefined, this.mkFrame(ast.computation, state.table, frame, slotName)]
+        return this.mkFrame(ast.computation, state.table, frame, slotName)
       }
       if (ast.throwToken) {
         throw new Error(JSON.stringify(c))
       }
-      return [c, undefined]
+      return this.done(c)
     }
 
     if (ast.tag === 'export*') {
-      return [Value.obj(table.exportValue()), undefined]
+      return this.done(Value.obj(table.exportValue()))
     }
 
     if (ast.tag === 'binaryOperator') {
       const lhsSlot = 'lhs'
       const lhs = frame.slots[lhsSlot]
       if (lhs === undefined) {
-        return [undefined, this.mkFrame(ast.lhs, table, frame, lhsSlot)]
+        return this.mkFrame(ast.lhs, table, frame, lhsSlot)
       }
 
       if (ast.operator === '||') {
         if (lhs.assertBool()) {
-          return [Value.bool(true), undefined]
+          return this.done(Value.bool(true))
         }
         const rhsSlot = 'rhs'
         const rhs = frame.slots[rhsSlot]
         if (rhs === undefined) {
-          return [undefined, this.mkFrame(ast.rhs, table, frame, rhsSlot)]
+          return this.mkFrame(ast.rhs, table, frame, rhsSlot)
         }
-        return [Value.bool(rhs.assertBool()), undefined]
+        return this.done(Value.bool(rhs.assertBool()))
       }
 
       if (ast.operator === '&&') {
         if (!lhs.assertBool()) {
-          return [Value.bool(false), undefined]
+          return this.done(Value.bool(false))
         }
         const rhsSlot = 'rhs'
         const rhs = frame.slots[rhsSlot]
         if (rhs === undefined) {
-          return [undefined, this.mkFrame(ast.rhs, table, frame, rhsSlot)]
+          return this.mkFrame(ast.rhs, table, frame, rhsSlot)
         }
-        return [Value.bool(rhs.assertBool()), undefined]
+        return this.done(Value.bool(rhs.assertBool()))
       }
 
       if (ast.operator === '??') {
         if (!lhs.isUndefined()) {
-          return [lhs, undefined]
+          return this.done(lhs)
         }
         const rhsSlot = 'rhs'
         const rhs = frame.slots[rhsSlot]
         if (rhs === undefined) {
-          return [undefined, this.mkFrame(ast.rhs, table, frame, rhsSlot)]
+          return this.mkFrame(ast.rhs, table, frame, rhsSlot)
         }
-        return [rhs, undefined]
+        return this.done(rhs)
       }
 
       const rhsSlot = 'rhs'
       const rhs = frame.slots[rhsSlot]
       if (rhs === undefined) {
-        return [undefined, this.mkFrame(ast.rhs, table, frame, rhsSlot)]
+        return this.mkFrame(ast.rhs, table, frame, rhsSlot)
       }
 
       if (ast.operator === '!=') {
-        return [lhs.equalsTo(rhs).not(), undefined]
+        return this.done(lhs.equalsTo(rhs).not())
       }
       if (ast.operator === '==') {
-        return [lhs.equalsTo(rhs), undefined]
+        return this.done(lhs.equalsTo(rhs))
       }
       if (ast.operator === '<=') {
-        return [lhs.order(rhs).isToZero('<='), undefined]
+        return this.done(lhs.order(rhs).isToZero('<='))
       }
       if (ast.operator === '<') {
-        return [lhs.order(rhs).isToZero('<'), undefined]
+        return this.done(lhs.order(rhs).isToZero('<'))
       }
       if (ast.operator === '>=') {
-        return [lhs.order(rhs).isToZero('>='), undefined]
+        return this.done(lhs.order(rhs).isToZero('>='))
       }
       if (ast.operator === '>') {
-        return [lhs.order(rhs).isToZero('>'), undefined]
+        return this.done(lhs.order(rhs).isToZero('>'))
       }
       if (ast.operator === '%') {
-        return [lhs.modulo(rhs), undefined]
+        return this.done(lhs.modulo(rhs))
       }
       if (ast.operator === '*') {
-        return [lhs.times(rhs), undefined]
+        return this.done(lhs.times(rhs))
       }
       if (ast.operator === '**') {
-        return [lhs.power(rhs), undefined]
+        return this.done(lhs.power(rhs))
       }
       if (ast.operator === '+') {
-        return [lhs.plus(rhs), undefined]
+        return this.done(lhs.plus(rhs))
       }
       if (ast.operator === '-') {
-        return [lhs.minus(rhs), undefined]
+        return this.done(lhs.minus(rhs))
       }
       if (ast.operator === '/') {
-        return [lhs.over(rhs), undefined]
+        return this.done(lhs.over(rhs))
       }
 
       shouldNeverHappen(ast.operator)
@@ -438,27 +442,27 @@ export class Runtime {
       const slotName = 'operand'
       const operand = frame.slots[slotName]
       if (operand === undefined) {
-        return [undefined, this.mkFrame(ast.operand, table, frame, slotName)]
+        return this.mkFrame(ast.operand, table, frame, slotName)
       }
 
       if (ast.operator === '!') {
-        return [operand.not(), undefined]
+        return this.done(operand.not())
       }
       if (ast.operator === '+') {
         // We intentionally do <0 + operand> instead of just <operand>. This is due to type-checking: the latter will
         // evaluate to the operand as-is, making expression such as `+true` dynamically valid (which is not the desired
         // behavior)
-        return [Value.num(0).plus(operand), undefined]
+        return this.done(Value.num(0).plus(operand))
       }
       if (ast.operator === '-') {
-        return [operand.negate(), undefined]
+        return this.done(operand.negate())
       }
 
       shouldNeverHappen(ast.operator)
     }
 
     if (ast.tag === 'ident') {
-      return [table.lookup(ast.t.text), undefined]
+      return this.done(table.lookup(ast.t.text))
     }
 
     if (ast.tag === 'formalArg') {
@@ -466,9 +470,9 @@ export class Runtime {
         const slotName = 'defaultValue'
         const v = frame.slots[slotName]
         if (v === undefined) {
-          return [undefined, this.mkFrame(ast.defaultValue, table, frame, slotName)]
+          return this.mkFrame(ast.defaultValue, table, frame, slotName)
         }
-        return [v, undefined]
+        return this.done(v)
       }
 
       // This error should not be reached. The call flow should evaluate a formalArg node only when if it has
@@ -479,16 +483,16 @@ export class Runtime {
     if (ast.tag === 'literal') {
       if (ast.type === 'bool') {
         // TODO(imaman): stricter checking of 'false'
-        return [Value.bool(ast.t.text === 'true' ? true : false), undefined]
+        return this.done(Value.bool(ast.t.text === 'true' ? true : false))
       }
       if (ast.type === 'num') {
-        return [Value.num(Number(ast.t.text)), undefined]
+        return this.done(Value.num(Number(ast.t.text)))
       }
       if (ast.type === 'str') {
-        return [Value.str(ast.t.text), undefined]
+        return this.done(Value.str(ast.t.text))
       }
       if (ast.type === 'undef') {
-        return [Value.undef(), undefined]
+        return this.done(Value.undef())
       }
       shouldNeverHappen(ast.type)
     }
@@ -502,7 +506,7 @@ export class Runtime {
 
         const slotName = `expression:${i}`
         if (frame.slots[slotName] === undefined) {
-          return [undefined, this.mkFrame(part.expr, table, frame, slotName)]
+          return this.mkFrame(part.expr, table, frame, slotName)
         }
       }
 
@@ -515,7 +519,7 @@ export class Runtime {
           return v.toString()
         })
         .join('')
-      return [Value.str(result), undefined]
+      return this.done(Value.str(result))
     }
 
     if (ast.tag === 'arrayLiteral') {
@@ -523,7 +527,7 @@ export class Runtime {
         const curr = ast.parts[i]
         const slotName = `part:${i}`
         if (frame.slots[slotName] === undefined) {
-          return [undefined, this.mkFrame(curr.v, table, frame, slotName)]
+          return this.mkFrame(curr.v, table, frame, slotName)
         }
       }
 
@@ -543,7 +547,7 @@ export class Runtime {
         }
       }
 
-      return [Value.arr(arr), undefined]
+      return this.done(Value.arr(arr))
     }
 
     if (ast.tag === 'objectLiteral') {
@@ -552,7 +556,7 @@ export class Runtime {
         if (part.tag === 'hardName' || part.tag === 'quotedString') {
           const valueSlot = `part:${i}:v`
           if (frame.slots[valueSlot] === undefined) {
-            return [undefined, this.mkFrame(part.v, table, frame, valueSlot)]
+            return this.mkFrame(part.v, table, frame, valueSlot)
           }
           continue
         }
@@ -560,11 +564,11 @@ export class Runtime {
         if (part.tag === 'computedName') {
           const keySlot = `part:${i}:k`
           if (frame.slots[keySlot] === undefined) {
-            return [undefined, this.mkFrame(part.k, table, frame, keySlot)]
+            return this.mkFrame(part.k, table, frame, keySlot)
           }
           const valueSlot = `part:${i}:v`
           if (frame.slots[valueSlot] === undefined) {
-            return [undefined, this.mkFrame(part.v, table, frame, valueSlot)]
+            return this.mkFrame(part.v, table, frame, valueSlot)
           }
           continue
         }
@@ -572,7 +576,7 @@ export class Runtime {
         if (part.tag === 'spread') {
           const objectSlot = `part:${i}:o`
           if (frame.slots[objectSlot] === undefined) {
-            return [undefined, this.mkFrame(part.o, table, frame, objectSlot)]
+            return this.mkFrame(part.o, table, frame, objectSlot)
           }
           continue
         }
@@ -609,30 +613,30 @@ export class Runtime {
       })
 
       // TODO(imaman): verify type of all keys (strings, maybe also numbers)
-      return [Value.obj(Object.fromEntries(entries.filter(([_, v]) => !v.isUndefined()))), undefined]
+      return this.done(Value.obj(Object.fromEntries(entries.filter(([_, v]) => !v.isUndefined()))))
     }
 
     if (ast.tag === 'lambda') {
-      return [Value.lambda(ast, table), undefined]
+      return this.done(Value.lambda(ast, table))
     }
 
     if (ast.tag === 'functionCall') {
       for (let i = 0; i < ast.actualArgs.length; ++i) {
         const slotName = `arg:${i}`
         if (frame.slots[slotName] === undefined) {
-          return [undefined, this.mkFrame(ast.actualArgs[i], table, frame, slotName)]
+          return this.mkFrame(ast.actualArgs[i], table, frame, slotName)
         }
       }
 
       const calleeSlot = 'callee'
       const callee = frame.slots[calleeSlot]
       if (callee === undefined) {
-        return [undefined, this.mkFrame(ast.callee, table, frame, calleeSlot)]
+        return this.mkFrame(ast.callee, table, frame, calleeSlot)
       }
 
       const argValues: Value[] = ast.actualArgs.map((_, i) => this.readSlot(frame, `arg:${i}`))
       if (!callee.isLambda()) {
-        return [this.call(callee, argValues), undefined]
+        return this.done(this.call(callee, argValues))
       }
 
       let state = frame.state
@@ -668,7 +672,7 @@ export class Runtime {
           const slotName = `default:${i}`
           const defaultValue = frame.slots[slotName]
           if (defaultValue === undefined) {
-            return [undefined, this.mkFrame(formal.defaultValue, state.lambdaTable, frame, slotName)]
+            return this.mkFrame(formal.defaultValue, state.lambdaTable, frame, slotName)
           }
           actual = defaultValue
         }
@@ -684,52 +688,52 @@ export class Runtime {
       const bodySlot = 'body'
       const bodyResult = frame.slots[bodySlot]
       if (bodyResult === undefined) {
-        return [undefined, this.mkFrame(state.body, state.newTable, frame, bodySlot)]
+        return this.mkFrame(state.body, state.newTable, frame, bodySlot)
       }
-      return [bodyResult, undefined]
+      return this.done(bodyResult)
     }
 
     if (ast.tag === 'if' || ast.tag === 'ternary') {
       const conditionSlot = 'condition'
       const c = frame.slots[conditionSlot]
       if (c === undefined) {
-        return [undefined, this.mkFrame(ast.condition, table, frame, conditionSlot)]
+        return this.mkFrame(ast.condition, table, frame, conditionSlot)
       }
 
       const branch = c.assertBool() ? ast.positive : ast.negative
       const branchSlot = c.assertBool() ? 'positive' : 'negative'
       const cachedBranchValue = frame.slots[branchSlot]
       if (cachedBranchValue === undefined) {
-        return [undefined, this.mkFrame(branch, table, frame, branchSlot)]
+        return this.mkFrame(branch, table, frame, branchSlot)
       }
-      return [cachedBranchValue, undefined]
+      return this.done(cachedBranchValue)
     }
 
     if (ast.tag === 'dot') {
       const recSlot = 'receiver'
       const rec = frame.slots[recSlot]
       if (rec === undefined) {
-        return [undefined, this.mkFrame(ast.receiver, table, frame, recSlot)]
+        return this.mkFrame(ast.receiver, table, frame, recSlot)
       }
       if (rec === undefined || rec === null) {
         throw new Error(`Cannot access attribute .${ast.ident.t.text} of ${rec}`)
       }
-      return [rec.access(ast.ident.t.text, (callee, args) => this.call(callee, args)), undefined]
+      return this.done(rec.access(ast.ident.t.text, (callee, args) => this.call(callee, args)))
     }
 
     if (ast.tag === 'indexAccess') {
       const recSlot = 'receiver'
       const rec = frame.slots[recSlot]
       if (rec === undefined) {
-        return [undefined, this.mkFrame(ast.receiver, table, frame, recSlot)]
+        return this.mkFrame(ast.receiver, table, frame, recSlot)
       }
 
       const indexSlot = 'index'
       const index = frame.slots[indexSlot]
       if (index === undefined) {
-        return [undefined, this.mkFrame(ast.index, table, frame, indexSlot)]
+        return this.mkFrame(ast.index, table, frame, indexSlot)
       }
-      return [rec.access(index, (callee, args) => this.call(callee, args)), undefined]
+      return this.done(rec.access(index, (callee, args) => this.call(callee, args)))
     }
 
     shouldNeverHappen(ast)
