@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-import { AstNode, show, Unit, UnitId } from './ast-node'
+import { AstNode, FormalArg, show, Unit, UnitId } from './ast-node'
 import { extractMessage } from './extract-message'
 import { failMe } from './fail-me'
 import { shouldNeverHappen } from './should-never-happen'
@@ -71,6 +71,34 @@ class EmptySymbolTable implements SymbolTable {
 export type Verbosity = 'quiet' | 'trace'
 export type Outputter = (u: unknown) => void
 
+interface ExecFrame {
+  ast: AstNode
+  table: SymbolTable
+  outer: ExecFrame | undefined
+  slotName: string | undefined
+  slots: Partial<Record<string, Value>>
+  state?: ExecFrameState
+}
+
+type StepResult = [Value, undefined] | [undefined, ExecFrame]
+type UnitFrameState = { tag: 'unit'; table: SymbolTable }
+type TopLevelFrameState = {
+  tag: 'topLevelExpression'
+  table: SymbolTable
+  nextDefinitionIndex: number
+  pending?: { slotName: string; placeholder: Placeholder; table: SymbolTable }
+}
+type LambdaCallFrameState = {
+  tag: 'lambda-call'
+  formals: FormalArg[]
+  body: AstNode
+  lambdaTable: SymbolTable
+  newTable: SymbolTable
+  actualValues: Value[]
+  nextFormalIndex: number
+}
+type ExecFrameState = UnitFrameState | TopLevelFrameState | LambdaCallFrameState
+
 export class Runtime {
   private stack: Stack.T = undefined
   constructor(
@@ -136,17 +164,7 @@ export class Runtime {
   }
 
   private evalNode(ast: AstNode, table: SymbolTable): Value {
-    this.stack = Stack.push(ast, this.stack)
-    const ret = this.evalNodeImpl(ast, table)
-    switchOn(this.verbosity, {
-      quiet: () => {},
-      trace: () => {
-        // eslint-disable-next-line no-console
-        console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
-      },
-    })
-    this.stack = Stack.pop(this.stack)
-    return ret
+    return this.evalLoop(ast, table)
   }
 
   private importDefinitions(importerAsPathFromSourceRoot: UnitId, relativePathFromImporter: string): Value {
@@ -195,123 +213,266 @@ export class Runtime {
     shouldNeverHappen(exp)
   }
 
-  private evalNodeImpl(ast: AstNode, table: SymbolTable): Value {
-    if (ast.tag === 'unit') {
-      let newTable = table
-      for (const imp of ast.imports) {
-        const o = this.importDefinitions(ast.unitId, imp.pathToImportFrom.text)
-        newTable = new SymbolFrame(imp.ident.t.text, { destination: o }, newTable, 'INTERNAL')
-      }
-      return this.evalNode(ast.expression, newTable)
+  private mkFrame(ast: AstNode, table: SymbolTable, outer: ExecFrame, slotName: string): StepResult {
+    return [undefined, { ast, table, outer, slotName, slots: {} }]
+  }
+
+  private done(value: Value): StepResult {
+    return [value, undefined]
+  }
+
+  private readSlot(frame: ExecFrame, slotName: string): Value {
+    const v = frame.slots[slotName]
+    if (v === undefined) {
+      return failMe<Value>(`missing slot: ${slotName}`)
     }
+    return v
+  }
+
+  private frameOutput(ast: AstNode, ret: Value) {
+    switchOn(this.verbosity, {
+      quiet: () => {},
+      trace: () => {
+        // eslint-disable-next-line no-console
+        console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
+      },
+    })
+  }
+
+  private evalLoop(ast: AstNode, table: SymbolTable): Value {
+    let end: ExecFrame = { ast, table, outer: undefined, slotName: undefined, slots: {} }
+    this.stack = Stack.push(ast, this.stack)
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const [value, next] = this.step(end)
+      if (next) {
+        end = next
+        this.stack = Stack.push(next.ast, this.stack)
+        continue
+      }
+
+      const computed = value ?? failMe<Value>(`Evaluation step did not produce a value for ${show(end.ast)}`)
+      this.frameOutput(end.ast, computed)
+      this.stack = Stack.pop(this.stack)
+      if (!end.outer) {
+        return computed
+      }
+
+      end.outer.slots[end.slotName ?? failMe(`missing slot name for ${show(end.ast)}`)] = computed
+      end = end.outer
+    }
+  }
+
+  private step(frame: ExecFrame): StepResult {
+    const { ast, table } = frame
+
+    if (ast.tag === 'unit') {
+      let state = frame.state
+      if (!state) {
+        let importedTable = table
+        for (const imp of ast.imports) {
+          const o = this.importDefinitions(ast.unitId, imp.pathToImportFrom.text)
+          importedTable = new SymbolFrame(imp.ident.t.text, { destination: o }, importedTable, 'INTERNAL')
+        }
+        state = { tag: 'unit', table: importedTable }
+        frame.state = state
+      }
+      if (state.tag !== 'unit') {
+        return failMe<StepResult>(`Invalid state for unit frame`)
+      }
+
+      const slotName = 'expression'
+      const cached = frame.slots[slotName]
+      if (cached === undefined) {
+        return this.mkFrame(ast.expression, state.table, frame, slotName)
+      }
+      return this.done(cached)
+    }
+
     if (ast.tag === 'topLevelExpression') {
-      let newTable = table
-      for (const def of ast.definitions) {
-        const name = def.ident.t.text
-        const placeholder: Placeholder = { destination: undefined }
-        newTable = new SymbolFrame(name, placeholder, newTable, def.isExported ? 'EXPORTED' : 'INTERNAL')
-        const v = this.evalNode(def.value, newTable)
-        placeholder.destination = v
+      let state = frame.state
+      if (!state) {
+        state = { tag: 'topLevelExpression', table, nextDefinitionIndex: 0 }
+        frame.state = state
+      }
+      if (state.tag !== 'topLevelExpression') {
+        return failMe<StepResult>(`Invalid state for topLevelExpression frame`)
+      }
+
+      while (state.nextDefinitionIndex < ast.definitions.length) {
+        if (!state.pending) {
+          const def = ast.definitions[state.nextDefinitionIndex]
+          const placeholder: Placeholder = { destination: undefined }
+          const tableForDefinition = new SymbolFrame(
+            def.ident.t.text,
+            placeholder,
+            state.table,
+            def.isExported ? 'EXPORTED' : 'INTERNAL',
+          )
+          state.pending = {
+            slotName: `definition:${state.nextDefinitionIndex}`,
+            placeholder,
+            table: tableForDefinition,
+          }
+        }
+
+        const pending = state.pending
+        const v = frame.slots[pending.slotName]
+        if (v === undefined) {
+          const def = ast.definitions[state.nextDefinitionIndex]
+          return this.mkFrame(def.value, pending.table, frame, pending.slotName)
+        }
+
+        pending.placeholder.destination = v
+        state.table = pending.table
+        state.pending = undefined
+        state.nextDefinitionIndex += 1
       }
 
       if (!ast.computation) {
-        return Value.str('')
+        return this.done(Value.str(''))
       }
-      const c = this.evalNode(ast.computation, newTable)
+
+      const slotName = 'computation'
+      const c = frame.slots[slotName]
+      if (c === undefined) {
+        return this.mkFrame(ast.computation, state.table, frame, slotName)
+      }
       if (ast.throwToken) {
         throw new Error(JSON.stringify(c))
       }
-
-      return c
+      return this.done(c)
     }
 
     if (ast.tag === 'export*') {
-      return Value.obj(table.exportValue())
+      return this.done(Value.obj(table.exportValue()))
     }
 
     if (ast.tag === 'binaryOperator') {
-      const lhs = this.evalNode(ast.lhs, table)
+      const lhsSlot = 'lhs'
+      const lhs = frame.slots[lhsSlot]
+      if (lhs === undefined) {
+        return this.mkFrame(ast.lhs, table, frame, lhsSlot)
+      }
+
       if (ast.operator === '||') {
-        return lhs.or(() => this.evalNode(ast.rhs, table))
+        if (lhs.assertBool()) {
+          return this.done(Value.bool(true))
+        }
+        const rhsSlot = 'rhs'
+        const rhs = frame.slots[rhsSlot]
+        if (rhs === undefined) {
+          return this.mkFrame(ast.rhs, table, frame, rhsSlot)
+        }
+        return this.done(Value.bool(rhs.assertBool()))
       }
+
       if (ast.operator === '&&') {
-        return lhs.and(() => this.evalNode(ast.rhs, table))
-      }
-
-      const rhs = this.evalNode(ast.rhs, table)
-      if (ast.operator === '!=') {
-        return lhs.equalsTo(rhs).not()
-      }
-      if (ast.operator === '==') {
-        return lhs.equalsTo(rhs)
-      }
-
-      if (ast.operator === '<=') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('<=')
-      }
-      if (ast.operator === '<') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('<')
-      }
-      if (ast.operator === '>=') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('>=')
-      }
-      if (ast.operator === '>') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('>')
-      }
-      if (ast.operator === '%') {
-        return lhs.modulo(rhs)
-      }
-      if (ast.operator === '*') {
-        return lhs.times(rhs)
-      }
-      if (ast.operator === '**') {
-        return lhs.power(rhs)
-      }
-      if (ast.operator === '+') {
-        return lhs.plus(rhs)
-      }
-      if (ast.operator === '-') {
-        return lhs.minus(rhs)
-      }
-      if (ast.operator === '/') {
-        return lhs.over(rhs)
+        if (!lhs.assertBool()) {
+          return this.done(Value.bool(false))
+        }
+        const rhsSlot = 'rhs'
+        const rhs = frame.slots[rhsSlot]
+        if (rhs === undefined) {
+          return this.mkFrame(ast.rhs, table, frame, rhsSlot)
+        }
+        return this.done(Value.bool(rhs.assertBool()))
       }
 
       if (ast.operator === '??') {
-        return lhs.coalesce(() => this.evalNode(ast.rhs, table))
+        if (!lhs.isUndefined()) {
+          return this.done(lhs)
+        }
+        const rhsSlot = 'rhs'
+        const rhs = frame.slots[rhsSlot]
+        if (rhs === undefined) {
+          return this.mkFrame(ast.rhs, table, frame, rhsSlot)
+        }
+        return this.done(rhs)
+      }
+
+      const rhsSlot = 'rhs'
+      const rhs = frame.slots[rhsSlot]
+      if (rhs === undefined) {
+        return this.mkFrame(ast.rhs, table, frame, rhsSlot)
+      }
+
+      if (ast.operator === '!=') {
+        return this.done(lhs.equalsTo(rhs).not())
+      }
+      if (ast.operator === '==') {
+        return this.done(lhs.equalsTo(rhs))
+      }
+      if (ast.operator === '<=') {
+        return this.done(lhs.order(rhs).isToZero('<='))
+      }
+      if (ast.operator === '<') {
+        return this.done(lhs.order(rhs).isToZero('<'))
+      }
+      if (ast.operator === '>=') {
+        return this.done(lhs.order(rhs).isToZero('>='))
+      }
+      if (ast.operator === '>') {
+        return this.done(lhs.order(rhs).isToZero('>'))
+      }
+      if (ast.operator === '%') {
+        return this.done(lhs.modulo(rhs))
+      }
+      if (ast.operator === '*') {
+        return this.done(lhs.times(rhs))
+      }
+      if (ast.operator === '**') {
+        return this.done(lhs.power(rhs))
+      }
+      if (ast.operator === '+') {
+        return this.done(lhs.plus(rhs))
+      }
+      if (ast.operator === '-') {
+        return this.done(lhs.minus(rhs))
+      }
+      if (ast.operator === '/') {
+        return this.done(lhs.over(rhs))
       }
 
       shouldNeverHappen(ast.operator)
     }
 
     if (ast.tag === 'unaryOperator') {
-      const operand = this.evalNode(ast.operand, table)
+      const slotName = 'operand'
+      const operand = frame.slots[slotName]
+      if (operand === undefined) {
+        return this.mkFrame(ast.operand, table, frame, slotName)
+      }
+
       if (ast.operator === '!') {
-        return operand.not()
+        return this.done(operand.not())
       }
       if (ast.operator === '+') {
         // We intentionally do <0 + operand> instead of just <operand>. This is due to type-checking: the latter will
         // evaluate to the operand as-is, making expression such as `+true` dynamically valid (which is not the desired
         // behavior)
-        return Value.num(0).plus(operand)
+        return this.done(Value.num(0).plus(operand))
       }
       if (ast.operator === '-') {
-        return operand.negate()
+        return this.done(operand.negate())
       }
 
       shouldNeverHappen(ast.operator)
     }
+
     if (ast.tag === 'ident') {
-      return table.lookup(ast.t.text)
+      return this.done(table.lookup(ast.t.text))
     }
 
     if (ast.tag === 'formalArg') {
       if (ast.defaultValue) {
-        return this.evalNode(ast.defaultValue, table)
+        const slotName = 'defaultValue'
+        const v = frame.slots[slotName]
+        if (v === undefined) {
+          return this.mkFrame(ast.defaultValue, table, frame, slotName)
+        }
+        return this.done(v)
       }
 
       // This error should not be reached. The call flow should evaluate a formalArg node only when if it has
@@ -322,43 +483,61 @@ export class Runtime {
     if (ast.tag === 'literal') {
       if (ast.type === 'bool') {
         // TODO(imaman): stricter checking of 'false'
-        return Value.bool(ast.t.text === 'true' ? true : false)
+        return this.done(Value.bool(ast.t.text === 'true' ? true : false))
       }
       if (ast.type === 'num') {
-        return Value.num(Number(ast.t.text))
+        return this.done(Value.num(Number(ast.t.text)))
       }
       if (ast.type === 'str') {
-        return Value.str(ast.t.text)
+        return this.done(Value.str(ast.t.text))
       }
-
       if (ast.type === 'undef') {
-        return Value.undef()
+        return this.done(Value.undef())
       }
       shouldNeverHappen(ast.type)
     }
 
     if (ast.tag === 'templateLiteral') {
+      for (let i = 0; i < ast.parts.length; ++i) {
+        const part = ast.parts[i]
+        if (part.tag !== 'expression') {
+          continue
+        }
+
+        const slotName = `expression:${i}`
+        if (frame.slots[slotName] === undefined) {
+          return this.mkFrame(part.expr, table, frame, slotName)
+        }
+      }
+
       const result = ast.parts
-        .map(part => {
+        .map((part, i) => {
           if (part.tag === 'string') {
             return part.value
           }
-          if (part.tag === 'expression') {
-            return this.evalNode(part.expr, table).toString()
-          }
-          shouldNeverHappen(part)
+          const v = this.readSlot(frame, `expression:${i}`)
+          return v.toString()
         })
         .join('')
-      return Value.str(result)
+      return this.done(Value.str(result))
     }
 
     if (ast.tag === 'arrayLiteral') {
+      for (let i = 0; i < ast.parts.length; ++i) {
+        const curr = ast.parts[i]
+        const slotName = `part:${i}`
+        if (frame.slots[slotName] === undefined) {
+          return this.mkFrame(curr.v, table, frame, slotName)
+        }
+      }
+
       const arr: Value[] = []
-      for (const curr of ast.parts) {
+      for (let i = 0; i < ast.parts.length; ++i) {
+        const curr = ast.parts[i]
+        const v = this.readSlot(frame, `part:${i}`)
         if (curr.tag === 'element') {
-          arr.push(this.evalNode(curr.v, table))
+          arr.push(v)
         } else if (curr.tag === 'spread') {
-          const v = this.evalNode(curr.v, table)
           if (v.isUndefined()) {
             continue
           }
@@ -368,66 +547,193 @@ export class Runtime {
         }
       }
 
-      return Value.arr(arr)
+      return this.done(Value.arr(arr))
     }
 
     if (ast.tag === 'objectLiteral') {
-      const entries: [string, Value][] = ast.parts.flatMap(at => {
-        if (at.tag === 'hardName') {
-          return [[at.k.t.text, this.evalNode(at.v, table)]]
+      for (let i = 0; i < ast.parts.length; ++i) {
+        const part = ast.parts[i]
+        if (part.tag === 'hardName' || part.tag === 'quotedString') {
+          const valueSlot = `part:${i}:v`
+          if (frame.slots[valueSlot] === undefined) {
+            return this.mkFrame(part.v, table, frame, valueSlot)
+          }
+          continue
         }
-        if (at.tag === 'quotedString') {
-          return [[at.k.t.text, this.evalNode(at.v, table)]]
+
+        if (part.tag === 'computedName') {
+          const keySlot = `part:${i}:k`
+          if (frame.slots[keySlot] === undefined) {
+            return this.mkFrame(part.k, table, frame, keySlot)
+          }
+          const valueSlot = `part:${i}:v`
+          if (frame.slots[valueSlot] === undefined) {
+            return this.mkFrame(part.v, table, frame, valueSlot)
+          }
+          continue
         }
-        if (at.tag === 'computedName') {
-          return [[this.evalNode(at.k, table).assertStr(), this.evalNode(at.v, table)]]
+
+        if (part.tag === 'spread') {
+          const objectSlot = `part:${i}:o`
+          if (frame.slots[objectSlot] === undefined) {
+            return this.mkFrame(part.o, table, frame, objectSlot)
+          }
+          continue
         }
-        if (at.tag === 'spread') {
-          const o = this.evalNode(at.o, table)
+
+        shouldNeverHappen(part)
+      }
+
+      const entries: [string, Value][] = ast.parts.flatMap((part, i) => {
+        if (part.tag === 'hardName') {
+          return [[part.k.t.text, this.readSlot(frame, `part:${i}:v`)]]
+        }
+        if (part.tag === 'quotedString') {
+          return [[part.k.t.text, this.readSlot(frame, `part:${i}:v`)]]
+        }
+        if (part.tag === 'computedName') {
+          const k = this.readSlot(frame, `part:${i}:k`)
+          const v = this.readSlot(frame, `part:${i}:v`)
+          return [[k.assertStr(), v]]
+        }
+        if (part.tag === 'spread') {
+          const o = this.readSlot(frame, `part:${i}:o`)
           if (o.isUndefined()) {
             return []
           }
-          return Object.entries(o.assertObj())
+          const spreadObject = o.assertObj()
+          const spreadEntries: [string, Value][] = []
+          for (const k of Object.keys(spreadObject)) {
+            spreadEntries.push([k, spreadObject[k]])
+          }
+          return spreadEntries
         }
 
-        shouldNeverHappen(at)
+        shouldNeverHappen(part)
       })
 
       // TODO(imaman): verify type of all keys (strings, maybe also numbers)
-      return Value.obj(Object.fromEntries(entries.filter(([_, v]) => !v.isUndefined())))
+      return this.done(Value.obj(Object.fromEntries(entries.filter(([_, v]) => !v.isUndefined()))))
     }
 
     if (ast.tag === 'lambda') {
-      return Value.lambda(ast, table)
+      return this.done(Value.lambda(ast, table))
     }
 
     if (ast.tag === 'functionCall') {
-      const argValues = ast.actualArgs.map(a => this.evalNode(a, table))
-      const callee = this.evalNode(ast.callee, table)
+      for (let i = 0; i < ast.actualArgs.length; ++i) {
+        const slotName = `arg:${i}`
+        if (frame.slots[slotName] === undefined) {
+          return this.mkFrame(ast.actualArgs[i], table, frame, slotName)
+        }
+      }
 
-      return this.call(callee, argValues)
+      const calleeSlot = 'callee'
+      const callee = frame.slots[calleeSlot]
+      if (callee === undefined) {
+        return this.mkFrame(ast.callee, table, frame, calleeSlot)
+      }
+
+      const argValues: Value[] = ast.actualArgs.map((_, i) => this.readSlot(frame, `arg:${i}`))
+      if (!callee.isLambda()) {
+        return this.done(this.call(callee, argValues))
+      }
+
+      let state = frame.state
+      if (!state) {
+        const lambda = callee.assertLambda()
+        const formals = lambda.ast.formalArgs
+        const requiredCount = formals.filter(f => !f.defaultValue).length
+        if (argValues.length < requiredCount) {
+          throw new Error(`Expected at least ${requiredCount} argument(s) but got ${argValues.length}`)
+        }
+        state = {
+          tag: 'lambda-call',
+          formals,
+          body: lambda.ast.body,
+          lambdaTable: lambda.table,
+          newTable: lambda.table,
+          actualValues: argValues,
+          nextFormalIndex: 0,
+        }
+        frame.state = state
+      }
+      if (state.tag !== 'lambda-call') {
+        return failMe<StepResult>(`Invalid state for lambda call frame`)
+      }
+
+      while (state.nextFormalIndex < state.formals.length) {
+        const i = state.nextFormalIndex
+        const formal = state.formals[i]
+        let actual = state.actualValues.at(i)
+        const useDefault = actual === undefined || (actual.isUndefined() && formal.defaultValue)
+
+        if (useDefault && formal.defaultValue) {
+          const slotName = `default:${i}`
+          const defaultValue = frame.slots[slotName]
+          if (defaultValue === undefined) {
+            return this.mkFrame(formal.defaultValue, state.lambdaTable, frame, slotName)
+          }
+          actual = defaultValue
+        }
+
+        if (actual === undefined) {
+          throw new Error(`A value must be passed to formal argument: ${show(formal.ident)}`)
+        }
+
+        state.newTable = new SymbolFrame(formal.ident.t.text, { destination: actual }, state.newTable, 'INTERNAL')
+        state.nextFormalIndex += 1
+      }
+
+      const bodySlot = 'body'
+      const bodyResult = frame.slots[bodySlot]
+      if (bodyResult === undefined) {
+        return this.mkFrame(state.body, state.newTable, frame, bodySlot)
+      }
+      return this.done(bodyResult)
     }
 
     if (ast.tag === 'if' || ast.tag === 'ternary') {
-      const c = this.evalNode(ast.condition, table)
-      return c.ifElse(
-        () => this.evalNode(ast.positive, table),
-        () => this.evalNode(ast.negative, table),
-      )
+      const conditionSlot = 'condition'
+      const c = frame.slots[conditionSlot]
+      if (c === undefined) {
+        return this.mkFrame(ast.condition, table, frame, conditionSlot)
+      }
+
+      const branch = c.assertBool() ? ast.positive : ast.negative
+      const branchSlot = c.assertBool() ? 'positive' : 'negative'
+      const cachedBranchValue = frame.slots[branchSlot]
+      if (cachedBranchValue === undefined) {
+        return this.mkFrame(branch, table, frame, branchSlot)
+      }
+      return this.done(cachedBranchValue)
     }
 
     if (ast.tag === 'dot') {
-      const rec = this.evalNode(ast.receiver, table)
+      const recSlot = 'receiver'
+      const rec = frame.slots[recSlot]
+      if (rec === undefined) {
+        return this.mkFrame(ast.receiver, table, frame, recSlot)
+      }
       if (rec === undefined || rec === null) {
         throw new Error(`Cannot access attribute .${ast.ident.t.text} of ${rec}`)
       }
-      return rec.access(ast.ident.t.text, (callee, args) => this.call(callee, args))
+      return this.done(rec.access(ast.ident.t.text, (callee, args) => this.call(callee, args)))
     }
 
     if (ast.tag === 'indexAccess') {
-      const rec = this.evalNode(ast.receiver, table)
-      const index = this.evalNode(ast.index, table)
-      return rec.access(index, (callee, args) => this.call(callee, args))
+      const recSlot = 'receiver'
+      const rec = frame.slots[recSlot]
+      if (rec === undefined) {
+        return this.mkFrame(ast.receiver, table, frame, recSlot)
+      }
+
+      const indexSlot = 'index'
+      const index = frame.slots[indexSlot]
+      if (index === undefined) {
+        return this.mkFrame(ast.index, table, frame, indexSlot)
+      }
+      return this.done(rec.access(index, (callee, args) => this.call(callee, args)))
     }
 
     shouldNeverHappen(ast)
@@ -447,7 +753,7 @@ export class Runtime {
         const useDefault = actual === undefined || (actual.isUndefined() && formal.defaultValue)
 
         if (useDefault && formal.defaultValue) {
-          actual = this.evalNode(formal.defaultValue, lambdaTable)
+          actual = this.evalLoop(formal.defaultValue, lambdaTable)
         }
 
         if (actual === undefined) {
@@ -456,7 +762,7 @@ export class Runtime {
 
         newTable = new SymbolFrame(formal.ident.t.text, { destination: actual }, newTable, 'INTERNAL')
       }
-      return this.evalNode(body, newTable)
+      return this.evalLoop(body, newTable)
     })
   }
 }
