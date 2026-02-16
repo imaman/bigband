@@ -7,6 +7,7 @@
   "author": "imaman",
   "main": "dist/src/index.js",
   "scripts": {
+    "benchmark": "node dist/src/benchmark.js",
     "build": "tsc -b",
     "test": "jest"
   },
