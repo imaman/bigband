@@ -1,5 +1,4 @@
-export function generateSchedulerHtml(): string {
-  return `<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -95,7 +94,7 @@ export function generateSchedulerHtml(): string {
 </head>
 <body>
   <div class="container">
-    <h1>Wake me up in\u2026</h1>
+    <h1>Wake me up in&#x2026;</h1>
     <input id="duration" type="text" placeholder="e.g. 5m, 30s" autofocus>
     <br>
     <button id="start" disabled>Start</button>
@@ -112,7 +111,7 @@ export function generateSchedulerHtml(): string {
 
     var btn = document.getElementById('start');
     var input = document.getElementById('duration');
-    var validPattern = /^(\\d+(?:\\.\\d+)?)(s|m)?$/;
+    var validPattern = /^(\d+(?:\.\d+)?)(s|m)?$/;
 
     function updateButton() {
       btn.disabled = !validPattern.test(input.value.trim());
@@ -134,5 +133,4 @@ export function generateSchedulerHtml(): string {
     });
   </script>
 </body>
-</html>`
-}
+</html>

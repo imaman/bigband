@@ -4,9 +4,9 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 import fs from 'fs'
 import path from 'path'
 
-import { generateNotificationHtml } from './notification-html'
-import { generateSchedulerHtml } from './scheduler-html'
 import { formatTargetTime, parseDuration } from './utils'
+
+const moduleRoot = path.join(__dirname, '..', '..')
 
 app.setName('wake-me-up')
 
@@ -33,7 +33,6 @@ function showNotification(delayMs: number): void {
     const now = new Date()
     const timeString = formatTargetTime(now)
     appendLog(`bell time=${timeString}`)
-    const html = generateNotificationHtml(timeString)
 
     const win = new BrowserWindow({
       width: 480,
@@ -49,7 +48,7 @@ function showNotification(delayMs: number): void {
       },
     })
 
-    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
+    win.loadFile(path.join(moduleRoot, 'notification.html'), { query: { time: timeString } })
     win.show()
     win.focus()
 
@@ -57,8 +56,6 @@ function showNotification(delayMs: number): void {
 }
 
 function showScheduler(): void {
-  const html = generateSchedulerHtml()
-
   const win = new BrowserWindow({
     width: 480,
     height: 340,
@@ -73,7 +70,7 @@ function showScheduler(): void {
     },
   })
 
-  win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
+  win.loadFile(path.join(moduleRoot, 'scheduler.html'))
   win.show()
   win.focus()
 

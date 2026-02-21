@@ -1,5 +1,4 @@
-export function generateNotificationHtml(timeString: string): string {
-  return `<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -82,13 +81,16 @@ export function generateNotificationHtml(timeString: string): string {
 </head>
 <body>
   <div class="container">
-    <div class="bell">\u{1F514}</div>
+    <div class="bell">&#x1F514;</div>
     <h1>Time's up!</h1>
-    <p class="time">It is ${timeString}</p>
+    <p class="time" id="time-display"></p>
     <button id="dismiss">Dismiss</button>
   </div>
 
   <script>
+    var timeString = new URLSearchParams(window.location.search).get('time');
+    document.getElementById('time-display').textContent = 'It is ' + timeString;
+
     // Repeating melody that gradually intensifies
     (function() {
       var ctx = new AudioContext();
@@ -140,5 +142,4 @@ export function generateNotificationHtml(timeString: string): string {
     });
   </script>
 </body>
-</html>`
-}
+</html>

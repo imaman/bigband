@@ -1,5 +1,3 @@
-import { generateNotificationHtml } from '../src/notification-html'
-import { generateSchedulerHtml } from '../src/scheduler-html'
 import { formatTargetTime, parseDuration, parseDelayMs } from '../src/utils'
 
 describe('wake-me-up', () => {
@@ -77,49 +75,5 @@ describe('wake-me-up', () => {
     })
   })
 
-  describe('generateNotificationHtml', () => {
-    test('returns HTML containing the time string', () => {
-      const html = generateNotificationHtml('14:30')
-      expect(html).toContain('14:30')
-    })
 
-    test('returns HTML with dismiss button', () => {
-      const html = generateNotificationHtml('09:00')
-      expect(html).toContain('id="dismiss"')
-    })
-
-    test("returns HTML with Time's up message", () => {
-      const html = generateNotificationHtml('09:00')
-      expect(html).toContain("Time's up!")
-    })
-
-    test('returns a complete HTML document', () => {
-      const html = generateNotificationHtml('12:00')
-      expect(html).toContain('<!DOCTYPE html>')
-      expect(html).toContain('</html>')
-    })
-  })
-
-  describe('generateSchedulerHtml', () => {
-    test('returns a complete HTML document', () => {
-      const html = generateSchedulerHtml()
-      expect(html).toContain('<!DOCTYPE html>')
-      expect(html).toContain('</html>')
-    })
-
-    test('returns HTML with duration input field', () => {
-      const html = generateSchedulerHtml()
-      expect(html).toContain('id="duration"')
-    })
-
-    test('returns HTML with start button', () => {
-      const html = generateSchedulerHtml()
-      expect(html).toContain('id="start"')
-    })
-
-    test('sends schedule IPC message on submit', () => {
-      const html = generateSchedulerHtml()
-      expect(html).toContain("ipcRenderer.send('schedule'")
-    })
-  })
 })
