@@ -1,0 +1,21 @@
+{
+  "name": "wake-me-up",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "author": "",
+  "main": "dist/src/index.js",
+  "bin": {
+    "wake-me-up": "dist/src/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "jest"
+  },
+  "jest": {
+    "preset": "../../jest.preset.js"
+  },
+  "dependencies": {
+    "electron": "^35.0.0"
+  }
+}
