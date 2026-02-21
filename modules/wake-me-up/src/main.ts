@@ -5,10 +5,12 @@ import fs from 'fs'
 import path from 'path'
 
 import { generateNotificationHtml } from './notification-html'
-import { formatTargetTime } from './wake-me-up'
+import { generateSchedulerHtml } from './scheduler-html'
+import { formatTargetTime, parseDuration } from './wake-me-up'
 
 app.setName('wake-me-up')
-const delayMs = Number(process.argv[process.argv.length - 1])
+
+let timerPending = false
 
 function appendLog(message: string): void {
   const logDir = path.join(app.getPath('logs'))
@@ -21,16 +23,13 @@ function appendLog(message: string): void {
   fs.appendFileSync(path.join(logDir, 'ledger.log'), `${date} ${time} ${message}\n`)
 }
 
-app.on('ready', () => {
-  // Hide dock icon on macOS so it stays invisible until notification
-  if (app.dock) {
-    app.dock.hide()
-  }
-
-  const wakeAt = formatTargetTime(new Date(Date.now() + delayMs))
-  appendLog(`scheduled wake-at=${wakeAt}`)
+function showNotification(delayMs: number): void {
+  timerPending = true
+  const fireAt = new Date(Date.now() + delayMs)
+  appendLog(`scheduled wake-at=${fireAt.toISOString()}`)
 
   setTimeout(() => {
+    timerPending = false
     const now = new Date()
     const timeString = formatTargetTime(now)
     appendLog(`bell time=${timeString}`)
@@ -58,8 +57,55 @@ app.on('ready', () => {
       app.quit()
     })
   }, delayMs)
+}
+
+function showScheduler(): void {
+  const html = generateSchedulerHtml()
+
+  const win = new BrowserWindow({
+    width: 480,
+    height: 340,
+    frame: false,
+    alwaysOnTop: true,
+    resizable: false,
+    skipTaskbar: false,
+    center: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  })
+
+  win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
+  win.show()
+  win.focus()
+
+  ipcMain.on('schedule', (_event: unknown, raw: string) => {
+    const delayMs = parseDuration(raw)
+    win.close()
+    showNotification(delayMs)
+  })
+}
+
+const lastArg = process.argv[process.argv.length - 1]
+const delayMs = Number(lastArg)
+const isTimerMode = Number.isFinite(delayMs) && delayMs > 0
+
+app.on('ready', () => {
+  // Hide dock icon on macOS so it stays invisible until notification
+  if (app.dock) {
+    app.dock.hide()
+  }
+
+  if (isTimerMode) {
+    showNotification(delayMs)
+  } else {
+    showScheduler()
+  }
 })
 
 app.on('window-all-closed', () => {
-  app.quit()
+  if (!timerPending) {
+    app.quit()
+  }
 })

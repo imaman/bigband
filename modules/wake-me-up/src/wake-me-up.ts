@@ -1,9 +1,4 @@
-export function parseDelayMs(argv: readonly string[]): number {
-  const raw = argv[2]
-  if (raw === undefined) {
-    throw new Error('Usage: wake-me-up <duration> (e.g., 13, 13m, 30s)')
-  }
-
+export function parseDuration(raw: string): number {
   const match = raw.match(/^(\d+(?:\.\d+)?)(s|m)?$/)
   if (!match) {
     throw new Error(`Invalid duration: ${raw}`)
@@ -16,6 +11,15 @@ export function parseDelayMs(argv: readonly string[]): number {
 
   const unit = match[2] ?? 'm'
   return unit === 's' ? value * 1_000 : value * 60_000
+}
+
+export function parseDelayMs(argv: readonly string[]): number {
+  const raw = argv[2]
+  if (raw === undefined) {
+    throw new Error('Usage: wake-me-up <duration> (e.g., 13, 13m, 30s)')
+  }
+
+  return parseDuration(raw)
 }
 
 export function formatTargetTime(date: Date): string {

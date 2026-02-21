@@ -89,28 +89,54 @@ export function generateNotificationHtml(timeString: string): string {
   </div>
 
   <script>
-    // Audio chime using Web Audio API
+    // Repeating melody that gradually intensifies
     (function() {
       var ctx = new AudioContext();
-      var notes = [523.25, 659.25, 783.99]; // C5, E5, G5
-      notes.forEach(function(freq, i) {
-        var osc = ctx.createOscillator();
-        var gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.2);
-        gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + i * 0.2 + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.2 + 0.8);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime + i * 0.2);
-        osc.stop(ctx.currentTime + i * 0.2 + 0.8);
-      });
+      var melody = [523.25, 659.25, 783.99, 659.25, 698.46, 783.99, 880.00, 783.99, 698.46, 659.25, 587.33, 523.25]; // C5, E5, G5, E5, F5, G5, A5, G5, F5, E5, D5, C5
+      var noteDuration = 0.3;
+      var melodyLength = melody.length * noteDuration;
+      var repeatInterval = melodyLength + 0.8;
+      var maxVolume = 0.4;
+      var startVolume = 0.05;
+      var rampUpRepeats = 10;
+      var dismissed = false;
+
+      function playMelody(repetition) {
+        if (dismissed) return;
+        var volume = Math.min(startVolume + (maxVolume - startVolume) * (repetition / rampUpRepeats), maxVolume);
+        var offset = ctx.currentTime;
+        melody.forEach(function(freq, i) {
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          var noteStart = offset + i * noteDuration;
+          gain.gain.setValueAtTime(0, noteStart);
+          gain.gain.linearRampToValueAtTime(volume, noteStart + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, noteStart + noteDuration - 0.02);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(noteStart);
+          osc.stop(noteStart + noteDuration);
+        });
+        setTimeout(function() { playMelody(repetition + 1); }, repeatInterval * 1000);
+      }
+
+      playMelody(0);
+      window.__dismissAudio = function() { dismissed = true; };
     })();
 
-    document.getElementById('dismiss').addEventListener('click', function() {
+    function dismiss() {
+      if (window.__dismissAudio) window.__dismissAudio();
       var electron = require('electron');
       electron.ipcRenderer.send('dismiss');
+    }
+
+    document.getElementById('dismiss').addEventListener('click', dismiss);
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        dismiss();
+      }
     });
   </script>
 </body>
