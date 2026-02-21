@@ -10,7 +10,9 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "test": "jest"
+    "test": "jest",
+    "install-desktop": "bash install-desktop.sh",
+    "uninstall-desktop": "rm -f ~/.local/share/applications/wake-me-up.desktop"
   },
   "jest": {
     "preset": "../../jest.preset.js"
