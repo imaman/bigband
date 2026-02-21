@@ -1,6 +1,6 @@
 import { generateNotificationHtml } from '../src/notification-html'
 import { generateSchedulerHtml } from '../src/scheduler-html'
-import { formatTargetTime, parseDuration, parseDelayMs } from '../src/wake-me-up'
+import { formatTargetTime, parseDuration, parseDelayMs } from '../src/utils'
 
 describe('wake-me-up', () => {
   describe('parseDuration', () => {

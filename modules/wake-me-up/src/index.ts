@@ -1,1 +1,1 @@
-export * from './wake-me-up'
+export * from './utils'

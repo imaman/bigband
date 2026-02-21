@@ -1,29 +1,29 @@
-export function parseDuration(raw: string): number {
-  const match = raw.match(/^(\d+(?:\.\d+)?)(s|m)?$/)
-  if (!match) {
-    throw new Error(`Invalid duration: ${raw}`)
-  }
+#!/usr/bin/env node
 
-  const value = Number(match[1])
-  if (value <= 0) {
-    throw new Error(`Expected a positive duration, got: ${raw}`)
-  }
+import { spawn } from 'child_process'
+import path from 'path'
 
-  const unit = match[2] ?? 'm'
-  return unit === 's' ? value * 1_000 : value * 60_000
-}
+import { formatTargetTime, parseDelayMs } from './utils'
 
-export function parseDelayMs(argv: readonly string[]): number {
-  const raw = argv[2]
-  if (raw === undefined) {
-    throw new Error('Usage: wake-me-up <duration> (e.g., 13, 13m, 30s)')
-  }
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const electronPath: string = require('electron')
+const mainScript = path.join(__dirname, 'main.js')
 
-  return parseDuration(raw)
-}
+if (process.argv[2] === undefined) {
+  const child = spawn(electronPath, ['--no-sandbox', mainScript], {
+    detached: true,
+    stdio: 'ignore',
+  })
+  child.unref()
+} else {
+  const delayMs = parseDelayMs(process.argv)
+  const targetTime = new Date(Date.now() + delayMs)
 
-export function formatTargetTime(date: Date): string {
-  const hours = String(date.getHours()).padStart(2, '0')
-  const mins = String(date.getMinutes()).padStart(2, '0')
-  return `${hours}:${mins}`
+  process.stdout.write(`will wake you up at ${formatTargetTime(targetTime)}\n`)
+
+  const child = spawn(electronPath, ['--no-sandbox', mainScript, String(delayMs)], {
+    detached: true,
+    stdio: 'ignore',
+  })
+  child.unref()
 }

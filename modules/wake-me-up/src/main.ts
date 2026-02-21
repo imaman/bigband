@@ -6,7 +6,7 @@ import path from 'path'
 
 import { generateNotificationHtml } from './notification-html'
 import { generateSchedulerHtml } from './scheduler-html'
-import { formatTargetTime, parseDuration } from './wake-me-up'
+import { formatTargetTime, parseDuration } from './utils'
 
 app.setName('wake-me-up')
 

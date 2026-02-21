@@ -6,7 +6,7 @@
   "author": "",
   "main": "dist/src/index.js",
   "bin": {
-    "wake-me-up": "dist/src/cli.js"
+    "wake-me-up": "dist/src/wake-me-up.js"
   },
   "scripts": {
     "build": "tsc -b",
