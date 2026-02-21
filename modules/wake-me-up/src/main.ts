@@ -53,9 +53,6 @@ function showNotification(delayMs: number): void {
     win.show()
     win.focus()
 
-    ipcMain.on('dismiss', () => {
-      app.quit()
-    })
   }, delayMs)
 }
 
@@ -90,6 +87,10 @@ function showScheduler(): void {
 const lastArg = process.argv[process.argv.length - 1]
 const delayMs = Number(lastArg)
 const isTimerMode = Number.isFinite(delayMs) && delayMs > 0
+
+ipcMain.on('dismiss', () => {
+  app.quit()
+})
 
 app.on('ready', () => {
   // Hide dock icon on macOS so it stays invisible until notification

@@ -82,9 +82,14 @@ export function generateSchedulerHtml(): string {
       margin-top: 20px;
     }
 
-    button:hover {
+    button:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.9);
       border-color: rgba(150, 120, 200, 0.6);
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: default;
     }
   </style>
 </head>
@@ -93,7 +98,7 @@ export function generateSchedulerHtml(): string {
     <h1>Wake me up in\u2026</h1>
     <input id="duration" type="text" placeholder="e.g. 5m, 30s" autofocus>
     <br>
-    <button id="start">Start</button>
+    <button id="start" disabled>Start</button>
   </div>
 
   <script>
@@ -105,8 +110,24 @@ export function generateSchedulerHtml(): string {
       }
     }
 
-    document.getElementById('start').addEventListener('click', submit);
-    document.getElementById('duration').addEventListener('keydown', function(e) {
+    var btn = document.getElementById('start');
+    var input = document.getElementById('duration');
+    var validPattern = /^(\\d+(?:\\.\\d+)?)(s|m)?$/;
+
+    function updateButton() {
+      btn.disabled = !validPattern.test(input.value.trim());
+    }
+
+    input.addEventListener('input', updateButton);
+
+    btn.addEventListener('click', submit);
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        var electron = require('electron');
+        electron.ipcRenderer.send('dismiss');
+      }
+    });
+    input.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
         submit();
       }
