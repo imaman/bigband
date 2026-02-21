@@ -14,7 +14,7 @@ process.stdout.write(`will wake you up at ${formatTargetTime(targetTime)}\n`)
 const electronPath: string = require('electron')
 const mainScript = path.join(__dirname, 'main.js')
 
-const child = spawn(electronPath, [mainScript, String(delayMs)], {
+const child = spawn(electronPath, ['--no-sandbox', mainScript, String(delayMs)], {
   detached: true,
   stdio: 'ignore',
 })
