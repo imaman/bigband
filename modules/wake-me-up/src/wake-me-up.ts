@@ -17,7 +17,8 @@ if (process.argv[2] === 'list') {
     const d = String(date.getDate()).padStart(2, '0')
     const h = String(date.getHours()).padStart(2, '0')
     const mi = String(date.getMinutes()).padStart(2, '0')
-    process.stdout.write(`${y}-${mo}-${d} ${h}:${mi}\n`)
+    const s = String(date.getSeconds()).padStart(2, '0')
+    process.stdout.write(`${y}-${mo}-${d} ${h}:${mi}:${s}\n`)
   }
 } else if (process.argv[2] === undefined) {
   const child = spawn(electronPath, ['--no-sandbox', mainScript], {
