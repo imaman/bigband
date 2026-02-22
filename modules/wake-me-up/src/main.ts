@@ -4,7 +4,7 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 import fs from 'fs'
 import path from 'path'
 
-import { formatTargetTime, parseDuration } from './utils'
+import { formatTargetTime, parseDuration, removeAlarmFile, removeExpiredAlarms } from './utils'
 
 const moduleRoot = path.join(__dirname, '..', '..')
 
@@ -30,6 +30,7 @@ function showNotification(delayMs: number): void {
 
   setTimeout(() => {
     timerPending = false
+    removeAlarmFile(fireAt)
     const now = new Date()
     const timeString = formatTargetTime(now)
     appendLog(`bell time=${timeString}`)
@@ -51,7 +52,6 @@ function showNotification(delayMs: number): void {
     win.loadFile(path.join(moduleRoot, 'notification.html'), { query: { time: timeString } })
     win.show()
     win.focus()
-
   }, delayMs)
 }
 
@@ -90,6 +90,8 @@ ipcMain.on('dismiss', () => {
 })
 
 app.on('ready', () => {
+  removeExpiredAlarms()
+
   // Hide dock icon on macOS so it stays invisible until notification
   if (app.dock) {
     app.dock.hide()
