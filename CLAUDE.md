@@ -68,6 +68,10 @@ AWS CloudFormation infrastructure-as-code abstractions:
 - `Instrument`: Base abstraction for AWS resources (Lambda, S3Bucket, Role)
 - `Section`: Configuration context for resource resolution
 
+## Linting
+
+Linting runs automatically via a pre-commit hook. Do NOT run `yarn lint` or `yarn lint:fix` after each change. Lint-level fixes (unused imports, import sorting, etc.) can be safely deferred until commit time — the hook will catch them and `yarn lint:fix` can be used to auto-fix before retrying the commit.
+
 ## Code Conventions
 
 - ESLint enforces `no-console`, `no-process-env`, `no-process-exit` - use proper abstractions
