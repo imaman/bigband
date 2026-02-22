@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 import { spawn } from 'child_process'
+import electron from 'electron'
 import path from 'path'
 
 import { formatTargetTime, listPendingAlarms, parseDelayMs, writeAlarmFile } from './utils'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const electronPath: string = require('electron')
+const electronPath: string = String(electron)
 const mainScript = path.join(__dirname, 'main.js')
 
 if (process.argv[2] === 'list') {
