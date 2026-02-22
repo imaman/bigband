@@ -30,7 +30,7 @@ export async function exportToMp4(
       height: HEIGHT,
     },
     audio: {
-      codec: 'aac',
+      codec: 'opus',
       numberOfChannels: audioBuffer.numberOfChannels,
       sampleRate: audioBuffer.sampleRate,
     },
@@ -96,7 +96,7 @@ export async function exportToMp4(
   })
 
   audioEncoder.configure({
-    codec: 'mp4a.40.2', // AAC-LC
+    codec: 'opus', // Chrome supports Opus encoding (not AAC)
     numberOfChannels: audioBuffer.numberOfChannels,
     sampleRate: audioBuffer.sampleRate,
     bitrate: 128_000,
