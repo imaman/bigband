@@ -1,6 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { app, BrowserWindow, ipcMain, Tray, Menu } = require('electron')
-
+import { app, BrowserWindow, ipcMain, Menu, Tray } from 'electron'
 import fs from 'fs'
 import path from 'path'
 
@@ -12,8 +10,7 @@ const iconPath = path.join(moduleRoot, 'icon.png')
 app.setName('wake-me-up')
 
 let timerPending = false
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let tray: any = null
+let tray: Tray | null = null
 
 function createTray(fireAt: Date): void {
   const timeLabel = formatTargetTime(fireAt)
