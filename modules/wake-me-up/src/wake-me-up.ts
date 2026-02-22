@@ -12,8 +12,10 @@ const mainScript = path.join(__dirname, 'main.js')
 if (process.argv[2] === 'list') {
   const alarms = listPendingAlarms()
   for (const date of alarms) {
+    // format the timestamps
     const y = date.getFullYear()
-    const mo = String(date.getMonth() + 1).padStart(2, '0')
+    const mo = String(
+      date.getMonth() + 1).padStart(2, '0')
     const d = String(date.getDate()).padStart(2, '0')
     const h = String(date.getHours()).padStart(2, '0')
     const mi = String(date.getMinutes()).padStart(2, '0')
