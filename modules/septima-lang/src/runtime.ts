@@ -1,6 +1,16 @@
 import crypto from 'crypto'
 
-import { AstNode, show, Unit, UnitId } from './ast-node'
+import {
+  ArrayLiteralPart,
+  AstNode,
+  FormalArg,
+  Let,
+  ObjectLiteralPart,
+  show,
+  TemplatePart,
+  Unit,
+  UnitId,
+} from './ast-node'
 import { extractMessage } from './extract-message'
 import { failMe } from './fail-me'
 import { shouldNeverHappen } from './should-never-happen'
@@ -71,6 +81,63 @@ class EmptySymbolTable implements SymbolTable {
 export type Verbosity = 'quiet' | 'trace'
 export type Outputter = (u: unknown) => void
 
+// Continuation types for the iterative evaluator
+type Cont =
+  | { tag: 'popTrace'; ast: AstNode }
+  | { tag: 'binaryRhs'; operator: string; rhs: AstNode; table: SymbolTable }
+  | { tag: 'binaryApply'; operator: string; lhs: Value }
+  | { tag: 'validateBool'; lhs: Value; operator: '||' | '&&' }
+  | { tag: 'unaryApply'; operator: '+' | '-' | '!' }
+  | { tag: 'ifBranch'; positive: AstNode; negative: AstNode; table: SymbolTable }
+  | { tag: 'funcCollectArgs'; collectedArgs: Value[]; remainingArgs: AstNode[]; table: SymbolTable; callee: AstNode }
+  | { tag: 'funcEvalCallee'; args: Value[]; table: SymbolTable; callee: AstNode }
+  | { tag: 'funcApply'; args: Value[] }
+  | { tag: 'dotAccess'; ident: string }
+  | { tag: 'indexEvalIndex'; index: AstNode; table: SymbolTable }
+  | { tag: 'indexApply'; receiver: Value }
+  | { tag: 'templateCollect'; collectedParts: string[]; remainingParts: TemplatePart[]; table: SymbolTable }
+  | {
+      tag: 'arrayCollect'
+      collectedElements: Value[]
+      isSpread: boolean
+      remainingParts: ArrayLiteralPart[]
+      table: SymbolTable
+    }
+  | {
+      tag: 'objCollect'
+      collectedEntries: [string, Value][]
+      remainingParts: ObjectLiteralPart[]
+      table: SymbolTable
+    }
+  | {
+      tag: 'objComputedValue'
+      key: string
+      collectedEntries: [string, Value][]
+      remainingParts: ObjectLiteralPart[]
+      table: SymbolTable
+    }
+  | {
+      tag: 'objComputedKey'
+      valueAst: AstNode
+      collectedEntries: [string, Value][]
+      remainingParts: ObjectLiteralPart[]
+      table: SymbolTable
+    }
+  | {
+      tag: 'topLevelDef'
+      definitions: Let[]
+      defIndex: number
+      placeholder: Placeholder
+      table: SymbolTable
+      computation: AstNode | undefined
+      throwToken: boolean
+      unitId: UnitId
+    }
+  | { tag: 'topLevelComputation'; throwToken: boolean }
+  | { tag: 'throwValue' }
+
+type StepResult = { tag: 'value'; val: Value } | { tag: 'eval'; ast: AstNode; table: SymbolTable }
+
 export class Runtime {
   private stack: Stack.T = undefined
   constructor(
@@ -119,7 +186,7 @@ export class Runtime {
 
   compute() {
     try {
-      const value = this.evalNode(this.root, this.buildInitialSymbolTable(true))
+      const value = this.evalLoop(this.root, this.buildInitialSymbolTable(true))
       return { value }
     } catch (e) {
       const trace: AstNode[] = []
@@ -133,20 +200,6 @@ export class Runtime {
         stack: (e as { stack?: string[] }).stack,
       }
     }
-  }
-
-  private evalNode(ast: AstNode, table: SymbolTable): Value {
-    this.stack = Stack.push(ast, this.stack)
-    const ret = this.evalNodeImpl(ast, table)
-    switchOn(this.verbosity, {
-      quiet: () => {},
-      trace: () => {
-        // eslint-disable-next-line no-console
-        console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
-      },
-    })
-    this.stack = Stack.pop(this.stack)
-    return ret
   }
 
   private importDefinitions(importerAsPathFromSourceRoot: UnitId, relativePathFromImporter: string): Value {
@@ -189,265 +242,621 @@ export class Runtime {
           computation: { tag: 'export*', unitId: importee.unitId },
         },
       }
-      return this.evalNode(exporStarUnit, this.buildInitialSymbolTable(false))
+      return this.evalLoop(exporStarUnit, this.buildInitialSymbolTable(false))
     }
 
     shouldNeverHappen(exp)
   }
 
-  private evalNodeImpl(ast: AstNode, table: SymbolTable): Value {
+  /**
+   * Iterative evaluation loop. Replaces the recursive evalNode/evalNodeImpl.
+   * Uses an explicit continuation stack to avoid JS call stack overflow on deep recursion.
+   */
+  private evalLoop(initialAst: AstNode, initialTable: SymbolTable): Value {
+    const contStack: Cont[] = []
+    let mode: 'eval' | 'apply' = 'eval'
+    let currentAst: AstNode = initialAst
+    let currentTable: SymbolTable = initialTable
+    let currentValue: Value = Value.undef() // placeholder, only meaningful in 'apply' mode
+
+    for (;;) {
+      if (mode === 'eval') {
+        // Push trace
+        this.stack = Stack.push(currentAst, this.stack)
+        contStack.push({ tag: 'popTrace', ast: currentAst })
+
+        const result = this.step(currentAst, currentTable, contStack)
+        if (result.tag === 'value') {
+          mode = 'apply'
+          currentValue = result.val
+        } else {
+          // result.tag === 'eval' — continuations already pushed by step()
+          currentAst = result.ast
+          currentTable = result.table
+          // stay in 'eval' mode
+        }
+      } else {
+        // mode === 'apply'
+        if (contStack.length === 0) {
+          return currentValue
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const cont = contStack.pop()!
+        const result = this.applyCont(cont, currentValue, contStack)
+        if (result.tag === 'value') {
+          currentValue = result.val
+          // stay in 'apply' mode
+        } else {
+          // result.tag === 'eval'
+          mode = 'eval'
+          currentAst = result.ast
+          currentTable = result.table
+        }
+      }
+    }
+  }
+
+  /**
+   * step() dispatches on AST tag. Either returns an immediate value or pushes continuation(s)
+   * and returns a sub-evaluation request.
+   */
+  private step(ast: AstNode, table: SymbolTable, contStack: Cont[]): StepResult {
     if (ast.tag === 'unit') {
       let newTable = table
       for (const imp of ast.imports) {
         const o = this.importDefinitions(ast.unitId, imp.pathToImportFrom.text)
         newTable = new SymbolFrame(imp.ident.t.text, { destination: o }, newTable, 'INTERNAL')
       }
-      return this.evalNode(ast.expression, newTable)
+      // Tail eval the expression
+      return { tag: 'eval', ast: ast.expression, table: newTable }
     }
+
     if (ast.tag === 'topLevelExpression') {
-      let newTable = table
-      for (const def of ast.definitions) {
-        const name = def.ident.t.text
-        const placeholder: Placeholder = { destination: undefined }
-        newTable = new SymbolFrame(name, placeholder, newTable, def.isExported ? 'EXPORTED' : 'INTERNAL')
-        const v = this.evalNode(def.value, newTable)
-        placeholder.destination = v
+      if (ast.definitions.length === 0) {
+        if (!ast.computation) {
+          return { tag: 'value', val: Value.str('') }
+        }
+        if (ast.throwToken) {
+          contStack.push({ tag: 'topLevelComputation', throwToken: true })
+        }
+        return { tag: 'eval', ast: ast.computation, table }
       }
 
-      if (!ast.computation) {
-        return Value.str('')
-      }
-      const c = this.evalNode(ast.computation, newTable)
-      if (ast.throwToken) {
-        throw new Error(JSON.stringify(c))
-      }
-
-      return c
+      const def = ast.definitions[0]
+      const placeholder: Placeholder = { destination: undefined }
+      const newTable = new SymbolFrame(def.ident.t.text, placeholder, table, def.isExported ? 'EXPORTED' : 'INTERNAL')
+      contStack.push({
+        tag: 'topLevelDef',
+        definitions: ast.definitions,
+        defIndex: 0,
+        placeholder,
+        table: newTable,
+        computation: ast.computation,
+        throwToken: !!ast.throwToken,
+        unitId: ast.unitId,
+      })
+      return { tag: 'eval', ast: def.value, table: newTable }
     }
 
     if (ast.tag === 'export*') {
-      return Value.obj(table.exportValue())
+      return { tag: 'value', val: Value.obj(table.exportValue()) }
     }
 
     if (ast.tag === 'binaryOperator') {
-      const lhs = this.evalNode(ast.lhs, table)
-      if (ast.operator === '||') {
-        return lhs.or(() => this.evalNode(ast.rhs, table))
-      }
-      if (ast.operator === '&&') {
-        return lhs.and(() => this.evalNode(ast.rhs, table))
-      }
-
-      const rhs = this.evalNode(ast.rhs, table)
-      if (ast.operator === '!=') {
-        return lhs.equalsTo(rhs).not()
-      }
-      if (ast.operator === '==') {
-        return lhs.equalsTo(rhs)
-      }
-
-      if (ast.operator === '<=') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('<=')
-      }
-      if (ast.operator === '<') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('<')
-      }
-      if (ast.operator === '>=') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('>=')
-      }
-      if (ast.operator === '>') {
-        const comp = lhs.order(rhs)
-        return comp.isToZero('>')
-      }
-      if (ast.operator === '%') {
-        return lhs.modulo(rhs)
-      }
-      if (ast.operator === '*') {
-        return lhs.times(rhs)
-      }
-      if (ast.operator === '**') {
-        return lhs.power(rhs)
-      }
-      if (ast.operator === '+') {
-        return lhs.plus(rhs)
-      }
-      if (ast.operator === '-') {
-        return lhs.minus(rhs)
-      }
-      if (ast.operator === '/') {
-        return lhs.over(rhs)
-      }
-
-      if (ast.operator === '??') {
-        return lhs.coalesce(() => this.evalNode(ast.rhs, table))
-      }
-
-      shouldNeverHappen(ast.operator)
+      contStack.push({ tag: 'binaryRhs', operator: ast.operator, rhs: ast.rhs, table })
+      return { tag: 'eval', ast: ast.lhs, table }
     }
 
     if (ast.tag === 'unaryOperator') {
-      const operand = this.evalNode(ast.operand, table)
-      if (ast.operator === '!') {
-        return operand.not()
-      }
-      if (ast.operator === '+') {
-        // We intentionally do <0 + operand> instead of just <operand>. This is due to type-checking: the latter will
-        // evaluate to the operand as-is, making expression such as `+true` dynamically valid (which is not the desired
-        // behavior)
-        return Value.num(0).plus(operand)
-      }
-      if (ast.operator === '-') {
-        return operand.negate()
-      }
-
-      shouldNeverHappen(ast.operator)
+      contStack.push({ tag: 'unaryApply', operator: ast.operator })
+      return { tag: 'eval', ast: ast.operand, table }
     }
+
     if (ast.tag === 'ident') {
-      return table.lookup(ast.t.text)
+      return { tag: 'value', val: table.lookup(ast.t.text) }
     }
 
     if (ast.tag === 'formalArg') {
       if (ast.defaultValue) {
-        return this.evalNode(ast.defaultValue, table)
+        return { tag: 'eval', ast: ast.defaultValue, table }
       }
-
-      // This error should not be reached. The call flow should evaluate a formalArg node only when if it has
-      // a default value sud-node.
       throw new Error(`no default value for ${ast}`)
     }
 
     if (ast.tag === 'literal') {
       if (ast.type === 'bool') {
-        // TODO(imaman): stricter checking of 'false'
-        return Value.bool(ast.t.text === 'true' ? true : false)
+        return { tag: 'value', val: Value.bool(ast.t.text === 'true' ? true : false) }
       }
       if (ast.type === 'num') {
-        return Value.num(Number(ast.t.text))
+        return { tag: 'value', val: Value.num(Number(ast.t.text)) }
       }
       if (ast.type === 'str') {
-        return Value.str(ast.t.text)
+        return { tag: 'value', val: Value.str(ast.t.text) }
       }
-
       if (ast.type === 'undef') {
-        return Value.undef()
+        return { tag: 'value', val: Value.undef() }
       }
       shouldNeverHappen(ast.type)
     }
 
     if (ast.tag === 'templateLiteral') {
-      const result = ast.parts
-        .map(part => {
-          if (part.tag === 'string') {
-            return part.value
-          }
-          if (part.tag === 'expression') {
-            return this.evalNode(part.expr, table).toString()
-          }
-          shouldNeverHappen(part)
-        })
-        .join('')
-      return Value.str(result)
+      if (ast.parts.length === 0) {
+        return { tag: 'value', val: Value.str('') }
+      }
+      const first = ast.parts[0]
+      const remaining = ast.parts.slice(1)
+      if (first.tag === 'string') {
+        // Start collecting from string part
+        if (remaining.length === 0) {
+          return { tag: 'value', val: Value.str(first.value) }
+        }
+        return this.stepTemplateCollect([first.value], remaining, table, contStack)
+      }
+      // first.tag === 'expression'
+      contStack.push({ tag: 'templateCollect', collectedParts: [], remainingParts: remaining, table })
+      return { tag: 'eval', ast: first.expr, table }
     }
 
     if (ast.tag === 'arrayLiteral') {
-      const arr: Value[] = []
-      for (const curr of ast.parts) {
-        if (curr.tag === 'element') {
-          arr.push(this.evalNode(curr.v, table))
-        } else if (curr.tag === 'spread') {
-          const v = this.evalNode(curr.v, table)
-          if (v.isUndefined()) {
-            continue
-          }
-          arr.push(...v.assertArr())
-        } else {
-          shouldNeverHappen(curr)
-        }
+      if (ast.parts.length === 0) {
+        return { tag: 'value', val: Value.arr([]) }
       }
-
-      return Value.arr(arr)
+      return this.stepArrayCollect([], ast.parts, table, contStack)
     }
 
     if (ast.tag === 'objectLiteral') {
-      const entries: [string, Value][] = ast.parts.flatMap(at => {
-        if (at.tag === 'hardName') {
-          return [[at.k.t.text, this.evalNode(at.v, table)]]
-        }
-        if (at.tag === 'quotedString') {
-          return [[at.k.t.text, this.evalNode(at.v, table)]]
-        }
-        if (at.tag === 'computedName') {
-          return [[this.evalNode(at.k, table).assertStr(), this.evalNode(at.v, table)]]
-        }
-        if (at.tag === 'spread') {
-          const o = this.evalNode(at.o, table)
-          if (o.isUndefined()) {
-            return []
-          }
-          return Object.entries(o.assertObj())
-        }
-
-        shouldNeverHappen(at)
-      })
-
-      // TODO(imaman): verify type of all keys (strings, maybe also numbers)
-      return Value.obj(Object.fromEntries(entries.filter(([_, v]) => !v.isUndefined())))
+      if (ast.parts.length === 0) {
+        return { tag: 'value', val: Value.obj({}) }
+      }
+      return this.stepObjCollect([], ast.parts, table, contStack)
     }
 
     if (ast.tag === 'lambda') {
-      return Value.lambda(ast, table)
+      return { tag: 'value', val: Value.lambda(ast, table) }
     }
 
     if (ast.tag === 'functionCall') {
-      const argValues = ast.actualArgs.map(a => this.evalNode(a, table))
-      const callee = this.evalNode(ast.callee, table)
-
-      return this.call(callee, argValues)
+      if (ast.actualArgs.length === 0) {
+        contStack.push({ tag: 'funcEvalCallee', args: [], table, callee: ast.callee })
+        return { tag: 'eval', ast: ast.callee, table }
+      }
+      // Evaluate first arg
+      contStack.push({
+        tag: 'funcCollectArgs',
+        collectedArgs: [],
+        remainingArgs: ast.actualArgs.slice(1),
+        table,
+        callee: ast.callee,
+      })
+      return { tag: 'eval', ast: ast.actualArgs[0], table }
     }
 
     if (ast.tag === 'if' || ast.tag === 'ternary') {
-      const c = this.evalNode(ast.condition, table)
-      return c.ifElse(
-        () => this.evalNode(ast.positive, table),
-        () => this.evalNode(ast.negative, table),
-      )
+      contStack.push({ tag: 'ifBranch', positive: ast.positive, negative: ast.negative, table })
+      return { tag: 'eval', ast: ast.condition, table }
     }
 
     if (ast.tag === 'dot') {
-      const rec = this.evalNode(ast.receiver, table)
-      if (rec === undefined || rec === null) {
-        throw new Error(`Cannot access attribute .${ast.ident.t.text} of ${rec}`)
-      }
-      return rec.access(ast.ident.t.text, (callee, args) => this.call(callee, args))
+      contStack.push({ tag: 'dotAccess', ident: ast.ident.t.text })
+      return { tag: 'eval', ast: ast.receiver, table }
     }
 
     if (ast.tag === 'indexAccess') {
-      const rec = this.evalNode(ast.receiver, table)
-      const index = this.evalNode(ast.index, table)
-      return rec.access(index, (callee, args) => this.call(callee, args))
+      contStack.push({ tag: 'indexEvalIndex', index: ast.index, table })
+      return { tag: 'eval', ast: ast.receiver, table }
     }
 
     shouldNeverHappen(ast)
   }
 
-  call(callee: Value, actualValues: Value[]) {
-    return callee.call(actualValues, (formals, body, lambdaTable: SymbolTable) => {
+  /**
+   * Helper to start evaluating the next array literal element
+   */
+  private stepArrayCollect(
+    collected: Value[],
+    remaining: ArrayLiteralPart[],
+    table: SymbolTable,
+    contStack: Cont[],
+  ): StepResult {
+    const part = remaining[0]
+    const rest = remaining.slice(1)
+    if (part.tag === 'element') {
+      contStack.push({
+        tag: 'arrayCollect',
+        collectedElements: collected,
+        isSpread: false,
+        remainingParts: rest,
+        table,
+      })
+      return { tag: 'eval', ast: part.v, table }
+    }
+    if (part.tag === 'spread') {
+      contStack.push({ tag: 'arrayCollect', collectedElements: collected, isSpread: true, remainingParts: rest, table })
+      return { tag: 'eval', ast: part.v, table }
+    }
+    shouldNeverHappen(part)
+  }
+
+  /**
+   * Helper to start evaluating the next template literal part
+   */
+  private stepTemplateCollect(
+    collected: string[],
+    remaining: TemplatePart[],
+    table: SymbolTable,
+    contStack: Cont[],
+  ): StepResult {
+    const part = remaining[0]
+    const rest = remaining.slice(1)
+    if (part.tag === 'string') {
+      collected.push(part.value)
+      if (rest.length === 0) {
+        return { tag: 'value', val: Value.str(collected.join('')) }
+      }
+      return this.stepTemplateCollect(collected, rest, table, contStack)
+    }
+    // part.tag === 'expression'
+    contStack.push({ tag: 'templateCollect', collectedParts: collected, remainingParts: rest, table })
+    return { tag: 'eval', ast: part.expr, table }
+  }
+
+  /**
+   * Helper to start evaluating the next object literal part
+   */
+  private stepObjCollect(
+    collected: [string, Value][],
+    remaining: ObjectLiteralPart[],
+    table: SymbolTable,
+    contStack: Cont[],
+  ): StepResult {
+    const part = remaining[0]
+    const rest = remaining.slice(1)
+    if (part.tag === 'hardName') {
+      contStack.push({
+        tag: 'objComputedValue',
+        key: part.k.t.text,
+        collectedEntries: collected,
+        remainingParts: rest,
+        table,
+      })
+      return { tag: 'eval', ast: part.v, table }
+    }
+    if (part.tag === 'quotedString') {
+      contStack.push({
+        tag: 'objComputedValue',
+        key: part.k.t.text,
+        collectedEntries: collected,
+        remainingParts: rest,
+        table,
+      })
+      return { tag: 'eval', ast: part.v, table }
+    }
+    if (part.tag === 'computedName') {
+      contStack.push({
+        tag: 'objComputedKey',
+        valueAst: part.v,
+        collectedEntries: collected,
+        remainingParts: rest,
+        table,
+      })
+      return { tag: 'eval', ast: part.k, table }
+    }
+    if (part.tag === 'spread') {
+      contStack.push({ tag: 'objCollect', collectedEntries: collected, remainingParts: rest, table })
+      return { tag: 'eval', ast: part.o, table }
+    }
+    shouldNeverHappen(part)
+  }
+
+  /**
+   * applyCont() processes a continuation with a computed value.
+   * Either produces a final value or requests another sub-evaluation.
+   */
+  private applyCont(cont: Cont, val: Value, contStack: Cont[]): StepResult {
+    if (cont.tag === 'popTrace') {
+      switchOn(this.verbosity, {
+        quiet: () => {},
+        trace: () => {
+          // eslint-disable-next-line no-console
+          console.log(`output of <|${show(cont.ast)}|> is ${JSON.stringify(val)}  // ${cont.ast.tag}`)
+        },
+      })
+      this.stack = Stack.pop(this.stack)
+      return { tag: 'value', val }
+    }
+
+    if (cont.tag === 'binaryRhs') {
+      const lhs = val
+      // Short-circuit operators
+      if (cont.operator === '||') {
+        if (lhs.inner.tag !== 'bool') {
+          throw new Error(`value type error: expected bool but found ${JSON.stringify(lhs)}`)
+        }
+        if (lhs.inner.val) {
+          return { tag: 'value', val: Value.bool(true) }
+        }
+        contStack.push({ tag: 'validateBool', lhs, operator: '||' })
+        return { tag: 'eval', ast: cont.rhs, table: cont.table }
+      }
+      if (cont.operator === '&&') {
+        if (lhs.inner.tag !== 'bool') {
+          throw new Error(`value type error: expected bool but found ${JSON.stringify(lhs)}`)
+        }
+        if (!lhs.inner.val) {
+          return { tag: 'value', val: Value.bool(false) }
+        }
+        contStack.push({ tag: 'validateBool', lhs, operator: '&&' })
+        return { tag: 'eval', ast: cont.rhs, table: cont.table }
+      }
+      if (cont.operator === '??') {
+        if (!lhs.isUndefined()) {
+          return { tag: 'value', val: lhs }
+        }
+        return { tag: 'eval', ast: cont.rhs, table: cont.table }
+      }
+      // Non-short-circuit: evaluate RHS
+      contStack.push({ tag: 'binaryApply', operator: cont.operator, lhs })
+      return { tag: 'eval', ast: cont.rhs, table: cont.table }
+    }
+
+    if (cont.tag === 'validateBool') {
+      const rhs = val
+      if (rhs.inner.tag !== 'bool') {
+        throw new Error(`value type error: expected bool but found ${JSON.stringify(rhs)}`)
+      }
+      return { tag: 'value', val: rhs }
+    }
+
+    if (cont.tag === 'binaryApply') {
+      const lhs = cont.lhs
+      const rhs = val
+      const op = cont.operator
+      if (op === '!=') {
+        return { tag: 'value', val: lhs.equalsTo(rhs).not() }
+      }
+      if (op === '==') {
+        return { tag: 'value', val: lhs.equalsTo(rhs) }
+      }
+      if (op === '<=') {
+        return { tag: 'value', val: lhs.order(rhs).isToZero('<=') }
+      }
+      if (op === '<') {
+        return { tag: 'value', val: lhs.order(rhs).isToZero('<') }
+      }
+      if (op === '>=') {
+        return { tag: 'value', val: lhs.order(rhs).isToZero('>=') }
+      }
+      if (op === '>') {
+        return { tag: 'value', val: lhs.order(rhs).isToZero('>') }
+      }
+      if (op === '%') {
+        return { tag: 'value', val: lhs.modulo(rhs) }
+      }
+      if (op === '*') {
+        return { tag: 'value', val: lhs.times(rhs) }
+      }
+      if (op === '**') {
+        return { tag: 'value', val: lhs.power(rhs) }
+      }
+      if (op === '+') {
+        return { tag: 'value', val: lhs.plus(rhs) }
+      }
+      if (op === '-') {
+        return { tag: 'value', val: lhs.minus(rhs) }
+      }
+      if (op === '/') {
+        return { tag: 'value', val: lhs.over(rhs) }
+      }
+      throw new Error(`Unknown binary operator: ${op}`)
+    }
+
+    if (cont.tag === 'unaryApply') {
+      if (cont.operator === '!') {
+        return { tag: 'value', val: val.not() }
+      }
+      if (cont.operator === '+') {
+        return { tag: 'value', val: Value.num(0).plus(val) }
+      }
+      if (cont.operator === '-') {
+        return { tag: 'value', val: val.negate() }
+      }
+      shouldNeverHappen(cont.operator)
+    }
+
+    if (cont.tag === 'ifBranch') {
+      const c = val
+      if (c.inner.tag !== 'bool') {
+        throw new Error(`value type error: expected bool but found ${JSON.stringify(c)}`)
+      }
+      // Tail eval the chosen branch
+      if (c.inner.val) {
+        return { tag: 'eval', ast: cont.positive, table: cont.table }
+      }
+      return { tag: 'eval', ast: cont.negative, table: cont.table }
+    }
+
+    if (cont.tag === 'funcCollectArgs') {
+      const newCollected = [...cont.collectedArgs, val]
+      if (cont.remainingArgs.length === 0) {
+        // All args collected, evaluate callee
+        contStack.push({ tag: 'funcApply', args: newCollected })
+        return { tag: 'eval', ast: cont.callee, table: cont.table }
+      }
+      // Evaluate next arg
+      contStack.push({
+        tag: 'funcCollectArgs',
+        collectedArgs: newCollected,
+        remainingArgs: cont.remainingArgs.slice(1),
+        table: cont.table,
+        callee: cont.callee,
+      })
+      return { tag: 'eval', ast: cont.remainingArgs[0], table: cont.table }
+    }
+
+    if (cont.tag === 'funcEvalCallee') {
+      // callee evaluated (no args case), proceed to apply
+      return this.applyFunction(val, cont.args, contStack)
+    }
+
+    if (cont.tag === 'funcApply') {
+      return this.applyFunction(val, cont.args, contStack)
+    }
+
+    if (cont.tag === 'dotAccess') {
+      const rec = val
+      if (rec === undefined || rec === null) {
+        throw new Error(`Cannot access attribute .${cont.ident} of ${rec}`)
+      }
+      return { tag: 'value', val: rec.access(cont.ident, (callee, args) => this.callDirect(callee, args)) }
+    }
+
+    if (cont.tag === 'indexEvalIndex') {
+      contStack.push({ tag: 'indexApply', receiver: val })
+      return { tag: 'eval', ast: cont.index, table: cont.table }
+    }
+
+    if (cont.tag === 'indexApply') {
+      const index = val
+      return { tag: 'value', val: cont.receiver.access(index, (callee, args) => this.callDirect(callee, args)) }
+    }
+
+    if (cont.tag === 'templateCollect') {
+      cont.collectedParts.push(val.toString())
+      if (cont.remainingParts.length === 0) {
+        return { tag: 'value', val: Value.str(cont.collectedParts.join('')) }
+      }
+      return this.stepTemplateCollect(cont.collectedParts, cont.remainingParts, cont.table, contStack)
+    }
+
+    if (cont.tag === 'arrayCollect') {
+      if (cont.isSpread) {
+        if (!val.isUndefined()) {
+          cont.collectedElements.push(...val.assertArr())
+        }
+      } else {
+        cont.collectedElements.push(val)
+      }
+      if (cont.remainingParts.length === 0) {
+        return { tag: 'value', val: Value.arr(cont.collectedElements) }
+      }
+      return this.stepArrayCollect(cont.collectedElements, cont.remainingParts, cont.table, contStack)
+    }
+
+    if (cont.tag === 'objCollect') {
+      // This handles spread in object literal
+      const o = val
+      if (!o.isUndefined()) {
+        cont.collectedEntries.push(...Object.entries(o.assertObj()))
+      }
+      if (cont.remainingParts.length === 0) {
+        return {
+          tag: 'value',
+          val: Value.obj(Object.fromEntries(cont.collectedEntries.filter(([_, v]) => !v.isUndefined()))),
+        }
+      }
+      return this.stepObjCollect(cont.collectedEntries, cont.remainingParts, cont.table, contStack)
+    }
+
+    if (cont.tag === 'objComputedValue') {
+      cont.collectedEntries.push([cont.key, val])
+      if (cont.remainingParts.length === 0) {
+        return {
+          tag: 'value',
+          val: Value.obj(Object.fromEntries(cont.collectedEntries.filter(([_, v]) => !v.isUndefined()))),
+        }
+      }
+      return this.stepObjCollect(cont.collectedEntries, cont.remainingParts, cont.table, contStack)
+    }
+
+    if (cont.tag === 'objComputedKey') {
+      const key = val.assertStr()
+      contStack.push({
+        tag: 'objComputedValue',
+        key,
+        collectedEntries: cont.collectedEntries,
+        remainingParts: cont.remainingParts,
+        table: cont.table,
+      })
+      return { tag: 'eval', ast: cont.valueAst, table: cont.table }
+    }
+
+    if (cont.tag === 'topLevelDef') {
+      // Definition value computed, fill placeholder
+      cont.placeholder.destination = val
+      const nextIndex = cont.defIndex + 1
+      if (nextIndex < cont.definitions.length) {
+        // More definitions to process
+        const def = cont.definitions[nextIndex]
+        const placeholder: Placeholder = { destination: undefined }
+        const newTable = new SymbolFrame(
+          def.ident.t.text,
+          placeholder,
+          cont.table,
+          def.isExported ? 'EXPORTED' : 'INTERNAL',
+        )
+        contStack.push({
+          tag: 'topLevelDef',
+          definitions: cont.definitions,
+          defIndex: nextIndex,
+          placeholder,
+          table: newTable,
+          computation: cont.computation,
+          throwToken: cont.throwToken,
+          unitId: cont.unitId,
+        })
+        return { tag: 'eval', ast: def.value, table: newTable }
+      }
+      // All definitions processed, evaluate computation
+      if (!cont.computation) {
+        return { tag: 'value', val: Value.str('') }
+      }
+      if (cont.throwToken) {
+        contStack.push({ tag: 'topLevelComputation', throwToken: true })
+      }
+      return { tag: 'eval', ast: cont.computation, table: cont.table }
+    }
+
+    if (cont.tag === 'topLevelComputation') {
+      if (cont.throwToken) {
+        throw new Error(JSON.stringify(val))
+      }
+      return { tag: 'value', val }
+    }
+
+    if (cont.tag === 'throwValue') {
+      throw new Error(JSON.stringify(val))
+    }
+
+    shouldNeverHappen(cont)
+  }
+
+  /**
+   * Apply a function (lambda or foreign) with given args.
+   * For lambdas, this does tail-eval of the body — no stack growth.
+   */
+  private applyFunction(callee: Value, args: Value[], _contStack: Cont[]): StepResult {
+    const inner = callee.inner
+    if (inner.tag === 'foreign') {
+      return { tag: 'value', val: Value.from(inner.val(...args)) }
+    }
+    if (inner.tag === 'lambda') {
+      const formals = inner.val.ast.formalArgs
+      const body = inner.val.ast.body
+      const lambdaTable = inner.val.table
       const requiredCount = formals.filter(f => !f.defaultValue).length
-      if (actualValues.length < requiredCount) {
-        throw new Error(`Expected at least ${requiredCount} argument(s) but got ${actualValues.length}`)
+      if (args.length < requiredCount) {
+        throw new Error(`Expected at least ${requiredCount} argument(s) but got ${args.length}`)
       }
 
-      let newTable = lambdaTable
+      let newTable: SymbolTable = lambdaTable
       for (let i = 0; i < formals.length; ++i) {
         const formal = formals[i]
-        let actual = actualValues.at(i)
+        let actual = args.at(i)
         const useDefault = actual === undefined || (actual.isUndefined() && formal.defaultValue)
 
         if (useDefault && formal.defaultValue) {
-          actual = this.evalNode(formal.defaultValue, lambdaTable)
+          actual = this.evalLoop(formal.defaultValue, lambdaTable)
         }
 
         if (actual === undefined) {
@@ -456,7 +865,44 @@ export class Runtime {
 
         newTable = new SymbolFrame(formal.ident.t.text, { destination: actual }, newTable, 'INTERNAL')
       }
-      return this.evalNode(body, newTable)
+      // Tail eval the body — no continuation pushed, no stack growth
+      return { tag: 'eval', ast: body, table: newTable }
+    }
+    throw new Error(`value type error: expected either foreign or lambda but found ${JSON.stringify(callee)}`)
+  }
+
+  /**
+   * callDirect starts a fresh evalLoop for synchronous callbacks (array methods like .map, .filter, etc).
+   * Since evalLoop is iterative, this adds only constant JS stack depth.
+   */
+  private callDirect(callee: Value, actualValues: Value[]): Value {
+    return callee.call(actualValues, (formals: FormalArg[], body: AstNode, lambdaTable: SymbolTable) => {
+      const requiredCount = formals.filter(f => !f.defaultValue).length
+      if (actualValues.length < requiredCount) {
+        throw new Error(`Expected at least ${requiredCount} argument(s) but got ${actualValues.length}`)
+      }
+
+      let newTable: SymbolTable = lambdaTable
+      for (let i = 0; i < formals.length; ++i) {
+        const formal = formals[i]
+        let actual = actualValues.at(i)
+        const useDefault = actual === undefined || (actual.isUndefined() && formal.defaultValue)
+
+        if (useDefault && formal.defaultValue) {
+          actual = this.evalLoop(formal.defaultValue, lambdaTable)
+        }
+
+        if (actual === undefined) {
+          throw new Error(`A value must be passed to formal argument: ${show(formal.ident)}`)
+        }
+
+        newTable = new SymbolFrame(formal.ident.t.text, { destination: actual }, newTable, 'INTERNAL')
+      }
+      return this.evalLoop(body, newTable)
     })
+  }
+
+  call(callee: Value, actualValues: Value[]) {
+    return this.callDirect(callee, actualValues)
   }
 }
