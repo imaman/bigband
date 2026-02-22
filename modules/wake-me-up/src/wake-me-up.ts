@@ -6,7 +6,7 @@ import path from 'path'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
-import { formatTargetTime, parseDuration, writeAlarmFile } from './utils'
+import { formatTargetTime, parseDuration } from './utils'
 
 const electronPath = String(electron)
 const mainScript = path.join(__dirname, 'main.js')
@@ -30,7 +30,6 @@ yargs(hideBin(process.argv))
       } else {
         const delayMs = parseDuration(argv.duration)
         const targetTime = new Date(Date.now() + delayMs)
-        writeAlarmFile(targetTime)
         process.stdout.write(`will wake you up at ${formatTargetTime(targetTime)}\n`)
         spawnElectron([String(delayMs)])
       }

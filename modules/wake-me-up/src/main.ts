@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, Tray } from 'electron'
 import fs from 'fs'
 import path from 'path'
 
-import { formatTargetTime, parseDuration, removeAlarmFile, removeExpiredAlarms } from './utils'
+import { formatTargetTime, parseDuration } from './utils'
 
 const moduleRoot = path.join(__dirname, '..', '..')
 const iconPath = path.join(moduleRoot, 'icon.png')
@@ -22,7 +22,6 @@ function createTray(fireAt: Date): void {
     {
       label: 'Cancel alarm',
       click: () => {
-        removeAlarmFile(fireAt)
         app.quit()
       },
     },
@@ -57,7 +56,6 @@ function showNotification(delayMs: number): void {
   setTimeout(() => {
     timerPending = false
     destroyTray()
-    removeAlarmFile(fireAt)
     const now = new Date()
     const timeString = formatTargetTime(now)
     appendLog(`bell time=${timeString}`)
@@ -117,8 +115,6 @@ ipcMain.on('dismiss', () => {
 })
 
 app.on('ready', () => {
-  removeExpiredAlarms()
-
   // Hide dock icon on macOS so it stays invisible until notification
   if (app.dock) {
     app.dock.hide()
