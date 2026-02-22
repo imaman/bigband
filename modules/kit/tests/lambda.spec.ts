@@ -18,7 +18,7 @@ describe('lambda', () => {
   })
   test('yells if the memory size is below 128', () => {
     expect(() => new Lambda('my-lambda', loc, { memorySize: 127 })).toThrowError(
-      'Number must be greater than or equal to 128',
+      'Too small: expected number to be >=128',
     )
     expect(() => new Lambda('my-lambda', loc, { memorySize: 128 })).not.toThrow()
   })
