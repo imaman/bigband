@@ -96,11 +96,6 @@ export function removeExpiredAlarms(dir?: string): void {
   }
 }
 
-export function alarmFileExists(date: Date, dir?: string): boolean {
-  const d = dir ?? alarmsDir()
-  return fs.existsSync(path.join(d, alarmFileName(date)))
-}
-
 export function listPendingAlarms(dir?: string): Date[] {
   const d = dir ?? alarmsDir()
   let entries: string[]
