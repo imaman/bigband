@@ -75,8 +75,14 @@ function reducer(state: AppState, action: AppAction): AppState {
     case 'UPLOAD_ERROR':
       return { ...state, loading: false, error: action.error }
 
-    case 'GO_TO_SCREEN':
-      return { ...state, screen: action.screen, error: null }
+    case 'GO_TO_SCREEN': {
+      const next: AppState = { ...state, screen: action.screen, error: null }
+      if (action.screen === 'export') {
+        next.exportProgress = 0
+        next.exportedBlob = null
+      }
+      return next
+    }
 
     case 'TOGGLE_SENTENCE': {
       const sentences = state.sentences.map(s => (s.id === action.sentenceId ? { ...s, deleted: !s.deleted } : s))

@@ -8,6 +8,7 @@ import { renderRsvpFrame } from '../rsvp/rsvp-renderer'
 const WIDTH = 1080
 const HEIGHT = 1920
 const FPS = 30
+const OPUS_SAMPLE_RATE = 48000
 
 export async function exportToMp4(
   audioBuffer: AudioBuffer,
@@ -18,8 +19,13 @@ export async function exportToMp4(
     throw new Error('WebCodecs is not supported in this browser. Please use Chrome 94+.')
   }
 
-  const duration = audioBuffer.duration
+  // Opus requires 48kHz — resample if needed
+  const audio48k = await resampleTo48k(audioBuffer)
+
+  const duration = audio48k.duration
   const totalFrames = Math.ceil(duration * FPS)
+
+  let encodingError: Error | null = null
 
   const target = new ArrayBufferTarget()
   const muxer = new Muxer({
@@ -31,8 +37,8 @@ export async function exportToMp4(
     },
     audio: {
       codec: 'opus',
-      numberOfChannels: audioBuffer.numberOfChannels,
-      sampleRate: audioBuffer.sampleRate,
+      numberOfChannels: audio48k.numberOfChannels,
+      sampleRate: OPUS_SAMPLE_RATE,
     },
     fastStart: 'in-memory',
   })
@@ -44,7 +50,7 @@ export async function exportToMp4(
   const videoEncoder = new VideoEncoder({
     output: (chunk, meta) => muxer.addVideoChunk(chunk, meta ?? undefined),
     error: e => {
-      throw e
+      encodingError = e instanceof Error ? e : new Error(String(e))
     },
   })
 
@@ -57,6 +63,8 @@ export async function exportToMp4(
   })
 
   for (let i = 0; i < totalFrames; i++) {
+    if (encodingError) throw encodingError
+
     const time = i / FPS
     const word = findCurrentWord(displayWords, time)
     renderRsvpFrame(ctx, word, { width: WIDTH, height: HEIGHT })
@@ -84,6 +92,7 @@ export async function exportToMp4(
 
   await videoEncoder.flush()
   videoEncoder.close()
+  if (encodingError) throw encodingError
 
   // --- Audio encoding ---
   onProgress(0.85)
@@ -91,32 +100,34 @@ export async function exportToMp4(
   const audioEncoder = new AudioEncoder({
     output: (chunk, meta) => muxer.addAudioChunk(chunk, meta ?? undefined),
     error: e => {
-      throw e
+      encodingError = e instanceof Error ? e : new Error(String(e))
     },
   })
 
   audioEncoder.configure({
     codec: 'opus', // Chrome supports Opus encoding (not AAC)
-    numberOfChannels: audioBuffer.numberOfChannels,
-    sampleRate: audioBuffer.sampleRate,
+    numberOfChannels: audio48k.numberOfChannels,
+    sampleRate: OPUS_SAMPLE_RATE,
     bitrate: 128_000,
   })
 
   // Feed audio in chunks
-  const chunkSize = audioBuffer.sampleRate // 1 second at a time
-  const numChunks = Math.ceil(audioBuffer.length / chunkSize)
+  const chunkSize = OPUS_SAMPLE_RATE // 1 second at a time
+  const numChunks = Math.ceil(audio48k.length / chunkSize)
 
   for (let c = 0; c < numChunks; c++) {
+    if (encodingError) throw encodingError
+
     const offset = c * chunkSize
-    const length = Math.min(chunkSize, audioBuffer.length - offset)
+    const length = Math.min(chunkSize, audio48k.length - offset)
 
     const audioData = new AudioData({
       format: 'f32-planar',
-      sampleRate: audioBuffer.sampleRate,
+      sampleRate: OPUS_SAMPLE_RATE,
       numberOfFrames: length,
-      numberOfChannels: audioBuffer.numberOfChannels,
-      timestamp: Math.round((offset / audioBuffer.sampleRate) * 1_000_000),
-      data: combineChannels(audioBuffer, offset, length),
+      numberOfChannels: audio48k.numberOfChannels,
+      timestamp: Math.round((offset / OPUS_SAMPLE_RATE) * 1_000_000),
+      data: combineChannels(audio48k, offset, length),
     })
 
     audioEncoder.encode(audioData)
@@ -128,6 +139,7 @@ export async function exportToMp4(
 
   await audioEncoder.flush()
   audioEncoder.close()
+  if (encodingError) throw encodingError
 
   // Finalize
   onProgress(0.95)
@@ -136,6 +148,25 @@ export async function exportToMp4(
   const blob = new Blob([target.buffer], { type: 'video/mp4' })
   onProgress(1)
   return blob
+}
+
+async function resampleTo48k(audioBuffer: AudioBuffer): Promise<AudioBuffer> {
+  if (audioBuffer.sampleRate === OPUS_SAMPLE_RATE) {
+    return audioBuffer
+  }
+
+  const offlineCtx = new OfflineAudioContext(
+    audioBuffer.numberOfChannels,
+    Math.ceil(audioBuffer.duration * OPUS_SAMPLE_RATE),
+    OPUS_SAMPLE_RATE,
+  )
+
+  const source = offlineCtx.createBufferSource()
+  source.buffer = audioBuffer
+  source.connect(offlineCtx.destination)
+  source.start()
+
+  return await offlineCtx.startRendering()
 }
 
 function combineChannels(audioBuffer: AudioBuffer, offset: number, length: number): Float32Array<ArrayBuffer> {

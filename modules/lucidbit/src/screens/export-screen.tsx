@@ -11,15 +11,15 @@ interface Props {
 
 export function ExportScreen({ state, dispatch }: Props) {
   const [exporting, setExporting] = useState(false)
-  const startedRef = useRef(false)
+  const exportedForRef = useRef<AudioBuffer | null>(null)
 
   const displayWords = applyThreshold(state.splicedWords, state.displayThresholdMs)
 
   useEffect(() => {
-    if (startedRef.current) return
     if (!state.splicedAudioBuffer || state.exportedBlob) return
+    if (exportedForRef.current === state.splicedAudioBuffer) return
 
-    startedRef.current = true
+    exportedForRef.current = state.splicedAudioBuffer
     setExporting(true)
 
     exportToMp4(state.splicedAudioBuffer, displayWords, progress => {
