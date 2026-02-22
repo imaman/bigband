@@ -6,7 +6,7 @@ import path from 'path'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
-import { formatTargetTime, listPendingAlarms, parseDuration, writeAlarmFile } from './utils'
+import { formatTargetTime, parseDuration } from './utils'
 
 const electronPath = String(electron)
 const mainScript = path.join(__dirname, 'main.js')
@@ -21,23 +21,6 @@ function spawnElectron(args: string[]): void {
 
 yargs(hideBin(process.argv))
   .command(
-    'list',
-    'Show pending alarms',
-    () => {},
-    () => {
-      const alarms = listPendingAlarms()
-      for (const date of alarms) {
-        const y = date.getFullYear()
-        const mo = String(date.getMonth() + 1).padStart(2, '0')
-        const d = String(date.getDate()).padStart(2, '0')
-        const h = String(date.getHours()).padStart(2, '0')
-        const mi = String(date.getMinutes()).padStart(2, '0')
-        const s = String(date.getSeconds()).padStart(2, '0')
-        process.stdout.write(`${y}-${mo}-${d} ${h}:${mi}:${s}\n`)
-      }
-    },
-  )
-  .command(
     '* [duration]',
     'Set a wake-up alarm (opens scheduler UI if no duration given)',
     y => y.positional('duration', { type: 'string', describe: 'e.g. 10s, 13m, 0.5' }),
@@ -47,7 +30,6 @@ yargs(hideBin(process.argv))
       } else {
         const delayMs = parseDuration(argv.duration)
         const targetTime = new Date(Date.now() + delayMs)
-        writeAlarmFile(targetTime)
         process.stdout.write(`will wake you up at ${formatTargetTime(targetTime)}\n`)
         spawnElectron([String(delayMs)])
       }
