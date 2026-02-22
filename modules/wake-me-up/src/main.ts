@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, Tray, Menu } = require('electron')
 
 import fs from 'fs'
 import path from 'path'
@@ -7,10 +7,38 @@ import path from 'path'
 import { formatTargetTime, parseDuration, removeAlarmFile, removeExpiredAlarms } from './utils'
 
 const moduleRoot = path.join(__dirname, '..', '..')
+const iconPath = path.join(moduleRoot, 'icon.png')
 
 app.setName('wake-me-up')
 
 let timerPending = false
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let tray: any = null
+
+function createTray(fireAt: Date): void {
+  const timeLabel = formatTargetTime(fireAt)
+  tray = new Tray(iconPath)
+  tray.setToolTip(`Wake at ${timeLabel}`)
+  const contextMenu = Menu.buildFromTemplate([
+    { label: `Alarm: ${timeLabel}`, enabled: false },
+    { type: 'separator' as const },
+    {
+      label: 'Cancel alarm',
+      click: () => {
+        removeAlarmFile(fireAt)
+        app.quit()
+      },
+    },
+  ])
+  tray.setContextMenu(contextMenu)
+}
+
+function destroyTray(): void {
+  if (tray) {
+    tray.destroy()
+    tray = null
+  }
+}
 
 function appendLog(message: string): void {
   const logDir = path.join(app.getPath('logs'))
@@ -27,9 +55,11 @@ function showNotification(delayMs: number): void {
   timerPending = true
   const fireAt = new Date(Date.now() + delayMs)
   appendLog(`scheduled wake-at=${fireAt.toISOString()}`)
+  createTray(fireAt)
 
   setTimeout(() => {
     timerPending = false
+    destroyTray()
     removeAlarmFile(fireAt)
     const now = new Date()
     const timeString = formatTargetTime(now)
