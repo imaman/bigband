@@ -10,14 +10,15 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "test": "jest",
     "install-desktop": "bash install-desktop.sh",
+    "test": "jest",
     "uninstall-desktop": "rm -f ~/.local/share/applications/wake-me-up.desktop"
   },
   "jest": {
     "preset": "../../jest.preset.js"
   },
   "dependencies": {
-    "electron": "^35.0.0"
+    "electron": "^35.0.0",
+    "yargs": "^17.0.0"
   }
 }
