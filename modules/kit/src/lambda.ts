@@ -47,7 +47,7 @@ const CloudformationProperties = z.object({
   Description,
   Environment: z
     .object({
-      Variables: z.record(z.string()),
+      Variables: z.record(z.string(), z.string()),
     })
     .optional(),
   EphemeralStorage: z
