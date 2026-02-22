@@ -5,7 +5,6 @@ import path from 'path'
 import {
   alarmFileName,
   formatTargetTime,
-  listPendingAlarms,
   parseAlarmFileName,
   parseDelayMs,
   parseDuration,
@@ -155,39 +154,6 @@ describe('wake-me-up', () => {
       test('does not throw if file does not exist', () => {
         const date = new Date('2026-02-22T14:30:00.000Z')
         expect(() => removeAlarmFile(date, tmpDir)).not.toThrow()
-      })
-    })
-
-    describe('listPendingAlarms', () => {
-      test('returns sorted array of future dates', () => {
-        const future1 = new Date(Date.now() + 3_600_000)
-        const future2 = new Date(Date.now() + 7_200_000)
-        const future3 = new Date(Date.now() + 1_800_000)
-        writeAlarmFile(future1, tmpDir)
-        writeAlarmFile(future2, tmpDir)
-        writeAlarmFile(future3, tmpDir)
-
-        const result = listPendingAlarms(tmpDir)
-        expect(result).toHaveLength(3)
-        expect(result[0].getTime()).toBe(future3.getTime())
-        expect(result[1].getTime()).toBe(future1.getTime())
-        expect(result[2].getTime()).toBe(future2.getTime())
-      })
-
-      test('excludes past dates', () => {
-        const past = new Date(Date.now() - 3_600_000)
-        const future = new Date(Date.now() + 3_600_000)
-        writeAlarmFile(past, tmpDir)
-        writeAlarmFile(future, tmpDir)
-
-        const result = listPendingAlarms(tmpDir)
-        expect(result).toHaveLength(1)
-        expect(result[0].getTime()).toBe(future.getTime())
-      })
-
-      test('returns empty array if directory does not exist', () => {
-        const nonExistent = path.join(tmpDir, 'does-not-exist')
-        expect(listPendingAlarms(nonExistent)).toEqual([])
       })
     })
 

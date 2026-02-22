@@ -95,22 +95,3 @@ export function removeExpiredAlarms(dir?: string): void {
     }
   }
 }
-
-export function listPendingAlarms(dir?: string): Date[] {
-  const d = dir ?? alarmsDir()
-  let entries: string[]
-  try {
-    entries = fs.readdirSync(d)
-  } catch (e: unknown) {
-    if (isEnoent(e)) {
-      return []
-    }
-    throw e
-  }
-
-  const now = new Date()
-  return entries
-    .map(name => parseAlarmFileName(name))
-    .filter(date => date.getTime() > now.getTime())
-    .sort((a, b) => a.getTime() - b.getTime())
-}
