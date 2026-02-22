@@ -1,0 +1,23 @@
+{
+  "name": "wake-me-up",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "author": "",
+  "main": "dist/src/index.js",
+  "bin": {
+    "wake-me-up": "dist/src/wake-me-up.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "jest",
+    "install-desktop": "bash install-desktop.sh",
+    "uninstall-desktop": "rm -f ~/.local/share/applications/wake-me-up.desktop"
+  },
+  "jest": {
+    "preset": "../../jest.preset.js"
+  },
+  "dependencies": {
+    "electron": "^35.0.0"
+  }
+}
