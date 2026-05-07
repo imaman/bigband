@@ -22,7 +22,18 @@ interface Options {
   consoleLog?: Outputter
 }
 
+/**
+ * A parsed, ready-to-run Septima program produced by `Septima.compile()` or `Septima.compileSync()`.
+ * Holds onto its compiled units so it can be re-run easily with different `args`.
+ */
 export interface Executable {
+  /**
+   * Evaluates the program. Runtime errors (other than `sink`) are thrown, with a formatted Septima-level stack
+   * trace.
+   *
+   * @param args exposed to the Septima code as the top-level `args` object.
+   * @returns `{ tag: 'ok', value }` on success, or `{ tag: 'sink', ... }` if the program evaluated to `sink`.
+   */
   execute(args: Record<string, unknown>): Result
 }
 
@@ -34,6 +45,16 @@ export interface SourceUnit {
   unit: Unit
 }
 
+/**
+ * Entry point for evaluating Septima programs.
+ *
+ * For a single inline snippet, prefer the static `Septima.run()`. For multi-file programs - or when you need to
+ * inspect the `Result` directly, separate parsing from execution, or run the same program repeatedly with
+ * different `args` - construct an instance and call `compile()` / `compileSync()` to obtain an `Executable`.
+ *
+ * A `Septima` instance caches every unit it loads, so each file is parsed at most once across all `compile*` calls
+ * on that instance. Use a fresh instance to discard that cache.
+ */
 export class Septima {
   /**
    * Runs a Septima program and returns the value it evaluates to. If it evaluates to `sink`, returns the value computed
@@ -70,8 +91,24 @@ export class Septima {
 
   private readonly unitByUnitId = new Map<UnitId, SourceUnit>()
 
+  /**
+   * @param sourceRoot directory that import paths and the `fileName` passed to `compile*()` are resolved against.
+   *   Imports resolving outside this root are rejected. Defaults to `''` (no root - paths are used as-is).
+   * @param consoleLog receives values from `console.log()` calls in the Septima program. Defaults to discarding them.
+   */
   constructor(private readonly sourceRoot = '', private readonly consoleLog?: Outputter) {}
 
+  /**
+   * Parses `fileName` and every file it (transitively) imports, then returns an `Executable` for the entry file.
+   * Files already cached on this instance from a prior `compile*()` call are not re-read.
+   *
+   * Throws on missing files, parse errors, or imports that escape `sourceRoot`.
+   *
+   * @param fileName entry file, resolved relative to `sourceRoot`.
+   * @param readFile called once per unique file with a path resolved relative to `sourceRoot`. Must return the
+   *   source as a string, or `undefined` if the file does not exist (which causes `compileSync` to throw with the
+   *   resolved path).
+   */
   compileSync(fileName: string, readFile: SyncCodeReader) {
     fileName = this.relativize(fileName)
     const acc = [fileName]
@@ -79,6 +116,15 @@ export class Septima {
     return this.getExecutableFor(fileName)
   }
 
+  /**
+   * Async counterpart to `compileSync()`: same contract and same error conditions. Use this when source is fetched
+   * from somewhere that is not synchronously available (network, async filesystem, etc.).
+   *
+   * Files are loaded in dependency-discovery order, not concurrently - reads are awaited one at a time.
+   *
+   * @param fileName entry file, resolved relative to `sourceRoot`.
+   * @param readFile async variant of the `compileSync()` reader: returns a `Promise<string | undefined>`.
+   */
   async compile(fileName: string, readFile: CodeReader) {
     fileName = this.relativize(fileName)
     const acc = [fileName]
