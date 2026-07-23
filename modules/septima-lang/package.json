@@ -7,6 +7,9 @@
   "author": "imaman",
   "type": "module",
   "main": "dist/src/index.js",
+  "files": [
+    "dist/src"
+  ],
   "scripts": {
     "benchmark": "node dist/src/benchmark.js",
     "build": "tsc -b",
