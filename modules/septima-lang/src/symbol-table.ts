@@ -1,4 +1,4 @@
-import { Value } from './value'
+import { Value } from './value.js'
 
 export type Visibility = 'EXPORTED' | 'INTERNAL'
 

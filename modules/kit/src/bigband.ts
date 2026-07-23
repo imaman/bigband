@@ -1,5 +1,5 @@
-import { Instrument, Resolution } from './instrument'
-import { ResolvedSection, Section } from './section'
+import { Instrument, Resolution } from './instrument.js'
+import { ResolvedSection, Section } from './section.js'
 
 // TODO(imaman): timestream, qldb, ddb, s3-folder(?), s3-location
 export class Bigband {

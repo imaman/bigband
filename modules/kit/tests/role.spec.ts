@@ -1,6 +1,6 @@
-import { Bigband } from '../src'
-import { Lambda } from '../src/lambda'
-import { Role } from '../src/role'
+import { Bigband } from '../src/index.js'
+import { Lambda } from '../src/lambda.js'
+import { Role } from '../src/role.js'
 
 describe('role', () => {
   test('computes an ARN', async () => {

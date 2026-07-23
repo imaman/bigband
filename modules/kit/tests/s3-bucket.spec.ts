@@ -1,5 +1,5 @@
-import { Bigband } from '../src/bigband'
-import { S3Bucket } from '../src/s3-bucket'
+import { Bigband } from '../src/bigband.js'
+import { S3Bucket } from '../src/s3-bucket.js'
 
 describe('s3-bucket', () => {
   test('computes an ARN', async () => {

@@ -1,7 +1,7 @@
-import { AstNode, UnitId } from './ast-node'
-import { failMe } from './fail-me'
-import { Span } from './location'
-import { SourceUnit } from './septima'
+import { AstNode, UnitId } from './ast-node.js'
+import { failMe } from './fail-me.js'
+import { Span } from './location.js'
+import { SourceUnit } from './septima.js'
 
 export type ResultSink = {
   tag: 'sink'

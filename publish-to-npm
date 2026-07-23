@@ -3,22 +3,11 @@
 set -e
 
 yarn test
-pushd modules/septima-lang
-rm -rf prepare-pack
-mkdir -p prepare-pack/dist
-cp package.json prepare-pack
-cp -r dist/src prepare-pack/dist/src
-cd prepare-pack
 
-CURRENT_VERSION=$(npm info septima-lang version)
-npm pkg set "version=$CURRENT_VERSION"
-npm version patch
-NEXT_VERSION=$(npm pkg get version | tr -d '"')
-echo "resolved new version: $NEXT_VERSION"
+REPORT_FILE=$(mktemp)
+npx monocrate@0.17.0 publish modules/septima-lang --bump=patch --report=$REPORT_FILE
 
-npm publish
-popd
-
+NEXT_VERSION=$(node -p "fs.readFileSync(\"$REPORT_FILE\").toString().trim()")
 
 T="published@$NEXT_VERSION"
 echo tagging "$T"

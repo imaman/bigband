@@ -1,5 +1,5 @@
-import { Executable, Septima } from '../src/septima'
-import { shouldNeverHappen } from '../src/should-never-happen'
+import { Executable, Septima } from '../src/septima.js'
+import { shouldNeverHappen } from '../src/should-never-happen.js'
 
 function runExecutable(executable: Executable, args: Record<string, unknown>) {
   const res = executable.execute(args)

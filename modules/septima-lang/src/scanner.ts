@@ -1,5 +1,5 @@
-import { Location } from './location'
-import { SourceCode } from './source-code'
+import { Location } from './location.js'
+import { SourceCode } from './source-code.js'
 
 export interface Token {
   readonly text: string

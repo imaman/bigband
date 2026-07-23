@@ -1,4 +1,4 @@
-import { Name } from '../src/name'
+import { Name } from '../src/name.js'
 
 describe('name', () => {
   test('mustBeKebabCase', () => {

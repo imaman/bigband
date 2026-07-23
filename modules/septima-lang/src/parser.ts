@@ -10,9 +10,9 @@ import {
   span,
   TemplatePart,
   Unit,
-} from './ast-node'
-import { Scanner, Token } from './scanner'
-import { switchOn } from './switch-on'
+} from './ast-node.js'
+import { Scanner, Token } from './scanner.js'
+import { switchOn } from './switch-on.js'
 
 export class Parser {
   constructor(private readonly scanner: Scanner) {}

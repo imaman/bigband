@@ -1,13 +1,13 @@
 import crypto from 'crypto'
 
-import { AstNode, show, Unit, UnitId } from './ast-node'
-import { extractMessage } from './extract-message'
-import { failMe } from './fail-me'
-import { shouldNeverHappen } from './should-never-happen'
-import * as Stack from './stack'
-import { switchOn } from './switch-on'
-import { SymbolTable, Visibility } from './symbol-table'
-import { Value } from './value'
+import { AstNode, show, Unit, UnitId } from './ast-node.js'
+import { extractMessage } from './extract-message.js'
+import { failMe } from './fail-me.js'
+import { shouldNeverHappen } from './should-never-happen.js'
+import * as Stack from './stack.js'
+import { switchOn } from './switch-on.js'
+import { SymbolTable, Visibility } from './symbol-table.js'
+import { Value } from './value.js'
 
 interface Placeholder {
   destination: undefined | Value

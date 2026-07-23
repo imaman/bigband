@@ -1,10 +1,11 @@
 import { app, BrowserWindow, ipcMain, Menu, Tray } from 'electron'
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
 
-import { formatTargetTime, parseDuration } from './utils'
+import { formatTargetTime, parseDuration } from './utils.js'
 
-const moduleRoot = path.join(__dirname, '..', '..')
+const moduleRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 const iconPath = path.join(moduleRoot, 'icon.png')
 
 app.setName('wake-me-up')
