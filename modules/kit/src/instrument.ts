@@ -1,5 +1,5 @@
-import { Name } from './name'
-import { ResolvedSection } from './section'
+import { Name } from './name.js'
+import { ResolvedSection } from './section.js'
 
 export interface Resolution {
   name: Name

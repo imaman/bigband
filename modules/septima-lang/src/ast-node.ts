@@ -1,7 +1,7 @@
-import { Span } from './location'
-import { Token } from './scanner'
-import { shouldNeverHappen } from './should-never-happen'
-import { switchOn } from './switch-on'
+import { Span } from './location.js'
+import { Token } from './scanner.js'
+import { shouldNeverHappen } from './should-never-happen.js'
+import { switchOn } from './switch-on.js'
 
 export type Let = { start: Token; ident: Ident; value: AstNode; isExported: boolean }
 

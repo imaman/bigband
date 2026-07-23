@@ -1,13 +1,13 @@
 import * as path from 'path'
 
-import { Unit, UnitId } from './ast-node'
-import { failMe } from './fail-me'
-import { Parser } from './parser'
-import { formatTrace, Result, ResultSink } from './result'
-import { Outputter, Runtime, Verbosity } from './runtime'
-import { Scanner } from './scanner'
-import { shouldNeverHappen } from './should-never-happen'
-import { SourceCode } from './source-code'
+import { Unit, UnitId } from './ast-node.js'
+import { failMe } from './fail-me.js'
+import { Parser } from './parser.js'
+import { formatTrace, Result, ResultSink } from './result.js'
+import { Outputter, Runtime, Verbosity } from './runtime.js'
+import { Scanner } from './scanner.js'
+import { shouldNeverHappen } from './should-never-happen.js'
+import { SourceCode } from './source-code.js'
 
 interface Options {
   /**

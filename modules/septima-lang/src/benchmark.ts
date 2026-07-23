@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { Septima } from './septima'
+import { Septima } from './septima.js'
 
 interface BenchmarkDef {
   name: string

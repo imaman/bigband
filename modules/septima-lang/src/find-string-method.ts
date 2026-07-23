@@ -1,4 +1,4 @@
-import { Value } from './value'
+import { Value } from './value.js'
 
 export function findStringMethod(s: string, indexValue: string | Value) {
   const index = Value.toStringOrNumber(indexValue)

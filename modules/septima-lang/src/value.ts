@@ -1,10 +1,10 @@
-import { AstNode, FormalArg, Lambda, show } from './ast-node'
-import { failMe } from './fail-me'
-import { CallEvaluator, findArrayMethod } from './find-array-method'
-import { findStringMethod } from './find-string-method'
-import { shouldNeverHappen } from './should-never-happen'
-import { switchOn } from './switch-on'
-import { SymbolTable } from './symbol-table'
+import { AstNode, FormalArg, Lambda, show } from './ast-node.js'
+import { failMe } from './fail-me.js'
+import { CallEvaluator, findArrayMethod } from './find-array-method.js'
+import { findStringMethod } from './find-string-method.js'
+import { shouldNeverHappen } from './should-never-happen.js'
+import { switchOn } from './switch-on.js'
+import { SymbolTable } from './symbol-table.js'
 
 type LambdaEvaluator = (formals: FormalArg[], ast: AstNode, table: SymbolTable) => Value
 

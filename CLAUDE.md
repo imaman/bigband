@@ -15,13 +15,15 @@ yarn test
 yarn lint
 
 # Run a single test file (build first, then run jest on compiled output)
-yarn build && yarn jest modules/septima-lang/dist/tests/septima.spec.js
+yarn build && NODE_OPTIONS=--experimental-vm-modules yarn jest modules/septima-lang/dist/tests/septima.spec.js
 
 # Run tests for a specific module
 cd modules/septima-lang && yarn test
 ```
 
 Note: Tests run against compiled JavaScript in `dist/` directories, not TypeScript source. Always build before running tests.
+
+The repo is ESM (`"type": "module"` in each module's package.json, `module: NodeNext` in tsconfig-base.json). Relative imports in TypeScript source must include the `.js` extension (e.g. `import { Name } from './name.js'`). Jest runs compiled ESM and requires `NODE_OPTIONS=--experimental-vm-modules`; the module-level and root `test` scripts already set it. Root-level config files (`jest.preset.js`, `.eslintrc.js`, `lint-staged.config.js`) remain CommonJS since the root package.json has no `type` field.
 
 ## Architecture
 
