@@ -204,9 +204,6 @@ export class Runtime {
     const stopAt = this.evalStack
     while (true) {
       const curr = this.evalStack
-      // if (curr.prev === curr) {
-      // }
-
       const operand = this.evalNodeImpl(curr)
       curr.n += 1
       if (operand) {
