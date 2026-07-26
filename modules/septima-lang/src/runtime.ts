@@ -1,9 +1,11 @@
-import crypto from 'node:crypto'
+import crypto from 'crypto'
 
 import { AstNode, show, Unit, UnitId } from './ast-node.js'
 import { extractMessage } from './extract-message.js'
 import { failMe } from './fail-me.js'
 import { shouldNeverHappen } from './should-never-happen.js'
+import * as Stack from './stack.js'
+import { switchOn } from './switch-on.js'
 import { SymbolTable, Visibility } from './symbol-table.js'
 import { Value } from './value.js'
 
@@ -70,36 +72,18 @@ export type Verbosity = 'quiet' | 'trace'
 export type Outputter = (u: unknown) => void
 
 export class Runtime {
-  // private stack: Stack.T = undefined
-  private evalStack: EvalFrame
+  private stack: Stack.T = undefined
   constructor(
     private readonly root: AstNode,
     private readonly verbosity: Verbosity = 'quiet',
     private readonly getAstOf: (importerAsPathFromSourceRoot: string, relativePathFromImporter: string) => Unit,
     private readonly args: Record<string, unknown>,
     private readonly consoleLog?: Outputter,
-  ) {
-    this.evalStack = this.makeTerminalEvalFrame()
-  }
+  ) {}
 
   private output(v: Value) {
     const logger = this.consoleLog ?? console.log // eslint-disable-line no-console
     logger(JSON.stringify(v))
-  }
-
-  private makeTerminalEvalFrame(): EvalFrame {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const fakeAst = undefined as unknown as AstNode
-    const temp = {
-      ast: fakeAst,
-      index: -1,
-      prev: undefined,
-      operands: [undefined],
-      symbolTable: this.buildInitialSymbolTable(true),
-    }
-    const ret = temp as unknown as EvalFrame // eslint-disable-line @typescript-eslint/consistent-type-assertions
-    ret.prev = ret
-    return ret
   }
 
   private buildInitialSymbolTable(generateTheArgsObject: boolean) {
@@ -134,15 +118,12 @@ export class Runtime {
   }
 
   compute() {
-    this.evalStack = this.makeTerminalEvalFrame()
-    this.push(this.root, 0, this.evalStack.symbolTable)
-
     try {
-      const value = this.evalNode()
+      const value = this.evalNode(this.root, this.buildInitialSymbolTable(true))
       return { value }
     } catch (e) {
       const trace: AstNode[] = []
-      for (let curr = this.evalStack; curr.prev != curr; curr = curr?.prev) {
+      for (let curr = this.stack; curr; curr = curr?.next) {
         trace.push(curr.ast)
       }
       return {
@@ -154,74 +135,21 @@ export class Runtime {
     }
   }
 
-  private numOperandsOf(ast: AstNode): number {
-    if (ast.tag === 'functionCall') {
-      return 2
-    } else if (ast.tag === 'arrayLiteral') {
-      return ast.parts.length
-    } else if (ast.tag === 'binaryOperator') {
-      return 2
-    } else if (ast.tag === 'dot') {
-      return 2
-    } else if (ast.tag === 'export*') {
-      return 0
-    } else if (ast.tag === 'formalArg') {
-      return 1
-    } else if (ast.tag === 'ident') {
-      return 0
-    } else if (ast.tag === 'if') {
-      return 3
-    } else if (ast.tag === 'indexAccess') {
-      return 2
-    } else if (ast.tag === 'lambda') {
-      return 2
-    } else if (ast.tag === 'literal') {
-      return 0
-    } else if (ast.tag === 'objectLiteral') {
-      return ast.parts.length
-    } else if (ast.tag === 'templateLiteral') {
-      return ast.parts.length
-    } else if (ast.tag === 'ternary') {
-      return 3
-    } else if (ast.tag === 'topLevelExpression') {
-      return ast.definitions.length + 1
-    } else if (ast.tag === 'unaryOperator') {
-      return 1
-    } else if (ast.tag === 'unit') {
-      return 1
-    } else if (ast.tag == 'let') {
-      return 1
-    }
-    shouldNeverHappen(ast)
+  private evalNode(ast: AstNode, table: SymbolTable): Value {
+    this.stack = Stack.push(ast, this.stack)
+    const ret = this.evalNodeImpl(ast, table)
+    switchOn(this.verbosity, {
+      quiet: () => {},
+      trace: () => {
+        // eslint-disable-next-line no-console
+        console.log(`output of <|${show(ast)}|> is ${JSON.stringify(ret)}  // ${ast.tag}`)
+      },
+    })
+    this.stack = Stack.pop(this.stack)
+    return ret
   }
 
-  private push(ast: AstNode, index: number, symbolTable: SymbolTable): undefined {
-    const operands = new Array<Value | undefined>(this.numOperandsOf(ast)).fill(undefined)
-    this.evalStack = { ast, operands, prev: this.evalStack, symbolTable, index, n: 0 }
-  }
-
-  private evalNode(): Value {
-    const stopAt = this.evalStack
-    while (true) {
-      const curr = this.evalStack
-      const operand = this.evalNodeImpl(curr)
-      curr.n += 1
-      if (operand) {
-        curr.prev.operands[curr.index] = operand
-        this.evalStack = curr.prev
-      }
-
-      if (this.evalStack === stopAt) {
-        return stopAt.operands[0] ?? failMe('no value was returned from the computation')
-      }
-    }
-  }
-
-  private importDefinitions(
-    importerAsPathFromSourceRoot: UnitId,
-    index: number,
-    relativePathFromImporter: string,
-  ): undefined | Value {
+  private importDefinitions(importerAsPathFromSourceRoot: UnitId, relativePathFromImporter: string): Value {
     const importee = this.getAstOf(importerAsPathFromSourceRoot, relativePathFromImporter)
     const exp = importee.expression
     if (
@@ -240,12 +168,10 @@ export class Runtime {
       exp.tag === 'objectLiteral' ||
       exp.tag === 'templateLiteral' ||
       exp.tag === 'unaryOperator' ||
-      exp.tag === 'unit' ||
-      exp.tag === 'let'
+      exp.tag === 'unit'
     ) {
       // TODO(imaman): throw an error on non-exporting unit?
-      return undefined
-      // return Value.obj({})
+      return Value.obj({})
     }
 
     if (exp.tag === 'topLevelExpression') {
@@ -263,45 +189,35 @@ export class Runtime {
           computation: { tag: 'export*', unitId: importee.unitId },
         },
       }
-      return this.push(exporStarUnit, index, this.buildInitialSymbolTable(false))
+      return this.evalNode(exporStarUnit, this.buildInitialSymbolTable(false))
     }
 
     shouldNeverHappen(exp)
   }
 
-  private evalNodeImpl(curr: EvalFrame): undefined | Value {
-    const { ast, n, symbolTable: table } = curr
+  private evalNodeImpl(ast: AstNode, table: SymbolTable): Value {
     if (ast.tag === 'unit') {
-      if (n < ast.imports.length) {
-        return this.importDefinitions(ast.unitId, n, ast.imports[n].pathToImportFrom.text)
-      }
-
       let newTable = table
-      for (let i = 0; i < ast.imports.length; ++i) {
-        const imp = ast.imports[i]
-        newTable = new SymbolFrame(imp.ident.t.text, { destination: curr.operands[i] }, newTable, 'INTERNAL')
+      for (const imp of ast.imports) {
+        const o = this.importDefinitions(ast.unitId, imp.pathToImportFrom.text)
+        newTable = new SymbolFrame(imp.ident.t.text, { destination: o }, newTable, 'INTERNAL')
       }
-      if (n === ast.imports.length) {
-        return this.push(ast.expression, n, table)
-      }
-
-      return curr.operands[ast.imports.length]
+      return this.evalNode(ast.expression, newTable)
     }
-
     if (ast.tag === 'topLevelExpression') {
-      if (n < ast.definitions.length) {
-        const def = ast.definitions[n]
-        return this.push(def, -1, table)
+      let newTable = table
+      for (const def of ast.definitions) {
+        const name = def.ident.t.text
+        const placeholder: Placeholder = { destination: undefined }
+        newTable = new SymbolFrame(name, placeholder, newTable, def.isExported ? 'EXPORTED' : 'INTERNAL')
+        const v = this.evalNode(def.value, newTable)
+        placeholder.destination = v
       }
 
-      if (n === ast.definitions.length) {
-        if (!ast.computation) {
-          return Value.str('')
-        }
-        return this.push(ast.computation, 0, table)
+      if (!ast.computation) {
+        return Value.str('')
       }
-
-      const c = curr.operands[0]
+      const c = this.evalNode(ast.computation, newTable)
       if (ast.throwToken) {
         throw new Error(JSON.stringify(c))
       }
@@ -309,87 +225,20 @@ export class Runtime {
       return c
     }
 
-    if (ast.tag === 'let') {
-      if (n === 0) {
-        const name = ast.ident.t.text
-        curr.placeholder = { destination: undefined }
-        const newTable = new SymbolFrame(name, curr.placeholder, table, ast.isExported ? 'EXPORTED' : 'INTERNAL')
-        curr.prev.symbolTable = newTable
-        return this.push(ast.value, 0, newTable)
-      }
-
-      const ph = curr.placeholder
-      if (!ph) {
-        throw new Error(`no placeholder when evaluating ${JSON.stringify(curr.ast)}`)
-      }
-
-      ph.destination = curr.operands[0]
-      return ph.destination
-    }
-
     if (ast.tag === 'export*') {
       return Value.obj(table.exportValue())
     }
 
     if (ast.tag === 'binaryOperator') {
-      if (n === 0) {
-        return this.push(ast.lhs, 0, table)
+      const lhs = this.evalNode(ast.lhs, table)
+      if (ast.operator === '||') {
+        return lhs.or(() => this.evalNode(ast.rhs, table))
+      }
+      if (ast.operator === '&&') {
+        return lhs.and(() => this.evalNode(ast.rhs, table))
       }
 
-      const lhs = curr.operands[0]
-      if (!lhs) {
-        throw new Error(`lhs is undefined`)
-      }
-
-      if (n === 1) {
-        const op = ast.operator
-        if (
-          op === '!=' ||
-          op === '==' ||
-          op === '<=' ||
-          op === '<' ||
-          op === '>=' ||
-          op === '>' ||
-          op === '%' ||
-          op === '*' ||
-          op === '**' ||
-          op === '+' ||
-          op === '-' ||
-          op === '/'
-        ) {
-          return this.push(ast.rhs, 1, table)
-        }
-
-        if (op === '||') {
-          if (lhs.isTrue()) {
-            return lhs
-          }
-          return this.push(ast.rhs, 1, table)
-        }
-
-        if (op === '&&') {
-          if (lhs.isFalse()) {
-            return lhs
-          }
-          return this.push(ast.rhs, 1, table)
-        }
-
-        if (op === '??') {
-          if (!lhs.isUndefined()) {
-            return lhs
-          }
-
-          return this.push(ast.rhs, 1, table)
-        }
-
-        shouldNeverHappen(op)
-      }
-
-      const rhs = curr.operands[1]
-      if (!rhs) {
-        throw new Error(`rhs is undefined`)
-      }
-
+      const rhs = this.evalNode(ast.rhs, table)
       if (ast.operator === '!=') {
         return lhs.equalsTo(rhs).not()
       }
@@ -433,25 +282,14 @@ export class Runtime {
       }
 
       if (ast.operator === '??') {
-        return lhs.coalesce(() => rhs)
-      }
-
-      if (ast.operator === '||') {
-        return lhs.or(() => rhs)
-      }
-      if (ast.operator === '&&') {
-        return lhs.and(() => rhs)
+        return lhs.coalesce(() => this.evalNode(ast.rhs, table))
       }
 
       shouldNeverHappen(ast.operator)
     }
 
     if (ast.tag === 'unaryOperator') {
-      const operand = curr.operands[0]
-      if (operand === undefined) {
-        return this.push(ast.operand, 0, table)
-      }
-
+      const operand = this.evalNode(ast.operand, table)
       if (ast.operator === '!') {
         return operand.not()
       }
@@ -467,19 +305,18 @@ export class Runtime {
 
       shouldNeverHappen(ast.operator)
     }
-
     if (ast.tag === 'ident') {
       return table.lookup(ast.t.text)
     }
 
     if (ast.tag === 'formalArg') {
-      if (!ast.defaultValue) {
-        // This error should not be reached. The call flow should evaluate a formalArg node only when if it has
-        // a default value sud-node.
-        throw new Error(`no default value for ${ast}`)
+      if (ast.defaultValue) {
+        return this.evalNode(ast.defaultValue, table)
       }
 
-      return n === 0 ? this.push(ast.defaultValue, 0, table) : curr.operands[0]
+      // This error should not be reached. The call flow should evaluate a formalArg node only when if it has
+      // a default value sud-node.
+      throw new Error(`no default value for ${ast}`)
     }
 
     if (ast.tag === 'literal') {
@@ -501,92 +338,60 @@ export class Runtime {
     }
 
     if (ast.tag === 'templateLiteral') {
-      if (n < ast.parts.length) {
-        const part = ast.parts[n]
-        if (part.tag === 'string') {
-          curr.operands[n] = Value.str(part.value)
-          return undefined
-        } else {
-          return this.push(part.expr, n, table)
-        }
-      }
-
-      return Value.str(curr.operands.map(at => at?.toString()).join(''))
+      const result = ast.parts
+        .map(part => {
+          if (part.tag === 'string') {
+            return part.value
+          }
+          if (part.tag === 'expression') {
+            return this.evalNode(part.expr, table).toString()
+          }
+          shouldNeverHappen(part)
+        })
+        .join('')
+      return Value.str(result)
     }
 
     if (ast.tag === 'arrayLiteral') {
-      if (n < ast.parts.length) {
-        const p = ast.parts[n]
-        return this.push(p.v, n, table)
-      }
-
       const arr: Value[] = []
-      for (let i = 0; i < ast.parts.length; ++i) {
-        const p = ast.parts[i]
-        const v = curr.operands[i] ?? failMe(`no operand at ${i}`)
-        if (p.tag === 'element') {
-          arr.push(v)
-        } else if (p.tag === 'spread') {
+      for (const curr of ast.parts) {
+        if (curr.tag === 'element') {
+          arr.push(this.evalNode(curr.v, table))
+        } else if (curr.tag === 'spread') {
+          const v = this.evalNode(curr.v, table)
           if (v.isUndefined()) {
             continue
           }
           arr.push(...v.assertArr())
         } else {
-          shouldNeverHappen(p)
+          shouldNeverHappen(curr)
         }
       }
+
       return Value.arr(arr)
     }
 
     if (ast.tag === 'objectLiteral') {
-      if (n < ast.parts.length * 2) {
-        if (n % 2 === 0) {
-          const at = ast.parts[n / 2]
-          if (at.tag === 'hardName' || at.tag === 'quotedString' || at.tag === 'computedName') {
-            return this.push(at.v, n, table)
-          } else if (at.tag === 'spread') {
-            return this.push(at.o, n, table)
-          } else {
-            shouldNeverHappen(at)
-          }
-        } else {
-          const at = ast.parts[(n - 1) / 2]
-          if (at.tag === 'hardName' || at.tag === 'quotedString' || at.tag === 'spread') {
-            return undefined
-          } else if (at.tag === 'computedName') {
-            return this.push(at.k, n, table)
-            // .assertStr()
-            // return this.push(at.o, n, table)
-          } else {
-            shouldNeverHappen(at)
-          }
+      const entries: [string, Value][] = ast.parts.flatMap(at => {
+        if (at.tag === 'hardName') {
+          return [[at.k.t.text, this.evalNode(at.v, table)]]
         }
-      }
-
-      const entries: [string, Value][] = []
-      for (let i = 0; i < ast.parts.length; ++i) {
-        const at = ast.parts[i]
-        const v = curr.operands[i * 2] ?? failMe(`no v in ${i * 2}`)
-        if (at.tag === 'hardName' || at.tag === 'quotedString') {
-          entries.push([at.k.t.text, v])
-          continue
+        if (at.tag === 'quotedString') {
+          return [[at.k.t.text, this.evalNode(at.v, table)]]
         }
-
         if (at.tag === 'computedName') {
-          const k = curr.operands[i * 2 + 1] ?? failMe(`no v in ${i * 2 + 1}`)
-          entries.push([k.assertStr(), v])
-          continue
+          return [[this.evalNode(at.k, table).assertStr(), this.evalNode(at.v, table)]]
         }
-
         if (at.tag === 'spread') {
-          if (!v.isUndefined()) {
-            entries.push(...Object.entries(v.assertObj()))
+          const o = this.evalNode(at.o, table)
+          if (o.isUndefined()) {
+            return []
           }
-          continue
+          return Object.entries(o.assertObj())
         }
 
         shouldNeverHappen(at)
-      }
+      })
 
       // TODO(imaman): verify type of all keys (strings, maybe also numbers)
       return Value.obj(Object.fromEntries(entries.filter(([_, v]) => !v.isUndefined())))
@@ -597,127 +402,61 @@ export class Runtime {
     }
 
     if (ast.tag === 'functionCall') {
-      if (n < ast.actualArgs.length) {
-        return this.push(ast.actualArgs[n], n, table)
-      }
+      const argValues = ast.actualArgs.map(a => this.evalNode(a, table))
+      const callee = this.evalNode(ast.callee, table)
 
-      if (n === ast.actualArgs.length) {
-        return this.push(ast.callee, n, table)
-      }
-
-      if (n === ast.actualArgs.length + 1) {
-        const argValues = curr.operands.slice(0, ast.actualArgs.length).flatMap(at => (at === undefined ? [] : [at]))
-        if (argValues.length !== ast.actualArgs.length) {
-          failMe(`one of actualArgs is unset`)
-        }
-        const callee = curr.operands[ast.actualArgs.length] ?? failMe(`callee is unset`)
-
-        return this.call(callee, argValues, n)
-      }
-
-      return curr.operands[ast.actualArgs.length + 1]
+      return this.call(callee, argValues)
     }
 
     if (ast.tag === 'if' || ast.tag === 'ternary') {
-      if (n === 0) {
-        return this.push(ast.condition, 0, table)
-      }
-
-      if (n === 1) {
-        const cond = curr.operands[0] ?? failMe(`condition is not set`)
-        if (cond.isTrue()) {
-          return this.push(ast.positive, 1, table)
-        } else if (cond.isFalse()) {
-          return this.push(ast.negative, 1, table)
-        } else {
-          throw new Error(`cond is neither false not true`)
-        }
-      }
-
-      return curr.operands[1] ?? failMe(`operands[1] is not set`)
+      const c = this.evalNode(ast.condition, table)
+      return c.ifElse(
+        () => this.evalNode(ast.positive, table),
+        () => this.evalNode(ast.negative, table),
+      )
     }
 
     if (ast.tag === 'dot') {
-      if (n === 0) {
-        return this.push(ast.receiver, 0, table)
-      }
-
-      const rec = curr.operands[0]
+      const rec = this.evalNode(ast.receiver, table)
       if (rec === undefined || rec === null) {
         throw new Error(`Cannot access attribute .${ast.ident.t.text} of ${rec}`)
       }
-      return rec.access(ast.ident.t.text, () => failMe('access caller'))
+      return rec.access(ast.ident.t.text, (callee, args) => this.call(callee, args))
     }
 
     if (ast.tag === 'indexAccess') {
-      if (n === 0) {
-        return this.push(ast.receiver, 0, table)
-      } else if (n === 1) {
-        return this.push(ast.index, 1, table)
-      }
-
-      const rec = curr.operands[0] ?? failMe(`operands[0] is not set`)
-      const index = curr.operands[1] ?? failMe(`operands[1] is not set`)
-      return rec.access(index, () => failMe('access caller'))
+      const rec = this.evalNode(ast.receiver, table)
+      const index = this.evalNode(ast.index, table)
+      return rec.access(index, (callee, args) => this.call(callee, args))
     }
 
     shouldNeverHappen(ast)
   }
 
-  call(callee: Value, actualValues: Value[], index: number) {
-    if (callee.isForeign()) {
-      const f = callee.assertForeign()
-      return Value.from(f(...actualValues))
-    }
-
-    const lamb = callee.assertLambda()
-
-    const formals = lamb.ast.formalArgs
-    const body = lamb.ast.body
-    const lambdaTable = lamb.table
-
-    const requiredCount = formals.filter(f => !f.defaultValue).length
-    if (actualValues.length < requiredCount) {
-      throw new Error(`Expected at least ${requiredCount} argument(s) but got ${actualValues.length}`)
-    }
-
-    let newTable = lambdaTable
-    for (let i = 0; i < formals.length; ++i) {
-      const formal = formals[i]
-      const actual = actualValues[i]
-      if (actual === undefined) {
-        throw new Error(`A value must be passed to formal argument: ${show(formal.ident)}`)
+  call(callee: Value, actualValues: Value[]) {
+    return callee.call(actualValues, (formals, body, lambdaTable: SymbolTable) => {
+      const requiredCount = formals.filter(f => !f.defaultValue).length
+      if (actualValues.length < requiredCount) {
+        throw new Error(`Expected at least ${requiredCount} argument(s) but got ${actualValues.length}`)
       }
-      newTable = new SymbolFrame(formal.ident.t.text, { destination: actual }, newTable, 'INTERNAL')
-    }
-    return this.push(body, index, newTable)
 
-    // // let newTable = lambdaTable
-    // for (let i = 0; i < formals.length; ++i) {
-    //   const formal = formals[i]
-    //   let actual = actualValues.at(i)
-    //   const useDefault = actual === undefined || (actual.isUndefined() && formal.defaultValue)
+      let newTable = lambdaTable
+      for (let i = 0; i < formals.length; ++i) {
+        const formal = formals[i]
+        let actual = actualValues.at(i)
+        const useDefault = actual === undefined || (actual.isUndefined() && formal.defaultValue)
 
-    //   if (useDefault && formal.defaultValue) {
-    //     actual = this.evalNode(formal.defaultValue, lambdaTable)
-    //   }
+        if (useDefault && formal.defaultValue) {
+          actual = this.evalNode(formal.defaultValue, lambdaTable)
+        }
 
-    //   if (actual === undefined) {
-    //     throw new Error(`A value must be passed to formal argument: ${show(formal.ident)}`)
-    //   }
+        if (actual === undefined) {
+          throw new Error(`A value must be passed to formal argument: ${show(formal.ident)}`)
+        }
 
-    //   newTable = new SymbolFrame(formal.ident.t.text, { destination: actual }, newTable, 'INTERNAL')
-    // }
-    // return this.evalNode(body, newTable)
+        newTable = new SymbolFrame(formal.ident.t.text, { destination: actual }, newTable, 'INTERNAL')
+      }
+      return this.evalNode(body, newTable)
+    })
   }
-}
-
-interface EvalFrame {
-  ast: AstNode
-  prev: EvalFrame
-  index: number
-  operands: (undefined | Value)[]
-  n: number
-  symbolTable: SymbolTable
-  placeholder?: Placeholder
 }
