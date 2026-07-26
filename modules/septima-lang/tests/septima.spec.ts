@@ -228,19 +228,19 @@ describe('septima', () => {
     })
   })
   describe('let', () => {
-    test('binds values to variables', () => {
+    test.only('binds values to variables', () => {
       expect(run(`let x = 5; x+3`)).toEqual(8)
       expect(run(`let x = 5; let y = 20; x*y+4`)).toEqual(104)
     })
-    test('do not need the trailing semicolon', () => {
+    test.only('does not need the trailing semicolon', () => {
       expect(run(`let x = 5 x+3`)).toEqual(8)
       expect(run(`let x = 5 let y = 20 x*y+4`)).toEqual(104)
     })
-    test('fails if the variable was not defined', () => {
+    test.only('fails if the variable was not defined', () => {
       expect(() => run(`let x = 5; x+y`)).toThrowError('Symbol y was not found')
     })
 
-    test('parenthsized expression can have let defintions', () => {
+    test.only('parenthsized expression can have let defintions', () => {
       expect(
         run(`
         let x = 5; 
@@ -257,7 +257,7 @@ describe('septima', () => {
       ).toEqual(128)
     })
 
-    test('inner expressions can access variables from enclosing scopes', () => {
+    test.only('inner expressions can access variables from enclosing scopes', () => {
       expect(
         run(`
         let x = 5; 
@@ -266,7 +266,7 @@ describe('septima', () => {
         x*y+(let n = 4; n+x)`),
       ).toEqual(109)
     })
-    test('definitions from inner scopes overshadow definitions from outer scopes', () => {
+    test.only('definitions from inner scopes overshadow definitions from outer scopes', () => {
       expect(
         run(`
         let x = 5; 
@@ -275,16 +275,16 @@ describe('septima', () => {
         x*y+(let n = 4; let x = 200; n+x)`),
       ).toEqual(304)
     })
-    test('the body of a definition can reference an earlier definition from the same scope', () => {
+    test.only('the body of a definition can reference an earlier definition from the same scope', () => {
       expect(run(`let x = 10;  let y = x*2;  y*2`)).toEqual(40)
     })
-    test('the body of a definition cannot reference a latter definition from the same scope', () => {
+    test.only('the body of a definition cannot reference a latter definition from the same scope', () => {
       expect(() => run(`let y = x*2; let x = 10;  y*2`)).toThrowError(`Symbol x was not found`)
     })
     test('the body of a definition cannot reference itself', () => {
       expect(() => run(`let x = 10;  let y = if (x > 0) y else x; y*2`)).toThrowError(`Unresolved definition: y`)
     })
-    test('uses lexical scoping (and not dynamic scoping)', () => {
+    test.only('uses lexical scoping (and not dynamic scoping)', () => {
       const actual = run(`let x = (let a = 1; a+1);  let y = (let a=100; x+1); y`)
       expect(actual).toEqual(3)
     })
