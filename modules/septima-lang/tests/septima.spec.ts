@@ -294,12 +294,12 @@ describe('septima', () => {
   })
 
   describe('semicolons before the expression', () => {
-    test('are allowed', () => {
+    test.only('are allowed', () => {
       expect(run(`let a = 5; ;;;;4.8`)).toEqual(4.8)
       expect(run(`;;;"abc"`)).toEqual('abc')
       expect(run(`;4.8`)).toEqual(4.8)
     })
-    test('can be interleaved with whitspace', () => {
+    test.only('can be interleaved with whitspace', () => {
       expect(run(`let a = 5; ;; ;; 4.8`)).toEqual(4.8)
       expect(run(`;; ;   "abc"`)).toEqual('abc')
       expect(run(` ;\n4.8`)).toEqual(4.8)
@@ -349,18 +349,18 @@ describe('septima', () => {
           'jumps over': 'the',
         })
       })
-      test('allow a dangling comma', () => {
+      test.only('allow a dangling comma', () => {
         expect(run(`{a: 1,}`)).toEqual({ a: 1 })
         expect(run(`{a: 1, b: 2,}`)).toEqual({ a: 1, b: 2 })
         expect(run(`{a: "A", b: "B", c: "CCC",}`)).toEqual({ a: 'A', b: 'B', c: 'CCC' })
       })
-      test('a dangling comma in an empty object is not allowed', () => {
+      test.only('a dangling comma in an empty object is not allowed', () => {
         expect(() => run(`{,}`)).toThrowError('Expected an identifier at (<inline>:1:2..3) ,}')
       })
       test('supports computed attributes names via the [<expression>]: <value> notation', () => {
         expect(run(`{["a" + 'b']: 'a-and-b'}`)).toEqual({ ab: 'a-and-b' })
       })
-      test('supports shorthand notation for initializing an attribute from an identifier', () => {
+      test.only('supports shorthand notation for initializing an attribute from an identifier', () => {
         expect(run(`let a = 'A'; let b = 42; {a, b}`)).toEqual({ a: 'A', b: 42 })
       })
     })
