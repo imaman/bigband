@@ -59,6 +59,7 @@ export class CodeEmitter {
           shouldNeverHappen(part)
         }
       }
+      cf.push({tag: 'array', param: ast.parts.length})
     } else if (ast.tag === 'ident') {
       cf.push({ tag: 'load', param: ast.t.text })
     } else if (ast.tag === 'literal') {

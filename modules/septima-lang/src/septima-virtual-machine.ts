@@ -77,7 +77,7 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'throw') {
         throw this.pop()
       } else if (at.tag === 'array') {
-        const arr = new Array(at.param).fill(undefined)
+        const arr: unknown[] = []
         for (let i = 0; i < at.param; ++i) {
           arr.push(this.pop())
         }

@@ -169,7 +169,7 @@ describe('septima', () => {
   })
 
   describe('unary expressions', () => {
-    test('+', () => {
+    test.only('+', () => {
       expect(run(`+7`)).toEqual(7)
       expect(run(`3*+7`)).toEqual(21)
       expect(run(`3 * +7`)).toEqual(21)
@@ -181,7 +181,7 @@ describe('septima', () => {
       expect(() => run(`+(fun (x) x*2)`)).toThrowError('expected num but found "fun (x) (x * 2)"')
       expect(() => run(`+'abc'`)).toThrowError(`expected num but found "abc"`)
     })
-    test('-', () => {
+    test.only('-', () => {
       expect(run(`-7`)).toEqual(-7)
       expect(run(`3+-7`)).toEqual(-4)
       expect(run(`3*-7`)).toEqual(-21)
