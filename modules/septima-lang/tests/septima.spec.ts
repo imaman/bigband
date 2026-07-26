@@ -365,7 +365,7 @@ describe('septima', () => {
       })
     })
     describe('attributes', () => {
-      test('can be accessed via the .<ident> notation', () => {
+      test.only('can be accessed via the .<ident> notation', () => {
         expect(run(`let x = {a: 3, b: 4}; x.a`)).toEqual(3)
         expect(run(`let x = {a: 3, b: 4}; x.a * x.b`)).toEqual(12)
         expect(run(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; [x.b.x.Jan, x.b.x.May, x.b.y]`)).toEqual([

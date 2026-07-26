@@ -108,7 +108,7 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'array') {
         const arr: unknown[] = []
         for (let i = 0; i < at.param; ++i) {
-          arr.push(this.pop())
+          arr[at.param - i - 1] = this.pop()
         }
         this.push(arr)
       } else if (at.tag === 'constUndefined') {
@@ -130,7 +130,11 @@ export class SeptimaVirtualMachine {
           this.push(-this.num())
         }
       } else if (at.tag === 'dot') {
-        throw new Error(`not impl yet ${JSON.stringify(at)}`)
+        const reciever = this.pop()
+        if (typeof reciever !== 'object' || reciever === null) {
+          throw new Error('----------tttttttttttttt---------')
+        }
+        this.push((reciever as Record<string, unknown>)[at.param])
       } else if (at.tag === 'spreadmark') {
         throw new Error(`not impl yet ${JSON.stringify(at)}`)
       } else if (at.tag === 'store') {
