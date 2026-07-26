@@ -646,17 +646,18 @@ export class Runtime {
       return curr.operands[1] ?? failMe(`operands[1] is not set`)
     }
 
-    // if (ast.tag === 'dot') {
-    //   if (n === 0) {
-    //     return this.push(ast.receiver, 0, table)
-    //   }
+    if (ast.tag === 'dot') {
+      if (n === 0) {
+        return this.push(ast.receiver, 0, table)
+      }
 
-    //   const rec = curr.operands[0]
-    //   if (rec === undefined || rec === null) {
-    //     throw new Error(`Cannot access attribute .${ast.ident.t.text} of ${rec}`)
-    //   }
-    //   return rec.access(ast.ident.t.text, (callee, args) => this.call(callee, args))
-    // }
+      const rec = curr.operands[0]
+      if (rec === undefined || rec === null) {
+        throw new Error(`Cannot access attribute .${ast.ident.t.text} of ${rec}`)
+      }
+      return rec.access(ast.ident.t.text, () => failMe('access caller'))
+      // (callee, args) => this.call(callee, args))
+    }
 
     // if (ast.tag === 'indexAccess') {
     //   if (n === 0) {
@@ -670,7 +671,7 @@ export class Runtime {
     //   return rec.access(index, (callee, args) => this.call(callee, args))
     // }
 
-    if (ast.tag === 'dot' || ast.tag === 'indexAccess') {
+    if (ast.tag === 'indexAccess') {
       throw new Error(`not impl yet: ${ast.tag}`)
     }
 
