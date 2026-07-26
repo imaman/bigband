@@ -1,14 +1,16 @@
 import * as path from 'path'
 
-import { show, Unit, UnitId } from './ast-node.js'
+import { Unit, UnitId } from './ast-node.js'
+import { CodeEmitter, CodeFile } from './code-emitter.js'
 import { failMe } from './fail-me.js'
 import { Parser } from './parser.js'
-import { formatTrace, Result, ResultSink } from './result.js'
-import { Outputter, Runtime, Verbosity } from './runtime.js'
+import { Result, ResultSink } from './result.js'
+import { Outputter, Verbosity } from './runtime.js'
 import { Scanner } from './scanner.js'
+import { SeptimaVirtualMachine } from './septima-virtual-machine.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 import { SourceCode } from './source-code.js'
-import { CodeEmitter, CodeFile } from './code-emitter.js'
+import { Value } from './value.js'
 
 interface Options {
   /**
@@ -154,22 +156,28 @@ export class Septima {
     }
   }
 
-  private execute(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
-    const runtime = new Runtime(
-      this.unitOf(undefined, fileName),
-      verbosity,
-      (a, b) => this.unitOf(a, b),
-      args,
-      this.consoleLog,
-    )
-    const c = runtime.compute()
+  private execute(fileName: string, _verbosity: Verbosity, _args: Record<string, unknown>) {
+    const u = this.unitOf(undefined, fileName)
+    const cf = new CodeFile()
+    new CodeEmitter().run(u, cf)
+    // console.log(`program:\n${show(u)}\n\n${cf.codes.map(at => JSON.stringify(at)).join('\n')}`)
+    const c = new SeptimaVirtualMachine(cf).run()
+    return Value.from(c)
 
-    if (c.value) {
-      return c.value
-    }
+    // const runtime = new Runtime(
+    //   this.unitOf(undefined, fileName),
+    //   verbosity,
+    //   (a, b) => this.unitOf(a, b),
+    //   args,
+    //   this.consoleLog,
+    // )
+    // const c = runtime.compute()
+    // if (c.value) {
+    //   return c.value
+    // }
 
-    const formatted = formatTrace(c.expressionTrace, this.unitByUnitId)
-    throw new Error(`${c.errorMessage} when evaluating:\n${formatted}`)
+    // const formatted = formatTrace(c.expressionTrace, this.unitByUnitId)
+    // throw new Error(`${c.errorMessage} when evaluating:\n${formatted}`)
   }
 
   /**
@@ -199,13 +207,6 @@ export class Septima {
 
     this.unitByUnitId.set(pathFromSourceRoot, { unit, sourceCode })
     acc.push(...unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text)))
-
-
-
-    
-    const cf = new CodeFile()
-    new CodeEmitter().run(unit, cf)
-    console.log(`program:\n${show(unit)}\n\n${cf.codes.map(at => JSON.stringify(at)).join('\n')}`)
   }
 
   private unitOf(importerPathFromSourceRoot: string | undefined, relativePath: string) {
