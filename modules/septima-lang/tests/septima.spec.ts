@@ -85,17 +85,17 @@ describe('septima', () => {
   })
 
   describe('equality', () => {
-    test('of numbers', () => {
+    test.only('of numbers', () => {
       expect(run(`3==4`)).toEqual(false)
       expect(run(`3==3`)).toEqual(true)
       expect(run(`3!=4`)).toEqual(true)
       expect(run(`3!=3`)).toEqual(false)
     })
-    test('of strings', () => {
+    test.only('of strings', () => {
       expect(run(`'alpha' == 'beta'`)).toEqual(false)
       expect(run(`'alpha' == 'alpha'`)).toEqual(true)
     })
-    test('of boolean', () => {
+    test.only('of boolean', () => {
       expect(run(`false == false`)).toEqual(true)
       expect(run(`false == true`)).toEqual(false)
       expect(run(`true == false`)).toEqual(false)

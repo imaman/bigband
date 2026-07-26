@@ -45,35 +45,45 @@ export class SeptimaVirtualMachine {
         if (at.mod === '&&' || at.mod === '||' || at.mod === '??') {
           throw new Error(`not yet ${JSON.stringify(at)}`)
         }
-        const rhs = this.num()
-        const lhs = this.num()
-        const v =
-          at.mod === '!='
-            ? lhs != rhs
-            : at.mod === '%'
-            ? lhs % rhs
-            : at.mod === '*'
-            ? lhs * rhs
-            : at.mod === '**'
-            ? lhs ** rhs
-            : at.mod === '+'
-            ? lhs + rhs
-            : at.mod === '-'
-            ? lhs - rhs
-            : at.mod === '/'
-            ? lhs / rhs
-            : at.mod === '>'
-            ? lhs > rhs
-            : at.mod === '<'
-            ? lhs < rhs
-            : at.mod === '>='
-            ? lhs >= rhs
-            : at.mod === '<='
-            ? lhs <= rhs
-            : at.mod === '=='
-            ? lhs == rhs
-            : shouldNeverHappen(at.mod)
-        this.push(v)
+
+        if (at.mod === '%' || at.mod === '*' || at.mod === '**'|| at.mod === '+'|| at.mod === '-'|| at.mod === '/'
+            || at.mod === '>' || at.mod === '<' || at.mod === '>=' || at.mod === '<='
+        ) {
+          const rhs = this.num()
+          const lhs = this.num()
+          const v =at.mod === '%'
+              ? lhs % rhs
+              : at.mod === '*'
+              ? lhs * rhs
+              : at.mod === '**'
+              ? lhs ** rhs
+              : at.mod === '+'
+              ? lhs + rhs
+              : at.mod === '-'
+              ? lhs - rhs
+              : at.mod === '/'
+              ? lhs / rhs
+              : at.mod === '>'
+              ? lhs > rhs
+              : at.mod === '<'
+              ? lhs < rhs
+              : at.mod === '>='
+              ? lhs >= rhs
+              : at.mod === '<='
+              ? lhs <= rhs
+              : shouldNeverHappen(at.mod)
+          this.push(v)
+        } else {
+            const rhs = this.pop()
+            const lhs = this.pop()
+            const eq = lhs === rhs
+            const v = at.mod === '=='
+              ? eq
+              : at.mod === '!='
+              ? !eq
+              : shouldNeverHappen(at.mod)
+          this.push(v)
+        }
       } else if (at.tag === 'throw') {
         throw this.pop()
       } else if (at.tag === 'array') {
