@@ -4,13 +4,14 @@
     "inlineSourceMap": true,
     "newLine": "LF",
     "declaration": true,
-    "target": "ES2021",
-    "lib": ["ES2021", "DOM"],
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
     "strict": true,
     "noImplicitAny": true,
     "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node", "jest"]
   }
 }

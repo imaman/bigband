@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.14",
+    "@types/node": "^22.9.0",
     "@typescript-eslint/eslint-plugin": "^5.7.0",
     "@typescript-eslint/parser": "^5.7.0",
     "build-raptor": "^0.150.0",
