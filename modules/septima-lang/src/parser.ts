@@ -90,7 +90,7 @@ export class Parser {
       const ident = this.identifier()
       this.scanner.consume('=')
       const value = this.lambda()
-      ret.push({ start, ident, value, isExported })
+      ret.push({ tag: 'let', start, ident, value, isExported, unitId: this.unitId })
 
       if (this.scanner.headMatches(';')) {
         continue

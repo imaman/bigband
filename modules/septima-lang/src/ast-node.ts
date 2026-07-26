@@ -3,7 +3,7 @@ import { Token } from './scanner.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 import { switchOn } from './switch-on.js'
 
-export type Let = { start: Token; ident: Ident; value: AstNode; isExported: boolean }
+export type Let = { tag: 'let'; start: Token; ident: Ident; value: AstNode; isExported: boolean; unitId: UnitId }
 
 export type UnitId = string
 
@@ -99,6 +99,7 @@ export type AstNode =
       computation?: AstNode
       unitId: UnitId
     }
+  | Let
   | Lambda
   | {
       tag: 'ternary'
@@ -243,9 +244,7 @@ export function show(ast: AstNode | AstNode[]): string {
     return `{${pairs.join(', ')}}`
   }
   if (ast.tag === 'topLevelExpression') {
-    const defs = ast.definitions
-      .map(d => `${d.isExported ? 'export ' : ''}let ${show(d.ident)} = ${show(d.value)}`)
-      .join('; ')
+    const defs = ast.definitions.map(d => show(d)).join('; ')
     const sep = defs && ast.computation ? ' ' : ''
     return `${defs ? defs + ';' : ''}${sep}${ast.throwToken ? ast.throwToken.text + ' ' : ''}${
       ast.computation ? show(ast.computation) : ''
@@ -259,6 +258,10 @@ export function show(ast: AstNode | AstNode[]): string {
       .map(imp => `import * as ${show(imp.ident)} from '${imp.pathToImportFrom.text}';`)
       .join('\n')
     return `${imports ? imports + '\n' : ''}${show(ast.expression)}`
+  }
+
+  if (ast.tag === 'let') {
+    return `${ast.isExported ? 'export ' : ''}let ${show(ast.ident)} = ${show(ast.value)}`
   }
 
   shouldNeverHappen(ast)
@@ -320,9 +323,16 @@ export function span(ast: AstNode): Span {
       const comp = span(ast.computation)
       return ofRange(d0 ? ofToken(d0.start) : comp, comp)
     } else if (ast.definitions.length) {
-      const first = ast.definitions[0]
-      const last = ast.definitions[ast.definitions.length - 1]
-      return ofRange(ofToken(first.start), span(last.value))
+      let ret: undefined | Span = undefined
+      for (const d of ast.definitions) {
+        const curr = span(d)
+        ret = ret ? ofRange(ret, curr) : curr
+      }
+
+      if (!ret) {
+        throw new Error(`span could not be computed for ${JSON.stringify(ast)}`)
+      }
+      return ret
     } else {
       return { from: { offset: 0 }, to: { offset: 0 } }
     }
@@ -334,6 +344,9 @@ export function span(ast: AstNode): Span {
     const i0 = ast.imports.find(Boolean)
     const exp = span(ast.expression)
     return ofRange(i0 ? ofToken(i0.start) : exp, exp)
+  }
+  if (ast.tag === 'let') {
+    return ofRange(ofToken(ast.start), span(ast.value))
   }
 
   shouldNeverHappen(ast)
