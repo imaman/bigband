@@ -12,7 +12,7 @@ function run(input: string) {
 }
 
 describe('septima', () => {
-  test('basics', () => {
+  test.only('basics', () => {
     expect(run(`5`)).toEqual(5)
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (<inline>:1:3..5) 789`)
     expect(run(`3.14`)).toEqual(3.14)
@@ -22,7 +22,7 @@ describe('septima', () => {
     expect(run(`const f = (a, b) => a + b; f(3, 4)`)).toEqual(7)
     expect(run(`const a = 1; let b = 2; const c = 3; a + b + c`)).toEqual(6)
   })
-  test('an optional return keyword can be placed before the result', () => {
+  test.only('an optional return keyword can be placed before the result', () => {
     expect(run(`return 5`)).toEqual(5)
     expect(run(`return 3.14`)).toEqual(3.14)
   })
@@ -126,7 +126,7 @@ describe('septima', () => {
     })
   })
 
-  test('comparison', () => {
+  test.only('comparison', () => {
     expect(run(`3>2`)).toEqual(true)
     expect(run(`3>3`)).toEqual(false)
     expect(run(`3>4`)).toEqual(false)
