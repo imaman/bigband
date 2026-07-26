@@ -292,14 +292,6 @@ export class Runtime {
       if (n < ast.definitions.length) {
         const def = ast.definitions[n]
         return this.push(def, -1, table)
-        // const name = def.ident.t.text
-        // const placeholder: Placeholder = { destination: undefined }
-        // // newTable = new SymbolFrame(name, placeholder, newTable, def.isExported ? 'EXPORTED' : 'INTERNAL')
-        // // curr.symbolTable = newTable
-        // this.push(def.value, n, newTable)
-        // return undefined
-        // // const v = this.evalNode(newTable)
-        // // placeholder.destination = v
       }
 
       if (n === ast.definitions.length) {
@@ -655,7 +647,6 @@ export class Runtime {
         throw new Error(`Cannot access attribute .${ast.ident.t.text} of ${rec}`)
       }
       return rec.access(ast.ident.t.text, () => failMe('access caller'))
-      // (callee, args) => this.call(callee, args))
     }
 
     if (ast.tag === 'indexAccess') {
@@ -668,7 +659,6 @@ export class Runtime {
       const rec = curr.operands[0] ?? failMe(`operands[0] is not set`)
       const index = curr.operands[1] ?? failMe(`operands[1] is not set`)
       return rec.access(index, () => failMe('access caller'))
-      // (callee, args) => this.call(callee, args))
     }
 
     shouldNeverHappen(ast)
