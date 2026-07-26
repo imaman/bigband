@@ -1,3 +1,4 @@
+import {stringify} from 'safe-stable-stringify'
 import { CodeFile } from './code-emitter.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 
@@ -76,7 +77,7 @@ export class SeptimaVirtualMachine {
         } else {
             const rhs = this.pop()
             const lhs = this.pop()
-            const eq = lhs === rhs
+            const eq = lhs === rhs || stringify(lhs) === stringify(rhs)
             const v = at.mod === '=='
               ? eq
               : at.mod === '!='
