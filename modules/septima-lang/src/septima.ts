@@ -1,6 +1,6 @@
 import * as path from 'path'
 
-import { Unit, UnitId } from './ast-node.js'
+import { show, Unit, UnitId } from './ast-node.js'
 import { CodeEmitter, CodeFile } from './code-emitter.js'
 import { failMe } from './fail-me.js'
 import { Parser } from './parser.js'
@@ -160,7 +160,7 @@ export class Septima {
     const u = this.unitOf(undefined, fileName)
     const cf = new CodeFile()
     new CodeEmitter().run(u, cf)
-    // console.log(`program:\n${show(u)}\n\n${cf.codes.map(at => JSON.stringify(at)).join('\n')}`)
+    console.log(`program:\n${show(u)}\n\n${cf.codes.map(at => JSON.stringify(at)).join('\n')}`)
     const c = new SeptimaVirtualMachine(cf).run()
     return Value.from(c)
 

@@ -29,6 +29,14 @@ export class SeptimaVirtualMachine {
     return ret
   }
 
+  private str() {
+    const ret = this.pop()
+    if (typeof ret !== 'string') {
+      throw new Error(`value type error: expected str but found ${JSON.stringify(ret)}`)
+    }
+    return ret
+  }
+
   run() {
     for (const at of this.cf.codes) {
       if (at.tag === 'const') {
@@ -77,10 +85,10 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'constUndefined') {
         this.push(undefined)
       } else if (at.tag === 'object') {
-        const arr = new Array(at.param).fill(undefined)
-        for (let i = 0; i < at.param; i += 2) {
+        const arr: [string, unknown][] = []
+        for (let i = 0; i < at.param * 2; i += 2) {
           const v = this.pop()
-          const k = this.pop()
+          const k = this.str()
           arr.push([k, v])
         }
         this.push(Object.fromEntries(arr))

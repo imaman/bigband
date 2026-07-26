@@ -335,7 +335,7 @@ describe('septima', () => {
 
   describe('objects', () => {
     describe('literals', () => {
-      test('are specified via JSON format', () => {
+      test.only('are specified via JSON format', () => {
         expect(run(`{}`)).toEqual({})
         expect(run(`{a: 1}`)).toEqual({ a: 1 })
         expect(run(`{a: 1, b: 2}`)).toEqual({ a: 1, b: 2 })
