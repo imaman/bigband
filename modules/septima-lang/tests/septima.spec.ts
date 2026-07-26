@@ -27,7 +27,7 @@ describe('septima', () => {
     expect(run(`return 3.14`)).toEqual(3.14)
   })
 
-  test.only('booleans', () => {
+  test('booleans', () => {
     expect(run(`true`)).toEqual(true)
     expect(run(`false`)).toEqual(false)
     expect(run(`!true`)).toEqual(false)
