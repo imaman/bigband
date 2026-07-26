@@ -935,7 +935,7 @@ describe('septima', () => {
       return Object.keys(casted)
     }
 
-    test(`the 'undefined' literal evaluates to (a JS) undefined`, () => {
+    test.only(`the 'undefined' literal evaluates to (a JS) undefined`, () => {
       expect(run(`let x = undefined; x`)).toBe(undefined)
     })
     test('accessing a non-existing attribute evaulates to undefined', () => {

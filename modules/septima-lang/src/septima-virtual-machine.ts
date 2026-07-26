@@ -142,12 +142,10 @@ export class SeptimaVirtualMachine {
       }
     }
 
-    const ret = this.pop() ?? undefined
-    if (ret === undefined) {
-      throw new Error(`nothing to return`)
+    if (this.opstack.length !== 1) {
+      throw new Error(`opstack length is ${this.opstack.length}`)
     }
-
-    return ret
+    return this.pop() 
   }
 }
 
