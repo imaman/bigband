@@ -201,19 +201,22 @@ export class Runtime {
   }
 
   private evalNode(): Value {
+    const stopAt = this.evalStack
     while (true) {
       const curr = this.evalStack
-      if (curr.prev === curr) {
-        return curr.operands[0] ?? failMe('no value was returned from the computation')
-      }
+      // if (curr.prev === curr) {
+      // }
 
       const operand = this.evalNodeImpl(curr)
       curr.n += 1
-      if (operand === undefined) {
-        continue
+      if (operand) {
+        curr.prev.operands[curr.index] = operand
+        this.evalStack = curr.prev
       }
-      curr.prev.operands[curr.index] = operand
-      this.evalStack = curr.prev
+
+      if (this.evalStack === stopAt) {
+        return stopAt.operands[0] ?? failMe('no value was returned from the computation')
+      }
     }
   }
 
