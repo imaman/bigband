@@ -63,7 +63,7 @@ export class CodeEmitter {
       cf.push({ tag: 'load', param: ast.t.text })
     } else if (ast.tag === 'literal') {
       if (ast.type === 'bool' || ast.type === 'num' || ast.type === 'str') {
-        cf.push({ tag: 'const', param: ast.t.text })
+        cf.push({ tag: 'const', param: JSON.parse(ast.t.text) })
       } else if (ast.type === 'undef') {
         cf.push({ tag: 'constUndefined' })
       } else {

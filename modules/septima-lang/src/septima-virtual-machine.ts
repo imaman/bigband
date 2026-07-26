@@ -14,13 +14,28 @@ export class SeptimaVirtualMachine {
     return this.opstack.pop()
   }
 
+  private bool() {
+    const ret = this.pop()
+    if (typeof ret !== 'boolean') {
+      throw new Error(`value type error: expected bool but found ${JSON.stringify(ret)}`)
+    }
+    return ret
+  }
+  private num() {
+    const ret = this.pop()
+    if (typeof ret !== 'number') {
+      throw new Error(`value type error: expected num but found ${JSON.stringify(ret)}`)
+    }
+    return ret
+  }
+
   run() {
     for (const at of this.cf.codes) {
       if (at.tag === 'const') {
         this.push(at.param)
       } else if (at.tag === 'binop') {
-        const rhs = Number(this.pop())
-        const lhs = Number(this.pop())
+        const rhs = this.num()
+        const lhs = this.num()
         const v =
           at.mod === '!='
             ? lhs != rhs
@@ -73,9 +88,13 @@ export class SeptimaVirtualMachine {
         }
         this.push(Object.fromEntries(arr))
       } else if (at.tag === 'unop') {
-        const a = Number(this.pop())
-        const v = at.mod === '!' ? !a : at.mod === '+' ? +a : at.mod === '-' ? -a : shouldNeverHappen(at.mod)
-        this.push(v)
+        if (at.mod === '!') {
+          this.push(!this.bool())
+        } else if (at.mod === '+') {
+          this.push(+this.num())
+        } else if (at.mod === '-') {
+          this.push(-this.num())
+        }
       } else if (at.tag === 'dot') {
         throw new Error(`not impl yet ${JSON.stringify(at)}`)
       } else if (at.tag === 'load') {
