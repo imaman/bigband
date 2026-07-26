@@ -218,9 +218,26 @@ export class Value {
       str: err,
     })
   }
+  assertForeign() {
+    const err = badType('foreign')
+    return selectRaw(this, {
+      arr: err,
+      bool: err,
+      foreign: a => a,
+      lambda: err,
+      num: err,
+      undef: err,
+      obj: err,
+      str: err,
+    })
+  }
 
   isLambda() {
     return this.inner.tag === 'lambda'
+  }
+
+  isForeign() {
+    return this.inner.tag === 'foreign'
   }
 
   isArray() {
@@ -521,6 +538,20 @@ export class Value {
     return selectRaw(this, {
       arr: err,
       bool: b => b,
+      foreign: err,
+      lambda: err,
+      num: err,
+      undef: err,
+      obj: err,
+      str: err,
+    })
+  }
+
+  isFalse(): boolean {
+    const err = badType('bool')
+    return selectRaw(this, {
+      arr: err,
+      bool: b => !b,
       foreign: err,
       lambda: err,
       num: err,
