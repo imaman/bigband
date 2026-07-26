@@ -658,7 +658,34 @@ export class Runtime {
 
       const rec = curr.operands[0] ?? failMe(`operands[0] is not set`)
       const index = curr.operands[1] ?? failMe(`operands[1] is not set`)
-      return rec.access(index, () => failMe('access caller'))
+      return rec.access(index, (callable, args) => {
+        if (callable.isLambda()) {
+          const lamb = callable.assertLambda()
+          this.evalStack = {
+            ast: {
+              tag: 'functionCall',
+              callee: lamb.ast,
+              actualArgs: [],
+              end: lamb.ast.start,
+              unitId: lamb.ast.unitId,
+            },
+            index: 0,
+            n: 0,
+            operands: args,
+            prev: this.evalStack,
+            symbolTable: table,
+          }
+
+          const ret = this.evalNode()
+          this.evalStack = this.evalStack.prev
+          return ret
+        } else if (callable.isForeign()) {
+          const f = callable.assertForeign()
+          return Value.from(f(...args))
+        } else {
+          throw new Error(`unsupported callable: ${JSON.stringify(callable)}`)
+        }
+      })
     }
 
     shouldNeverHappen(ast)
