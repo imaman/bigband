@@ -143,7 +143,9 @@ export class Runtime {
     } catch (e) {
       const trace: AstNode[] = []
       for (let curr = this.evalStack; curr.prev != curr; curr = curr?.prev) {
-        trace.push(curr.ast)
+        if (curr.ast) {
+          trace.push(curr.ast)
+        }
       }
       return {
         expressionTrace: trace,
@@ -204,9 +206,6 @@ export class Runtime {
     const stopAt = this.evalStack
     while (true) {
       const curr = this.evalStack
-      // if (curr.prev === curr) {
-      // }
-
       const operand = this.evalNodeImpl(curr)
       curr.n += 1
       if (operand) {
@@ -273,6 +272,9 @@ export class Runtime {
   }
 
   private evalNodeImpl(curr: EvalFrame): undefined | Value {
+    if (!curr?.ast) {
+      return //curr.
+    }
     const { ast, n, symbolTable: table } = curr
     if (ast.tag === 'unit') {
       if (n < ast.imports.length) {
@@ -661,7 +663,16 @@ export class Runtime {
 
       const rec = curr.operands[0] ?? failMe(`operands[0] is not set`)
       const index = curr.operands[1] ?? failMe(`operands[1] is not set`)
-      return rec.access(index, () => failMe('access caller'))
+
+      // this.evalStack = {
+      //   ast,
+      //   index: -1,
+      //   n: 0,
+      //   operands: [undefined],
+      //   prev: this.evalStack,
+      //   symbolTable: table,
+      // }
+      return rec.access(index, () => failMe('indexAccess'))
     }
 
     shouldNeverHappen(ast)
@@ -715,12 +726,16 @@ export class Runtime {
   }
 }
 
-interface EvalFrame {
-  ast: AstNode
+type EvalFrame = {
   prev: EvalFrame
   index: number
   operands: (undefined | Value)[]
   n: number
   symbolTable: SymbolTable
   placeholder?: Placeholder
-}
+} & (
+  | {
+      ast: AstNode
+    }
+  | { ast: undefined; calc: () => Value }
+)
