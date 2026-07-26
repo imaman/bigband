@@ -378,12 +378,12 @@ describe('septima', () => {
           ),
         ).toEqual([{ Jan: 1, Feb: 2, May: 5 }, ['Mon', 'Tue', 'Wed']])
       })
-      test('can be accessed via the [<name>] notation', () => {
+      test.only('can be accessed via the [<name>] notation', () => {
         expect(run(`let x = {a: 3, b: 4}; x['a']`)).toEqual(3)
         expect(run(`let x = {a: 3, b: 4}; [x['a'], x["b"]]`)).toEqual([3, 4])
         expect(run(`let x = {a: 3, b: {x: {Jan: 1, Feb: 2, May: 5}, y: 300}}; x["b"]['x']["May"]`)).toEqual(5)
       })
-      test('supports chains of attribute accesses mixing the .<ident> and the [<name>] notations', () => {
+      test.only('supports chains of attribute accesses mixing the .<ident> and the [<name>] notations', () => {
         expect(run(`let o = {b: {x: {M: 5}}}; [o["b"].x["M"], o.b["x"].M, o.b.x["M"]]`)).toEqual([5, 5, 5])
       })
       test('supports chains of calls to nested attributes which are lambda expressions', () => {
@@ -938,7 +938,7 @@ describe('septima', () => {
     test.only(`the 'undefined' literal evaluates to (a JS) undefined`, () => {
       expect(run(`let x = undefined; x`)).toBe(undefined)
     })
-    test('accessing a non-existing attribute evaulates to undefined', () => {
+    test.only('accessing a non-existing attribute evaulates to undefined', () => {
       expect(run(`let x = {a: 42}; [x.a, x.b]`)).toEqual([42, undefined])
     })
     test('.at() method returns undefined when the index is out of range', () => {

@@ -15,7 +15,7 @@ type Command =
       param: string | number | boolean
     }
   | {
-      tag: 'throw' | 'spreadmark' | 'constUndefined'
+      tag: 'throw' | 'spreadmark' | 'constUndefined' | 'indexAccess'
     }
   | {
       tag: 'load' | 'dot' | 'store'
@@ -92,6 +92,7 @@ export class CodeEmitter {
     } else if (ast.tag === 'indexAccess') {
       this.run(ast.receiver, cf)
       this.run(ast.index, cf)
+      cf.push({tag: 'indexAccess'})
     } else if (ast.tag === 'lambda') {
       throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'let') {

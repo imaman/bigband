@@ -141,6 +141,10 @@ export class SeptimaVirtualMachine {
         table = table.add(at.param, this.pop())
       } else if (at.tag === 'load') {
         this.push(table.lookup(at.param))
+      } else if (at.tag === 'indexAccess') {
+        const sel = this.str()
+        const rec = this.pop() as Record<string, unknown>
+        this.push(rec[sel])
       } else {
         shouldNeverHappen(at.tag)
       }
