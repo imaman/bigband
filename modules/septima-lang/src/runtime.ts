@@ -659,20 +659,17 @@ export class Runtime {
       // (callee, args) => this.call(callee, args))
     }
 
-    // if (ast.tag === 'indexAccess') {
-    //   if (n === 0) {
-    //     return this.push(ast.receiver, 0, table)
-    //   } else if (n === 1) {
-    //     return this.push(ast.index, 1, table)
-    //   }
-
-    //   const rec = curr.operands[0] ?? failMe(`operands[0] is not set`)
-    //   const index = curr.operands[1] ?? failMe(`operands[1] is not set`)
-    //   return rec.access(index, (callee, args) => this.call(callee, args))
-    // }
-
     if (ast.tag === 'indexAccess') {
-      throw new Error(`not impl yet: ${ast.tag}`)
+      if (n === 0) {
+        return this.push(ast.receiver, 0, table)
+      } else if (n === 1) {
+        return this.push(ast.index, 1, table)
+      }
+
+      const rec = curr.operands[0] ?? failMe(`operands[0] is not set`)
+      const index = curr.operands[1] ?? failMe(`operands[1] is not set`)
+      return rec.access(index, () => failMe('access caller'))
+      // (callee, args) => this.call(callee, args))
     }
 
     shouldNeverHappen(ast)
