@@ -22,7 +22,7 @@ type Command =
       param: string
     }
   | {
-      tag: 'object' | 'array'
+      tag: 'object' | 'array' | 'exitScope'
       param: number
     }
 
@@ -45,6 +45,10 @@ export class CodeEmitter {
         this.run(ast.computation, cf)
       }
 
+      if (ast.definitions.length > 0) {
+        cf.push({ tag: 'exitScope', param: ast.definitions.length })
+      }
+
       if (ast.throwToken) {
         cf.push({ tag: 'throw' })
       }
@@ -59,7 +63,7 @@ export class CodeEmitter {
           shouldNeverHappen(part)
         }
       }
-      cf.push({tag: 'array', param: ast.parts.length})
+      cf.push({ tag: 'array', param: ast.parts.length })
     } else if (ast.tag === 'ident') {
       cf.push({ tag: 'load', param: ast.t.text })
     } else if (ast.tag === 'literal') {
@@ -92,7 +96,7 @@ export class CodeEmitter {
     } else if (ast.tag === 'indexAccess') {
       this.run(ast.receiver, cf)
       this.run(ast.index, cf)
-      cf.push({tag: 'indexAccess'})
+      cf.push({ tag: 'indexAccess' })
     } else if (ast.tag === 'lambda') {
       throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'let') {

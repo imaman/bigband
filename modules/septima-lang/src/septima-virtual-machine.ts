@@ -141,6 +141,8 @@ export class SeptimaVirtualMachine {
         table = table.add(at.param, this.pop())
       } else if (at.tag === 'load') {
         this.push(table.lookup(at.param))
+      } else if (at.tag === 'exitScope') {
+        table = table.exitScope(at.param)
       } else if (at.tag === 'indexAccess') {
         const sel = this.str()
         const rec = this.pop() as Record<string, unknown>
@@ -168,6 +170,20 @@ class ValTable {
 
   add(name: string, val: unknown) {
     return new ValTable(this, name, val)
+  }
+  
+  exitScope(n: number) {
+    let ret: ValTable = this
+    while (n > 0) {
+      --n
+      const e = ret.earlier
+      if (e === undefined) {
+        throw new Error(`unbalanced val table`)
+      }
+      ret = e
+    }
+
+    return ret
   }
 
   lookup(name: string): unknown {
