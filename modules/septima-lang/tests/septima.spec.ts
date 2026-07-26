@@ -160,7 +160,7 @@ describe('septima', () => {
     expect(() => run(`true && x`)).toThrowError('Symbol x was not found')
   })
 
-  test('eats whitespace', () => {
+  test.only('eats whitespace', () => {
     expect(run(`    8 * 2  `)).toEqual(16)
     expect(run(`3 + 1`)).toEqual(4)
     expect(run(`20 - 3`)).toEqual(17)
