@@ -17,5 +17,8 @@
   },
   "jest": {
     "preset": "../../jest.preset.js"
+  },
+  "dependencies": {
+    "safe-stable-stringify": "^2.5.0"
   }
 }
