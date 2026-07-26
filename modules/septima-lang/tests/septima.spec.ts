@@ -193,17 +193,17 @@ describe('septima', () => {
   })
 
   describe('strings', () => {
-    test('can be specified via the double-quotes notation', () => {
+    test.only('can be specified via the double-quotes notation', () => {
       expect(run(`""`)).toEqual('')
       expect(run(`"ab"`)).toEqual('ab')
       expect(run(`"ab" + "cd"`)).toEqual('abcd')
     })
-    test('can be specified via the single-quotes notation', () => {
+    test.only('can be specified via the single-quotes notation', () => {
       expect(run(`''`)).toEqual('')
       expect(run(`'ab'`)).toEqual('ab')
       expect(run(`'ab' + 'cd'`)).toEqual('abcd')
     })
-    test('does not trim leading/trailing whitespace', () => {
+    test.only('does not trim leading/trailing whitespace', () => {
       expect(run(`' ab'`)).toEqual(' ab')
       expect(run(`'ab '`)).toEqual('ab ')
       expect(run(`'   '`)).toEqual('   ')

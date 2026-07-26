@@ -17,25 +17,29 @@ export class SeptimaVirtualMachine {
 
   private bool() {
     const ret = this.pop()
-    if (typeof ret !== 'boolean') {
-      throw new Error(`value type error: expected bool but found ${JSON.stringify(ret)}`)
-    }
+    this.mustBe(ret, 'boolean')
     return ret
   }
   private num() {
     const ret = this.pop()
-    if (typeof ret !== 'number') {
-      throw new Error(`value type error: expected num but found ${JSON.stringify(ret)}`)
-    }
+    this.mustBe(ret, 'number')
     return ret
   }
 
   private str() {
     const ret = this.pop()
-    if (typeof ret !== 'string') {
-      throw new Error(`value type error: expected str but found ${JSON.stringify(ret)}`)
-    }
+    this.mustBe(ret, 'string')
     return ret
+  }
+  
+  private mustBe(u: unknown, expectedType: 'string'): asserts u is string
+  private mustBe(u: unknown, expectedType: 'number'): asserts u is number
+  private mustBe(u: unknown, expectedType: 'boolean'): asserts u is boolean
+  private mustBe(u: unknown, expectedType: 'string' | 'number' | 'boolean') {
+    if (typeof u !== expectedType) {
+      const tn = {'string': 'str', 'number': 'num', 'boolean': 'bool'}[expectedType]
+      throw new Error(`value type error: expected ${tn} but found ${JSON.stringify(u)}`)
+    }
   }
 
   run() {
@@ -47,7 +51,21 @@ export class SeptimaVirtualMachine {
           throw new Error(`not yet ${JSON.stringify(at)}`)
         }
 
-        if (at.mod === '%' || at.mod === '*' || at.mod === '**'|| at.mod === '+'|| at.mod === '-'|| at.mod === '/'
+        if (at.mod === '+') {
+          const rhs = this.pop()
+          const lhs = this.pop()
+          if (typeof lhs === 'number') {
+            this.mustBe(rhs, 'number')
+            this.push(lhs + rhs)
+          } else if (typeof lhs === 'string') {
+            this.mustBe(rhs, 'string')
+            this.push(lhs + rhs)
+          } else {
+            throw new Error(`+ not supported for type ${typeof lhs}`)
+          }
+          continue
+        }
+        if (at.mod === '%' || at.mod === '*' || at.mod === '**'|| at.mod === '-'|| at.mod === '/'
             || at.mod === '>' || at.mod === '<' || at.mod === '>=' || at.mod === '<='
         ) {
           const rhs = this.num()
@@ -58,8 +76,6 @@ export class SeptimaVirtualMachine {
               ? lhs * rhs
               : at.mod === '**'
               ? lhs ** rhs
-              : at.mod === '+'
-              ? lhs + rhs
               : at.mod === '-'
               ? lhs - rhs
               : at.mod === '/'
