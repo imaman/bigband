@@ -1166,4 +1166,8 @@ describe('septima', () => {
   test.todo('proper internal representation of arrow function, in particular: show(), span()')
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
+
+  test.only('HEEEEEEEEEEEEEERE', () => {
+    expect(run(`let x = 5; x+3`)).toEqual(8)
+  })
 })

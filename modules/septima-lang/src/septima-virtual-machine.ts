@@ -1,6 +1,7 @@
 import {stringify} from 'safe-stable-stringify'
 import { CodeFile } from './code-emitter.js'
 import { shouldNeverHappen } from './should-never-happen.js'
+import { EmptySymbolTable } from './symbol-table.js'
 
 export class SeptimaVirtualMachine {
   constructor(private readonly cf: CodeFile) {}
@@ -43,6 +44,7 @@ export class SeptimaVirtualMachine {
   }
 
   run() {
+    let table = ValTable.empty()
     for (const at of this.cf.codes) {
       if (at.tag === 'const') {
         this.push(at.param)
@@ -129,12 +131,12 @@ export class SeptimaVirtualMachine {
         }
       } else if (at.tag === 'dot') {
         throw new Error(`not impl yet ${JSON.stringify(at)}`)
-      } else if (at.tag === 'load') {
-        throw new Error(`not impl yet ${JSON.stringify(at)}`)
       } else if (at.tag === 'spreadmark') {
         throw new Error(`not impl yet ${JSON.stringify(at)}`)
       } else if (at.tag === 'store') {
-        throw new Error(`not impl yet ${JSON.stringify(at)}`)
+        table = table.add(at.param, this.pop())
+      } else if (at.tag === 'load') {
+        this.push(table.lookup(at.param))
       } else {
         shouldNeverHappen(at.tag)
       }
@@ -145,6 +147,32 @@ export class SeptimaVirtualMachine {
       throw new Error(`nothing to return`)
     }
 
+    return ret
+  }
+}
+
+
+class ValTable {
+  private constructor(private readonly earlier: ValTable|undefined, private readonly name?: string, private readonly val?: unknown) {}
+
+
+  static empty() {
+    return new ValTable(undefined)
+  }
+
+  add(name: string, val: unknown) {
+    return new ValTable(this, name, val)
+  }
+
+  lookup(name: string): unknown {
+    if (this.name === name) {
+      return this.val
+    }
+
+    const ret = this.earlier?.lookup(name)
+    if (ret === undefined) {
+      throw new Error(`Symbol ${name} was not found`)
+    }
     return ret
   }
 }
