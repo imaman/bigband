@@ -1,6 +1,6 @@
 import * as path from 'path'
 
-import { Unit, UnitId } from './ast-node.js'
+import { show, Unit, UnitId } from './ast-node.js'
 import { failMe } from './fail-me.js'
 import { Parser } from './parser.js'
 import { formatTrace, Result, ResultSink } from './result.js'
@@ -8,6 +8,7 @@ import { Outputter, Runtime, Verbosity } from './runtime.js'
 import { Scanner } from './scanner.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 import { SourceCode } from './source-code.js'
+import { CodeEmitter, CodeFile } from './code-emitter.js'
 
 interface Options {
   /**
@@ -198,6 +199,13 @@ export class Septima {
 
     this.unitByUnitId.set(pathFromSourceRoot, { unit, sourceCode })
     acc.push(...unit.imports.map(at => this.getPathFromSourceRoot(pathFromSourceRoot, at.pathToImportFrom.text)))
+
+
+
+    
+    const cf = new CodeFile()
+    new CodeEmitter().run(unit, cf)
+    console.log(`program:\n${show(unit)}\n\n${cf.codes.map(at => JSON.stringify(at)).join('\n')}`)
   }
 
   private unitOf(importerPathFromSourceRoot: string | undefined, relativePath: string) {

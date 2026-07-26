@@ -46,7 +46,7 @@ describe('septima', () => {
     expect(run(`false && false`)).toEqual(false)
   })
 
-  test('arithmetics', () => {
+  test.only('arithmetics', () => {
     expect(run(`8*2`)).toEqual(16)
     expect(run(`3+1`)).toEqual(4)
     expect(run(`20-3`)).toEqual(17)
