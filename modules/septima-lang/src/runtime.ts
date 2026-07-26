@@ -4,7 +4,6 @@ import { AstNode, show, Unit, UnitId } from './ast-node.js'
 import { extractMessage } from './extract-message.js'
 import { failMe } from './fail-me.js'
 import { shouldNeverHappen } from './should-never-happen.js'
-import * as Stack from './stack.js'
 import { SymbolTable, Visibility } from './symbol-table.js'
 import { Value } from './value.js'
 
@@ -71,7 +70,7 @@ export type Verbosity = 'quiet' | 'trace'
 export type Outputter = (u: unknown) => void
 
 export class Runtime {
-  private stack: Stack.T = undefined
+  // private stack: Stack.T = undefined
   private evalStack: EvalFrame
   constructor(
     private readonly root: AstNode,
@@ -143,7 +142,7 @@ export class Runtime {
       return { value }
     } catch (e) {
       const trace: AstNode[] = []
-      for (let curr = this.stack; curr; curr = curr?.next) {
+      for (let curr = this.evalStack; curr.prev != curr; curr = curr?.prev) {
         trace.push(curr.ast)
       }
       return {
