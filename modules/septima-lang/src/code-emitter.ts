@@ -15,6 +15,9 @@ export class CodeFile {
   }
 }
 
+type Command = {
+  tag: ''
+}
 export class CodeEmitter {
   run(ast: AstNode, cf: CodeFile) {
     if (ast.tag === 'topLevelExpression') {
@@ -40,6 +43,7 @@ export class CodeEmitter {
           shouldNeverHappen(part)
         }
       }
+      
     } else if (ast.tag === 'ident') {
       cf.push('load', ast.t.text)
     } else if (ast.tag === 'literal') {
