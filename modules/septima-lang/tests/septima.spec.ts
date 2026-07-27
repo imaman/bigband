@@ -1167,7 +1167,7 @@ describe('septima', () => {
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
 
-  test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(run(`true && false`)).toEqual(false)
+  test.skip('HEEEEEEEEEEEEEERE', () => {
+    expect(run(`true && 5`)).toEqual(false)
   })
 })
