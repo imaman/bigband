@@ -29,6 +29,9 @@ type Command =
       tag: 'ifFalse' | 'jump' | 'ifTrue'
       to: number
     }
+  | {
+      tag: 'drop'
+    }
 
 export class CodeFile {
   readonly codes: Command[] = []
