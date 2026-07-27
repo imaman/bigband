@@ -24,7 +24,7 @@ describe('septima', () => {
     expect(run(`const a = 1; let b = 2; const c = 3; a + b + c`)).toEqual(6)
   })
   test.only('expression cannot forward reference variables', () => {
-    expect(() => run(`const x = y+3; const y = 7; x`)).toThrow('Symbol y was not found')
+    expect(() => run(`const x = y+3; const y = 7; x`)).toThrow('Unresolved definition: y')
   })
   test.only('does not allow duplicate definitions in the same top-level-expression', () => {
     // TODO(imaman): guard against this at parsing time
@@ -115,7 +115,7 @@ describe('septima', () => {
       expect(run(`true == false`)).toEqual(false)
       expect(run(`true == true`)).toEqual(true)
     })
-    test('of values of different types is always false', () => {
+    test.only('of values of different types is always false', () => {
       expect(run(`false == 5`)).toEqual(false)
       expect(run(`'6' == 6`)).toEqual(false)
       expect(run(`['alpha'] == 'alpha'`)).toEqual(false)
@@ -188,11 +188,11 @@ describe('septima', () => {
       expect(run(`3*+7`)).toEqual(21)
       expect(run(`3 * +7`)).toEqual(21)
     })
-    test('errors if + is applied to non-number', () => {
+    test.only('errors if + is applied to non-number', () => {
       expect(() => run(`+true`)).toThrowError('expected num but found true')
       expect(() => run(`+[]`)).toThrowError('expected num but found []')
       expect(() => run(`+{}`)).toThrowError('expected num but found {}')
-      expect(() => run(`+(fun (x) x*2)`)).toThrowError('expected num but found "fun (x) (x * 2)"')
+      expect(() => run(`+(fun (x) x*2)`)).toThrowError('expected num but found a function')
       expect(() => run(`+'abc'`)).toThrowError(`expected num but found "abc"`)
     })
     test.only('-', () => {
@@ -293,9 +293,9 @@ describe('septima', () => {
       expect(run(`let x = 10;  let y = x*2;  y*2`)).toEqual(40)
     })
     test.only('the body of a definition cannot reference a latter definition from the same scope', () => {
-      expect(() => run(`let y = x*2; let x = 10;  y*2`)).toThrowError(`Symbol x was not found`)
+      expect(() => run(`let y = x*2; let x = 10;  y*2`)).toThrowError(`Unresolved definition: x`)
     })
-    test('the body of a definition cannot reference itself', () => {
+    test.only('the body of a definition cannot reference itself', () => {
       expect(() => run(`let x = 10;  let y = if (x > 0) y else x; y*2`)).toThrowError(`Unresolved definition: y`)
     })
     test.only('uses lexical scoping (and not dynamic scoping)', () => {

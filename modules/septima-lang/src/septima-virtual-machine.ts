@@ -47,9 +47,13 @@ export class SeptimaVirtualMachine {
   private strOrNum(): string | number {
     const ret = this.pop()
     if (typeof ret !== 'number' && typeof ret !== 'string') {
-      throw new Error(`value type error: expected str or num but found ${JSON.stringify(ret)}`)
+      throw new Error(`value type error: expected str or num but found ${this.format(ret)}`)
     }
     return ret
+  }
+
+  private format(u: unknown) {
+    return u instanceof LambdaRef ? 'a function' : JSON.stringify(u)
   }
 
   private mustBe(u: unknown, expectedType: 'string'): asserts u is string
@@ -62,7 +66,7 @@ export class SeptimaVirtualMachine {
   private mustBeImpl(u: unknown, expectedType: 'string' | 'number' | 'boolean') {
     if (typeof u !== expectedType) {
       const tn = { string: 'str', number: 'num', boolean: 'bool' }[expectedType]
-      throw new Error(`value type error: expected ${tn} but found ${JSON.stringify(u)}`)
+      throw new Error(`value type error: expected ${tn} but found ${this.format(u)}`)
     }
   }
 
@@ -297,7 +301,7 @@ class ValTable {
   lookup(name: string): unknown {
     if (this.name === name) {
       if (this.val === placeholder) {
-        throw new Error(`Symbol ${name} was not found`)
+        throw new Error(`Unresolved definition: ${name}`)
       }
 
       return this.val
