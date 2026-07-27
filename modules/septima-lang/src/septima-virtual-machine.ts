@@ -98,13 +98,14 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'const') {
         this.push(at.param)
       } else if (at.tag === 'lambdaRef') {
-        const lr = new LambdaRef(at.id)
+        const lr = new LambdaRef(at.id, frame.table)
         this.push(lr)
         frame.lambdaRefs.push(lr)
       } else if (at.tag === 'lockLambdaRefs') {
         for (const lr of frame.lambdaRefs) {
           lr.table = frame.table
         }
+        frame.lambdaRefs.length = 0
       } else if (at.tag === 'call') {
         const callee = this.pop()
         if (!(callee instanceof LambdaRef)) {
@@ -287,9 +288,22 @@ class ValTable {
     }
     return ret
   }
+
+  toJSON() {
+    const ret: unknown[] = []
+    for (let curr: ValTable | undefined = this; curr; curr = curr.earlier) {
+      if (curr.name) {
+        ret.push([curr.name, curr.val])
+      }
+    }
+    return ret
+  }
 }
 
 class LambdaRef {
-  table: ValTable | undefined
-  constructor(readonly id: number) {}
+  constructor(readonly id: number, public table: ValTable) {}
+
+  toJSON() {
+    return { id: this.id, _lambdaRef: '' }
+  }
 }

@@ -78,7 +78,15 @@ export class CodeEmitter {
 
   private emit(ast: AstNode, cf: CodeFile) {
     if (ast.tag === 'topLevelExpression') {
+      const seen = new Set<string>()
       for (const d of ast.definitions) {
+        const name = d.ident.t.text
+        // TODO(imaman): should be handled at the parser level?
+        if (seen.has(name)) {
+          throw new Error(`duplicate definition: ${JSON.stringify(name)}`)
+        }
+
+        seen.add(name)
         this.emit(d, cf)
       }
       cf.add({ tag: 'lockLambdaRefs' })
