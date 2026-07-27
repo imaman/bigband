@@ -334,7 +334,7 @@ describe('septima', () => {
     test.only('individual elements of an array can be accessed via the [<index>] notation', () => {
       expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; a[1]`)).toEqual('mon')
     })
-    test('the <index> value at the [<index>] notation can be a computed value', () => {
+    test.only('the <index> value at the [<index>] notation can be a computed value', () => {
       expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; let f = fun(n) n-5; [a[3-1], a[18/6], a[f(5)]]`)).toEqual([
         'tue',
         'wed',
@@ -400,11 +400,11 @@ describe('septima', () => {
       test.only('supports chains of attribute accesses mixing the .<ident> and the [<name>] notations', () => {
         expect(run(`let o = {b: {x: {M: 5}}}; [o["b"].x["M"], o.b["x"].M, o.b.x["M"]]`)).toEqual([5, 5, 5])
       })
-      test('supports chains of calls to nested attributes which are lambda expressions', () => {
+      test.only('supports chains of calls to nested attributes which are lambda expressions', () => {
         expect(run(`let o = {a: fun () { b: fun () { c: fun () { d: 'x' }}}}; o.a().b().c().d`)).toEqual('x')
         expect(run(`let o = {a: fun () { b: { c: fun () { d: 'x' }}}}; o.a().b.c().d`)).toEqual('x')
       })
-      test('the <name> value at the [<name>] notation can be a computed value', () => {
+      test.only('the <name> value at the [<name>] notation can be a computed value', () => {
         expect(run(`let q = fun (x) x + "eb"; let o = {Jan: 1, Feb: 2, May: 5}; [o["Ja" + 'n'], o[q('F')]]`)).toEqual([
           1, 2,
         ])
@@ -819,14 +819,14 @@ describe('septima', () => {
     })
   })
   describe('line comments', () => {
-    test(`anything from '//' up to the end-of-line is ignored`, () => {
+    test.only(`anything from '//' up to the end-of-line is ignored`, () => {
       expect(
         run(`
         1 + 20 + // 300
         4000`),
       ).toEqual(4021)
     })
-    test(`allow consecutive lines which are all commented out`, () => {
+    test.only(`allow consecutive lines which are all commented out`, () => {
       expect(
         run(`
         1 + 
@@ -836,7 +836,7 @@ describe('septima', () => {
         50000`),
       ).toEqual(50001)
     })
-    test(`a comment inside a comment has no effect`, () => {
+    test.only(`a comment inside a comment has no effect`, () => {
       expect(
         run(`
         1 + 
@@ -846,10 +846,10 @@ describe('septima', () => {
     })
   })
   describe('block comments', () => {
-    test(`anything from '/*' up to the next '*/' is ignored`, () => {
+    test.only(`anything from '/*' up to the next '*/' is ignored`, () => {
       expect(run(`1 + 20 + /* 300 */ 4000`)).toEqual(4021)
     })
-    test(`can span multiple lines`, () => {
+    test.only(`can span multiple lines`, () => {
       expect(
         run(`
         1 + /*
@@ -858,12 +858,12 @@ describe('septima', () => {
         */ 4000`),
       ).toEqual(4001)
     })
-    test(`errors if the block comment start but does not end`, () => {
+    test.only(`errors if the block comment start but does not end`, () => {
       expect(() => run(`1 + 20 + /* 300`)).toThrowError(
         'Block comment that started at at (<inline>:1:12..15)  300 is missing its closing (*/)',
       )
     })
-    test(`errors if a block comment closer does not have a matching opener`, () => {
+    test.only(`errors if a block comment closer does not have a matching opener`, () => {
       expect(() => run(`1 + 20 + */ 300`)).toThrowError('Unparsable input at (<inline>:1:10..15) */ 300')
     })
   })
