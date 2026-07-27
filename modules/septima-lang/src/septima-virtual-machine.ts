@@ -1,7 +1,7 @@
-import {stringify} from 'safe-stable-stringify'
+import { stringify } from 'safe-stable-stringify'
+
 import { CodeFile } from './code-emitter.js'
 import { shouldNeverHappen } from './should-never-happen.js'
-import { EmptySymbolTable } from './symbol-table.js'
 
 export class SeptimaVirtualMachine {
   constructor(private readonly cf: CodeFile) {}
@@ -33,20 +33,20 @@ export class SeptimaVirtualMachine {
     return ret
   }
 
-  private strOrNum(): string|number {
+  private strOrNum(): string | number {
     const ret = this.pop()
     if (typeof ret !== 'number' && typeof ret !== 'string') {
       throw new Error(`value type error: expected str or num but found ${JSON.stringify(ret)}`)
     }
     return ret
   }
-  
+
   private mustBe(u: unknown, expectedType: 'string'): asserts u is string
   private mustBe(u: unknown, expectedType: 'number'): asserts u is number
   private mustBe(u: unknown, expectedType: 'boolean'): asserts u is boolean
   private mustBe(u: unknown, expectedType: 'string' | 'number' | 'boolean') {
     if (typeof u !== expectedType) {
-      const tn = {'string': 'str', 'number': 'num', 'boolean': 'bool'}[expectedType]
+      const tn = { string: 'str', number: 'num', boolean: 'bool' }[expectedType]
       throw new Error(`value type error: expected ${tn} but found ${JSON.stringify(u)}`)
     }
   }
@@ -58,10 +58,6 @@ export class SeptimaVirtualMachine {
       if (at.tag === 'const') {
         this.push(at.param)
       } else if (at.tag === 'binop') {
-        if (at.mod === '&&' || at.mod === '||' || at.mod === '??') {
-          throw new Error(`not yet ${JSON.stringify(at)}`)
-        }
-
         if (at.mod === '+') {
           const rhs = this.pop()
           const lhs = this.pop()
@@ -76,12 +72,21 @@ export class SeptimaVirtualMachine {
           }
           continue
         }
-        if (at.mod === '%' || at.mod === '*' || at.mod === '**'|| at.mod === '-'|| at.mod === '/'
-            || at.mod === '>' || at.mod === '<' || at.mod === '>=' || at.mod === '<='
+        if (
+          at.mod === '%' ||
+          at.mod === '*' ||
+          at.mod === '**' ||
+          at.mod === '-' ||
+          at.mod === '/' ||
+          at.mod === '>' ||
+          at.mod === '<' ||
+          at.mod === '>=' ||
+          at.mod === '<='
         ) {
           const rhs = this.num()
           const lhs = this.num()
-          const v =at.mod === '%'
+          const v =
+            at.mod === '%'
               ? lhs % rhs
               : at.mod === '*'
               ? lhs * rhs
@@ -102,14 +107,10 @@ export class SeptimaVirtualMachine {
               : shouldNeverHappen(at.mod)
           this.push(v)
         } else {
-            const rhs = this.pop()
-            const lhs = this.pop()
-            const eq = lhs === rhs || stringify(lhs) === stringify(rhs)
-            const v = at.mod === '=='
-              ? eq
-              : at.mod === '!='
-              ? !eq
-              : shouldNeverHappen(at.mod)
+          const rhs = this.pop()
+          const lhs = this.pop()
+          const eq = lhs === rhs || stringify(lhs) === stringify(rhs)
+          const v = at.mod === '==' ? eq : at.mod === '!=' ? !eq : shouldNeverHappen(at.mod)
           this.push(v)
         }
       } else if (at.tag === 'throw') {
@@ -143,6 +144,7 @@ export class SeptimaVirtualMachine {
         if (typeof reciever !== 'object' || reciever === null) {
           throw new Error('----------tttttttttttttt---------')
         }
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         this.push((reciever as Record<string, unknown>)[at.param])
       } else if (at.tag === 'spreadmark') {
         throw new Error(`not impl yet ${JSON.stringify(at)}`)
@@ -154,7 +156,8 @@ export class SeptimaVirtualMachine {
         table = table.exitScope(at.param)
       } else if (at.tag === 'indexAccess') {
         const sel = this.strOrNum()
-        const rec = this.pop() as Record<string|number, unknown>
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        const rec = this.pop() as Record<string | number, unknown>
         this.push(rec[sel])
       } else if (at.tag === 'ifFalse') {
         const b = this.bool()
@@ -176,14 +179,16 @@ export class SeptimaVirtualMachine {
     if (this.opstack.length !== 1) {
       throw new Error(`opstack length is ${this.opstack.length}`)
     }
-    return this.pop() 
+    return this.pop()
   }
 }
 
-
 class ValTable {
-  private constructor(private readonly earlier: ValTable|undefined, private readonly name?: string, private readonly val?: unknown) {}
-
+  private constructor(
+    private readonly earlier: ValTable | undefined,
+    private readonly name?: string,
+    private readonly val?: unknown,
+  ) {}
 
   static empty() {
     return new ValTable(undefined)
@@ -192,7 +197,7 @@ class ValTable {
   add(name: string, val: unknown) {
     return new ValTable(this, name, val)
   }
-  
+
   exitScope(n: number) {
     let ret: ValTable = this
     while (n > 0) {

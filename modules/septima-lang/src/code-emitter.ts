@@ -4,7 +4,7 @@ import { shouldNeverHappen } from './should-never-happen.js'
 type Command =
   | {
       tag: 'binop'
-      mod: '+' | '-' | '*' | '/' | '%' | '**' | '&&' | '||' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '??'
+      mod: '+' | '-' | '*' | '/' | '%' | '**' | '>' | '<' | '>=' | '<=' | '==' | '!='
     }
   | {
       tag: 'unop'
@@ -26,8 +26,9 @@ type Command =
       param: number
     }
   | {
-    tag: 'ifFalse'|'jump'|'ifTrue', to: number
-  }
+      tag: 'ifFalse' | 'jump' | 'ifTrue'
+      to: number
+    }
 
 export class CodeFile {
   readonly codes: Command[] = []
@@ -87,26 +88,44 @@ export class CodeEmitter {
     } else if (ast.tag === 'unit') {
       this.run(ast.expression, cf)
     } else if (ast.tag === 'binaryOperator') {
-      if (ast.operator === '&&') {
+      const op = ast.operator
+      if (op === '&&') {
         this.run(ast.lhs, cf)
-        const a = cf.push({tag: 'ifFalse', to: -1})
+        const a = cf.push({ tag: 'ifFalse', to: -1 })
         this.run(ast.rhs, cf)
-        const b = cf.push({tag: 'jump', to: -1})
+        const b = cf.push({ tag: 'jump', to: -1 })
         a.to = cf.offset
         this.run(ast.lhs, cf)
         b.to = cf.offset
-      } else if (ast.operator === '||') {
+      } else if (op === '||') {
         this.run(ast.lhs, cf)
-        const a = cf.push({tag: 'ifTrue', to: -1})
+        const a = cf.push({ tag: 'ifTrue', to: -1 })
         this.run(ast.rhs, cf)
-        const b = cf.push({tag: 'jump', to: -1})
+        const b = cf.push({ tag: 'jump', to: -1 })
         a.to = cf.offset
         this.run(ast.lhs, cf)
         b.to = cf.offset
+      } else if (op === '??') {
+        throw new Error(`not yet ${JSON.stringify(ast)}`)
+      } else if (
+        op === '!=' ||
+        op === '%' ||
+        op === '*' ||
+        op === '**' ||
+        op === '+' ||
+        op === '-' ||
+        op === '/' ||
+        op === '<' ||
+        op === '<=' ||
+        op === '==' ||
+        op === '>' ||
+        op === '>='
+      ) {
+        this.run(ast.lhs, cf)
+        this.run(ast.rhs, cf)
+        cf.push({ tag: 'binop', mod: op })
       } else {
-        this.run(ast.lhs, cf)
-        this.run(ast.rhs, cf)
-        cf.push({ tag: 'binop', mod: ast.operator })
+        shouldNeverHappen(op)
       }
     } else if (ast.tag === 'dot') {
       this.run(ast.receiver, cf)
@@ -119,9 +138,9 @@ export class CodeEmitter {
       throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'if' || ast.tag === 'ternary') {
       this.run(ast.condition, cf)
-      const a = cf.push({tag: 'ifFalse', to: 0})
+      const a = cf.push({ tag: 'ifFalse', to: 0 })
       this.run(ast.positive, cf)
-      const b = cf.push({tag: 'jump', to: 0})
+      const b = cf.push({ tag: 'jump', to: 0 })
       a.to = cf.offset
       this.run(ast.negative, cf)
       b.to = cf.offset
