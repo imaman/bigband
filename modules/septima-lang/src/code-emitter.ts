@@ -81,6 +81,7 @@ export class CodeEmitter {
       for (const d of ast.definitions) {
         this.emit(d, cf)
       }
+      cf.add({ tag: 'lockLambdaRefs' })
 
       if (ast.computation) {
         this.emit(ast.computation, cf)

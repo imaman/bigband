@@ -42,6 +42,12 @@ export type Instruction =
       param: number
     }
   | {
+      /** Loads a positional arg passed to a lambda onto the opstack */
       tag: 'loadArg'
       param: number
+    }
+  | {
+      /** Placed after all definitions - the virtual machine updates the ValTables of LambdaRefs thus
+       * allowing recursion and mutual recursion */
+      tag: 'lockLambdaRefs'
     }

@@ -8,6 +8,7 @@ interface StackFrame {
   chunkId: number
   table: ValTable
   args: unknown[]
+  lambdaRefs: LambdaRef[]
 }
 
 export class SeptimaVirtualMachine {
@@ -66,7 +67,7 @@ export class SeptimaVirtualMachine {
   }
 
   run() {
-    this.callStack.push({ chunkId: 0, pc: 0, table: ValTable.empty(), args: [] })
+    this.callStack.push({ chunkId: 0, pc: 0, table: ValTable.empty(), args: [], lambdaRefs: [] })
     const ret = this.runLoop()
     if (this.opstack.length) {
       throw new Error(
@@ -97,18 +98,27 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'const') {
         this.push(at.param)
       } else if (at.tag === 'lambdaRef') {
-        this.push(new LambdaRef(at.id, frame.table))
+        const lr = new LambdaRef(at.id)
+        this.push(lr)
+        frame.lambdaRefs.push(lr)
+      } else if (at.tag === 'lockLambdaRefs') {
+        for (const lr of frame.lambdaRefs) {
+          lr.table = frame.table
+        }
       } else if (at.tag === 'call') {
         const callee = this.pop()
         if (!(callee instanceof LambdaRef)) {
           throw new Error(`callee is not a reference to a lambda function: ${JSON.stringify(callee)}`)
+        }
+        if (!callee.table) {
+          throw new Error(`ValTable of LambdaRef (${callee.id}) is missing`)
         }
 
         const args: unknown[] = []
         for (let i = 0; i < at.param; ++i) {
           args[at.param - i - 1] = this.pop()
         }
-        this.callStack.push({ chunkId: callee.id, pc: 0, table: callee.table, args })
+        this.callStack.push({ chunkId: callee.id, pc: 0, table: callee.table, args, lambdaRefs: [] })
       } else if (at.tag === 'loadArg') {
         this.push(frame.args.at(at.param))
       } else if (at.tag === 'binop') {
@@ -280,5 +290,6 @@ class ValTable {
 }
 
 class LambdaRef {
-  constructor(readonly id: number, readonly table: ValTable) {}
+  table: ValTable | undefined
+  constructor(readonly id: number) {}
 }
