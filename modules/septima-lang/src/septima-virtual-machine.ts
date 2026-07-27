@@ -64,6 +64,7 @@ export class SeptimaVirtualMachine {
         this.pop()
       } else if (at.tag === 'assertType') {
         const u = this.pop()
+        this.push(u)
         this.mustBeImpl(u, at.param)
       } else if (at.tag === 'const') {
         this.push(at.param)

@@ -66,12 +66,14 @@ export class CodeEmitter {
         const cond = cf.add({ tag: 'ifFalse', to: -1 })
         cf.add({ tag: 'drop' })
         this.run(ast.rhs, cf)
+        cf.add({tag: 'assertType', param: 'boolean'})
         cond.to = cf.offset
       } else if (op === '||') {
         this.run(ast.lhs, cf)
         const cond = cf.add({ tag: 'ifTrue', to: -1 })
         cf.add({ tag: 'drop' })
         this.run(ast.rhs, cf)
+        cf.add({tag: 'assertType', param: 'boolean'})
         cond.to = cf.offset
       } else if (op === '??') {
         throw new Error(`not yet ${JSON.stringify(ast)}`)

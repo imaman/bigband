@@ -45,6 +45,12 @@ describe('septima', () => {
     expect(run(`false && true`)).toEqual(false)
     expect(run(`false && false`)).toEqual(false)
   })
+  test.only('rhs of && must be boolean', () => {
+    expect(() => run(`true && 5`)).toThrow('value type error: expected bool but found 5')
+  })
+  test.only('rhs of || must be boolean', () => {
+    expect(() => run(`false || 6`)).toThrow('value type error: expected bool but found 6')
+  })
 
   test.only('arithmetics', () => {
     expect(run(`8*2`)).toEqual(16)
@@ -1168,6 +1174,6 @@ describe('septima', () => {
   test.todo('{foo}')
 
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(run(`true && 5`)).toEqual(false)
+    expect(() => run(`true && 5`)).toThrow('value type error: expected bool but found 5')
   })
 })
