@@ -3,11 +3,19 @@ import { stringify } from 'safe-stable-stringify'
 import { CodeFile } from './code-emitter.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 
+interface StackFrame {
+  pc: number
+  chunkId: number
+  table: ValTable
+}
+
 export class SeptimaVirtualMachine {
   constructor(private readonly cf: CodeFile) {}
 
   /** the machine's operand stack */
   private opstack: unknown[] = []
+
+  private callStack: StackFrame[] = []
 
   private push(u: unknown) {
     this.opstack.push(u)
@@ -57,17 +65,28 @@ export class SeptimaVirtualMachine {
   }
 
   run() {
-    const ret = this.runLoop(0, ValTable.empty())
+    this.callStack.push({ chunkId: 0, pc: 0, table: ValTable.empty() })
+    const ret = this.runLoop()
     if (this.opstack.length) {
-      throw new Error(`opstack length is ${this.opstack.length} - stack=${JSON.stringify(this.opstack)} - cf=\n${this.cf.format()}`)
+      throw new Error(
+        `opstack length is ${this.opstack.length} - stack=${JSON.stringify(this.opstack)} - cf=\n${this.cf.format()}`,
+      )
     }
     return ret
   }
 
-  private runLoop(chunkId: number, table: ValTable) {
-    const instructions = this.cf.get(chunkId)
-    for (let i = 0; i < instructions.length; ++i) {
-      const at = instructions[i]
+  private runLoop() {
+    while (true) {
+      const frame = this.callStack.at(-1)
+      if (!frame) {
+        return this.pop()
+      }
+      const instructions = this.cf.get(frame.chunkId)
+      if (frame.pc >= instructions.length) {
+        this.callStack.pop()
+        continue
+      }
+      const at = instructions[frame.pc]
       if (at.tag === 'drop') {
         this.pop()
       } else if (at.tag === 'assertType') {
@@ -77,7 +96,7 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'const') {
         this.push(at.param)
       } else if (at.tag === 'lambda') {
-        this.push(new LambdaRef(at.id, table))
+        this.push(new LambdaRef(at.id, frame.table))
       } else if (at.tag === 'call') {
         const callee = this.pop()
         if (!(callee instanceof LambdaRef)) {
@@ -88,7 +107,7 @@ export class SeptimaVirtualMachine {
         for (let i = 0; i < at.param; ++i) {
           args[at.param - i - 1] = this.pop()
         }
-        this.push(this.runLoop(callee.id, callee.table))
+        this.callStack.push({ chunkId: callee.id, pc: 0, table: callee.table })
       } else if (at.tag === 'binop') {
         if (at.mod === '+') {
           const rhs = this.pop()
@@ -102,9 +121,7 @@ export class SeptimaVirtualMachine {
           } else {
             throw new Error(`+ not supported for type ${typeof lhs}`)
           }
-          continue
-        }
-        if (
+        } else if (
           at.mod === '%' ||
           at.mod === '*' ||
           at.mod === '**' ||
@@ -181,11 +198,11 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'spreadmark') {
         throw new Error(`not impl yet ${JSON.stringify(at)}`)
       } else if (at.tag === 'store') {
-        table = table.add(at.param, this.pop())
+        frame.table = frame.table.add(at.param, this.pop())
       } else if (at.tag === 'load') {
-        this.push(table.lookup(at.param))
+        this.push(frame.table.lookup(at.param))
       } else if (at.tag === 'exitScope') {
-        table = table.exitScope(at.param)
+        frame.table = frame.table.exitScope(at.param)
       } else if (at.tag === 'indexAccess') {
         const sel = this.strOrNum()
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -195,22 +212,25 @@ export class SeptimaVirtualMachine {
         const b = this.bool()
         this.push(b)
         if (!b) {
-          i = at.to - 1 // There will be the +1 of the for loop
+          frame.pc = at.to
+          continue
         }
       } else if (at.tag === 'ifTrue') {
         const b = this.bool()
         this.push(b)
         if (b) {
-          i = at.to - 1 // There will be the +1 of the for loop
+          frame.pc = at.to
+          continue
         }
       } else if (at.tag === 'jump') {
-        i = at.to - 1
+        frame.pc = at.to
+        continue
       } else {
         shouldNeverHappen(at.tag)
       }
-    }
 
-    return this.pop()
+      frame.pc += 1
+    }
   }
 }
 
