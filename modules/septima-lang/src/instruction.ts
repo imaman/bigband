@@ -33,3 +33,10 @@ export type Instruction =
       tag: 'assertType'
       param: 'string' | 'number' | 'boolean'
     }
+  | {
+    tag: 'lambda'
+    id: number
+  } | {
+    tag: 'call'
+    param: number
+  }

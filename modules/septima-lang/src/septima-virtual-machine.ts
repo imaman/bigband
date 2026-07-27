@@ -57,9 +57,13 @@ export class SeptimaVirtualMachine {
   }
 
   run() {
-    let table = ValTable.empty()
-    for (let i = 0; i < this.cf.instructions.length; ++i) {
-      const at = this.cf.instructions[i]
+    return this.runLoop(0, ValTable.empty())
+  }
+
+  private runLoop(chunkId: number, table: ValTable) {
+    const instructions = this.cf.get(chunkId)
+    for (let i = 0; i < instructions.length; ++i) {
+      const at = instructions[i]
       if (at.tag === 'drop') {
         this.pop()
       } else if (at.tag === 'assertType') {
@@ -68,6 +72,19 @@ export class SeptimaVirtualMachine {
         this.mustBeImpl(u, at.param)
       } else if (at.tag === 'const') {
         this.push(at.param)
+      } else if (at.tag === 'lambda') {
+        this.push(new LambdaRef(at.id, table))
+      } else if (at.tag === 'call') {
+        const callee = this.pop()
+        if (!(callee instanceof LambdaRef)) {
+          throw new Error(`callee is not a reference to a lambda function: ${JSON.stringify(callee)}`)
+        }
+
+        const args: unknown[] = []
+        for (let i = 0; i < at.param; ++i) {
+          args[at.param - i - 1] = this.pop()
+        }
+        this.push(this.runLoop(callee.id, callee.table))
       } else if (at.tag === 'binop') {
         if (at.mod === '+') {
           const rhs = this.pop()
@@ -236,4 +253,8 @@ class ValTable {
     }
     return ret
   }
+}
+
+class LambdaRef {
+  constructor(readonly id: number, readonly table: ValTable) {}
 }

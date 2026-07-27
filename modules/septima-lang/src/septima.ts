@@ -159,7 +159,7 @@ export class Septima {
   private execute(fileName: string, _verbosity: Verbosity, _args: Record<string, unknown>) {
     const u = this.unitOf(undefined, fileName)
     const cf = new CodeEmitter().run(u)
-    console.log(`program:\n${show(u)}\n\n${cf.instructions.map(at => JSON.stringify(at)).join('\n')}`)
+    console.log(`program:\n${show(u)}\n\n${cf.format()}`)
     const c = new SeptimaVirtualMachine(cf).run()
     return Value.from(c)
 

@@ -1,26 +1,66 @@
-import { AstNode } from './ast-node.js'
+import { AstNode, Lambda } from './ast-node.js'
+import { failMe } from './fail-me.js'
 import { Instruction } from './instruction.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 
+
+
+interface CodeChunk {
+  instructions: Instruction[]
+}
 export class CodeFile {
-  readonly instructions: Instruction[] = []
+  readonly chunks: CodeChunk[] = []
+
+  startChunk() {
+    this.chunks.push({instructions: []})
+  }
+
+  private get currChunk() {
+    return this.chunks.at(-1) ?? failMe('no chunk')
+  }
 
   add<T extends Instruction>(instruction: T): T {
-    this.instructions.push(instruction)
+    this.currChunk.instructions.push(instruction)
     return instruction
   }
 
   get offset() {
-    return this.instructions.length
+    return this.currChunk.instructions.length
+  }
+
+  get(n: number) {
+    return (this.chunks.at(n) ?? failMe(`bad chunk index: ${n}`)).instructions
+  }
+
+  format(): string {
+    return this.chunks.flatMap((at,i) => `// chunck ${i}\n` + at.instructions.map(c => JSON.stringify(c)).join('\n')).join('\n\n')
   }
 }
 
 export class CodeEmitter {
 
-  run(ast: AstNode) {
-    const ret = new CodeFile()
-    this.emit(ast, ret)
+  private workList: Lambda[] = []
+
+  private registerLambda(ast: Lambda) {
+    const ret = this.workList.length
+    this.workList.push(ast)
     return ret
+  }
+
+  run(ast: AstNode) {
+    const cf = new CodeFile()
+    cf.startChunk()
+    this.emit(ast, cf)
+
+    let i = 0
+    while (i < this.workList.length) {
+      const at = this.workList[i]
+      ++i
+      cf.startChunk()
+      this.emit(at.body, cf)
+    }
+
+    return cf
   }
 
   private emit(ast: AstNode, cf: CodeFile) {
@@ -112,7 +152,11 @@ export class CodeEmitter {
     } else if (ast.tag === 'formalArg') {
       throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'functionCall') {
-      throw new Error(`not yet: ${ast.tag}`)
+      for (const a of ast.actualArgs) {
+        this.emit(a, cf)
+      }
+      this.emit(ast.callee, cf)
+      cf.add({tag: 'call', param: ast.actualArgs.length})
     } else if (ast.tag === 'if' || ast.tag === 'ternary') {
       this.emit(ast.condition, cf)
       const cond = cf.add({ tag: 'ifFalse', to: 0 })
@@ -128,7 +172,8 @@ export class CodeEmitter {
       this.emit(ast.index, cf)
       cf.add({ tag: 'indexAccess' })
     } else if (ast.tag === 'lambda') {
-      throw new Error(`not yet: ${ast.tag}`)
+      const id = this.registerLambda(ast)
+      cf.add({tag: 'lambda', id})
     } else if (ast.tag === 'let') {
       this.emit(ast.value, cf)
       cf.add({ tag: 'store', param: ast.ident.t.text })
