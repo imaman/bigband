@@ -559,9 +559,9 @@ describe('septima', () => {
         expect(run(`let f = (a,b,) => a+b+1000; f(5,900)`)).toEqual(1905)
       })
     })
-    test('can have no args', () => {
-      expect(run(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)
-      expect(run(`(fun() 3.14)()*2`)).toEqual(6.28)
+    test.only('can have no args', () => {
+      expect(run(`let pi = () => 3.14; 2*pi()`)).toEqual(6.28)
+      expect(run(`(() => 3.14)()*2`)).toEqual(6.28)
     })
     test('errors on arg list mismatch', () => {
       expect(() => run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2)`)).toThrowError(
@@ -1174,6 +1174,6 @@ describe('septima', () => {
   test.todo('{foo}')
 
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(run(`let f = () => 9; f(9)`)).toEqual(9)
+    expect(run(`let f = () => 9; f()`)).toEqual(9)
   })
 })

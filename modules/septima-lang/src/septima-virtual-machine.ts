@@ -57,7 +57,11 @@ export class SeptimaVirtualMachine {
   }
 
   run() {
-    return this.runLoop(0, ValTable.empty())
+    const ret = this.runLoop(0, ValTable.empty())
+    if (this.opstack.length) {
+      throw new Error(`opstack length is ${this.opstack.length} - stack=${JSON.stringify(this.opstack)} - cf=\n${this.cf.format()}`)
+    }
+    return ret
   }
 
   private runLoop(chunkId: number, table: ValTable) {
@@ -206,9 +210,6 @@ export class SeptimaVirtualMachine {
       }
     }
 
-    if (this.opstack.length !== 1) {
-      throw new Error(`opstack length is ${this.opstack.length}`)
-    }
     return this.pop()
   }
 }
