@@ -66,6 +66,10 @@ export class CodeEmitter {
       const at = this.workList[i]
       ++i
       cf.activateChunk(at.chunkId)
+      for (let i = 0; i < at.ast.formalArgs.length; ++i) {
+        cf.add({ tag: 'loadArg', param: i })
+        cf.add({ tag: 'store', param: at.ast.formalArgs[i].ident.t.text })
+      }
       this.emit(at.ast.body, cf)
     }
 

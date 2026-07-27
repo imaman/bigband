@@ -7,6 +7,7 @@ interface StackFrame {
   pc: number
   chunkId: number
   table: ValTable
+  args: unknown[]
 }
 
 export class SeptimaVirtualMachine {
@@ -65,7 +66,7 @@ export class SeptimaVirtualMachine {
   }
 
   run() {
-    this.callStack.push({ chunkId: 0, pc: 0, table: ValTable.empty() })
+    this.callStack.push({ chunkId: 0, pc: 0, table: ValTable.empty(), args: [] })
     const ret = this.runLoop()
     if (this.opstack.length) {
       throw new Error(
@@ -107,7 +108,9 @@ export class SeptimaVirtualMachine {
         for (let i = 0; i < at.param; ++i) {
           args[at.param - i - 1] = this.pop()
         }
-        this.callStack.push({ chunkId: callee.id, pc: 0, table: callee.table })
+        this.callStack.push({ chunkId: callee.id, pc: 0, table: callee.table, args })
+      } else if (at.tag === 'loadArg') {
+        this.push(frame.args.at(at.param))
       } else if (at.tag === 'binop') {
         if (at.mod === '+') {
           const rhs = this.pop()

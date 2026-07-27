@@ -41,3 +41,7 @@ export type Instruction =
       tag: 'call'
       param: number
     }
+  | {
+      tag: 'loadArg'
+      param: number
+    }
