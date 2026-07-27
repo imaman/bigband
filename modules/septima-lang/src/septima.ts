@@ -160,7 +160,7 @@ export class Septima {
     const u = this.unitOf(undefined, fileName)
     const cf = new CodeFile()
     new CodeEmitter().run(u, cf)
-    console.log(`program:\n${show(u)}\n\n${cf.codes.map(at => JSON.stringify(at)).join('\n')}`)
+    console.log(`program:\n${show(u)}\n\n${cf.instructions.map(at => JSON.stringify(at)).join('\n')}`)
     const c = new SeptimaVirtualMachine(cf).run()
     return Value.from(c)
 

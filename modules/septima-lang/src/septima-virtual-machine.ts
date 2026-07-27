@@ -53,8 +53,8 @@ export class SeptimaVirtualMachine {
 
   run() {
     let table = ValTable.empty()
-    for (let i = 0; i < this.cf.codes.length; ++i) {
-      const at = this.cf.codes[i]
+    for (let i = 0; i < this.cf.instructions.length; ++i) {
+      const at = this.cf.instructions[i]
       if (at.tag === 'drop') {
         this.pop()
       } else if (at.tag === 'const') {
