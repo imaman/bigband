@@ -16,14 +16,21 @@ export class CodeFile {
 }
 
 export class CodeEmitter {
-  run(ast: AstNode, cf: CodeFile) {
+
+  run(ast: AstNode) {
+    const ret = new CodeFile()
+    this.emit(ast, ret)
+    return ret
+  }
+
+  private emit(ast: AstNode, cf: CodeFile) {
     if (ast.tag === 'topLevelExpression') {
       for (const d of ast.definitions) {
-        this.run(d, cf)
+        this.emit(d, cf)
       }
 
       if (ast.computation) {
-        this.run(ast.computation, cf)
+        this.emit(ast.computation, cf)
       }
 
       if (ast.definitions.length > 0) {
@@ -36,9 +43,9 @@ export class CodeEmitter {
     } else if (ast.tag === 'arrayLiteral') {
       for (const part of ast.parts) {
         if (part.tag === 'element') {
-          this.run(part.v, cf)
+          this.emit(part.v, cf)
         } else if (part.tag === 'spread') {
-          this.run(part.v, cf)
+          this.emit(part.v, cf)
           cf.add({ tag: 'spreadmark' })
         } else {
           shouldNeverHappen(part)
@@ -58,21 +65,21 @@ export class CodeEmitter {
         shouldNeverHappen(ast.type)
       }
     } else if (ast.tag === 'unit') {
-      this.run(ast.expression, cf)
+      this.emit(ast.expression, cf)
     } else if (ast.tag === 'binaryOperator') {
       const op = ast.operator
       if (op === '&&') {
-        this.run(ast.lhs, cf)
+        this.emit(ast.lhs, cf)
         const cond = cf.add({ tag: 'ifFalse', to: -1 })
         cf.add({ tag: 'drop' })
-        this.run(ast.rhs, cf)
+        this.emit(ast.rhs, cf)
         cf.add({tag: 'assertType', param: 'boolean'})
         cond.to = cf.offset
       } else if (op === '||') {
-        this.run(ast.lhs, cf)
+        this.emit(ast.lhs, cf)
         const cond = cf.add({ tag: 'ifTrue', to: -1 })
         cf.add({ tag: 'drop' })
-        this.run(ast.rhs, cf)
+        this.emit(ast.rhs, cf)
         cf.add({tag: 'assertType', param: 'boolean'})
         cond.to = cf.offset
       } else if (op === '??') {
@@ -91,14 +98,14 @@ export class CodeEmitter {
         op === '>' ||
         op === '>='
       ) {
-        this.run(ast.lhs, cf)
-        this.run(ast.rhs, cf)
+        this.emit(ast.lhs, cf)
+        this.emit(ast.rhs, cf)
         cf.add({ tag: 'binop', mod: op })
       } else {
         shouldNeverHappen(op)
       }
     } else if (ast.tag === 'dot') {
-      this.run(ast.receiver, cf)
+      this.emit(ast.receiver, cf)
       cf.add({ tag: 'dot', param: ast.ident.t.text })
     } else if (ast.tag === 'export*') {
       throw new Error(`not yet: ${ast.tag}`)
@@ -107,29 +114,29 @@ export class CodeEmitter {
     } else if (ast.tag === 'functionCall') {
       throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'if' || ast.tag === 'ternary') {
-      this.run(ast.condition, cf)
+      this.emit(ast.condition, cf)
       const cond = cf.add({ tag: 'ifFalse', to: 0 })
       cf.add({ tag: 'drop' })
-      this.run(ast.positive, cf)
+      this.emit(ast.positive, cf)
       const positiveEnd = cf.add({ tag: 'jump', to: 0 })
       cond.to = cf.offset
       cf.add({ tag: 'drop' })
-      this.run(ast.negative, cf)
+      this.emit(ast.negative, cf)
       positiveEnd.to = cf.offset
     } else if (ast.tag === 'indexAccess') {
-      this.run(ast.receiver, cf)
-      this.run(ast.index, cf)
+      this.emit(ast.receiver, cf)
+      this.emit(ast.index, cf)
       cf.add({ tag: 'indexAccess' })
     } else if (ast.tag === 'lambda') {
       throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'let') {
-      this.run(ast.value, cf)
+      this.emit(ast.value, cf)
       cf.add({ tag: 'store', param: ast.ident.t.text })
     } else if (ast.tag === 'objectLiteral') {
       for (const part of ast.parts) {
         if (part.tag === 'hardName') {
           cf.add({ tag: 'const', param: part.k.t.text })
-          this.run(part.v, cf)
+          this.emit(part.v, cf)
         } else if (part.tag === 'computedName' || part.tag === 'quotedString' || part.tag === 'spread') {
           throw new Error(`not supported: ${JSON.stringify(part)}`)
         } else {
@@ -142,14 +149,14 @@ export class CodeEmitter {
         if (part.tag === 'string') {
           cf.add({ tag: 'const', param: part.value })
         } else if (part.tag === 'expression') {
-          this.run(part.expr, cf)
+          this.emit(part.expr, cf)
         } else {
           shouldNeverHappen(part)
         }
         cf.add({ tag: 'array', param: ast.parts.length })
       }
     } else if (ast.tag === 'unaryOperator') {
-      this.run(ast.operand, cf)
+      this.emit(ast.operand, cf)
       cf.add({ tag: 'unop', mod: ast.operator })
     } else {
       shouldNeverHappen(ast)
