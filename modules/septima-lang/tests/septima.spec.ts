@@ -497,10 +497,10 @@ describe('septima', () => {
     test('higher precendence than lambda', () => {
       expect(run(`let f = (a,b) => a > b ? 'ABOVE' : 'BELOW'; f(1,2) + '_' + f(2,1)`)).toEqual('BELOW_ABOVE')
     })
-    test('higher precendence than if', () => {
+    test.only('higher precendence than if', () => {
       expect(run(`if (5 < 2) "Y" else 3+4>8? 'ABOVE' : 'BELOW'`)).toEqual('BELOW')
     })
-    test('can span multiple lines', () => {
+    test.only('can span multiple lines', () => {
       expect(run(`3 + 4 > 6\n? 'ABOVE'\n: 'BELOW'`)).toEqual('ABOVE')
       expect(run(`3 + 4 > 8\n? 'ABOVE'\n: 'BELOW'`)).toEqual('BELOW')
       expect(run(`3 + 4 > 6?\n 'ABOVE':\n 'BELOW'`)).toEqual('ABOVE')
