@@ -200,7 +200,7 @@ export class CodeEmitter {
       cf.add({ tag: 'lambdaRef', id })
     } else if (ast.tag === 'let') {
       this.emit(ast.value, cf)
-      cf.add({ tag: 'resolve', name: ast.ident.t.text })
+      cf.add({ tag: 'fillIn', name: ast.ident.t.text })
     } else if (ast.tag === 'objectLiteral') {
       for (const part of ast.parts) {
         if (part.tag === 'hardName') {

@@ -210,7 +210,7 @@ export class SeptimaVirtualMachine {
         frame.table = frame.table.add(at.param, this.pop())
       } else if (at.tag === 'reserve') {
         frame.table = frame.table.prepare(at.name)
-      } else if (at.tag === 'resolve') {
+      } else if (at.tag === 'fillIn') {
         const v = this.pop()
         frame.table.resolve(at.name, v)
       } else if (at.tag === 'load') {

@@ -51,6 +51,6 @@ export type Instruction =
       name: string
     }
   | {
-      tag: 'resolve'
+      tag: 'fillIn'
       name: string
     }
