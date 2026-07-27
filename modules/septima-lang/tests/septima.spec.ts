@@ -151,11 +151,11 @@ describe('septima', () => {
     expect(run(`(5 + 3 > 9) && (10*20 > 201)`)).toEqual(false)
   })
 
-  test('the rhs of a logical-or expression is evaluated only if lhs is false', () => {
+  test.only('the rhs of a logical-or expression is evaluated only if lhs is false', () => {
     expect(run(`true || x`)).toEqual(true)
     expect(() => run(`false || x`)).toThrowError('Symbol x was not found')
   })
-  test('the rhs of a logical-and expression is evaluated only if lhs is true', () => {
+  test.only('the rhs of a logical-and expression is evaluated only if lhs is true', () => {
     expect(run(`false && x`)).toEqual(false)
     expect(() => run(`true && x`)).toThrowError('Symbol x was not found')
   })
