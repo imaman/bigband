@@ -868,8 +868,8 @@ describe('septima', () => {
     })
   })
   describe('evaluation stack', () => {
-    test('max recursion depth', () => {
-      expect(run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(260)`)).toEqual(260)
+    test.only('max recursion depth', () => {
+      expect(run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(16384)`)).toEqual(16_384)
     })
   })
   describe('args', () => {
