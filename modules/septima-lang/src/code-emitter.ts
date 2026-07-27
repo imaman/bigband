@@ -117,7 +117,7 @@ export class CodeEmitter {
       throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'functionCall') {
       throw new Error(`not yet: ${ast.tag}`)
-    } else if (ast.tag === 'if') {
+    } else if (ast.tag === 'if' || ast.tag === 'ternary') {
       this.run(ast.condition, cf)
       const a = cf.push({tag: 'ifFalse', to: 0})
       this.run(ast.positive, cf)
@@ -157,8 +157,6 @@ export class CodeEmitter {
         }
         cf.push({ tag: 'array', param: ast.parts.length })
       }
-    } else if (ast.tag === 'ternary') {
-      throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'unaryOperator') {
       this.run(ast.operand, cf)
       cf.push({ tag: 'unop', mod: ast.operator })

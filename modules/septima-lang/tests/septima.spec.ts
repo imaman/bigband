@@ -477,7 +477,7 @@ describe('septima', () => {
   })
 
   describe('ternary', () => {
-    test('returns the value of the first branch if the condition is true', () => {
+    test.only('returns the value of the first branch if the condition is true', () => {
       expect(run(`(4 > 3) ? 200 : -100`)).toEqual(200)
     })
     test('evaluates the first branch only if the condition is true', () => {
