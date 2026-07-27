@@ -1174,6 +1174,6 @@ describe('septima', () => {
   test.todo('{foo}')
 
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(() => run(`true && 5`)).toThrow('value type error: expected bool but found 5')
+    expect(run(`let f = () => 9; f(9)`)).toEqual(9)
   })
 })

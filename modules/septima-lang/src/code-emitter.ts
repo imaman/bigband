@@ -10,13 +10,23 @@ interface CodeChunk {
 }
 export class CodeFile {
   readonly chunks: CodeChunk[] = []
+  private currChunkId: number = 0
+  
+  activateChunk(chunkId: number) {
+    if (chunkId < 0 || chunkId > this.chunks.length) {
+      throw new Error(`chunkId is out of bounds: ${chunkId}`)
+    }
+    this.currChunkId = chunkId
+  }
 
-  startChunk() {
+  createChunk() {
+    const ret = this.chunks.length
     this.chunks.push({instructions: []})
+    return ret
   }
 
   private get currChunk() {
-    return this.chunks.at(-1) ?? failMe('no chunk')
+    return this.chunks.at(this.currChunkId) ?? failMe('no chunk')
   }
 
   add<T extends Instruction>(instruction: T): T {
@@ -39,25 +49,25 @@ export class CodeFile {
 
 export class CodeEmitter {
 
-  private workList: Lambda[] = []
+  private workList: {ast: Lambda, chunkId: number}[] = []
 
-  private registerLambda(ast: Lambda) {
-    const ret = this.workList.length
-    this.workList.push(ast)
+  private registerLambda(ast: Lambda, cf: CodeFile) {
+    const ret = cf.createChunk()
+    this.workList.push({ast, chunkId: ret})
     return ret
   }
 
   run(ast: AstNode) {
     const cf = new CodeFile()
-    cf.startChunk()
+    cf.activateChunk(cf.createChunk())
     this.emit(ast, cf)
 
     let i = 0
     while (i < this.workList.length) {
       const at = this.workList[i]
       ++i
-      cf.startChunk()
-      this.emit(at.body, cf)
+      cf.activateChunk(at.chunkId)
+      this.emit(at.ast.body, cf)
     }
 
     return cf
@@ -172,7 +182,7 @@ export class CodeEmitter {
       this.emit(ast.index, cf)
       cf.add({ tag: 'indexAccess' })
     } else if (ast.tag === 'lambda') {
-      const id = this.registerLambda(ast)
+      const id = this.registerLambda(ast, cf)
       cf.add({tag: 'lambda', id})
     } else if (ast.tag === 'let') {
       this.emit(ast.value, cf)
