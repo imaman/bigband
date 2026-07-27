@@ -164,11 +164,13 @@ export class SeptimaVirtualMachine {
         this.push(rec[sel])
       } else if (at.tag === 'ifFalse') {
         const b = this.bool()
+        this.push(b)
         if (!b) {
           i = at.to - 1 // There will be the +1 of the for loop
         }
       } else if (at.tag === 'ifTrue') {
         const b = this.bool()
+        this.push(b)
         if (b) {
           i = at.to - 1 // There will be the +1 of the for loop
         }

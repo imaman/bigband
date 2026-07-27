@@ -94,20 +94,16 @@ export class CodeEmitter {
       const op = ast.operator
       if (op === '&&') {
         this.run(ast.lhs, cf)
-        const a = cf.add({ tag: 'ifFalse', to: -1 })
+        const cond = cf.add({ tag: 'ifFalse', to: -1 })
+        cf.add({ tag: 'drop' })
         this.run(ast.rhs, cf)
-        const b = cf.add({ tag: 'jump', to: -1 })
-        a.to = cf.offset
-        this.run(ast.lhs, cf)
-        b.to = cf.offset
+        cond.to = cf.offset
       } else if (op === '||') {
         this.run(ast.lhs, cf)
-        const a = cf.add({ tag: 'ifTrue', to: -1 })
+        const cond = cf.add({ tag: 'ifTrue', to: -1 })
+        cf.add({ tag: 'drop' })
         this.run(ast.rhs, cf)
-        const b = cf.add({ tag: 'jump', to: -1 })
-        a.to = cf.offset
-        this.run(ast.lhs, cf)
-        b.to = cf.offset
+        cond.to = cf.offset
       } else if (op === '??') {
         throw new Error(`not yet ${JSON.stringify(ast)}`)
       } else if (
@@ -141,12 +137,14 @@ export class CodeEmitter {
       throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'if' || ast.tag === 'ternary') {
       this.run(ast.condition, cf)
-      const a = cf.add({ tag: 'ifFalse', to: 0 })
+      const cond = cf.add({ tag: 'ifFalse', to: 0 })
+      cf.add({ tag: 'drop' })
       this.run(ast.positive, cf)
-      const b = cf.add({ tag: 'jump', to: 0 })
-      a.to = cf.offset
+      const positiveEnd = cf.add({ tag: 'jump', to: 0 })
+      cond.to = cf.offset
+      cf.add({ tag: 'drop' })
       this.run(ast.negative, cf)
-      b.to = cf.offset
+      positiveEnd.to = cf.offset
     } else if (ast.tag === 'indexAccess') {
       this.run(ast.receiver, cf)
       this.run(ast.index, cf)
