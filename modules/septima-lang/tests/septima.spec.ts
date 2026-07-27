@@ -27,7 +27,7 @@ describe('septima', () => {
     expect(run(`return 3.14`)).toEqual(3.14)
   })
 
-  test('booleans', () => {
+  test.only('booleans', () => {
     expect(run(`true`)).toEqual(true)
     expect(run(`false`)).toEqual(false)
     expect(run(`!true`)).toEqual(false)
@@ -144,7 +144,7 @@ describe('septima', () => {
     expect(run(`3<4`)).toEqual(true)
   })
 
-  test('combined arithmetics and logical expressions', () => {
+  test.only('combined arithmetics and logical expressions', () => {
     expect(run(`(5 + 3 > 6) && (10*20 > 150)`)).toEqual(true)
     expect(run(`(5 + 3 > 9) && (10*20 > 150)`)).toEqual(false)
     expect(run(`(5 + 3 > 6) && (10*20 > 201)`)).toEqual(false)
@@ -1168,6 +1168,6 @@ describe('septima', () => {
   test.todo('{foo}')
 
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(run(`let x = 5; x+3`)).toEqual(8)
+    expect(run(`true && false`)).toEqual(false)
   })
 })

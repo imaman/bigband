@@ -87,9 +87,27 @@ export class CodeEmitter {
     } else if (ast.tag === 'unit') {
       this.run(ast.expression, cf)
     } else if (ast.tag === 'binaryOperator') {
-      this.run(ast.lhs, cf)
-      this.run(ast.rhs, cf)
-      cf.push({ tag: 'binop', mod: ast.operator })
+      if (ast.operator === '&&') {
+        this.run(ast.lhs, cf)
+        const a = cf.push({tag: 'ifFalse', to: -1})
+        this.run(ast.rhs, cf)
+        const b = cf.push({tag: 'jump', to: -1})
+        a.to = cf.offset
+        this.run(ast.lhs, cf)
+        b.to = cf.offset
+      } else if (ast.operator === '||') {
+        this.run(ast.lhs, cf)
+        const a = cf.push({tag: 'ifTrue', to: -1})
+        this.run(ast.rhs, cf)
+        const b = cf.push({tag: 'jump', to: -1})
+        a.to = cf.offset
+        this.run(ast.lhs, cf)
+        b.to = cf.offset
+      } else {
+        this.run(ast.lhs, cf)
+        this.run(ast.rhs, cf)
+        cf.push({ tag: 'binop', mod: ast.operator })
+      }
     } else if (ast.tag === 'dot') {
       this.run(ast.receiver, cf)
       cf.push({ tag: 'dot', param: ast.ident.t.text })
