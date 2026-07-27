@@ -6,6 +6,7 @@ import { shouldNeverHappen } from './should-never-happen.js'
 export class SeptimaVirtualMachine {
   constructor(private readonly cf: CodeFile) {}
 
+  /** the machine's operand stack */
   private opstack: unknown[] = []
 
   private push(u: unknown) {
