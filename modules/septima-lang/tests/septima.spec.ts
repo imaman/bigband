@@ -460,18 +460,18 @@ describe('septima', () => {
     test.only('returns the value of the first branch if the condition is true', () => {
       expect(run(`if (4 > 3) 200 else -100`)).toEqual(200)
     })
-    test('evaluates the first branch only if the condition is true', () => {
+    test.only('evaluates the first branch only if the condition is true', () => {
       expect(() => run(`if (true) x else -100`)).toThrowError('Symbol x was not found')
       expect(run(`if (false) x else -100`)).toEqual(-100)
     })
-    test('returns the value of the second branch if the condition is false', () => {
+    test.only('returns the value of the second branch if the condition is false', () => {
       expect(run(`if (4 < 3) 200 else -100`)).toEqual(-100)
     })
-    test('evaluates the second branch only if the condition is false', () => {
+    test.only('evaluates the second branch only if the condition is false', () => {
       expect(() => run(`if (false) 200 else x`)).toThrowError('Symbol x was not found')
       expect(run(`if (true) 200 else x`)).toEqual(200)
     })
-    test('yells if conditions is not boolean', () => {
+    test.only('yells if conditions is not boolean', () => {
       expect(() => run(`if (5+8) 200 else -100`)).toThrowError('value type error: expected bool but found 13')
     })
   })
@@ -944,7 +944,7 @@ describe('septima', () => {
     test('.at() method returns undefined when the index is out of range', () => {
       expect(run(`let x = ['a', 'b', 'c']; [x.at(0), x.at(2), x.at(3)]`)).toEqual(['a', 'c', undefined])
     })
-    test('can be stored in an array', () => {
+    test.only('can be stored in an array', () => {
       expect(run(`['a', undefined, 'c']`)).toEqual(['a', undefined, 'c'])
     })
     test('an object attribute with a value of undefined is dropped from the object', () => {
