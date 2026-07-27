@@ -322,7 +322,7 @@ class ValTable {
 }
 
 class LambdaRef {
-  constructor(readonly id: number, public table: ValTable) {}
+  constructor(readonly id: number, public readonly table: ValTable) {}
 
   toJSON() {
     return { id: this.id, _lambdaRef: '' }
