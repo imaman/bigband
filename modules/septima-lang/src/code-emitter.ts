@@ -80,7 +80,7 @@ export class CodeEmitter {
     if (ast.tag === 'topLevelExpression') {
       const seen = new Set<string>()
       for (const d of ast.definitions) {
-        cf.add({ tag: 'prepare', name: d.ident.t.text })
+        cf.add({ tag: 'reserve', name: d.ident.t.text })
       }
       for (const d of ast.definitions) {
         const name = d.ident.t.text

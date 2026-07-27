@@ -47,7 +47,7 @@ export type Instruction =
       param: number
     }
   | {
-      tag: 'prepare'
+      tag: 'reserve'
       name: string
     }
   | {

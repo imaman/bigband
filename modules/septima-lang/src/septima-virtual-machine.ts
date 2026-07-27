@@ -208,7 +208,7 @@ export class SeptimaVirtualMachine {
         throw new Error(`not impl yet ${JSON.stringify(at)}`)
       } else if (at.tag === 'store') {
         frame.table = frame.table.add(at.param, this.pop())
-      } else if (at.tag === 'prepare') {
+      } else if (at.tag === 'reserve') {
         frame.table = frame.table.prepare(at.name)
       } else if (at.tag === 'resolve') {
         const v = this.pop()
