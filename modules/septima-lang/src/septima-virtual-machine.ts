@@ -32,6 +32,14 @@ export class SeptimaVirtualMachine {
     this.mustBe(ret, 'string')
     return ret
   }
+
+  private strOrNum(): string|number {
+    const ret = this.pop()
+    if (typeof ret !== 'number' && typeof ret !== 'string') {
+      throw new Error(`value type error: expected str or num but found ${JSON.stringify(ret)}`)
+    }
+    return ret
+  }
   
   private mustBe(u: unknown, expectedType: 'string'): asserts u is string
   private mustBe(u: unknown, expectedType: 'number'): asserts u is number
@@ -145,8 +153,8 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'exitScope') {
         table = table.exitScope(at.param)
       } else if (at.tag === 'indexAccess') {
-        const sel = this.str()
-        const rec = this.pop() as Record<string, unknown>
+        const sel = this.strOrNum()
+        const rec = this.pop() as Record<string|number, unknown>
         this.push(rec[sel])
       } else if (at.tag === 'ifFalse') {
         const b = this.bool()

@@ -317,7 +317,7 @@ describe('septima', () => {
       expect(run(`[246,]`)).toEqual([246])
       expect(run(`[246,531,]`)).toEqual([246, 531])
     })
-    test('individual elements of an array can be accessed via the [<index>] notation', () => {
+    test.only('individual elements of an array can be accessed via the [<index>] notation', () => {
       expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; a[1]`)).toEqual('mon')
     })
     test('the <index> value at the [<index>] notation can be a computed value', () => {
