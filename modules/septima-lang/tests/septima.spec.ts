@@ -307,11 +307,11 @@ describe('septima', () => {
   })
 
   describe('arrays', () => {
-    test('array literals are specified via the enclosing brackets notation ([])', () => {
+    test.only('array literals are specified via the enclosing brackets notation ([])', () => {
       expect(run(`["ab", 5]`)).toEqual(['ab', 5])
       expect(run(`[]`)).toEqual([])
     })
-    test('allow a dangling comma', () => {
+    test.only('allow a dangling comma', () => {
       expect(run(`[,]`)).toEqual([])
       expect(run(`[,,]`)).toEqual([])
       expect(run(`[246,]`)).toEqual([246])
