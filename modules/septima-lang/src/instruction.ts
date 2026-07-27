@@ -29,3 +29,7 @@ export type Instruction =
   | {
       tag: 'drop'
     }
+  | {
+      tag: 'assertType'
+      param: 'string' | 'number' | 'boolean'
+    }

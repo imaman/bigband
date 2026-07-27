@@ -46,6 +46,10 @@ export class SeptimaVirtualMachine {
   private mustBe(u: unknown, expectedType: 'number'): asserts u is number
   private mustBe(u: unknown, expectedType: 'boolean'): asserts u is boolean
   private mustBe(u: unknown, expectedType: 'string' | 'number' | 'boolean') {
+    this.mustBeImpl(u, expectedType)
+  }
+
+  private mustBeImpl(u: unknown, expectedType: 'string' | 'number' | 'boolean') {
     if (typeof u !== expectedType) {
       const tn = { string: 'str', number: 'num', boolean: 'bool' }[expectedType]
       throw new Error(`value type error: expected ${tn} but found ${JSON.stringify(u)}`)
@@ -58,6 +62,9 @@ export class SeptimaVirtualMachine {
       const at = this.cf.instructions[i]
       if (at.tag === 'drop') {
         this.pop()
+      } else if (at.tag === 'assertType') {
+        const u = this.pop()
+        this.mustBeImpl(u, at.param)
       } else if (at.tag === 'const') {
         this.push(at.param)
       } else if (at.tag === 'binop') {
