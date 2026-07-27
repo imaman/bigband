@@ -4,7 +4,7 @@ import { shouldNeverHappen } from './should-never-happen.js'
 type Command =
   | {
       tag: 'binop'
-      mod: '+' | '-' | '*' | '/' | '%' | '**' | '&&' | '||' | '>' | '<' | '>=' | '<=' | '==' | '!=' | '??'
+      mod: '+' | '-' | '*' | '/' | '%' | '**' | '>' | '<' | '>=' | '<=' | '==' | '!='
     }
   | {
       tag: 'unop'
@@ -22,15 +22,24 @@ type Command =
       param: string
     }
   | {
-      tag: 'object' | 'array'
+      tag: 'object' | 'array' | 'exitScope'
       param: number
+    }
+  | {
+      tag: 'ifFalse' | 'jump' | 'ifTrue'
+      to: number
     }
 
 export class CodeFile {
   readonly codes: Command[] = []
 
-  push(c: Command) {
+  push<T extends Command>(c: T): T {
     this.codes.push(c)
+    return c
+  }
+
+  get offset() {
+    return this.codes.length
   }
 }
 
@@ -43,6 +52,10 @@ export class CodeEmitter {
 
       if (ast.computation) {
         this.run(ast.computation, cf)
+      }
+
+      if (ast.definitions.length > 0) {
+        cf.push({ tag: 'exitScope', param: ast.definitions.length })
       }
 
       if (ast.throwToken) {
@@ -59,7 +72,7 @@ export class CodeEmitter {
           shouldNeverHappen(part)
         }
       }
-      cf.push({tag: 'array', param: ast.parts.length})
+      cf.push({ tag: 'array', param: ast.parts.length })
     } else if (ast.tag === 'ident') {
       cf.push({ tag: 'load', param: ast.t.text })
     } else if (ast.tag === 'literal') {
@@ -75,9 +88,45 @@ export class CodeEmitter {
     } else if (ast.tag === 'unit') {
       this.run(ast.expression, cf)
     } else if (ast.tag === 'binaryOperator') {
-      this.run(ast.lhs, cf)
-      this.run(ast.rhs, cf)
-      cf.push({ tag: 'binop', mod: ast.operator })
+      const op = ast.operator
+      if (op === '&&') {
+        this.run(ast.lhs, cf)
+        const a = cf.push({ tag: 'ifFalse', to: -1 })
+        this.run(ast.rhs, cf)
+        const b = cf.push({ tag: 'jump', to: -1 })
+        a.to = cf.offset
+        this.run(ast.lhs, cf)
+        b.to = cf.offset
+      } else if (op === '||') {
+        this.run(ast.lhs, cf)
+        const a = cf.push({ tag: 'ifTrue', to: -1 })
+        this.run(ast.rhs, cf)
+        const b = cf.push({ tag: 'jump', to: -1 })
+        a.to = cf.offset
+        this.run(ast.lhs, cf)
+        b.to = cf.offset
+      } else if (op === '??') {
+        throw new Error(`not yet ${JSON.stringify(ast)}`)
+      } else if (
+        op === '!=' ||
+        op === '%' ||
+        op === '*' ||
+        op === '**' ||
+        op === '+' ||
+        op === '-' ||
+        op === '/' ||
+        op === '<' ||
+        op === '<=' ||
+        op === '==' ||
+        op === '>' ||
+        op === '>='
+      ) {
+        this.run(ast.lhs, cf)
+        this.run(ast.rhs, cf)
+        cf.push({ tag: 'binop', mod: op })
+      } else {
+        shouldNeverHappen(op)
+      }
     } else if (ast.tag === 'dot') {
       this.run(ast.receiver, cf)
       cf.push({ tag: 'dot', param: ast.ident.t.text })
@@ -87,12 +136,18 @@ export class CodeEmitter {
       throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'functionCall') {
       throw new Error(`not yet: ${ast.tag}`)
-    } else if (ast.tag === 'if') {
-      throw new Error(`not yet: ${ast.tag}`)
+    } else if (ast.tag === 'if' || ast.tag === 'ternary') {
+      this.run(ast.condition, cf)
+      const a = cf.push({ tag: 'ifFalse', to: 0 })
+      this.run(ast.positive, cf)
+      const b = cf.push({ tag: 'jump', to: 0 })
+      a.to = cf.offset
+      this.run(ast.negative, cf)
+      b.to = cf.offset
     } else if (ast.tag === 'indexAccess') {
       this.run(ast.receiver, cf)
       this.run(ast.index, cf)
-      cf.push({tag: 'indexAccess'})
+      cf.push({ tag: 'indexAccess' })
     } else if (ast.tag === 'lambda') {
       throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'let') {
@@ -121,8 +176,6 @@ export class CodeEmitter {
         }
         cf.push({ tag: 'array', param: ast.parts.length })
       }
-    } else if (ast.tag === 'ternary') {
-      throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'unaryOperator') {
       this.run(ast.operand, cf)
       cf.push({ tag: 'unop', mod: ast.operator })

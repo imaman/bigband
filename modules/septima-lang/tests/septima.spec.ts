@@ -27,7 +27,7 @@ describe('septima', () => {
     expect(run(`return 3.14`)).toEqual(3.14)
   })
 
-  test('booleans', () => {
+  test.only('booleans', () => {
     expect(run(`true`)).toEqual(true)
     expect(run(`false`)).toEqual(false)
     expect(run(`!true`)).toEqual(false)
@@ -144,18 +144,18 @@ describe('septima', () => {
     expect(run(`3<4`)).toEqual(true)
   })
 
-  test('combined arithmetics and logical expressions', () => {
+  test.only('combined arithmetics and logical expressions', () => {
     expect(run(`(5 + 3 > 6) && (10*20 > 150)`)).toEqual(true)
     expect(run(`(5 + 3 > 9) && (10*20 > 150)`)).toEqual(false)
     expect(run(`(5 + 3 > 6) && (10*20 > 201)`)).toEqual(false)
     expect(run(`(5 + 3 > 9) && (10*20 > 201)`)).toEqual(false)
   })
 
-  test('the rhs of a logical-or expression is evaluated only if lhs is false', () => {
+  test.only('the rhs of a logical-or expression is evaluated only if lhs is false', () => {
     expect(run(`true || x`)).toEqual(true)
     expect(() => run(`false || x`)).toThrowError('Symbol x was not found')
   })
-  test('the rhs of a logical-and expression is evaluated only if lhs is true', () => {
+  test.only('the rhs of a logical-and expression is evaluated only if lhs is true', () => {
     expect(run(`false && x`)).toEqual(false)
     expect(() => run(`true && x`)).toThrowError('Symbol x was not found')
   })
@@ -288,7 +288,7 @@ describe('septima', () => {
       const actual = run(`let x = (let a = 1; a+1);  let y = (let a=100; x+1); y`)
       expect(actual).toEqual(3)
     })
-    test('definitions go out of scope', () => {
+    test.only('definitions go out of scope', () => {
       expect(() => run(`let x = (let a = 1; a+1); a+100`)).toThrowError('Symbol a was not found')
     })
   })
@@ -307,17 +307,17 @@ describe('septima', () => {
   })
 
   describe('arrays', () => {
-    test('array literals are specified via the enclosing brackets notation ([])', () => {
+    test.only('array literals are specified via the enclosing brackets notation ([])', () => {
       expect(run(`["ab", 5]`)).toEqual(['ab', 5])
       expect(run(`[]`)).toEqual([])
     })
-    test('allow a dangling comma', () => {
+    test.only('allow a dangling comma', () => {
       expect(run(`[,]`)).toEqual([])
       expect(run(`[,,]`)).toEqual([])
       expect(run(`[246,]`)).toEqual([246])
       expect(run(`[246,531,]`)).toEqual([246, 531])
     })
-    test('individual elements of an array can be accessed via the [<index>] notation', () => {
+    test.only('individual elements of an array can be accessed via the [<index>] notation', () => {
       expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; a[1]`)).toEqual('mon')
     })
     test('the <index> value at the [<index>] notation can be a computed value', () => {
@@ -457,50 +457,50 @@ describe('septima', () => {
   })
 
   describe('if', () => {
-    test('returns the value of the first branch if the condition is true', () => {
+    test.only('returns the value of the first branch if the condition is true', () => {
       expect(run(`if (4 > 3) 200 else -100`)).toEqual(200)
     })
-    test('evaluates the first branch only if the condition is true', () => {
+    test.only('evaluates the first branch only if the condition is true', () => {
       expect(() => run(`if (true) x else -100`)).toThrowError('Symbol x was not found')
       expect(run(`if (false) x else -100`)).toEqual(-100)
     })
-    test('returns the value of the second branch if the condition is false', () => {
+    test.only('returns the value of the second branch if the condition is false', () => {
       expect(run(`if (4 < 3) 200 else -100`)).toEqual(-100)
     })
-    test('evaluates the second branch only if the condition is false', () => {
+    test.only('evaluates the second branch only if the condition is false', () => {
       expect(() => run(`if (false) 200 else x`)).toThrowError('Symbol x was not found')
       expect(run(`if (true) 200 else x`)).toEqual(200)
     })
-    test('yells if conditions is not boolean', () => {
+    test.only('yells if conditions is not boolean', () => {
       expect(() => run(`if (5+8) 200 else -100`)).toThrowError('value type error: expected bool but found 13')
     })
   })
 
   describe('ternary', () => {
-    test('returns the value of the first branch if the condition is true', () => {
+    test.only('returns the value of the first branch if the condition is true', () => {
       expect(run(`(4 > 3) ? 200 : -100`)).toEqual(200)
     })
-    test('evaluates the first branch only if the condition is true', () => {
+    test.only('evaluates the first branch only if the condition is true', () => {
       expect(() => run(`true ? x : -100`)).toThrowError('Symbol x was not found')
       expect(run(`false ? x : -100`)).toEqual(-100)
     })
-    test('returns the value of the second branch if the condition is false', () => {
+    test.only('returns the value of the second branch if the condition is false', () => {
       expect(run(`(4 < 3) ? 200 : -100`)).toEqual(-100)
     })
-    test('evaluates the second branch only if the condition is false', () => {
+    test.only('evaluates the second branch only if the condition is false', () => {
       expect(() => run(`false ? 200 : x`)).toThrowError('Symbol x was not found')
       expect(run(`true ? 200 : x`)).toEqual(200)
     })
-    test('yells if conditions is not boolean', () => {
+    test.only('yells if conditions is not boolean', () => {
       expect(() => run(`5+8 ? 200 : -100`)).toThrowError('value type error: expected bool but found 13')
     })
     test('higher precendence than lambda', () => {
       expect(run(`let f = (a,b) => a > b ? 'ABOVE' : 'BELOW'; f(1,2) + '_' + f(2,1)`)).toEqual('BELOW_ABOVE')
     })
-    test('higher precendence than if', () => {
+    test.only('higher precendence than if', () => {
       expect(run(`if (5 < 2) "Y" else 3+4>8? 'ABOVE' : 'BELOW'`)).toEqual('BELOW')
     })
-    test('can span multiple lines', () => {
+    test.only('can span multiple lines', () => {
       expect(run(`3 + 4 > 6\n? 'ABOVE'\n: 'BELOW'`)).toEqual('ABOVE')
       expect(run(`3 + 4 > 8\n? 'ABOVE'\n: 'BELOW'`)).toEqual('BELOW')
       expect(run(`3 + 4 > 6?\n 'ABOVE':\n 'BELOW'`)).toEqual('ABOVE')
@@ -944,7 +944,7 @@ describe('septima', () => {
     test('.at() method returns undefined when the index is out of range', () => {
       expect(run(`let x = ['a', 'b', 'c']; [x.at(0), x.at(2), x.at(3)]`)).toEqual(['a', 'c', undefined])
     })
-    test('can be stored in an array', () => {
+    test.only('can be stored in an array', () => {
       expect(run(`['a', undefined, 'c']`)).toEqual(['a', undefined, 'c'])
     })
     test('an object attribute with a value of undefined is dropped from the object', () => {
@@ -1168,6 +1168,6 @@ describe('septima', () => {
   test.todo('{foo}')
 
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(run(`let x = 5; x+3`)).toEqual(8)
+    expect(run(`true && false`)).toEqual(false)
   })
 })
