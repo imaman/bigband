@@ -25,12 +25,20 @@ type Command =
       tag: 'object' | 'array' | 'exitScope'
       param: number
     }
+  | {
+    tag: 'ifFalse'|'jump'|'ifTrue', to: number
+  }
 
 export class CodeFile {
   readonly codes: Command[] = []
 
-  push(c: Command) {
+  push<T extends Command>(c: T): T {
     this.codes.push(c)
+    return c
+  }
+
+  get offset() {
+    return this.codes.length
   }
 }
 
@@ -92,7 +100,13 @@ export class CodeEmitter {
     } else if (ast.tag === 'functionCall') {
       throw new Error(`not yet: ${ast.tag}`)
     } else if (ast.tag === 'if') {
-      throw new Error(`not yet: ${ast.tag}`)
+      this.run(ast.condition, cf)
+      const a = cf.push({tag: 'ifFalse', to: 0})
+      this.run(ast.positive, cf)
+      const b = cf.push({tag: 'jump', to: 0})
+      a.to = cf.offset
+      this.run(ast.negative, cf)
+      b.to = cf.offset
     } else if (ast.tag === 'indexAccess') {
       this.run(ast.receiver, cf)
       this.run(ast.index, cf)

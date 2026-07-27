@@ -45,7 +45,8 @@ export class SeptimaVirtualMachine {
 
   run() {
     let table = ValTable.empty()
-    for (const at of this.cf.codes) {
+    for (let i = 0; i < this.cf.codes.length; ++i) {
+      const at = this.cf.codes[i]
       if (at.tag === 'const') {
         this.push(at.param)
       } else if (at.tag === 'binop') {
@@ -147,6 +148,18 @@ export class SeptimaVirtualMachine {
         const sel = this.str()
         const rec = this.pop() as Record<string, unknown>
         this.push(rec[sel])
+      } else if (at.tag === 'ifFalse') {
+        const b = this.bool()
+        if (!b) {
+          i = at.to - 1 // There will be the +1 of the for loop
+        }
+      } else if (at.tag === 'ifTrue') {
+        const b = this.bool()
+        if (b) {
+          i = at.to - 1 // There will be the +1 of the for loop
+        }
+      } else if (at.tag === 'jump') {
+        i = at.to - 1
       } else {
         shouldNeverHappen(at.tag)
       }
