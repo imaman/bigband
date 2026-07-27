@@ -520,19 +520,19 @@ describe('septima', () => {
       expect(run(`(fun(a, b) a*a-b*b)(3,4)`)).toEqual(-7)
       expect(run(`(fun(a, b) a*a-b*b)(4,3)`)).toEqual(7)
     })
-    test('can be stored in a variable', () => {
+    test.only('can be stored in a variable', () => {
       expect(run(`let triple = (fun(a) 3*a); triple(100) - triple(90)`)).toEqual(30)
       expect(run(`let triple = fun(a) 3*a; triple(100) - triple(90)`)).toEqual(30)
     })
-    test('allows a dangling comma, at the call site, after the last actual argument', () => {
+    test.only('allows a dangling comma, at the call site, after the last actual argument', () => {
       expect(run(`let triple = (fun(a) 3*a); triple(100,)`)).toEqual(300)
       expect(run(`let mean = (fun(a,b) (a+b)/2); mean(4, 28,)`)).toEqual(16)
     })
-    describe('arrow function notation', () => {
-      test('a single formal argument does not need to be surrounded with parenthesis', () => {
+    describe.only('arrow function notation', () => {
+      test.only('a single formal argument does not need to be surrounded with parenthesis', () => {
         expect(run(`let triple = a => 3*a; triple(100)`)).toEqual(300)
       })
-      test('(a) => <expression>', () => {
+      test.only('(a) => <expression>', () => {
         expect(run(`let triple = (a) => 3*a; triple(100)`)).toEqual(300)
       })
       test.only('() => <expression>', () => {
@@ -575,7 +575,7 @@ describe('septima', () => {
         12, 21,
       ])
     })
-    test('can access definitions from the enclosing scope', () => {
+    test.only('can access definitions from the enclosing scope', () => {
       expect(run(`let a = 1; (let inc = fun(n) n+a; inc(2))`)).toEqual(3)
       expect(run(`let by2 = fun(x) x*2; (let by10 = (let by5 = fun(x) x*5; fun(x) by2(by5(x))); by10(20))`)).toEqual(
         200,
@@ -595,7 +595,7 @@ describe('septima', () => {
         run(`let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(x); a(5)`),
       ).toThrowError(expected)
     })
-    test('only lexical scope is considered when looking up a definition', () => {
+    test.only('only lexical scope is considered when looking up a definition', () => {
       expect(run(`let a = 1; let inc = fun(n) n+a; (let a = 100; inc(2))`)).toEqual(3)
     })
     test('can return another lambda expression (a-la currying)', () => {
