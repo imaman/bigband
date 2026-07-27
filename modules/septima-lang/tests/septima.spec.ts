@@ -500,7 +500,7 @@ describe('septima', () => {
     test.only('yells if conditions is not boolean', () => {
       expect(() => run(`5+8 ? 200 : -100`)).toThrowError('value type error: expected bool but found 13')
     })
-    test('higher precendence than lambda', () => {
+    test.only('higher precendence than lambda', () => {
       expect(run(`let f = (a,b) => a > b ? 'ABOVE' : 'BELOW'; f(1,2) + '_' + f(2,1)`)).toEqual('BELOW_ABOVE')
     })
     test.only('higher precendence than if', () => {
@@ -515,7 +515,7 @@ describe('septima', () => {
   })
 
   describe('lambda expressions', () => {
-    test('binds the value of the actual arg to the formal arg', () => {
+    test.only('binds the value of the actual arg to the formal arg', () => {
       expect(run(`(fun(a) 2*a)(3)`)).toEqual(6)
       expect(run(`(fun(a, b) a*a-b*b)(3,4)`)).toEqual(-7)
       expect(run(`(fun(a, b) a*a-b*b)(4,3)`)).toEqual(7)
