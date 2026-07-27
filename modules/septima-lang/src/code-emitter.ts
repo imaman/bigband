@@ -22,7 +22,7 @@ type Command =
       param: string
     }
   | {
-      tag: 'object' | 'array'|'exitScope'
+      tag: 'object' | 'array'
       param: number
     }
 
@@ -43,10 +43,6 @@ export class CodeEmitter {
 
       if (ast.computation) {
         this.run(ast.computation, cf)
-      }
-
-      if (ast.definitions.length) {
-        cf.push({tag: 'exitScope', param: ast.definitions.length})
       }
 
       if (ast.throwToken) {

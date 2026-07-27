@@ -288,7 +288,7 @@ describe('septima', () => {
       const actual = run(`let x = (let a = 1; a+1);  let y = (let a=100; x+1); y`)
       expect(actual).toEqual(3)
     })
-    test.only('definitions go out of scope', () => {
+    test('definitions go out of scope', () => {
       expect(() => run(`let x = (let a = 1; a+1); a+100`)).toThrowError('Symbol a was not found')
     })
   })
