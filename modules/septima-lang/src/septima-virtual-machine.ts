@@ -101,11 +101,6 @@ export class SeptimaVirtualMachine {
         const lr = new LambdaRef(at.id, frame.table)
         this.push(lr)
         frame.lambdaRefs.push(lr)
-      } else if (at.tag === 'lockLambdaRefs') {
-        for (const lr of frame.lambdaRefs) {
-          lr.table = frame.table
-        }
-        frame.lambdaRefs.length = 0
       } else if (at.tag === 'call') {
         const callee = this.pop()
         if (!(callee instanceof LambdaRef)) {
@@ -213,6 +208,11 @@ export class SeptimaVirtualMachine {
         throw new Error(`not impl yet ${JSON.stringify(at)}`)
       } else if (at.tag === 'store') {
         frame.table = frame.table.add(at.param, this.pop())
+      } else if (at.tag === 'prepare') {
+        frame.table = frame.table.prepare(at.name)
+      } else if (at.tag === 'resolve') {
+        const v = this.pop()
+        frame.table.resolve(at.name, v)
       } else if (at.tag === 'load') {
         this.push(frame.table.lookup(at.param))
       } else if (at.tag === 'exitScope') {
@@ -248,11 +248,13 @@ export class SeptimaVirtualMachine {
   }
 }
 
+const placeholder = {}
+
 class ValTable {
   private constructor(
     private readonly earlier: ValTable | undefined,
     private readonly name?: string,
-    private readonly val?: unknown,
+    private val?: unknown,
   ) {}
 
   static empty() {
@@ -261,6 +263,21 @@ class ValTable {
 
   add(name: string, val: unknown) {
     return new ValTable(this, name, val)
+  }
+
+  prepare(name: string) {
+    return new ValTable(this, name, placeholder)
+  }
+
+  resolve(name: string, val: unknown) {
+    for (let curr: ValTable | undefined = this; curr; curr = curr.earlier) {
+      if (curr.name === name && curr.val === placeholder) {
+        curr.val = val
+        return this
+      }
+    }
+
+    throw new Error(`could not resolve: ${name}`)
   }
 
   exitScope(n: number) {
@@ -279,6 +296,10 @@ class ValTable {
 
   lookup(name: string): unknown {
     if (this.name === name) {
+      if (this.val === placeholder) {
+        throw new Error(`Symbol ${name} was not found`)
+      }
+
       return this.val
     }
 

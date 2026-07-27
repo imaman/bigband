@@ -47,7 +47,10 @@ export type Instruction =
       param: number
     }
   | {
-      /** Placed after all definitions - the virtual machine updates the ValTables of LambdaRefs thus
-       * allowing recursion and mutual recursion */
-      tag: 'lockLambdaRefs'
+      tag: 'prepare'
+      name: string
+    }
+  | {
+      tag: 'resolve'
+      name: string
     }

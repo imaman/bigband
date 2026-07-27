@@ -12,16 +12,23 @@ function run(input: string) {
   return Septima.run(input, { onSink: () => undefined })
 }
 
-describe.skip('septima', () => {
+describe('septima', () => {
   test.only('basics', () => {
     expect(run(`5`)).toEqual(5)
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (<inline>:1:3..5) 789`)
     expect(run(`3.14`)).toEqual(3.14)
   })
-  test('const keyword behaves like let', () => {
+  test.only('const keyword behaves like let', () => {
     expect(run(`const x = 5; x`)).toEqual(5)
     expect(run(`const f = (a, b) => a + b; f(3, 4)`)).toEqual(7)
     expect(run(`const a = 1; let b = 2; const c = 3; a + b + c`)).toEqual(6)
+  })
+  test.only('expression cannot forward reference variables', () => {
+    expect(() => run(`const x = y+3; const y = 7; x`)).toThrow('Symbol y was not found')
+  })
+  test.only('does not allow duplicate definitions in the same top-level-expression', () => {
+    // TODO(imaman): guard against this at parsing time
+    expect(() => run(`let a = 1; let b = 2; let a = 999; b+a`)).toThrow(`duplicate definition: "a"`)
   })
   test.only('an optional return keyword can be placed before the result', () => {
     expect(run(`return 5`)).toEqual(5)
@@ -529,7 +536,7 @@ describe.skip('septima', () => {
       expect(run(`let triple = (fun(a) 3*a); triple(100,)`)).toEqual(300)
       expect(run(`let mean = (fun(a,b) (a+b)/2); mean(4, 28,)`)).toEqual(16)
     })
-    describe.only('arrow function notation', () => {
+    describe('arrow function notation', () => {
       test.only('a single formal argument does not need to be surrounded with parenthesis', () => {
         expect(run(`let triple = a => 3*a; triple(100)`)).toEqual(300)
       })
@@ -539,23 +546,23 @@ describe.skip('septima', () => {
       test.only('() => <expression>', () => {
         expect(run(`let five = () => 5; five()`)).toEqual(5)
       })
-      test('(a,b) => <expression>', () => {
+      test.only('(a,b) => <expression>', () => {
         expect(run(`let conc = (a,b) => a+b; conc('al', 'pha')`)).toEqual('alpha')
         expect(run(`let conc = (a,b,c,d,e,f) => a+b+c+d+e+f; conc('M', 'o', 'n', 'd', 'a', 'y')`)).toEqual('Monday')
       })
-      test('body of an arrow function can be { return <expression>}', () => {
+      test.only('body of an arrow function can be { return <expression>}', () => {
         expect(run(`let triple = a => { return 3*a }; triple(100)`)).toEqual(300)
         expect(run(`let triple = (a) => { return 3*a }; triple(100)`)).toEqual(300)
         expect(run(`let five = () => { return 5 }; five()`)).toEqual(5)
         expect(run(`let concat = (a,b) => { return a+b }; concat('al', 'pha')`)).toEqual('alpha')
       })
-      test('body of an arrow function can include let definitions', () => {
+      test.only('body of an arrow function can include let definitions', () => {
         expect(run(`let triple = a => { let factor = 3; return factor*a }; triple(100)`)).toEqual(300)
         expect(run(`let triple = (a) => { let factor = 3; return 3*a }; triple(100)`)).toEqual(300)
         expect(run(`let five = () => { let two = 2; let three = 3; return three+two }; five()`)).toEqual(5)
         expect(run(`let concat = (a,b) => { let u = '_'; return u+a+b+u }; concat('a', 'b')`)).toEqual('_ab_')
       })
-      test('allows a dangling comma after last formal arg', () => {
+      test.only('allows a dangling comma after last formal arg', () => {
         expect(run(`let f = (a,) => a+1000; f(3)`)).toEqual(1003)
         expect(run(`let f = (a,b,) => a+b+1000; f(5,900)`)).toEqual(1905)
       })
@@ -575,6 +582,12 @@ describe.skip('septima', () => {
       expect(run(`let gcd = fun(a, b) if (b == 0) a else gcd(b, a % b); [gcd(24, 60), gcd(1071, 462)]`)).toEqual([
         12, 21,
       ])
+    })
+    test.only('can be mutually recursive', () => {
+      expect(run(`const f1 = (n) => n == 0 ? 0 : n%10+f2(n); const f2 = (n) => f1((n-n%10)/10); f1(261)`)).toEqual(9)
+    })
+    test.only('can forward reference another function', () => {
+      expect(run(`const f1 = (n) => f2(-n); const f2 = (n) => n/5; f1(35)`)).toEqual(-7)
     })
     test.only('can access definitions from the enclosing scope', () => {
       expect(run(`let a = 1; (let inc = fun(n) n+a; inc(2))`)).toEqual(3)
@@ -1173,7 +1186,9 @@ describe.skip('septima', () => {
   test.todo('proper internal representation of arrow function, in particular: show(), span()')
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
-})
-test.only('HEEEEEEEEEEEEEERE', () => {
-  expect(run(`let factorial = fun(n) if (n > 0) n*factorial(n-1) else 1; factorial(6)`)).toEqual(720)
+  test.only('HEEEEEEEEEEEEEERE', () => {
+    // expect(run(`(let by10 = (let by5 = x=> x*5; x => 2*by5(x)); by10(20))`)).toEqual(200)
+    // expect(run(`const by10 = (const by5 = x => x*5; x => 2*by5(x)); by10(20)`)).toEqual(200)
+    expect(run(`const by10 = (const m=10; b => m*b); by10(20)`)).toEqual(200)
+  })
 })

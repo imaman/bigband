@@ -80,6 +80,9 @@ export class CodeEmitter {
     if (ast.tag === 'topLevelExpression') {
       const seen = new Set<string>()
       for (const d of ast.definitions) {
+        cf.add({ tag: 'prepare', name: d.ident.t.text })
+      }
+      for (const d of ast.definitions) {
         const name = d.ident.t.text
         // TODO(imaman): should be handled at the parser level?
         if (seen.has(name)) {
@@ -89,7 +92,6 @@ export class CodeEmitter {
         seen.add(name)
         this.emit(d, cf)
       }
-      cf.add({ tag: 'lockLambdaRefs' })
 
       if (ast.computation) {
         this.emit(ast.computation, cf)
@@ -198,7 +200,7 @@ export class CodeEmitter {
       cf.add({ tag: 'lambdaRef', id })
     } else if (ast.tag === 'let') {
       this.emit(ast.value, cf)
-      cf.add({ tag: 'store', param: ast.ident.t.text })
+      cf.add({ tag: 'resolve', name: ast.ident.t.text })
     } else if (ast.tag === 'objectLiteral') {
       for (const part of ast.parts) {
         if (part.tag === 'hardName') {
