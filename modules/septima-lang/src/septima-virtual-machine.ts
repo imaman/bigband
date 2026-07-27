@@ -95,7 +95,7 @@ export class SeptimaVirtualMachine {
         this.mustBeImpl(u, at.param)
       } else if (at.tag === 'const') {
         this.push(at.param)
-      } else if (at.tag === 'lambda') {
+      } else if (at.tag === 'lambdaRef') {
         this.push(new LambdaRef(at.id, frame.table))
       } else if (at.tag === 'call') {
         const callee = this.pop()

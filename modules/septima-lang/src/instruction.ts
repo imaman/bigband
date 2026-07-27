@@ -34,9 +34,10 @@ export type Instruction =
       param: 'string' | 'number' | 'boolean'
     }
   | {
-    tag: 'lambda'
-    id: number
-  } | {
-    tag: 'call'
-    param: number
-  }
+      tag: 'lambdaRef'
+      id: number
+    }
+  | {
+      tag: 'call'
+      param: number
+    }

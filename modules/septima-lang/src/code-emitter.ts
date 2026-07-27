@@ -3,15 +3,13 @@ import { failMe } from './fail-me.js'
 import { Instruction } from './instruction.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 
-
-
 interface CodeChunk {
   instructions: Instruction[]
 }
 export class CodeFile {
   readonly chunks: CodeChunk[] = []
-  private currChunkId: number = 0
-  
+  private currChunkId = 0
+
   activateChunk(chunkId: number) {
     if (chunkId < 0 || chunkId > this.chunks.length) {
       throw new Error(`chunkId is out of bounds: ${chunkId}`)
@@ -21,7 +19,7 @@ export class CodeFile {
 
   createChunk() {
     const ret = this.chunks.length
-    this.chunks.push({instructions: []})
+    this.chunks.push({ instructions: [] })
     return ret
   }
 
@@ -43,17 +41,18 @@ export class CodeFile {
   }
 
   format(): string {
-    return this.chunks.flatMap((at,i) => `// chunck ${i}\n` + at.instructions.map(c => JSON.stringify(c)).join('\n')).join('\n\n')
+    return this.chunks
+      .flatMap((at, i) => `// chunck ${i}\n` + at.instructions.map(c => JSON.stringify(c)).join('\n'))
+      .join('\n\n')
   }
 }
 
 export class CodeEmitter {
-
-  private workList: {ast: Lambda, chunkId: number}[] = []
+  private workList: { ast: Lambda; chunkId: number }[] = []
 
   private registerLambda(ast: Lambda, cf: CodeFile) {
     const ret = cf.createChunk()
-    this.workList.push({ast, chunkId: ret})
+    this.workList.push({ ast, chunkId: ret })
     return ret
   }
 
@@ -123,14 +122,14 @@ export class CodeEmitter {
         const cond = cf.add({ tag: 'ifFalse', to: -1 })
         cf.add({ tag: 'drop' })
         this.emit(ast.rhs, cf)
-        cf.add({tag: 'assertType', param: 'boolean'})
+        cf.add({ tag: 'assertType', param: 'boolean' })
         cond.to = cf.offset
       } else if (op === '||') {
         this.emit(ast.lhs, cf)
         const cond = cf.add({ tag: 'ifTrue', to: -1 })
         cf.add({ tag: 'drop' })
         this.emit(ast.rhs, cf)
-        cf.add({tag: 'assertType', param: 'boolean'})
+        cf.add({ tag: 'assertType', param: 'boolean' })
         cond.to = cf.offset
       } else if (op === '??') {
         throw new Error(`not yet ${JSON.stringify(ast)}`)
@@ -166,7 +165,7 @@ export class CodeEmitter {
         this.emit(a, cf)
       }
       this.emit(ast.callee, cf)
-      cf.add({tag: 'call', param: ast.actualArgs.length})
+      cf.add({ tag: 'call', param: ast.actualArgs.length })
     } else if (ast.tag === 'if' || ast.tag === 'ternary') {
       this.emit(ast.condition, cf)
       const cond = cf.add({ tag: 'ifFalse', to: 0 })
@@ -183,7 +182,7 @@ export class CodeEmitter {
       cf.add({ tag: 'indexAccess' })
     } else if (ast.tag === 'lambda') {
       const id = this.registerLambda(ast, cf)
-      cf.add({tag: 'lambda', id})
+      cf.add({ tag: 'lambdaRef', id })
     } else if (ast.tag === 'let') {
       this.emit(ast.value, cf)
       cf.add({ tag: 'store', param: ast.ident.t.text })
