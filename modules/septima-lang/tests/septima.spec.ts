@@ -355,7 +355,7 @@ describe('septima', () => {
         expect(run(`{a: 1, b: 2}`)).toEqual({ a: 1, b: 2 })
         expect(run(`{a: "A", b: "B", c: "CCC"}`)).toEqual({ a: 'A', b: 'B', c: 'CCC' })
       })
-      test('attribute names can be double/single quoted', () => {
+      test.only('attribute names can be double/single quoted', () => {
         expect(run(`{"a": 1}`)).toEqual({ a: 1 })
         expect(run(`{'b': 2}`)).toEqual({ b: 2 })
         expect(run(`{"the quick brown": "fox", 'jumps over': "the"}`)).toEqual({
@@ -371,7 +371,7 @@ describe('septima', () => {
       test.only('a dangling comma in an empty object is not allowed', () => {
         expect(() => run(`{,}`)).toThrowError('Expected an identifier at (<inline>:1:2..3) ,}')
       })
-      test('supports computed attributes names via the [<expression>]: <value> notation', () => {
+      test.only('supports computed attributes names via the [<expression>]: <value> notation', () => {
         expect(run(`{["a" + 'b']: 'a-and-b'}`)).toEqual({ ab: 'a-and-b' })
       })
       test.only('supports shorthand notation for initializing an attribute from an identifier', () => {
