@@ -377,6 +377,12 @@ describe('septima', () => {
       test.only('supports shorthand notation for initializing an attribute from an identifier', () => {
         expect(run(`let a = 'A'; let b = 42; {a, b}`)).toEqual({ a: 'A', b: 42 })
       })
+      test.only('maintain the order of the entries', () => {
+        expect(Object.entries(run(`{a: 100, b: 200}`) as Record<string, unknown>)).toEqual([
+          ['a', 100],
+          ['b', 200],
+        ])
+      })
     })
     describe('attributes', () => {
       test.only('can be accessed via the .<ident> notation', () => {
