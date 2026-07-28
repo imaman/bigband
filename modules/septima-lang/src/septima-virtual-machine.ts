@@ -81,7 +81,7 @@ export class SeptimaVirtualMachine {
     return ret
   }
 
-  private popLast(n: number) {
+  private popArray(n: number) {
     const ret: unknown[] = []
     for (let i = 0; i < n; ++i) {
       ret[n - i - 1] = this.pop()
@@ -116,7 +116,7 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'call') {
         const callee = this.pop()
         if (typeof callee === 'function') {
-          const retVal = callee(...this.popLast(at.param))
+          const retVal = callee(...this.popArray(at.param))
           this.push(retVal)
         } else {
           if (!(callee instanceof LambdaRef)) {
@@ -130,7 +130,7 @@ export class SeptimaVirtualMachine {
             chunkId: callee.id,
             pc: 0,
             table: callee.table,
-            args: this.popLast(at.param),
+            args: this.popArray(at.param),
             lambdaRefs: [],
           })
         }
