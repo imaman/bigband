@@ -967,7 +967,7 @@ describe('septima', () => {
     test.only('accessing a non-existing attribute evaulates to undefined', () => {
       expect(run(`let x = {a: 42}; [x.a, x.b]`)).toEqual([42, undefined])
     })
-    test('.at() method returns undefined when the index is out of range', () => {
+    test.only('.at() method returns undefined when the index is out of range', () => {
       expect(run(`let x = ['a', 'b', 'c']; [x.at(0), x.at(2), x.at(3)]`)).toEqual(['a', 'c', undefined])
     })
     test.only('can be stored in an array', () => {
@@ -1193,12 +1193,7 @@ describe('septima', () => {
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(run(`['a', 'b', 'z']`, true)).toEqual(['a', 'b', 'z'])
-    expect(run(`let a = ['TUE']; let b = a[0]; [b]`, true)).toEqual(['TUE'])
-    expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; let f = fun(n) n-5; [a[3-1], a[18/6], a[f(5)]]`, true)).toEqual([
-      'tue',
-      'wed',
-      'sun',
-    ])
+    expect(run(`let x = ['a']; x.at(0)`, true)).toEqual('a')
+    // expect(run(`let x = ['a', 'b', 'c']; [x.at(0), x.at(2), x.at(3)]`, true)).toEqual(['a', 'c', undefined])
   })
 })

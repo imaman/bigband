@@ -400,12 +400,14 @@ class LambdaRef {
 class SeptimaArray {
   constructor(readonly values: unknown[]) {}
 
-  at(index: string | number) {
-    if (typeof index === 'string') {
-      throw new Error(`index into an array must be a number (got: ${index})`)
-    }
+  get at() {
+    return (index: string | number) => {
+      if (typeof index === 'string') {
+        throw new Error(`index into an array must be a number (got: ${index})`)
+      }
 
-    return this.values.at(index)
+      return this.values.at(index)
+    }
   }
 
   toJSON() {
