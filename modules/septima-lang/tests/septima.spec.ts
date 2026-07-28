@@ -8,8 +8,8 @@ import { Septima } from '../src/septima.js'
  * returned.
  * @param input the Septima program to run
  */
-function run(input: string) {
-  return Septima.run(input, { onSink: () => undefined })
+function run(input: string, verbose?: boolean) {
+  return Septima.run(input, { onSink: () => undefined, verbose })
 }
 
 describe('septima', () => {
@@ -1029,7 +1029,7 @@ describe('septima', () => {
     })
   })
   describe('Casting functions', () => {
-    test('String()', () => {
+    test.only('String()', () => {
       expect(run(`String(42)`)).toEqual('42')
       expect(run(`String("abc")`)).toEqual('abc')
       expect(run(`String(true)`)).toEqual('true')
@@ -1193,8 +1193,12 @@ describe('septima', () => {
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
   test.only('HEEEEEEEEEEEEEERE', () => {
-    // expect(run(`(let by10 = (let by5 = x=> x*5; x => 2*by5(x)); by10(20))`)).toEqual(200)
-    // expect(run(`const by10 = (const by5 = x => x*5; x => 2*by5(x)); by10(20)`)).toEqual(200)
-    expect(run(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
+    expect(run(`['a', 'b', 'z']`, true)).toEqual(['a', 'b', 'z'])
+    expect(run(`let a = ['TUE']; let b = a[0]; [b]`, true)).toEqual(['TUE'])
+    expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; let f = fun(n) n-5; [a[3-1], a[18/6], a[f(5)]]`, true)).toEqual([
+      'tue',
+      'wed',
+      'sun',
+    ])
   })
 })

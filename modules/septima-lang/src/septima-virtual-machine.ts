@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import { stringify } from 'safe-stable-stringify'
+import util from 'util'
 
 import { CodeFile } from './code-emitter.js'
 import { Outputter } from './outputter.js'
@@ -14,7 +15,11 @@ interface StackFrame {
 }
 
 export class SeptimaVirtualMachine {
-  constructor(private readonly cf: CodeFile, private readonly consoleLog?: Outputter) {}
+  constructor(
+    private readonly cf: CodeFile,
+    private readonly consoleLog?: Outputter,
+    private readonly verbose?: boolean,
+  ) {}
 
   /** the machine's operand stack */
   private opstack: unknown[] = []
@@ -73,6 +78,10 @@ export class SeptimaVirtualMachine {
   }
 
   run() {
+    if (this.verbose) {
+      // eslint-disable-next-line no-console
+      console.log(`Program:\n${this.cf.format()}`)
+    }
     this.callStack.push({ chunkId: 0, pc: 0, table: this.stdLib(), args: [], lambdaRefs: [] })
     const ret = this.runLoop()
     if (this.opstack.length) {
@@ -80,7 +89,7 @@ export class SeptimaVirtualMachine {
         `opstack length is ${this.opstack.length} - stack=${JSON.stringify(this.opstack)} - cf=\n${this.cf.format()}`,
       )
     }
-    return ret
+    return toJs(ret)
   }
 
   private popArray(n: number) {
@@ -103,6 +112,11 @@ export class SeptimaVirtualMachine {
         continue
       }
       const at = instructions[frame.pc]
+
+      if (this.verbose) {
+        // eslint-disable-next-line no-console
+        console.log(`[${frame.chunkId}.${frame.pc}] ${JSON.stringify(at)} -- ${JSON.stringify(this.opstack)}`)
+      }
       if (at.tag === 'drop') {
         this.pop()
       } else if (at.tag === 'assertType') {
@@ -199,7 +213,7 @@ export class SeptimaVirtualMachine {
         for (let i = 0; i < at.param; ++i) {
           arr[at.param - i - 1] = this.pop()
         }
-        this.push(arr)
+        this.push(new SeptimaArray(arr))
       } else if (at.tag === 'constUndefined') {
         this.push(undefined)
       } else if (at.tag === 'object') {
@@ -209,7 +223,7 @@ export class SeptimaVirtualMachine {
           const k = this.str()
           arr[at.param - i - 1] = [k, v]
         }
-        this.push(Object.fromEntries(arr))
+        this.push(new SeptimaObject(arr))
       } else if (at.tag === 'unop') {
         if (at.mod === '!') {
           this.push(!this.bool())
@@ -240,9 +254,14 @@ export class SeptimaVirtualMachine {
         frame.table = frame.table.exitScope(at.param)
       } else if (at.tag === 'indexAccess') {
         const sel = this.strOrNum()
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        const rec = this.pop() as Record<string | number, unknown>
-        this.push(rec[sel])
+        const rec = this.pop()
+        if (rec instanceof SeptimaObject) {
+          this.push(SeptimaObject.at(rec, sel))
+        } else if (rec instanceof SeptimaArray) {
+          this.push(rec.at(sel))
+        } else {
+          throw new Error(`Index access not allowed on type ${typeof rec}`)
+        }
       } else if (at.tag === 'ifFalse') {
         const b = this.bool()
         this.push(b)
@@ -276,7 +295,7 @@ export class SeptimaVirtualMachine {
       })
 
     return ValTable.empty()
-      .add('JSON', { stringify: JSON.stringify, parse: JSON.parse })
+      .add('JSON', { stringify: JSON.stringify, parse: (x: string) => fromJs(JSON.parse(x)) })
       .add('Array', { isArray: Array.isArray })
       .add('crypto', { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') })
       .add('console', {
@@ -285,6 +304,7 @@ export class SeptimaVirtualMachine {
           return u
         },
       })
+      .add('String', String)
   }
 }
 
@@ -367,4 +387,101 @@ class LambdaRef {
   toJSON() {
     return { id: this.id, _lambdaRef: '' }
   }
+}
+
+/**
+ * Why do we need our own object?
+ * (1) JS's native arrays' toString() format is not JSON.
+ * (2) They have mutating methods (e.g., sort(), reverse()) which are a no-go in a purely functional language such as
+ * Septima. Our design decision is to go opt-in than to opt-out.
+ */
+class SeptimaArray {
+  constructor(readonly values: unknown[]) {}
+
+  at(index: string | number) {
+    if (typeof index === 'string') {
+      throw new Error(`index into an array must be a number (got: ${index})`)
+    }
+
+    return this.values.at(index)
+  }
+
+  toJSON() {
+    return this.values
+  }
+
+  toString() {
+    return JSON.stringify(this.toJSON())
+  }
+}
+
+/**
+ * Why do we need our own object? JS's native objects' toString() format is not JSON (the dreaded "[object Object]".
+ */
+class SeptimaObject {
+  constructor(entries: [string, unknown][]) {
+    Object.assign(this, Object.fromEntries(entries))
+  }
+  toJSON() {
+    return { ...this }
+  }
+  toString() {
+    return JSON.stringify(this)
+  }
+  static at(o: SeptimaObject, index: string | number): unknown {
+    if (typeof index === 'number') {
+      throw new Error(`index into an object must be a string (got: ${index})`)
+    }
+    return Object.hasOwn(o, index) ? (o as unknown as Record<string, unknown>)[index] : undefined
+  }
+}
+
+function toJs(u: unknown): unknown {
+  const t = typeof u
+  if (t === 'bigint' || t === 'boolean' || t === 'function' || t === 'number' || t === 'string' || t === 'undefined') {
+    return u
+  }
+
+  if (t === 'symbol') {
+    throw new Error(`cannot translate symbol: ${u}`)
+  }
+
+  if (u instanceof SeptimaObject) {
+    return Object.fromEntries(Object.entries(u.toJSON()).map(([k, v]) => [k, toJs(v)]))
+  }
+
+  if (u instanceof SeptimaArray) {
+    const ret = []
+    for (const x of u.toJSON()) {
+      ret.push(toJs(x))
+    }
+
+    return ret
+  }
+
+  throw new Error(`Non translatable toJs: ${util.inspect(u)}`)
+}
+
+function fromJs(u: unknown): unknown {
+  if (u === null) {
+    return undefined
+  }
+  const t = typeof u
+  if (t === 'bigint' || t === 'boolean' || t === 'function' || t === 'number' || t === 'string' || t === 'undefined') {
+    return u
+  }
+
+  if (t === 'symbol') {
+    throw new Error(`cannot translate symbol: ${u}`)
+  }
+
+  if (Array.isArray(u)) {
+    return new SeptimaArray(u.map(at => fromJs(at)))
+  }
+
+  if (typeof u === 'object') {
+    return new SeptimaObject(Object.entries(u).map(([k, v]) => [k, fromJs(v)]))
+  }
+
+  throw new Error(`Non translatable fromJs: ${util.inspect(u)}`)
 }

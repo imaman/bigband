@@ -14,6 +14,7 @@ import { SourceCode } from './source-code.js'
 import { Value } from './value.js'
 
 interface Options {
+  verbose?: boolean
   /**
    * A callback function to be invoked when the Septima program evaluated to `sink`. Allows the caller to determine
    * which value will be returned in that case. For instance, passing `() => undefined` will translate a `sink` value
@@ -81,7 +82,9 @@ export class Septima {
     const fileName = '<inline>'
     const contentRec: Record<string, string> = { [fileName]: input }
     const readFile = (m: string) => contentRec[m]
-    const res = new Septima(undefined, options?.consoleLog).compileSync(fileName, readFile).execute(args)
+    const res = new Septima(undefined, options?.consoleLog, options?.verbose)
+      .compileSync(fileName, readFile)
+      .execute(args)
     if (res.tag === 'ok') {
       return res.value
     }
@@ -100,7 +103,11 @@ export class Septima {
    *   Imports resolving outside this root are rejected. Defaults to `''` (no root - paths are used as-is).
    * @param consoleLog receives values from `console.log()` calls in the Septima program. Defaults to discarding them.
    */
-  constructor(private readonly sourceRoot = '', private readonly consoleLog?: Outputter) {}
+  constructor(
+    private readonly sourceRoot = '',
+    private readonly consoleLog?: Outputter,
+    private readonly verbose?: boolean,
+  ) {}
 
   /**
    * Parses `fileName` and every file it (transitively) imports, then returns an `Executable` for the entry file.
@@ -160,7 +167,7 @@ export class Septima {
   private execute(fileName: string, _verbosity: Verbosity, _args: Record<string, unknown>) {
     const u = this.unitOf(undefined, fileName)
     const cf = new CodeEmitter().run(u)
-    const c = new SeptimaVirtualMachine(cf, this.consoleLog).run()
+    const c = new SeptimaVirtualMachine(cf, this.consoleLog, this.verbose).run()
     return Value.from(c)
 
     // const runtime = new Runtime(

@@ -42,7 +42,11 @@ export class CodeFile {
 
   format(): string {
     return this.chunks
-      .flatMap((at, i) => `// chunck ${i}\n` + at.instructions.map(c => JSON.stringify(c)).join('\n'))
+      .flatMap(
+        (at, i) =>
+          `// chunck ${i}\n` +
+          at.instructions.map((c, i) => `${i < 10 ? ' ' : ''}[${i}] ${JSON.stringify(c)}`).join('\n'),
+      )
       .join('\n\n')
   }
 }
