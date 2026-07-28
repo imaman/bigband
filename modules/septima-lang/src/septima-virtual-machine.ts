@@ -458,6 +458,9 @@ function toJs(u: unknown): unknown {
     throw new Error(`cannot translate symbol: ${u}`)
   }
 
+  if (u instanceof LambdaRef) {
+    return { 'septima-function': u.id }
+  }
   if (u instanceof SeptimaObject) {
     return Object.fromEntries(Object.entries(u.toJSON()).map(([k, v]) => [k, toJs(v)]))
   }

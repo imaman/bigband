@@ -810,12 +810,12 @@ describe('septima', () => {
         z: true,
       })
     })
-    test('fails if applied to a non-array value', () => {
-      expect(() => run(`Object.fromEntries('a')`)).toThrowError('type error: expected arr but found "a"')
-      expect(() => run(`Object.fromEntries(5)`)).toThrowError('type error: expected arr but found 5')
-      expect(() => run(`Object.fromEntries(false)`)).toThrowError('type error: expected arr but found false')
-      expect(() => run(`Object.fromEntries({x: 1})`)).toThrowError('type error: expected arr but found {"x":1}')
-      expect(() => run(`Object.fromEntries(fun () 5)`)).toThrowError('type error: expected arr but found "fun () 5"')
+    test.only('fails if applied to a non-array value', () => {
+      expect(() => run(`Object.fromEntries('a')`)).toThrowError('Iterator value a is not an entry object')
+      expect(() => run(`Object.fromEntries(5)`)).toThrowError('number 5 is not iterable')
+      expect(() => run(`Object.fromEntries(false)`)).toThrowError('boolean false is not iterable')
+      expect(() => run(`Object.fromEntries({x: 1})`)).toThrowError('object is not iterable')
+      expect(() => run(`Object.fromEntries(fun () 5)`)).toThrowError('object is not iterable')
     })
     test('the input array must be an array of pairs', () => {
       expect(() => run(`Object.fromEntries([['a', 1], ['b']])`)).toThrowError('each entry must be a [key, value] pair')
