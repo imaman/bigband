@@ -1189,6 +1189,6 @@ describe('septima', () => {
   test.only('HEEEEEEEEEEEEEERE', () => {
     // expect(run(`(let by10 = (let by5 = x=> x*5; x => 2*by5(x)); by10(20))`)).toEqual(200)
     // expect(run(`const by10 = (const by5 = x => x*5; x => 2*by5(x)); by10(20)`)).toEqual(200)
-    expect(run(`const by10 = (const m=10; b => m*b); by10(20)`)).toEqual(200)
+    expect(run(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
   })
 })

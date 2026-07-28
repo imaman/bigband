@@ -71,12 +71,20 @@ export class SeptimaVirtualMachine {
   }
 
   run() {
-    this.callStack.push({ chunkId: 0, pc: 0, table: ValTable.empty(), args: [], lambdaRefs: [] })
+    this.callStack.push({ chunkId: 0, pc: 0, table: stdLib(), args: [], lambdaRefs: [] })
     const ret = this.runLoop()
     if (this.opstack.length) {
       throw new Error(
         `opstack length is ${this.opstack.length} - stack=${JSON.stringify(this.opstack)} - cf=\n${this.cf.format()}`,
       )
+    }
+    return ret
+  }
+
+  private popLast(n: number) {
+    const ret: unknown[] = []
+    for (let i = 0; i < n; ++i) {
+      ret[n - i - 1] = this.pop()
     }
     return ret
   }
@@ -107,18 +115,25 @@ export class SeptimaVirtualMachine {
         frame.lambdaRefs.push(lr)
       } else if (at.tag === 'call') {
         const callee = this.pop()
-        if (!(callee instanceof LambdaRef)) {
-          throw new Error(`callee is not a reference to a lambda function: ${JSON.stringify(callee)}`)
-        }
-        if (!callee.table) {
-          throw new Error(`ValTable of LambdaRef (${callee.id}) is missing`)
-        }
+        if (typeof callee === 'function') {
+          const retVal = callee(...this.popLast(at.param))
+          this.push(retVal)
+        } else {
+          if (!(callee instanceof LambdaRef)) {
+            throw new Error(`callee is not a reference to a lambda function: ${JSON.stringify(callee)}}`)
+          }
+          if (!callee.table) {
+            throw new Error(`ValTable of LambdaRef (${callee.id}) is missing`)
+          }
 
-        const args: unknown[] = []
-        for (let i = 0; i < at.param; ++i) {
-          args[at.param - i - 1] = this.pop()
+          this.callStack.push({
+            chunkId: callee.id,
+            pc: 0,
+            table: callee.table,
+            args: this.popLast(at.param),
+            lambdaRefs: [],
+          })
         }
-        this.callStack.push({ chunkId: callee.id, pc: 0, table: callee.table, args, lambdaRefs: [] })
       } else if (at.tag === 'loadArg') {
         this.push(frame.args.at(at.param))
       } else if (at.tag === 'binop') {
@@ -331,4 +346,10 @@ class LambdaRef {
   toJSON() {
     return { id: this.id, _lambdaRef: '' }
   }
+}
+
+function stdLib() {
+  return ValTable.empty()
+    .add('JSON', { stringify: JSON.stringify, parse: JSON.parse })
+    .add('Array', { isArray: Array.isArray })
 }
