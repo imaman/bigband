@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import { stringify } from 'safe-stable-stringify'
 
 import { CodeFile } from './code-emitter.js'
+import { Outputter } from './outputter.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 
 interface StackFrame {
@@ -13,7 +14,7 @@ interface StackFrame {
 }
 
 export class SeptimaVirtualMachine {
-  constructor(private readonly cf: CodeFile) {}
+  constructor(private readonly cf: CodeFile, private readonly consoleLog?: Outputter) {}
 
   /** the machine's operand stack */
   private opstack: unknown[] = []
@@ -72,7 +73,7 @@ export class SeptimaVirtualMachine {
   }
 
   run() {
-    this.callStack.push({ chunkId: 0, pc: 0, table: stdLib(), args: [], lambdaRefs: [] })
+    this.callStack.push({ chunkId: 0, pc: 0, table: this.stdLib(), args: [], lambdaRefs: [] })
     const ret = this.runLoop()
     if (this.opstack.length) {
       throw new Error(
@@ -266,6 +267,20 @@ export class SeptimaVirtualMachine {
       frame.pc += 1
     }
   }
+
+  private stdLib() {
+    const log =
+      this.consoleLog ??
+      ((x: unknown) => {
+        console.log(x) // eslint-disable-line no-console
+      })
+
+    return ValTable.empty()
+      .add('JSON', { stringify: JSON.stringify, parse: JSON.parse })
+      .add('Array', { isArray: Array.isArray })
+      .add('crypto', { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') })
+      .add('console', { log })
+  }
 }
 
 const placeholder = {}
@@ -347,11 +362,4 @@ class LambdaRef {
   toJSON() {
     return { id: this.id, _lambdaRef: '' }
   }
-}
-
-function stdLib() {
-  return ValTable.empty()
-    .add('JSON', { stringify: JSON.stringify, parse: JSON.parse })
-    .add('Array', { isArray: Array.isArray })
-    .add('crypto', { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') })
 }

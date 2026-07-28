@@ -2,6 +2,7 @@ import crypto from 'crypto'
 
 import { AstNode, show, Unit, UnitId } from './ast-node.js'
 import { extractMessage } from './extract-message.js'
+import { Outputter } from './outputter.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 import * as Stack from './stack.js'
 import { switchOn } from './switch-on.js'
@@ -9,7 +10,6 @@ import { EmptySymbolTable, Placeholder, SymbolFrame, SymbolTable } from './symbo
 import { Value } from './value.js'
 
 export type Verbosity = 'quiet' | 'trace'
-export type Outputter = (u: unknown) => void
 
 export class Runtime {
   private stack: Stack.T = undefined

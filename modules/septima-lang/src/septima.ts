@@ -1,11 +1,12 @@
 import * as path from 'path'
 
-import { show, Unit, UnitId } from './ast-node.js'
-import { CodeEmitter, CodeFile } from './code-emitter.js'
+import { Unit, UnitId } from './ast-node.js'
+import { CodeEmitter } from './code-emitter.js'
 import { failMe } from './fail-me.js'
+import { Outputter } from './outputter.js'
 import { Parser } from './parser.js'
 import { Result, ResultSink } from './result.js'
-import { Outputter, Verbosity } from './runtime.js'
+import { Verbosity } from './runtime.js'
 import { Scanner } from './scanner.js'
 import { SeptimaVirtualMachine } from './septima-virtual-machine.js'
 import { shouldNeverHappen } from './should-never-happen.js'
@@ -159,8 +160,7 @@ export class Septima {
   private execute(fileName: string, _verbosity: Verbosity, _args: Record<string, unknown>) {
     const u = this.unitOf(undefined, fileName)
     const cf = new CodeEmitter().run(u)
-    console.log(`program:\n${show(u)}\n\n${cf.format()}`)
-    const c = new SeptimaVirtualMachine(cf).run()
+    const c = new SeptimaVirtualMachine(cf, this.consoleLog).run()
     return Value.from(c)
 
     // const runtime = new Runtime(
