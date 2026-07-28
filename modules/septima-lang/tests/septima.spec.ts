@@ -772,7 +772,7 @@ describe('septima', () => {
     })
   })
   describe('Object.keys()', () => {
-    test('returns names of all attributes of the given object', () => {
+    test.only('returns names of all attributes of the given object', () => {
       expect(run(`Object.keys({a: 1, b: 2, w: 30})`)).toEqual(['a', 'b', 'w'])
       // expect(run(`Object.entries({a: 1, b: 2, w: 30})`)).toEqual([['a', 1], ['b', 2], ['w', 30]])
     })
@@ -785,7 +785,7 @@ describe('septima', () => {
     })
   })
   describe('Object.entries()', () => {
-    test('returns a [key, value] pair for each attribute of the given object', () => {
+    test.only('returns a [key, value] pair for each attribute of the given object', () => {
       expect(run(`Object.entries({a: 1, b: 2, w: 30})`)).toEqual([
         ['a', 1],
         ['b', 2],
@@ -801,7 +801,7 @@ describe('septima', () => {
     })
   })
   describe('Object.fromEntries()', () => {
-    test('constructs an object from a list of [key, value] pairs describing its attributes', () => {
+    test.only('constructs an object from a list of [key, value] pairs describing its attributes', () => {
       expect(run(`Object.fromEntries([['a', 1], ['b', 2], ['w', 30], ['y', 'yoo'], ['z', true]])`)).toEqual({
         a: 1,
         b: 2,

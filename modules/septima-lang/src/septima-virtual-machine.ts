@@ -296,6 +296,12 @@ export class SeptimaVirtualMachine {
 
     return ValTable.empty()
       .add('JSON', { stringify: JSON.stringify, parse: (x: string) => fromJs(JSON.parse(x)) })
+      .add('Object', {
+        keys: (o: ObjLike) => fromJs(Object.keys(o)),
+        entries: (o: ObjLike) => fromJs(Object.entries(o)),
+        fromEntries: (arr: Iterable<[string, unknown]>) =>
+          fromJs(Object.fromEntries(toJs(arr) as Iterable<[string, unknown]>)),
+      })
       .add('Array', { isArray: Array.isArray })
       .add('crypto', { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') })
       .add('console', {
@@ -309,6 +315,8 @@ export class SeptimaVirtualMachine {
       .add('String', String)
   }
 }
+
+type ObjLike = Partial<Record<string, unknown>>
 
 const placeholder = {}
 
