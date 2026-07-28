@@ -1096,13 +1096,13 @@ describe('septima', () => {
   })
   describe('hash224', () => {
     const hashOf = (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex')
-    test.only('can compute hash values of strings', () => {
+    test('can compute hash values of strings', () => {
       expect(run(`crypto.hash224('A')`)).toEqual(hashOf('A'))
     })
-    test.only('can compute hash values of complex objects', () => {
+    test('can compute hash values of complex objects', () => {
       expect(run(`crypto.hash224({a: 1, b: [{x: 'X'}, ["Y"]]})`)).toEqual(hashOf({ a: 1, b: [{ x: 'X' }, ['Y']] }))
     })
-    test.only('the hash changes when the input changes', () => {
+    test('the hash changes when the input changes', () => {
       expect(run(`crypto.hash224(110002)`)).toEqual(hashOf(110002))
       expect(run(`crypto.hash224(110003)`)).toEqual(hashOf(110003))
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions

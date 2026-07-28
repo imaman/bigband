@@ -1,4 +1,3 @@
-import crypto from 'node:crypto'
 import { stringify } from 'safe-stable-stringify'
 
 import { CodeFile } from './code-emitter.js'
@@ -203,10 +202,10 @@ export class SeptimaVirtualMachine {
         this.push(undefined)
       } else if (at.tag === 'object') {
         const arr: [string, unknown][] = []
-        for (let i = 0; i < at.param; ++i) {
+        for (let i = 0; i < at.param * 2; i += 2) {
           const v = this.pop()
           const k = this.str()
-          arr[at.param - i - 1] = [k, v]
+          arr.push([k, v])
         }
         this.push(Object.fromEntries(arr))
       } else if (at.tag === 'unop') {
@@ -353,5 +352,4 @@ function stdLib() {
   return ValTable.empty()
     .add('JSON', { stringify: JSON.stringify, parse: JSON.parse })
     .add('Array', { isArray: Array.isArray })
-    .add('crypto', { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') })
 }
