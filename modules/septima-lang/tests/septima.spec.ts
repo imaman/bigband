@@ -1038,7 +1038,7 @@ describe('septima', () => {
       expect(run(`String({a: "alpha", b: [3,1,4], n: 42})`)).toEqual('{"a":"alpha","b":[3,1,4],"n":42}')
       expect(run(`String(["abc", 3.14159, false, true, undefined])`)).toEqual('["abc",3.14159,false,true,null]')
     })
-    test('Boolean()', () => {
+    test.only('Boolean()', () => {
       expect(run(`Boolean(42)`)).toEqual(true)
       expect(run(`Boolean(0)`)).toEqual(false)
       expect(run(`Boolean("abc")`)).toEqual(true)
@@ -1049,7 +1049,7 @@ describe('septima', () => {
       expect(run(`Boolean({})`)).toEqual(true)
       expect(run(`Boolean([])`)).toEqual(true)
     })
-    test('Number()', () => {
+    test.only('Number()', () => {
       expect(run(`Number(42)`)).toEqual(42)
       expect(run(`Number(0)`)).toEqual(0)
       expect(run(`Number("42")`)).toEqual(42)
@@ -1089,7 +1089,7 @@ describe('septima', () => {
     test.only('parses a string', () => {
       expect(run(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
     })
-    test('roundtrips a value that was converted to JSON', () => {
+    test.only('roundtrips a value that was converted to JSON', () => {
       expect(run(`JSON.parse(String({"a": 1, "b": "beta", c: {arr: [100, 200]}}))`)).toEqual({
         a: 1,
         b: 'beta',

@@ -304,6 +304,8 @@ export class SeptimaVirtualMachine {
           return u
         },
       })
+      .add('Boolean', Boolean)
+      .add('Number', Number)
       .add('String', String)
   }
 }
