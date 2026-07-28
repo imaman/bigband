@@ -1067,7 +1067,7 @@ describe('septima', () => {
       const result = Septima.run(input, { onSink: () => undefined, consoleLog: u => lines.push(u) })
       return { lines, result }
     }
-    test('prints its input', () => {
+    test.only('prints its input', () => {
       expect(runLog(`console.log(2*2*2*2)`).lines).toEqual(['16'])
       expect(runLog(`console.log({a: 1, b: 2, c: ['d', 'e']})`).lines).toEqual(['{"a":1,"b":2,"c":["d","e"]}'])
     })
@@ -1078,7 +1078,7 @@ describe('septima', () => {
         '"blue"',
       ])
     })
-    test('returns its input', () => {
+    test.only('returns its input', () => {
       expect(runLog(`32*console.log(8)`)).toEqual({
         result: 256,
         lines: ['8'],

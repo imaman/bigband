@@ -279,7 +279,12 @@ export class SeptimaVirtualMachine {
       .add('JSON', { stringify: JSON.stringify, parse: JSON.parse })
       .add('Array', { isArray: Array.isArray })
       .add('crypto', { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') })
-      .add('console', { log })
+      .add('console', {
+        log: (u: unknown) => {
+          log(JSON.stringify(u))
+          return u
+        },
+      })
   }
 }
 
