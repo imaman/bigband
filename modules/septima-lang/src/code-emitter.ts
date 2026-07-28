@@ -203,10 +203,13 @@ export class CodeEmitter {
       cf.add({ tag: 'fillIn', name: ast.ident.t.text })
     } else if (ast.tag === 'objectLiteral') {
       for (const part of ast.parts) {
-        if (part.tag === 'hardName') {
+        if (part.tag === 'hardName' || part.tag === 'quotedString') {
           cf.add({ tag: 'const', param: part.k.t.text })
           this.emit(part.v, cf)
-        } else if (part.tag === 'computedName' || part.tag === 'quotedString' || part.tag === 'spread') {
+        } else if (part.tag === 'computedName') {
+          this.emit(part.k, cf)
+          this.emit(part.v, cf)
+        } else if (part.tag === 'spread') {
           throw new Error(`not supported: ${JSON.stringify(part)}`)
         } else {
           shouldNeverHappen(part)

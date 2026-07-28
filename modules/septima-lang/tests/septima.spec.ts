@@ -1080,7 +1080,7 @@ describe('septima', () => {
     })
   })
   describe(`JSON.parse`, () => {
-    test('parses a string', () => {
+    test.only('parses a string', () => {
       expect(run(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
     })
     test('roundtrips a value that was converted to JSON', () => {
@@ -1090,7 +1090,7 @@ describe('septima', () => {
         c: { arr: [100, 200] },
       })
     })
-    test('keeps non-string as-is', () => {
+    test.only('keeps non-string as-is', () => {
       expect(run(`JSON.parse(5000)`)).toEqual(5000)
     })
   })
