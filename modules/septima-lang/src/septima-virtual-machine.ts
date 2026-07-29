@@ -244,12 +244,20 @@ export class SeptimaVirtualMachine {
           this.push(-this.num())
         }
       } else if (at.tag === 'dot') {
-        const reciever = this.pop()
-        if (typeof reciever !== 'object' || reciever === null) {
+        const reciever = this.pop() as Record<string, unknown>
+        const x = reciever[at.param]
+        if (typeof reciever === 'string') {
+          let b = x
+          if (typeof x === 'function') {
+            const t = x.bind(reciever)
+            b = (...args: unknown[]) => fromJs(t(...args))
+          }
+          this.push(b)
+        } else if (typeof reciever !== 'object' || reciever === null) {
           throw new Error('----------tttttttttttttt---------')
+        } else {
+          this.push(reciever[at.param])
         }
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        this.push((reciever as Record<string, unknown>)[at.param])
       } else if (at.tag === 'store') {
         frame.table = frame.table.add(at.param, this.pop())
       } else if (at.tag === 'reserve') {
