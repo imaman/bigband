@@ -973,15 +973,15 @@ describe('septima', () => {
     test.only('can be stored in an array', () => {
       expect(run(`['a', undefined, 'c']`)).toEqual(['a', undefined, 'c'])
     })
-    test('an object attribute with a value of undefined is dropped from the object', () => {
+    test.only('an object attribute with a value of undefined is dropped from the object', () => {
       expect(keysOf(run(`{n: 42, o: undefined, p: 'poo'}`))).toEqual(['n', 'p'])
       expect(keysOf(run(`Object.fromEntries([['n', 42], ['o', undefined], ['p', 'poo']])`))).toEqual(['n', 'p'])
     })
     test.todo('decide how overwriting with undefined works')
-    test('spreading an undefined in object is a no-op', () => {
+    test.only('spreading an undefined in object is a no-op', () => {
       expect(run(`{n: 42, ...undefined, p: 'poo'}`)).toEqual({ n: 42, p: 'poo' })
     })
-    test('spreading an undefined in an array is a no-op', () => {
+    test.only('spreading an undefined in an array is a no-op', () => {
       expect(run(`[42, ...undefined, 'poo']`)).toEqual([42, 'poo'])
     })
     test('produces a full trace when an undefined-reference-error is fired', () => {
@@ -1197,7 +1197,6 @@ describe('septima', () => {
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(run(`let x = ['a']; x.at(0)`, true)).toEqual('a')
-    // expect(run(`let x = ['a', 'b', 'c']; [x.at(0), x.at(2), x.at(3)]`, true)).toEqual(['a', 'c', undefined])
+    expect(run(`{n: 42, ...undefined, p: 'poo'}`, true)).toEqual({ n: 42, p: 'poo' })
   })
 })

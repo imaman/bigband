@@ -221,6 +221,9 @@ export class SeptimaVirtualMachine {
           if (isSpread) {
             --j
             const v = this.pop()
+            if (v === undefined) {
+              continue
+            }
             if (!(v instanceof SeptimaObject)) {
               throw new Error(`value type error: expected obj but found ${JSON.stringify(v)}`)
             }
@@ -231,7 +234,7 @@ export class SeptimaVirtualMachine {
             arr[i] = [k, v]
           }
         }
-        this.push(new SeptimaObject(arr))
+        this.push(new SeptimaObject(arr.filter(Boolean)))
       } else if (at.tag === 'unop') {
         if (at.mod === '!') {
           this.push(!this.bool())
@@ -420,6 +423,9 @@ class SeptimaArray implements Iterable<unknown> {
       const isSpread = j < spreads.length && spreads[j] === i
       if (isSpread) {
         ++j
+        if (v === undefined) {
+          continue
+        }
         if (v instanceof SeptimaArray) {
           this.values.push(...v)
         } else {
@@ -467,7 +473,8 @@ class SeptimaObject {
         arr.push(at)
       }
     }
-    Object.assign(this, Object.fromEntries(arr))
+    const filtered = arr.filter(([_, v]) => v !== undefined)
+    Object.assign(this, Object.fromEntries(filtered))
   }
   toJSON() {
     return { ...this }
