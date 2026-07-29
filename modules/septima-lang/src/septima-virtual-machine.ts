@@ -136,7 +136,7 @@ export class SeptimaVirtualMachine {
           this.push(retVal)
         } else {
           if (!(callee instanceof LambdaRef)) {
-            throw new Error(`callee is not a reference to a lambda function: ${JSON.stringify(callee)}}`)
+            throw new Error(`Callee is not a function (it is: ${JSON.stringify(callee)})`)
           }
           if (!callee.table) {
             throw new Error(`ValTable of LambdaRef (${callee.id}) is missing`)
@@ -246,7 +246,7 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'dot') {
         const reciever = this.pop() as Record<string, unknown>
         const x = reciever[at.param]
-        if (typeof reciever === 'string') {
+        if (typeof reciever === 'string' || reciever instanceof SeptimaArray) {
           let b = x
           if (typeof x === 'function') {
             const t = x.bind(reciever)
@@ -424,7 +424,7 @@ class LambdaRef {
  */
 class SeptimaArray implements Iterable<unknown> {
   readonly values: unknown[] = []
-  constructor(values: unknown[], spreads: number[]) {
+  constructor(values: unknown[], spreads: number[] = []) {
     let j = 0
     for (let i = 0; i < values.length; ++i) {
       const v = values[i]
@@ -445,14 +445,24 @@ class SeptimaArray implements Iterable<unknown> {
     }
   }
 
-  get at() {
-    return (index: string | number) => {
-      if (typeof index === 'string') {
-        throw new Error(`index into an array must be a number (got: ${index})`)
-      }
-
-      return this.values.at(index)
+  at(index: string | number) {
+    if (typeof index === 'string') {
+      throw new Error(`index into an array must be a number (got: ${index})`)
     }
+
+    return this.values.at(index)
+  }
+
+  concat(...args: unknown[]) {
+    const arr: unknown[] = [...this.values]
+    for (const a of args) {
+      if (a instanceof SeptimaArray) {
+        arr.push(...a.values)
+      } else {
+        arr.push(a)
+      }
+    }
+    return new SeptimaArray(arr)
   }
 
   *[Symbol.iterator](): Iterator<unknown> {
@@ -501,7 +511,20 @@ class SeptimaObject {
   }
 }
 
-function toJs(u: unknown): unknown {
+function toJs(u: unknown, debug = false): unknown {
+  const ret = toJsImpl(u, debug)
+  if (debug) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `${typeof u} | ${u instanceof Object ? u.constructor.name : 'n/o'} | ${JSON.stringify(u)} -> ${JSON.stringify(
+        ret,
+      )}`,
+    )
+  }
+  return ret
+}
+
+function toJsImpl(u: unknown, debug = false): unknown {
   const t = typeof u
   if (t === 'bigint' || t === 'boolean' || t === 'function' || t === 'number' || t === 'string' || t === 'undefined') {
     return u
@@ -515,13 +538,13 @@ function toJs(u: unknown): unknown {
     return { 'septima-function': u.id }
   }
   if (u instanceof SeptimaObject) {
-    return Object.fromEntries(Object.entries(u.toJSON()).map(([k, v]) => [k, toJs(v)]))
+    return Object.fromEntries(Object.entries(u.toJSON()).map(([k, v]) => [k, toJs(v, debug)]))
   }
 
   if (u instanceof SeptimaArray) {
     const ret = []
     for (const x of u.toJSON()) {
-      ret.push(toJs(x))
+      ret.push(toJs(x, debug))
     }
 
     return ret
@@ -541,6 +564,10 @@ function fromJs(u: unknown): unknown {
 
   if (t === 'symbol') {
     throw new Error(`cannot translate symbol: ${u}`)
+  }
+
+  if (u instanceof SeptimaArray || u instanceof SeptimaObject) {
+    return u
   }
 
   if (Array.isArray(u)) {

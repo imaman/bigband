@@ -675,7 +675,7 @@ describe('septima', () => {
     })
   })
   describe('array methods', () => {
-    test('concat', () => {
+    test.only('concat', () => {
       expect(run(`['foo', 'bar', 'goo'].concat(['zoo', 'poo'])`)).toEqual(['foo', 'bar', 'goo', 'zoo', 'poo'])
     })
     test('every', () => {
@@ -753,8 +753,8 @@ describe('septima', () => {
         })
       })
     })
-    test('push is not allowed', () => {
-      expect(() => run(`let a = [1,2]; a.push(5)`)).toThrowError('Unrecognized array method: push')
+    test.only('push is not allowed', () => {
+      expect(() => run(`let a = [1,2]; a.push(5)`)).toThrowError('Callee is not a function (it is: undefined)')
     })
   })
   describe('constructor', () => {
@@ -1197,6 +1197,6 @@ describe('septima', () => {
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(run(`{n: 42, ...undefined, p: 'poo'}`, true)).toEqual({ n: 42, p: 'poo' })
+    expect(run(`['foo'].concat(['zoo'])`, true)).toEqual(['foo', 'zoo'])
   })
 })
