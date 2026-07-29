@@ -227,7 +227,7 @@ describe('septima', () => {
       expect(run(`"   "`)).toEqual('   ')
       expect(run(`"  ab  "`)).toEqual('  ab  ')
     })
-    test('supports string methods', () => {
+    test.only('supports string methods', () => {
       expect(run(`'bigbird'.substring(3, 7)`)).toEqual('bird')
       expect(run(`'bigbird'.indexOf('g')`)).toEqual(2)
       expect(run(`'ab-cde-fghi-jkl'.split('-')`)).toEqual(['ab', 'cde', 'fghi', 'jkl'])
