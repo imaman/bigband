@@ -209,10 +209,7 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'throw') {
         throw this.pop()
       } else if (at.tag === 'array') {
-        const arr: unknown[] = []
-        for (let i = 0; i < at.param; ++i) {
-          arr[at.param - i - 1] = this.pop()
-        }
+        const arr = this.popArray(at.param)
         this.push(new SeptimaArray(arr))
       } else if (at.tag === 'constUndefined') {
         this.push(undefined)
