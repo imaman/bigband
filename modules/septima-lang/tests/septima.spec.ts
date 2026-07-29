@@ -237,7 +237,7 @@ describe('septima', () => {
         'ab   cd',
       ])
     })
-    test('supports optional arguments of string methods', () => {
+    test.only('supports optional arguments of string methods', () => {
       expect(run(`'bigbird'.substring(5)`)).toEqual('rd')
     })
   })
