@@ -12,6 +12,12 @@ function run(input: string, verbose?: boolean) {
   return Septima.run(input, { onSink: () => undefined, verbose })
 }
 
+const runLog = (input: string, verbose?: boolean) => {
+  const lines: unknown[] = []
+  const result = Septima.run(input, { onSink: () => undefined, consoleLog: u => lines.push(u), verbose })
+  return { lines, result }
+}
+
 describe('septima', () => {
   test.only('basics', () => {
     expect(run(`5`)).toEqual(5)
@@ -678,7 +684,7 @@ describe('septima', () => {
     test.only('concat', () => {
       expect(run(`['foo', 'bar', 'goo'].concat(['zoo', 'poo'])`)).toEqual(['foo', 'bar', 'goo', 'zoo', 'poo'])
     })
-    test('every', () => {
+    test.only('every', () => {
       expect(run(`["", 'x', 'xx'].every(fun (item, i) item.length == i)`)).toEqual(true)
       expect(run(`["", 'yy', 'zz'].every(fun (item, i) item.length == i)`)).toEqual(false)
       expect(
@@ -815,7 +821,7 @@ describe('septima', () => {
       expect(() => run(`Object.fromEntries(5)`)).toThrowError('number 5 is not iterable')
       expect(() => run(`Object.fromEntries(false)`)).toThrowError('boolean false is not iterable')
       expect(() => run(`Object.fromEntries({x: 1})`)).toThrowError('object is not iterable')
-      expect(() => run(`Object.fromEntries(fun () 5)`)).toThrowError('object is not iterable')
+      expect(() => run(`Object.fromEntries(() => 5)`)).toThrowError('function is not iterable')
     })
     test('the input array must be an array of pairs', () => {
       expect(() => run(`Object.fromEntries([['a', 1], ['b']])`)).toThrowError('each entry must be a [key, value] pair')
@@ -1058,15 +1064,10 @@ describe('septima', () => {
       expect(run(`Number(false)`)).toEqual(0)
       expect(run(`Number(undefined)`)).toEqual(NaN)
       expect(run(`Number({})`)).toEqual(NaN)
-      expect(run(`Number([])`)).toEqual(NaN)
+      expect(run(`Number([])`)).toEqual(0)
     })
   })
   describe('console.log', () => {
-    const runLog = (input: string) => {
-      const lines: unknown[] = []
-      const result = Septima.run(input, { onSink: () => undefined, consoleLog: u => lines.push(u) })
-      return { lines, result }
-    }
     test.only('prints its input', () => {
       expect(runLog(`console.log(2*2*2*2)`).lines).toEqual(['16'])
       expect(runLog(`console.log({a: 1, b: 2, c: ['d', 'e']})`).lines).toEqual(['{"a":1,"b":2,"c":["d","e"]}'])
@@ -1197,6 +1198,6 @@ describe('septima', () => {
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(run(`['foo'].concat(['zoo'])`, true)).toEqual(['foo', 'zoo'])
+    expect(run(`["x"].every((at, i, a) => at == a[(a.length - i) - 1])`, true)).toEqual(true)
   })
 })

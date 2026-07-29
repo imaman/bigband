@@ -5,13 +5,13 @@ import util from 'util'
 import { CodeFile } from './code-emitter.js'
 import { Outputter } from './outputter.js'
 import { shouldNeverHappen } from './should-never-happen.js'
+import { failMe } from './fail-me.js'
 
 interface StackFrame {
   pc: number
   chunkId: number
   table: ValTable
   args: unknown[]
-  lambdaRefs: LambdaRef[]
 }
 
 export class SeptimaVirtualMachine {
@@ -82,14 +82,14 @@ export class SeptimaVirtualMachine {
       // eslint-disable-next-line no-console
       console.log(`Program:\n${this.cf.format()}`)
     }
-    this.callStack.push({ chunkId: 0, pc: 0, table: this.stdLib(), args: [], lambdaRefs: [] })
-    const ret = this.runLoop()
+    this.callStack.push({ chunkId: 0, pc: 0, table: this.stdLib(), args: [] })
+    const ret = this.launch()
     if (this.opstack.length) {
       throw new Error(
         `opstack length is ${this.opstack.length} - stack=${JSON.stringify(this.opstack)} - cf=\n${this.cf.format()}`,
       )
     }
-    return toJs(ret)
+    return this.toJs(ret)
   }
 
   private popArray(n: number) {
@@ -100,12 +100,20 @@ export class SeptimaVirtualMachine {
     return ret
   }
 
-  private runLoop() {
+  private launch() {
+    return this.runLoop(this.callStack.length)
+  }
+
+  private runLoop(n: number) {
+    if (n < 1) {
+      throw new Error(`n must be nonnegative`)
+    }
     while (true) {
-      const frame = this.callStack.at(-1)
-      if (!frame) {
+      if (this.callStack.length < n) {
         return this.pop()
       }
+
+      const frame = this.callStack.at(-1) ?? failMe('callStack is empty')
       const instructions = this.cf.get(frame.chunkId)
       if (frame.pc >= instructions.length) {
         this.callStack.pop()
@@ -126,13 +134,14 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'const') {
         this.push(at.param)
       } else if (at.tag === 'lambdaRef') {
-        const lr = new LambdaRef(at.id, frame.table)
-        this.push(lr)
-        frame.lambdaRefs.push(lr)
+        this.push(new LambdaRef(at.id, frame.table))
       } else if (at.tag === 'call') {
         const callee = this.pop()
         if (typeof callee === 'function') {
-          const retVal = callee(...this.popArray(at.param))
+          const actuals = (this.toJs(this.popArray(at.param)) as unknown[])
+          console.log(`L.132 call ${JSON.stringify(callee)} with ${JSON.stringify(actuals)}`)
+          const retVal = callee(...actuals)
+          console.log(`L.135 retVal=${JSON.stringify(retVal)}`)
           this.push(retVal)
         } else {
           if (!(callee instanceof LambdaRef)) {
@@ -147,7 +156,6 @@ export class SeptimaVirtualMachine {
             pc: 0,
             table: callee.table,
             args: this.popArray(at.param),
-            lambdaRefs: [],
           })
         }
       } else if (at.tag === 'loadArg') {
@@ -250,7 +258,7 @@ export class SeptimaVirtualMachine {
           let b = x
           if (typeof x === 'function') {
             const t = x.bind(reciever)
-            b = (...args: unknown[]) => fromJs(t(...args))
+            b = (...args: unknown[]) => fromJs(t(...this.toJs(args, true) as unknown[]))
           }
           this.push(b)
         } else if (typeof reciever !== 'object' || reciever === null) {
@@ -317,7 +325,7 @@ export class SeptimaVirtualMachine {
         keys: (o: ObjLike) => fromJs(Object.keys(o)),
         entries: (o: ObjLike) => fromJs(Object.entries(o)),
         fromEntries: (arr: Iterable<[string, unknown]>) =>
-          fromJs(Object.fromEntries(toJs(arr) as Iterable<[string, unknown]>)),
+          fromJs(Object.fromEntries(this.toJs(arr) as Iterable<[string, unknown]>)),
       })
       .add('Array', { isArray: Array.isArray })
       .add('crypto', { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') })
@@ -331,6 +339,62 @@ export class SeptimaVirtualMachine {
       .add('Number', Number)
       .add('String', String)
   }
+
+
+  private toJs(u: unknown, debug = false): unknown {
+    const ret = this.toJsImpl(u, debug)
+    if (debug) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `${typeof u} | ${u instanceof Object ? u.constructor.name : 'n/o'} | ${JSON.stringify(u)} -> ${JSON.stringify(
+          ret,
+        )}`,
+      )
+    }
+    return ret
+  }
+
+  private toJsImpl(u: unknown, debug = false): unknown {
+    const t = typeof u
+    if (t === 'bigint' || t === 'boolean' || t === 'function' || t === 'number' || t === 'string' || t === 'undefined') {
+      return u
+    }
+
+    if (t === 'symbol') {
+      throw new Error(`cannot translate symbol: ${u}`)
+    }
+
+    if (Array.isArray(u)) {      
+      return u.map(at => this.toJs(at, debug))
+    }
+
+    if (u instanceof LambdaRef) {
+      return (...args: unknown[]) => {
+          this.callStack.push({
+            chunkId: u.id,
+            pc: 0,
+            table: u.table,
+            args: fromJs(args) as unknown[]
+          })
+          return this.launch()
+        }
+    }
+    
+    if (u instanceof SeptimaObject) {
+      return Object.fromEntries(Object.entries(u.toJSON()).map(([k, v]) => [k, this.toJs(v, debug)]))
+    }
+
+    if (u instanceof SeptimaArray) {
+      const ret = []
+      for (const x of u.toJSON()) {
+        ret.push(this.toJs(x, debug))
+      }
+
+      return ret
+    }
+
+    return u
+  }  
 }
 
 type ObjLike = Partial<Record<string, unknown>>
@@ -424,6 +488,11 @@ class LambdaRef {
  */
 class SeptimaArray implements Iterable<unknown> {
   readonly values: unknown[] = []
+
+  get length() {
+    return this.values.length
+  }
+  
   constructor(values: unknown[], spreads: number[] = []) {
     let j = 0
     for (let i = 0; i < values.length; ++i) {
@@ -458,11 +527,17 @@ class SeptimaArray implements Iterable<unknown> {
     for (const a of args) {
       if (a instanceof SeptimaArray) {
         arr.push(...a.values)
+      } else if (Array.isArray(a)) {
+        arr.push(...a)
       } else {
         arr.push(a)
       }
     }
     return new SeptimaArray(arr)
+  }
+
+  every(predicate: (value: unknown, index: number, array: unknown[])=> boolean) {
+    return this.values.every(predicate)
   }
 
   *[Symbol.iterator](): Iterator<unknown> {
@@ -509,49 +584,9 @@ class SeptimaObject {
   static entries(o: SeptimaObject): [string, unknown][] {
     return Object.entries(o)
   }
+
 }
 
-function toJs(u: unknown, debug = false): unknown {
-  const ret = toJsImpl(u, debug)
-  if (debug) {
-    // eslint-disable-next-line no-console
-    console.log(
-      `${typeof u} | ${u instanceof Object ? u.constructor.name : 'n/o'} | ${JSON.stringify(u)} -> ${JSON.stringify(
-        ret,
-      )}`,
-    )
-  }
-  return ret
-}
-
-function toJsImpl(u: unknown, debug = false): unknown {
-  const t = typeof u
-  if (t === 'bigint' || t === 'boolean' || t === 'function' || t === 'number' || t === 'string' || t === 'undefined') {
-    return u
-  }
-
-  if (t === 'symbol') {
-    throw new Error(`cannot translate symbol: ${u}`)
-  }
-
-  if (u instanceof LambdaRef) {
-    return { 'septima-function': u.id }
-  }
-  if (u instanceof SeptimaObject) {
-    return Object.fromEntries(Object.entries(u.toJSON()).map(([k, v]) => [k, toJs(v, debug)]))
-  }
-
-  if (u instanceof SeptimaArray) {
-    const ret = []
-    for (const x of u.toJSON()) {
-      ret.push(toJs(x, debug))
-    }
-
-    return ret
-  }
-
-  throw new Error(`Non translatable toJs: ${util.inspect(u)}`)
-}
 
 function fromJs(u: unknown): unknown {
   if (u === null) {
