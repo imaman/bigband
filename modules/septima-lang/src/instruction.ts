@@ -24,29 +24,31 @@ export type Instruction =
     }
   | {
       /**
-       * Pops n*2 values from the opstack ("object inputs"), constructs an object of off these and pushes it back onto
-       * the opstack. Each two consecrtive inputs are treated as key-value pair. Last pair popped will be added *first*
-       * in the resulting object.
+       * Constructs an object from n "inputs" (one per part of the object literal, in source order) and pushes it onto
+       * the opstack. A plain input occupies two stack slots: its key (pushed first) and its value. A spread input
+       * occupies a single slot: the value to be spread. Thus, this instruction pops n*2 - spreads.length values
+       * overall. Input 0 is the deepest on the stack (popped last). Attributes are added to the object in input order,
+       * so when the same key appears in multiple inputs the last one wins.
        */
       tag: 'object'
       n: number
       /**
-       * Indexes of object inputs which should be spreaded into it. 0 means "spread the last pair popped". Should be
-       * sorted (lowest first).
+       * Indexes (into the n inputs) of the spread inputs, sorted ascending. A spread input must evaluate to an object
+       * - whose attributes are then copied into the constructed object - or to undefined, which is a no-op.
        */
       spreads: number[]
     }
   | {
       /**
-       * Pops n values from the opstack ("array inputs"), constructs an array of off these and pushes it back onto the
-       * opstack. Last value popped will be placed *first* in the array. The resulitng array length may not necessarily
+       * Pops n values from the opstack ("array inputs"), constructs an array out of these and pushes it back onto the
+       * opstack. Last value popped will be placed *first* in the array. The resulting array length may not necessarily
        * be n due to spreading.
        */
       tag: 'array'
       n: number
       /**
-       * Indexes of array inpiuts which should be spreaded into it. 0 means "spread the last value popped". Should be
-       * sorted (lowest first).
+       * Indexes (into the n inputs) of the spread inputs, sorted ascending. A spread input must evaluate to an array
+       * - whose elements are then placed into the constructed array - or to undefined, which is a no-op.
        */
       spreads: number[]
     }
