@@ -109,17 +109,19 @@ export class CodeEmitter {
         cf.add({ tag: 'throw' })
       }
     } else if (ast.tag === 'arrayLiteral') {
-      for (const part of ast.parts) {
+      const spreads: number[] = []
+      for (let i = 0; i < ast.parts.length; ++i) {
+        const part = ast.parts[i]
         if (part.tag === 'element') {
           this.emit(part.v, cf)
         } else if (part.tag === 'spread') {
           this.emit(part.v, cf)
-          cf.add({ tag: 'spreadmark' })
+          spreads.push(i)
         } else {
           shouldNeverHappen(part)
         }
       }
-      cf.add({ tag: 'array', param: ast.parts.length })
+      cf.add({ tag: 'array', n: ast.parts.length, spreads })
     } else if (ast.tag === 'ident') {
       cf.add({ tag: 'load', param: ast.t.text })
     } else if (ast.tag === 'literal') {
@@ -229,7 +231,7 @@ export class CodeEmitter {
         } else {
           shouldNeverHappen(part)
         }
-        cf.add({ tag: 'array', param: ast.parts.length })
+        cf.add({ tag: 'array', n: ast.parts.length, spreads: [] })
       }
     } else if (ast.tag === 'unaryOperator') {
       this.emit(ast.operand, cf)

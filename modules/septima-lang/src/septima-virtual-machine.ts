@@ -209,8 +209,8 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'throw') {
         throw this.pop()
       } else if (at.tag === 'array') {
-        const arr = this.popArray(at.param)
-        this.push(new SeptimaArray(arr))
+        const arr = this.popArray(at.n)
+        this.push(new SeptimaArray(arr, at.spreads))
       } else if (at.tag === 'constUndefined') {
         this.push(undefined)
       } else if (at.tag === 'object') {
@@ -236,8 +236,6 @@ export class SeptimaVirtualMachine {
         }
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         this.push((reciever as Record<string, unknown>)[at.param])
-      } else if (at.tag === 'spreadmark') {
-        throw new Error(`not impl yet ${JSON.stringify(at)}`)
       } else if (at.tag === 'store') {
         frame.table = frame.table.add(at.param, this.pop())
       } else if (at.tag === 'reserve') {
@@ -402,8 +400,21 @@ class LambdaRef {
  * (2) They have mutating methods (e.g., sort(), reverse()) which are a no-go in a purely functional language such as
  * Septima. Our design decision is to go opt-in than to opt-out.
  */
-class SeptimaArray {
-  constructor(readonly values: unknown[]) {}
+class SeptimaArray implements Iterable<unknown> {
+  readonly values: unknown[] = []
+  constructor(values: unknown[], spreads: number[]) {
+    let j = 0
+    for (let i = 0; i < values.length; ++i) {
+      const v = values[i]
+      const isSpread = j < spreads.length && spreads[j] === i
+      if (isSpread) {
+        this.values.push(...(v as Iterable<unknown>))
+        ++j
+      } else {
+        this.values.push(v)
+      }
+    }
+  }
 
   get at() {
     return (index: string | number) => {
@@ -413,6 +424,10 @@ class SeptimaArray {
 
       return this.values.at(index)
     }
+  }
+
+  *[Symbol.iterator](): Iterator<unknown> {
+    yield* this.values
   }
 
   toJSON() {
@@ -488,7 +503,10 @@ function fromJs(u: unknown): unknown {
   }
 
   if (Array.isArray(u)) {
-    return new SeptimaArray(u.map(at => fromJs(at)))
+    return new SeptimaArray(
+      u.map(at => fromJs(at)),
+      [],
+    )
   }
 
   if (typeof u === 'object') {
