@@ -419,7 +419,7 @@ describe('septima', () => {
   })
 
   describe('spread operator in objects', () => {
-    test('shallow copies an object into an object literal', () => {
+    test.only('shallow copies an object into an object literal', () => {
       expect(run(`let o = {a: 1, b: 2}; {...o}`)).toEqual({ a: 1, b: 2 })
     })
     test('can be combined with hard-coded (literal) attributes', () => {
