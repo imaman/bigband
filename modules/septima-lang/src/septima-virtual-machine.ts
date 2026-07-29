@@ -408,8 +408,12 @@ class SeptimaArray implements Iterable<unknown> {
       const v = values[i]
       const isSpread = j < spreads.length && spreads[j] === i
       if (isSpread) {
-        this.values.push(...(v as Iterable<unknown>))
         ++j
+        if (v instanceof SeptimaArray) {
+          this.values.push(...v)
+        } else {
+          throw new Error(`value type error: expected arr but found ${JSON.stringify(v)}`)
+        }
       } else {
         this.values.push(v)
       }

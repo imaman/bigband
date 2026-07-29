@@ -455,10 +455,10 @@ describe('septima', () => {
     test.only('shallow copies an array into an array literal', () => {
       expect(run(`let a = ['x', 'y']; [...a]`)).toEqual(['x', 'y'])
     })
-    test('can be mixed with array elements', () => {
+    test.only('can be mixed with array elements', () => {
       expect(run(`let a = ['x', 'y']; ['p', ...a, 'q']`)).toEqual(['p', 'x', 'y', 'q'])
     })
-    test('can be used multiple times inside an array literal', () => {
+    test.only('can be used multiple times inside an array literal', () => {
       expect(run(`let a1 = ['x', 'y']; let a2 = ['z']; ['p', ...a1, 'q', ...a2, 'r']`)).toEqual([
         'p',
         'x',
@@ -468,7 +468,7 @@ describe('septima', () => {
         'r',
       ])
     })
-    test('errors if applied to a non-array value', () => {
+    test.only('errors if applied to a non-array value', () => {
       expect(() => run(`let a = true; [...a]`)).toThrowError('value type error: expected arr but found true')
       expect(() => run(`let a = 5; [...a]`)).toThrowError('value type error: expected arr but found 5')
       expect(() => run(`let a = {x: 1}; [...a]`)).toThrowError(`value type error: expected arr but found {"x":1}`)
