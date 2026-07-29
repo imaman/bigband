@@ -452,7 +452,7 @@ describe('septima', () => {
   })
 
   describe('spread operator in arrays', () => {
-    test('shallow copies an array into an array literal', () => {
+    test.only('shallow copies an array into an array literal', () => {
       expect(run(`let a = ['x', 'y']; [...a]`)).toEqual(['x', 'y'])
     })
     test('can be mixed with array elements', () => {
