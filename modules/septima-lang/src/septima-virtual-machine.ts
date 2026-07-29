@@ -222,7 +222,7 @@ export class SeptimaVirtualMachine {
             --j
             const v = this.pop()
             if (!(v instanceof SeptimaObject)) {
-              throw new Error(`cannot spread a non-object into an object: ${JSON.stringify(v)}`)
+              throw new Error(`value type error: expected obj but found ${JSON.stringify(v)}`)
             }
             arr[i] = v
           } else {

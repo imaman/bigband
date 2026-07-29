@@ -422,11 +422,11 @@ describe('septima', () => {
     test.only('shallow copies an object into an object literal', () => {
       expect(run(`let o = {a: 1, b: 2}; {...o}`)).toEqual({ a: 1, b: 2 })
     })
-    test('can be combined with hard-coded (literal) attributes', () => {
+    test.only('can be combined with hard-coded (literal) attributes', () => {
       expect(run(`let o = {a: 1}; {...o, b: 2}`)).toEqual({ a: 1, b: 2 })
       expect(run(`let o = {b: 2}; {...o, a: 1, ...o}`)).toEqual({ a: 1, b: 2 })
     })
-    test('can be used multiple times inside a single object literal', () => {
+    test.only('can be used multiple times inside a single object literal', () => {
       expect(run(`let o1 = {b: 2}; let o2 = {c: 3}; {a: 1, ...o1, ...o2, d: 4}`)).toEqual({
         a: 1,
         b: 2,
@@ -434,16 +434,16 @@ describe('septima', () => {
         d: 4,
       })
     })
-    test('overrides attributes to its left', () => {
+    test.only('overrides attributes to its left', () => {
       expect(run(`let o = {b: 2}; {a: 100, b: 200, c: 300, ...o}`)).toEqual({ a: 100, b: 2, c: 300 })
     })
-    test('overridden by attributes to its right', () => {
+    test.only('overridden by attributes to its right', () => {
       expect(run(`let o = {a: 1, b: 2, c: 3}; {...o, b: 200}`)).toEqual({ a: 1, b: 200, c: 3 })
     })
-    test('can be mixed with computed attribute names', () => {
+    test.only('can be mixed with computed attribute names', () => {
       expect(run(`let o = {ab: 'anteater'}; {...o, ['c' + 'd']: 'cat'}`)).toEqual({ ab: 'anteater', cd: 'cat' })
     })
-    test('errors if applied to a non-object value', () => {
+    test.only('errors if applied to a non-object value', () => {
       expect(() => run(`let o = ['a']; {...o}`)).toThrowError(`value type error: expected obj but found ["a"]`)
       expect(() => run(`let o = true; {...o}`)).toThrowError('value type error: expected obj but found true')
       expect(() => run(`let o = 5; {...o}`)).toThrowError('value type error: expected obj but found 5')
