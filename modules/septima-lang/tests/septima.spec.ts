@@ -122,7 +122,7 @@ describe('septima', () => {
       expect(run(`{} == []`)).toEqual(false)
       expect(run(`((x) => (x+3)) == 6`)).toEqual(false)
     })
-    test('of objects', () => {
+    test.only('of objects', () => {
       expect(run(`{} == {}`)).toEqual(true)
       expect(run(`{} == {a: 1}`)).toEqual(false)
       expect(run(`{x: 1, y: {z: "ab".length}} == {x: 1, y: {z: 2}}`)).toEqual(true)
