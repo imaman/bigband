@@ -208,7 +208,9 @@ export class CodeEmitter {
       this.emit(ast.value, cf)
       cf.add({ tag: 'fillIn', name: ast.ident.t.text })
     } else if (ast.tag === 'objectLiteral') {
-      for (const part of ast.parts) {
+      const spreads: number[] = []
+      for (let i = 0; i < ast.parts.length; ++i) {
+        const part = ast.parts[i]
         if (part.tag === 'hardName' || part.tag === 'quotedString') {
           cf.add({ tag: 'const', param: part.k.t.text })
           this.emit(part.v, cf)
@@ -216,12 +218,13 @@ export class CodeEmitter {
           this.emit(part.k, cf)
           this.emit(part.v, cf)
         } else if (part.tag === 'spread') {
-          throw new Error(`not supported: ${JSON.stringify(part)}`)
+          spreads.push(i)
+          this.emit(part.o, cf)
         } else {
           shouldNeverHappen(part)
         }
       }
-      cf.add({ tag: 'object', param: ast.parts.length })
+      cf.add({ tag: 'object', n: ast.parts.length, spreads })
     } else if (ast.tag === 'templateLiteral') {
       for (const part of ast.parts) {
         if (part.tag === 'string') {

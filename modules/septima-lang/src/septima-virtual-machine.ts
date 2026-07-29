@@ -214,11 +214,22 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'constUndefined') {
         this.push(undefined)
       } else if (at.tag === 'object') {
-        const arr: [string, unknown][] = []
-        for (let i = 0; i < at.param; ++i) {
-          const v = this.pop()
-          const k = this.str()
-          arr[at.param - i - 1] = [k, v]
+        let j = at.spreads.length - 1
+        const arr: (SeptimaObject | [string, unknown])[] = []
+        for (let i = at.n - 1; i >= 0; --i) {
+          const isSpread = j >= 0 && at.spreads[j] === i
+          if (isSpread) {
+            --j
+            const v = this.pop()
+            if (!(v instanceof SeptimaObject)) {
+              throw new Error(`cannot spread a non-object into an object: ${JSON.stringify(v)}`)
+            }
+            arr[i] = v
+          } else {
+            const v = this.pop()
+            const k = this.str()
+            arr[i] = [k, v]
+          }
         }
         this.push(new SeptimaObject(arr))
       } else if (at.tag === 'unop') {
@@ -447,8 +458,16 @@ class SeptimaArray implements Iterable<unknown> {
  * Why do we need our own object? JS's native objects' toString() format is not JSON (the dreaded "[object Object]".
  */
 class SeptimaObject {
-  constructor(entries: [string, unknown][]) {
-    Object.assign(this, Object.fromEntries(entries))
+  constructor(entries: (SeptimaObject | [string, unknown])[]) {
+    const arr: [string, unknown][] = []
+    for (const at of entries) {
+      if (at instanceof SeptimaObject) {
+        arr.push(...SeptimaObject.entries(at))
+      } else {
+        arr.push(at)
+      }
+    }
+    Object.assign(this, Object.fromEntries(arr))
   }
   toJSON() {
     return { ...this }
@@ -461,6 +480,9 @@ class SeptimaObject {
       throw new Error(`index into an object must be a string (got: ${index})`)
     }
     return Object.hasOwn(o, index) ? (o as unknown as Record<string, unknown>)[index] : undefined
+  }
+  static entries(o: SeptimaObject): [string, unknown][] {
+    return Object.entries(o)
   }
 }
 

@@ -19,8 +19,22 @@ export type Instruction =
       param: string
     }
   | {
-      tag: 'object' | 'exitScope'
+      tag: 'exitScope'
       param: number
+    }
+  | {
+      /**
+       * Pops n*2 values from the opstack ("object inputs"), constructs an object of off these and pushes it back onto
+       * the opstack. Each two consecrtive inputs are treated as key-value pair. Last pair popped will be added *first*
+       * in the resulting object.
+       */
+      tag: 'object'
+      n: number
+      /**
+       * Indexes of object inputs which should be spreaded into it. 0 means "spread the last pair popped". Should be
+       * sorted (lowest first).
+       */
+      spreads: number[]
     }
   | {
       /**
