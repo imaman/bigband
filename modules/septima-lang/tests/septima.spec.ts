@@ -1192,6 +1192,10 @@ describe('septima', () => {
   test.todo('proper internal representation of arrow function, in particular: show(), span()')
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
+  // CRTICAL CRTICAL CRITICAL
+  test.todo(
+    'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
+  )
   test.only('HEEEEEEEEEEEEEERE', () => {
     expect(run(`let x = ['a']; x.at(0)`, true)).toEqual('a')
     // expect(run(`let x = ['a', 'b', 'c']; [x.at(0), x.at(2), x.at(3)]`, true)).toEqual(['a', 'c', undefined])
