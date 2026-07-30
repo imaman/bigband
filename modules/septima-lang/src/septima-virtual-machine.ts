@@ -256,7 +256,7 @@ export class SeptimaVirtualMachine {
           let b = x
           if (typeof x === 'function') {
             const t = x.bind(reciever)
-            b = (...args: unknown[]) => fromJs(t(...(this.toJs(args, true) as unknown[])))
+            b = (...args: unknown[]) => fromJs(t(...(this.toJs(args) as unknown[])))
           }
           this.push(b)
         } else if (typeof reciever !== 'object' || reciever === null) {

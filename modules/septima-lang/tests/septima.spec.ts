@@ -1202,6 +1202,6 @@ describe('septima', () => {
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(run(`["x"].every((at, i, a) => at == a[(a.length - i) - 1])`, true)).toEqual(true)
+    expect(run(`["x"].every((at, i, a) => at == a[(a.length - i) - 1])`)).toEqual(true)
   })
 })
