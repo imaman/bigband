@@ -1041,6 +1041,9 @@ describe('septima', () => {
       expect(run(`String(true)`)).toEqual('true')
       expect(run(`String(false)`)).toEqual('false')
       expect(run(`String(undefined)`)).toEqual('undefined')
+    })
+    // X
+    test('String() on non-primitives', () => {
       expect(run(`String({a: "alpha", b: [3,1,4], n: 42})`)).toEqual('{"a":"alpha","b":[3,1,4],"n":42}')
       expect(run(`String(["abc", 3.14159, false, true, undefined])`)).toEqual('["abc",3.14159,false,true,null]')
     })
@@ -1090,7 +1093,8 @@ describe('septima', () => {
     test.only('parses a string', () => {
       expect(run(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
     })
-    test.only('roundtrips a value that was converted to JSON', () => {
+    // X
+    test('roundtrips a value that was converted to JSON', () => {
       expect(run(`JSON.parse(String({"a": 1, "b": "beta", c: {arr: [100, 200]}}))`)).toEqual({
         a: 1,
         b: 'beta',
