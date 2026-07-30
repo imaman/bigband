@@ -929,7 +929,7 @@ describe('septima', () => {
       }
       expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 'sum=8' })
     })
-    test('all exported defintions are available at the import site', () => {
+    test.only('all exported defintions are available at the import site', () => {
       const septima = new Septima()
       const files: Partial<Record<string, string>> = {
         a: `import * as b from './b'; b.sum(b.four, b.six)`,
@@ -937,7 +937,7 @@ describe('septima', () => {
       }
       expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 10 })
     })
-    test('non-exported definitions become undefined', () => {
+    test.only('non-exported definitions become undefined', () => {
       const septima = new Septima()
       const files: Partial<Record<string, string>> = {
         a: `import * as b from './b';\n[b.four,\nb.six]`,
@@ -945,7 +945,7 @@ describe('septima', () => {
       }
       expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [4, undefined] })
     })
-    test('can import from multiple files', () => {
+    test.only('can import from multiple files', () => {
       const septima = new Septima()
       const files: Partial<Record<string, string>> = {
         a: `import * as b from './b';\nimport * as c from './c'\nimport * as d from './d'; [b.val, c.val, d.val]`,
@@ -1204,7 +1204,7 @@ describe('septima', () => {
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
   test.only('HEEEEEEEEEEEEEERE', () => {
-    const septima = new Septima(undefined, undefined, true)
+    const septima = new Septima()
     const files: Partial<Record<string, string>> = {
       a: `import * as b from './b'; 'sum=' + String(b.sum(5, 3))`,
       b: `export let sum = (x,y) => x+y`,
