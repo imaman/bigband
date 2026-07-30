@@ -4,9 +4,9 @@ import { Instruction } from './instruction.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 
 interface CodeChunk {
-  ast: AstNode
+  unitId: string
   instructions: Instruction[]
-  asts: AstNode[]
+  asts: AstNode[] // The AST node of each instruction
 }
 export class CodeFile {
   readonly chunks: CodeChunk[] = []
@@ -21,7 +21,7 @@ export class CodeFile {
 
   createChunk(ast: AstNode) {
     const ret = this.chunks.length
-    this.chunks.push({ ast, instructions: [], asts: [] })
+    this.chunks.push({ unitId: ast.unitId, instructions: [], asts: [] })
     return ret
   }
 
@@ -66,7 +66,7 @@ export class CodeFile {
     return this.chunks
       .flatMap(
         (at, i) =>
-          `// chunck ${i}\n` +
+          `// chunck ${i} ${at.unitId}\n` +
           at.instructions.map((c, i) => `${i < 10 ? ' ' : ''}[${i}] ${JSON.stringify(c)}`).join('\n'),
       )
       .join('\n\n')
