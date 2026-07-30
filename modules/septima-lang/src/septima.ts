@@ -162,7 +162,10 @@ export class Septima {
   }
 
   private execute(fileName: string, _verbosity: Verbosity, _args: Record<string, unknown>): Result {
-    const cf = new CodeEmitter((a, b) => this.unitOf(a, b)).run(fileName)
+    const cf = new CodeEmitter(
+      (a, b) => this.unitOf(a, b),
+      (a, b) => this.resolveUnitId(a, b),
+    ).run(fileName)
     const vm = new SeptimaVirtualMachine(cf, this.consoleLog, this.verbose)
     const ret = vm.run()
     if (ret.tag === 'ok') {
@@ -219,10 +222,17 @@ export class Septima {
   }
 
   private unitOf(importerPathFromSourceRoot: string | undefined, relativePath: string) {
-    const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
+    const p = this.resolveUnitId(importerPathFromSourceRoot, relativePath)
     const { unit } =
       this.unitByUnitId.get(p) ?? failMe(`Encluntered a file which has not been loaded (file name: ${p})`)
     return unit
+  }
+  private resolveUnitId(importerPathFromSourceRoot: string | undefined, relativePath: string) {
+    const ret = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
+    if (!this.unitByUnitId.has(ret)) {
+      throw new Error(`Import target not found (${importerPathFromSourceRoot} -> ${relativePath})`)
+    }
+    return ret
   }
 
   private getPathFromSourceRoot(startingPoint: string | undefined, relativePath: string) {

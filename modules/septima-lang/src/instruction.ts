@@ -1,5 +1,9 @@
 export type Instruction =
   | {
+      tag: 'import'
+      unitId: string
+    }
+  | {
       tag: 'binop'
       mod: '+' | '-' | '*' | '/' | '%' | '**' | '>' | '<' | '>=' | '<=' | '==' | '!='
     }

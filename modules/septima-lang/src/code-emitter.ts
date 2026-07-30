@@ -76,7 +76,10 @@ export class CodeFile {
 export class CodeEmitter {
   private workList: { ast: Lambda; chunkId: number }[] = []
 
-  constructor(private readonly getAstOf: (unitId: string | undefined, relativePath: string) => Unit) {}
+  constructor(
+    private readonly getAstOf: (unitId: string | undefined, relativePath: string) => Unit,
+    private readonly reolveUnitId: (unitId: string | undefined, relativePath: string) => string,
+  ) {}
   // const o = this.importDefinitions(ast.unitId, imp.pathToImportFrom.text)
 
   private registerLambda(ast: Lambda, cf: CodeFile) {
@@ -134,7 +137,13 @@ export class CodeEmitter {
   }
 
   private emit(ast: AstNode, cf: CodeFile) {
-    if (ast.tag === 'topLevelExpression') {
+    if (ast.tag === 'unit') {
+      for (const imp of ast.imports) {
+        const importeeUnitId = this.reolveUnitId(ast.unitId, imp.pathToImportFrom.text)
+        cf.add({ tag: 'import', unitId: importeeUnitId }, ast)
+      }
+      this.emit(ast.expression, cf)
+    } else if (ast.tag === 'topLevelExpression') {
       const seen = new Set<string>()
       for (const d of ast.definitions) {
         cf.add({ tag: 'reserve', name: d.ident.t.text }, ast)
@@ -187,8 +196,6 @@ export class CodeEmitter {
       } else {
         shouldNeverHappen(ast.type)
       }
-    } else if (ast.tag === 'unit') {
-      this.emit(ast.expression, cf)
     } else if (ast.tag === 'binaryOperator') {
       const op = ast.operator
       if (op === '&&') {
