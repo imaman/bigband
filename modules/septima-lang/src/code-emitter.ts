@@ -39,8 +39,24 @@ export class CodeFile {
     return this.currChunk.instructions.length
   }
 
-  get(n: number) {
-    return (this.chunks.at(n) ?? failMe(`bad chunk index: ${n}`)).instructions
+  private getChunk(chunkId: number) {
+    return this.chunks.at(chunkId) ?? failMe(`bad chunkId: ${chunkId}`)
+  }
+
+  get(chunkId: number) {
+    return this.getChunk(chunkId).instructions
+  }
+
+  read({ chunkId, pc }: { chunkId: number; pc: number }) {
+    const c = this.getChunk(chunkId)
+    const instruction = c.instructions[pc]
+    const ast = c.asts[pc]
+
+    if (instruction === undefined || ast === undefined) {
+      throw new Error(`programCounter is out of range: ${pc}`)
+    }
+
+    return { instruction, ast }
   }
 
   format(): string {
@@ -51,12 +67,6 @@ export class CodeFile {
           at.instructions.map((c, i) => `${i < 10 ? ' ' : ''}[${i}] ${JSON.stringify(c)}`).join('\n'),
       )
       .join('\n\n')
-  }
-
-  formatLocation(chunkId: number, pc: number) {
-    const c = this.chunks.at(chunkId) ?? failMe(`Out of range chunkId: ${chunkId}`)
-    c.ast.unitId
-    c.instructions
   }
 }
 

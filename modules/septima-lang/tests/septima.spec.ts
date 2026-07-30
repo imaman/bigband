@@ -9,7 +9,12 @@ import { Septima } from '../src/septima.js'
  * @param input the Septima program to run
  */
 function run(input: string, verbose?: boolean) {
-  return Septima.run(input, { onSink: () => undefined, verbose })
+  return Septima.run(input, {
+    onSink: x => {
+      throw new Error(x.message)
+    },
+    verbose,
+  })
 }
 
 const runLog = (input: string, verbose?: boolean) => {
@@ -1207,9 +1212,6 @@ test.only('HEEEEEEEEEEEEEERE', () => {
 
   const expected = [
     `value type error: expected num but found "zxcvbnm" when evaluating:`,
-    `  at (<inline>:1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
-    `  at (<inline>:1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
-    `  at (<inline>:1:5..21) 8 * 'zxcvbnm' * 7`,
     `  at (<inline>:1:10..21) zxcvbnm' * 7`,
   ].join('\n')
 

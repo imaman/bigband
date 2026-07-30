@@ -83,22 +83,32 @@ export class SeptimaVirtualMachine {
       console.log(`Program:\n${this.cf.format()}`)
     }
     this.callStack.push({ chunkId: 0, pc: 0, table: this.stdLib(), args: [] })
-    let ret 
-    try {
-      ret = this.launch()
-    } catch (e) {
-      const trace = this.callStack.map(at => this.cf.formatLocation(at.chunkId, at.pc))
 
-      const ee = e as {message?: unknown}
-      const message = ee.message? String(ee.message) : String(ee)
-      throw new Error(`[${this.callStack.length}] ${message}\n${trace.join('\n')}`)
+    let value
+    try {
+      value = this.launch()
+    } catch (e) {
+      const f = this.getFrame(-1)
+      const { ast } = this.cf.read(f)
+      const ee = e as { message?: unknown }
+      const innerMessage = ee.message ? String(ee.message) : String(ee)
+      const trace = this.callStack.map(at => {
+        const { ast } = this.cf.read(at)
+        return ast
+      })
+      return {
+        tag: 'err' as const,
+        where: ast,
+        trace,
+        message: innerMessage,
+      }
     }
     if (this.opstack.length) {
       throw new Error(
         `opstack length is ${this.opstack.length} - stack=${JSON.stringify(this.opstack)} - cf=\n${this.cf.format()}`,
       )
     }
-    return this.toJs(ret)
+    return { tag: 'ok' as const, value: this.toJs(value) }
   }
 
   private popArray(n: number) {
@@ -113,6 +123,16 @@ export class SeptimaVirtualMachine {
     return this.runLoop(this.callStack.length)
   }
 
+  /**
+   * Returns a frame from the call stack
+   *
+   * @param pos selects the frame to return. 0 is the earliest frame in the stack. 1 is the second earliest. -1 is the
+   * most recent frame.
+   */
+  private getFrame(pos: number) {
+    return this.callStack.at(pos) ?? failMe(`No frame at position ${pos}`)
+  }
+
   private runLoop(n: number) {
     if (n < 1) {
       throw new Error(`n must be nonnegative`)
@@ -122,7 +142,7 @@ export class SeptimaVirtualMachine {
         return this.pop()
       }
 
-      const frame = this.callStack.at(-1) ?? failMe('callStack is empty')
+      const frame = this.getFrame(-1)
       const instructions = this.cf.get(frame.chunkId)
       if (frame.pc >= instructions.length) {
         this.callStack.pop()

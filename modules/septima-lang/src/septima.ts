@@ -11,7 +11,6 @@ import { Scanner } from './scanner.js'
 import { SeptimaVirtualMachine } from './septima-virtual-machine.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 import { SourceCode } from './source-code.js'
-import { Value } from './value.js'
 
 interface Options {
   verbose?: boolean
@@ -157,33 +156,38 @@ export class Septima {
 
     return {
       execute: (args: Record<string, unknown>) => {
-        const value = this.execute(fileName, 'quiet', args)
-        const ret: Result = { value: value.export(), tag: 'ok' }
-        return ret
+        return this.execute(fileName, 'quiet', args)
       },
     }
   }
 
-  private execute(fileName: string, _verbosity: Verbosity, _args: Record<string, unknown>) {
+  private execute(fileName: string, _verbosity: Verbosity, _args: Record<string, unknown>): Result {
     const u = this.unitOf(undefined, fileName)
     const cf = new CodeEmitter().run(u)
-    const c = new SeptimaVirtualMachine(cf, this.consoleLog, this.verbose).run()
-    return Value.from(c)
+    const vm = new SeptimaVirtualMachine(cf, this.consoleLog, this.verbose)
+    const ret = vm.run()
+    if (ret.tag === 'ok') {
+      return ret
+    }
 
-    // const runtime = new Runtime(
-    //   this.unitOf(undefined, fileName),
-    //   verbosity,
-    //   (a, b) => this.unitOf(a, b),
-    //   args,
-    //   this.consoleLog,
-    // )
-    // const c = runtime.compute()
-    // if (c.value) {
-    //   return c.value
-    // }
+    const indent = '  '
+    const trace =
+      indent +
+      ret.trace
+        .map(at => {
+          const u = this.unitByUnitId.get(at.unitId) ?? failMe(`unit not found: ${at.unitId}`)
+          return u?.sourceCode.formatAst(at)
+        })
+        .join(indent + '\n')
 
-    // const formatted = formatTrace(c.expressionTrace, this.unitByUnitId)
-    // throw new Error(`${c.errorMessage} when evaluating:\n${formatted}`)
+    const message = `${ret.message} when evaluating:\n${trace}`
+
+    return {
+      tag: 'sink',
+      message,
+      symbols: undefined,
+      trace,
+    }
   }
 
   /**
