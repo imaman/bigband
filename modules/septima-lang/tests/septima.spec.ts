@@ -23,7 +23,7 @@ const runLog = (input: string, verbose?: boolean) => {
   return { lines, result }
 }
 
-describe.skip('septima', () => {
+describe('septima', () => {
   test.only('basics', () => {
     expect(run(`5`)).toEqual(5)
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (<inline>:1:3..5) 789`)
@@ -100,9 +100,6 @@ describe.skip('septima', () => {
 
     const expected = [
       `value type error: expected num but found "zxcvbnm" when evaluating:`,
-      `  at (<inline>:1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
-      `  at (<inline>:1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
-      `  at (<inline>:1:5..21) 8 * 'zxcvbnm' * 7`,
       `  at (<inline>:1:10..21) zxcvbnm' * 7`,
     ].join('\n')
 
@@ -1206,14 +1203,14 @@ describe.skip('septima', () => {
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
-})
-test.only('HEEEEEEEEEEEEEERE', () => {
-  expect(() => run(`7+\n6+\n5+4+3+!2`)).toThrowError(`value type error: expected bool but found 2`)
+  test.only('HEEEEEEEEEEEEEERE', () => {
+    expect(() => run(`7+\n6+\n5+4+3+!2`)).toThrowError(`value type error: expected bool but found 2`)
 
-  const expected = [
-    `value type error: expected num but found "zxcvbnm" when evaluating:`,
-    `  at (<inline>:1:10..21) zxcvbnm' * 7`,
-  ].join('\n')
+    const expected = [
+      `value type error: expected num but found "zxcvbnm" when evaluating:`,
+      `  at (<inline>:1:10..21) zxcvbnm' * 7`,
+    ].join('\n')
 
-  expect(() => run(`9 * 8 * 'zxcvbnm' * 7`, true)).toThrowError(expected)
+    expect(() => run(`9 * 8 * 'zxcvbnm' * 7`, true)).toThrowError(expected)
+  })
 })
