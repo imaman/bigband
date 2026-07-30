@@ -1,4 +1,4 @@
-import { AstNode, Lambda } from './ast-node.js'
+import { AstNode, Lambda, Unit } from './ast-node.js'
 import { failMe } from './fail-me.js'
 import { Instruction } from './instruction.js'
 import { shouldNeverHappen } from './should-never-happen.js'
@@ -76,27 +76,58 @@ export class CodeFile {
 export class CodeEmitter {
   private workList: { ast: Lambda; chunkId: number }[] = []
 
+  constructor(private readonly getAstOf: (unitId: string | undefined, relativePath: string) => Unit) {}
+  // const o = this.importDefinitions(ast.unitId, imp.pathToImportFrom.text)
+
   private registerLambda(ast: Lambda, cf: CodeFile) {
     const ret = cf.createChunk(ast)
     this.workList.push({ ast, chunkId: ret })
     return ret
   }
 
-  run(ast: AstNode) {
-    const cf = new CodeFile()
-    cf.activateChunk(cf.createChunk(ast))
-    this.emit(ast, cf)
+  private discoverUnits(unitId: string) {
+    const ast = this.getAstOf(undefined, unitId)
 
-    let i = 0
-    while (i < this.workList.length) {
-      const at = this.workList[i]
-      ++i
-      cf.activateChunk(at.chunkId)
-      for (let i = 0; i < at.ast.formalArgs.length; ++i) {
-        cf.add({ tag: 'loadArg', param: i }, ast)
-        cf.add({ tag: 'store', param: at.ast.formalArgs[i].ident.t.text }, ast)
+    const seen = new Set<string>([unitId])
+    const ret: Unit[] = [ast]
+    let k = -1
+    while (true) {
+      ++k
+      const u = ret.at(k)
+      if (!u) {
+        break
       }
-      this.emit(at.ast.body, cf)
+
+      for (const imp of u.imports) {
+        const importee = this.getAstOf(u.unitId, imp.pathToImportFrom.text)
+        if (!seen.has(importee.unitId)) {
+          ret.push(importee)
+        }
+        seen.add(importee.unitId)
+      }
+    }
+
+    return ret
+  }
+
+  run(unitId: string) {
+    const cf = new CodeFile()
+    const units = this.discoverUnits(unitId)
+    for (const ast of units) {
+      cf.activateChunk(cf.createChunk(ast))
+      this.emit(ast, cf)
+
+      let i = 0
+      while (i < this.workList.length) {
+        const at = this.workList[i]
+        ++i
+        cf.activateChunk(at.chunkId)
+        for (let i = 0; i < at.ast.formalArgs.length; ++i) {
+          cf.add({ tag: 'loadArg', param: i }, ast)
+          cf.add({ tag: 'store', param: at.ast.formalArgs[i].ident.t.text }, ast)
+        }
+        this.emit(at.ast.body, cf)
+      }
     }
 
     return cf

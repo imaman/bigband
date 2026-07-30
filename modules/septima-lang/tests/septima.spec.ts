@@ -1201,7 +1201,7 @@ describe.skip('septima', () => {
   )
 })
 test.only('HEEEEEEEEEEEEEERE', () => {
-  const septima = new Septima()
+  const septima = new Septima(undefined, undefined, true)
   const files: Partial<Record<string, string>> = {
     a: `import * as b from './b'; 'sum=' + b.sum(5, 3)`,
     b: `export let sum = (x,y) => x+y`,

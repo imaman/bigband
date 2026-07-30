@@ -162,8 +162,7 @@ export class Septima {
   }
 
   private execute(fileName: string, _verbosity: Verbosity, _args: Record<string, unknown>): Result {
-    const u = this.unitOf(undefined, fileName)
-    const cf = new CodeEmitter().run(u)
+    const cf = new CodeEmitter((a, b) => this.unitOf(a, b)).run(fileName)
     const vm = new SeptimaVirtualMachine(cf, this.consoleLog, this.verbose)
     const ret = vm.run()
     if (ret.tag === 'ok') {
