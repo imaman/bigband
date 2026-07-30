@@ -83,7 +83,16 @@ export class SeptimaVirtualMachine {
       console.log(`Program:\n${this.cf.format()}`)
     }
     this.callStack.push({ chunkId: 0, pc: 0, table: this.stdLib(), args: [] })
-    const ret = this.launch()
+    let ret 
+    try {
+      ret = this.launch()
+    } catch (e) {
+      const trace = this.callStack.map(at => this.cf.formatLocation(at.chunkId, at.pc))
+
+      const ee = e as {message?: unknown}
+      const message = ee.message? String(ee.message) : String(ee)
+      throw new Error(`[${this.callStack.length}] ${message}\n${trace.join('\n')}`)
+    }
     if (this.opstack.length) {
       throw new Error(
         `opstack length is ${this.opstack.length} - stack=${JSON.stringify(this.opstack)} - cf=\n${this.cf.format()}`,
