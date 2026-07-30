@@ -1,7 +1,20 @@
 export type Instruction =
   | {
       tag: 'import'
-      unitId: string
+      /**
+       * Chunk ID of the imported unit
+       */
+      chunkId: number
+    }
+  | {
+      /**
+       * Pushes onto the opstack an object that bundles the exported definitions of the current unit
+       */
+      tag: 'export*'
+      /**
+       * Number of definition in the current unit (including non-exported ones)
+       */
+      n: number
     }
   | {
       tag: 'binop'
@@ -83,6 +96,7 @@ export type Instruction =
   | {
       tag: 'reserve'
       name: string
+      isExported: boolean
     }
   | {
       tag: 'fillIn'

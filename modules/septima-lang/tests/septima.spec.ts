@@ -23,7 +23,7 @@ const runLog = (input: string, verbose?: boolean) => {
   return { lines, result }
 }
 
-describe.skip('septima', () => {
+describe('septima', () => {
   test.only('basics', () => {
     expect(run(`5`)).toEqual(5)
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (<inline>:1:3..5) 789`)
@@ -924,7 +924,7 @@ describe.skip('septima', () => {
     test.only('makes a definition from one file to be available in another file', () => {
       const septima = new Septima()
       const files: Partial<Record<string, string>> = {
-        a: `import * as b from './b'; 'sum=' + b.sum(5, 3)`,
+        a: `import * as b from './b'; 'sum=' + String(b.sum(5, 3))`,
         b: `export let sum = (x,y) => x+y`,
       }
       expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 'sum=8' })
@@ -1194,17 +1194,19 @@ describe.skip('septima', () => {
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
   // CRTICAL CRTICAL CRITICAL
+  test.todo('a const initialized from a lambda in another const')
+  // CRTICAL CRTICAL CRITICAL
   test.todo('number + string, and string+number works')
   // CRTICAL CRTICAL CRITICAL
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
-})
-test.only('HEEEEEEEEEEEEEERE', () => {
-  const septima = new Septima(undefined, undefined, true)
-  const files: Partial<Record<string, string>> = {
-    a: `import * as b from './b'; 'sum=' + b.sum(5, 3)`,
-    b: `export let sum = (x,y) => x+y`,
-  }
-  expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 'sum=8' })
+  test.only('HEEEEEEEEEEEEEERE', () => {
+    const septima = new Septima(undefined, undefined, true)
+    const files: Partial<Record<string, string>> = {
+      a: `import * as b from './b'; 'sum=' + String(b.sum(5, 3))`,
+      b: `export let sum = (x,y) => x+y`,
+    }
+    expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 'sum=8' })
+  })
 })

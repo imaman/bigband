@@ -25,6 +25,10 @@ export class CodeFile {
     return ret
   }
 
+  chunkIdByUnitId(unitId: string) {
+    return this.chunks.findIndex(at => at.unitId === unitId) ?? failMe(`No chunkId found for unitId ${unitId}`)
+  }
+
   private get currChunk() {
     return this.chunks.at(this.currChunkId) ?? failMe('no chunk')
   }
@@ -88,15 +92,15 @@ export class CodeEmitter {
     return ret
   }
 
-  private discoverUnits(unitId: string) {
+  private discoverUnits(unitId: string, cf: CodeFile) {
     const ast = this.getAstOf(undefined, unitId)
 
     const seen = new Set<string>([unitId])
-    const ret: Unit[] = [ast]
+    const units: Unit[] = [ast]
     let k = -1
     while (true) {
       ++k
-      const u = ret.at(k)
+      const u = units.at(k)
       if (!u) {
         break
       }
@@ -104,20 +108,20 @@ export class CodeEmitter {
       for (const imp of u.imports) {
         const importee = this.getAstOf(u.unitId, imp.pathToImportFrom.text)
         if (!seen.has(importee.unitId)) {
-          ret.push(importee)
+          units.push(importee)
         }
         seen.add(importee.unitId)
       }
     }
 
-    return ret
+    return units.map(u => ({ ast: u, chunkId: cf.createChunk(u) }))
   }
 
   run(unitId: string) {
     const cf = new CodeFile()
-    const units = this.discoverUnits(unitId)
-    for (const ast of units) {
-      cf.activateChunk(cf.createChunk(ast))
+    const chunkedUnits = this.discoverUnits(unitId, cf)
+    for (const { ast, chunkId } of chunkedUnits) {
+      cf.activateChunk(chunkId)
       this.emit(ast, cf)
 
       let i = 0
@@ -140,13 +144,17 @@ export class CodeEmitter {
     if (ast.tag === 'unit') {
       for (const imp of ast.imports) {
         const importeeUnitId = this.reolveUnitId(ast.unitId, imp.pathToImportFrom.text)
-        cf.add({ tag: 'import', unitId: importeeUnitId }, ast)
+        const importeeChunkId = cf.chunkIdByUnitId(importeeUnitId)
+        cf.add({ tag: 'import', chunkId: importeeChunkId }, ast)
+        cf.add({ tag: 'store', param: imp.ident.t.text }, ast)
       }
       this.emit(ast.expression, cf)
     } else if (ast.tag === 'topLevelExpression') {
       const seen = new Set<string>()
+      let hasExported = false
       for (const d of ast.definitions) {
-        cf.add({ tag: 'reserve', name: d.ident.t.text }, ast)
+        cf.add({ tag: 'reserve', name: d.ident.t.text, isExported: d.isExported }, ast)
+        hasExported = hasExported || d.isExported
       }
       for (const d of ast.definitions) {
         const name = d.ident.t.text
@@ -158,12 +166,20 @@ export class CodeEmitter {
         seen.add(name)
         this.emit(d, cf)
       }
+      if (hasExported) {
+        // TODO(imaman): this is a tiny security concern: he who writes the opcodes can tell the VM which definitions to
+        // export (by controlling the n value). A better approach is to let the VM decide which values to export. For this
+        // the VM needs to know when the current unit "started" (val-table wise).
+        cf.add({ tag: 'export*', n: ast.definitions.length }, ast)
+      }
 
       if (ast.computation) {
         this.emit(ast.computation, cf)
       }
 
       if (ast.definitions.length > 0) {
+        // TODO(imaman): just like with export* maybe it's better to let the VM decide how much to unwind from the
+        // val-table.
         cf.add({ tag: 'exitScope', param: ast.definitions.length }, ast)
       }
 

@@ -12,6 +12,10 @@ interface StackFrame {
   chunkId: number
   table: ValTable
   args: unknown[]
+  /**
+   * Whether to just export this units' definitions
+   */
+  export: boolean
 }
 
 export class SeptimaVirtualMachine {
@@ -82,7 +86,7 @@ export class SeptimaVirtualMachine {
       // eslint-disable-next-line no-console
       console.log(`Program:\n${this.cf.format()}`)
     }
-    this.callStack.push({ chunkId: 0, pc: 0, table: this.stdLib(), args: [] })
+    this.callStack.push({ chunkId: 0, pc: 0, table: this.stdLib(), args: [], export: false })
 
     let value
     try {
@@ -154,7 +158,23 @@ export class SeptimaVirtualMachine {
         // eslint-disable-next-line no-console
         console.log(`[${frame.chunkId}.${frame.pc}] ${JSON.stringify(at)} -- ${JSON.stringify(this.opstack)}`)
       }
-      if (at.tag === 'drop') {
+      if (at.tag === 'import') {
+        // TODO(imaman): module cache
+        this.callStack.push({
+          chunkId: at.chunkId,
+          pc: 0,
+          table: this.stdLib(),
+          args: [],
+          export: true,
+        })
+      } else if (at.tag === 'export*') {
+        if (frame.export) {
+          const pairs = frame.table.collectExported(at.n)
+          this.push(new SeptimaObject(pairs))
+          this.callStack.pop()
+          continue
+        }
+      } else if (at.tag === 'drop') {
         this.pop()
       } else if (at.tag === 'assertType') {
         const u = this.pop()
@@ -183,6 +203,7 @@ export class SeptimaVirtualMachine {
             pc: 0,
             table: callee.table,
             args: this.popArray(at.param),
+            export: false,
           })
         }
       } else if (at.tag === 'loadArg') {
@@ -296,7 +317,7 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'store') {
         frame.table = frame.table.add(at.param, this.pop())
       } else if (at.tag === 'reserve') {
-        frame.table = frame.table.prepare(at.name)
+        frame.table = frame.table.prepare(at.name, at.isExported)
       } else if (at.tag === 'fillIn') {
         const v = this.pop()
         frame.table.resolve(at.name, v)
@@ -408,6 +429,7 @@ export class SeptimaVirtualMachine {
           pc: 0,
           table: u.table,
           args: fromJs(args) as unknown[],
+          export: false,
         })
         return this.launch()
       }
@@ -437,20 +459,21 @@ const placeholder = {}
 class ValTable {
   private constructor(
     private readonly earlier: ValTable | undefined,
+    private readonly isExported: boolean,
     private readonly name?: string,
     private val?: unknown,
   ) {}
 
   static empty() {
-    return new ValTable(undefined)
+    return new ValTable(undefined, false)
   }
 
   add(name: string, val: unknown) {
-    return new ValTable(this, name, val)
+    return new ValTable(this, false, name, val)
   }
 
-  prepare(name: string) {
-    return new ValTable(this, name, placeholder)
+  prepare(name: string, isExported: boolean) {
+    return new ValTable(this, isExported, name, placeholder)
   }
 
   resolve(name: string, val: unknown) {
@@ -491,6 +514,26 @@ class ValTable {
     if (ret === undefined) {
       throw new Error(`Symbol ${name} was not found`)
     }
+    return ret
+  }
+
+  /**
+   * Return all exported definitions from the last n defintions
+   * @param n
+   */
+  collectExported(n: number) {
+    const ret: [string, unknown][] = []
+
+    for (let curr: ValTable | undefined = this; curr && n > 0; curr = curr.earlier) {
+      --n
+      if (curr.isExported) {
+        if (curr.val === placeholder) {
+          throw new Error(`when exporting no placeholders should be encountered`)
+        }
+        ret.push([curr.name ?? failMe(`no name for a definition`), curr.val])
+      }
+    }
+
     return ret
   }
 
