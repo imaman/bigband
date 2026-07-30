@@ -178,7 +178,7 @@ export class Septima {
           const u = this.unitByUnitId.get(at.unitId) ?? failMe(`unit not found: ${at.unitId}`)
           return u?.sourceCode.formatAst(at)
         })
-        .join(indent + '\n')
+        .join(`\n${indent}`)
 
     const message = `${ret.message} when evaluating:\n${trace}`
 

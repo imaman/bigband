@@ -47,8 +47,11 @@ export class CodeFile {
     return this.getChunk(chunkId).instructions
   }
 
-  read({ chunkId, pc }: { chunkId: number; pc: number }) {
+  read({ chunkId, pc }: { chunkId: number; pc: number }, isLast: boolean) {
     const c = this.getChunk(chunkId)
+    if (!isLast) {
+      --pc
+    }
     const instruction = c.instructions[pc]
     const ast = c.asts[pc]
 

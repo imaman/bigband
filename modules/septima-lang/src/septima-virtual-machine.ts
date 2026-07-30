@@ -89,11 +89,11 @@ export class SeptimaVirtualMachine {
       value = this.launch()
     } catch (e) {
       const f = this.getFrame(-1)
-      const { ast } = this.cf.read(f)
+      const { ast } = this.cf.read(f, true)
       const ee = e as { message?: unknown }
       const innerMessage = ee.message ? String(ee.message) : String(ee)
-      const trace = this.callStack.map(at => {
-        const { ast } = this.cf.read(at)
+      const trace = this.callStack.map((at, i) => {
+        const { ast } = this.cf.read(at, i === this.callStack.length - 1)
         return ast
       })
       return {

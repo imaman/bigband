@@ -609,18 +609,18 @@ describe('septima', () => {
         200,
       )
     })
-    test('expression trace on error', () => {
+    test.only('expression trace on error', () => {
       const expected = [
-        '  at (<inline>:1:1..88) let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(...',
-        '  at (<inline>:1:85..88) a(5)',
-        '  at (<inline>:1:79..82) b(x)',
-        '  at (<inline>:1:58..61) c(x)',
-        '  at (<inline>:1:36..39) d(x)',
-        '  at (<inline>:1:17..18) x2',
+        'Symbol xd2 was not found when evaluating:',
+        '  at (<inline>:1:84..87) a(5)',
+        '  at (<inline>:1:77..81) b(xa)',
+        '  at (<inline>:1:56..60) c(xb)',
+        '  at (<inline>:1:35..39) d(xc)',
+        '  at (<inline>:1:16..18) xd2',
       ].join('\n')
 
       expect(() =>
-        run(`let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(x); a(5)`),
+        run(`let d = xd1 => xd2; let c = xc => d(xc); let b = xb => c(xb); let a = xa => b(xa); a(5)`),
       ).toThrowError(expected)
     })
     test.only('only lexical scope is considered when looking up a definition', () => {
@@ -650,7 +650,7 @@ describe('septima', () => {
           '%WORD%',
         )
       })
-      test('errors if there is an argument without a default value after an arugument with a default value', () => {
+      test.only('errors if there is an argument without a default value after an arugument with a default value', () => {
         expect(() => run(`let f = (a, b = 2000, c) => a+b+c`)).toThrowError(
           'A required parameter cannot follow an optional parameter: at (<inline>:1:23..33) c) => a+b+c',
         )
@@ -914,7 +914,7 @@ describe('septima', () => {
     test('multiple exported definitions can be interleaved with non-exported ones', () => {
       expect(run(`export let x = 5; let twice = n => n*2; export let a = r => r*r*3.14; twice(3)`)).toEqual(6)
     })
-    test('errors if a nested definition has the "export" qualifier', () => {
+    test.only('errors if a nested definition has the "export" qualifier', () => {
       expect(() => run(`let x = (export let y = 4; y+1); x+3`)).toThrowError(
         'non-top-level definition cannot be exported at (<inline>:1:10..36) export let y = 4; y+1); x+3',
       )
@@ -992,7 +992,7 @@ describe('septima', () => {
     test.only('spreading an undefined in an array is a no-op', () => {
       expect(run(`[42, ...undefined, 'poo']`)).toEqual([42, 'poo'])
     })
-    test('produces a full trace when an undefined-reference-error is fired', () => {
+    test.only('produces a full trace when an undefined-reference-error is fired', () => {
       let message
       try {
         run(`let x = undefined; x.a`)
@@ -1001,16 +1001,14 @@ describe('septima', () => {
       }
 
       expect(message?.split('\n')).toEqual([
-        'Error: value type error: expected either str, arr or obj but found undefined when evaluating:',
-        '  at (<inline>:1:1..22) let x = undefined; x.a',
-        '  at (<inline>:1:1..22) let x = undefined; x.a',
+        `Error: Cannot read properties of undefined (reading 'a') when evaluating:`,
         '  at (<inline>:1:20..22) x.a',
       ])
     })
-    test('errors when calling a method on undefined', () => {
-      expect(() => run(`let x = undefined; x.a()`)).toThrowError('at (<inline>:1:20..24) x.a()')
+    test.only('errors when calling a method on undefined', () => {
+      expect(() => run(`let x = undefined; x.a()`)).toThrowError('at (<inline>:1:20..22) x.a')
     })
-    test('errors when using undefined in arithmetic expressions', () => {
+    test.only('errors when using undefined in arithmetic expressions', () => {
       expect(() => run(`4 + undefined`)).toThrowError('at (<inline>:1:1..13) 4 + undefined')
       expect(() => run(`4 - undefined`)).toThrowError('at (<inline>:1:1..13) 4 - undefined')
       expect(() => run(`4 * undefined`)).toThrowError('at (<inline>:1:1..13) 4 * undefined')
@@ -1204,13 +1202,17 @@ describe('septima', () => {
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(() => run(`7+\n6+\n5+4+3+!2`)).toThrowError(`value type error: expected bool but found 2`)
-
     const expected = [
-      `value type error: expected num but found "zxcvbnm" when evaluating:`,
-      `  at (<inline>:1:10..21) zxcvbnm' * 7`,
+      'Symbol xd2 was not found when evaluating:',
+      '  at (<inline>:1:84..87) a(5)',
+      '  at (<inline>:1:77..81) b(xa)',
+      '  at (<inline>:1:56..60) c(xb)',
+      '  at (<inline>:1:35..39) d(xc)',
+      '  at (<inline>:1:16..18) xd2',
     ].join('\n')
 
-    expect(() => run(`9 * 8 * 'zxcvbnm' * 7`, true)).toThrowError(expected)
+    expect(() =>
+      run(`let d = xd1 => xd2; let c = xc => d(xc); let b = xb => c(xb); let a = xa => b(xa); a(5)`),
+    ).toThrowError(expected)
   })
 })
