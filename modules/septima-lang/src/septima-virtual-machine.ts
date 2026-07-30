@@ -3,9 +3,9 @@ import { stringify } from 'safe-stable-stringify'
 import util from 'util'
 
 import { CodeFile } from './code-emitter.js'
+import { failMe } from './fail-me.js'
 import { Outputter } from './outputter.js'
 import { shouldNeverHappen } from './should-never-happen.js'
-import { failMe } from './fail-me.js'
 
 interface StackFrame {
   pc: number
@@ -138,10 +138,8 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'call') {
         const callee = this.pop()
         if (typeof callee === 'function') {
-          const actuals = (this.toJs(this.popArray(at.param)) as unknown[])
-          console.log(`L.132 call ${JSON.stringify(callee)} with ${JSON.stringify(actuals)}`)
+          const actuals = this.toJs(this.popArray(at.param)) as unknown[]
           const retVal = callee(...actuals)
-          console.log(`L.135 retVal=${JSON.stringify(retVal)}`)
           this.push(retVal)
         } else {
           if (!(callee instanceof LambdaRef)) {
@@ -258,7 +256,7 @@ export class SeptimaVirtualMachine {
           let b = x
           if (typeof x === 'function') {
             const t = x.bind(reciever)
-            b = (...args: unknown[]) => fromJs(t(...this.toJs(args, true) as unknown[]))
+            b = (...args: unknown[]) => fromJs(t(...(this.toJs(args, true) as unknown[])))
           }
           this.push(b)
         } else if (typeof reciever !== 'object' || reciever === null) {
@@ -340,7 +338,6 @@ export class SeptimaVirtualMachine {
       .add('String', String)
   }
 
-
   private toJs(u: unknown, debug = false): unknown {
     const ret = this.toJsImpl(u, debug)
     if (debug) {
@@ -356,7 +353,14 @@ export class SeptimaVirtualMachine {
 
   private toJsImpl(u: unknown, debug = false): unknown {
     const t = typeof u
-    if (t === 'bigint' || t === 'boolean' || t === 'function' || t === 'number' || t === 'string' || t === 'undefined') {
+    if (
+      t === 'bigint' ||
+      t === 'boolean' ||
+      t === 'function' ||
+      t === 'number' ||
+      t === 'string' ||
+      t === 'undefined'
+    ) {
       return u
     }
 
@@ -364,22 +368,22 @@ export class SeptimaVirtualMachine {
       throw new Error(`cannot translate symbol: ${u}`)
     }
 
-    if (Array.isArray(u)) {      
+    if (Array.isArray(u)) {
       return u.map(at => this.toJs(at, debug))
     }
 
     if (u instanceof LambdaRef) {
       return (...args: unknown[]) => {
-          this.callStack.push({
-            chunkId: u.id,
-            pc: 0,
-            table: u.table,
-            args: fromJs(args) as unknown[]
-          })
-          return this.launch()
-        }
+        this.callStack.push({
+          chunkId: u.id,
+          pc: 0,
+          table: u.table,
+          args: fromJs(args) as unknown[],
+        })
+        return this.launch()
+      }
     }
-    
+
     if (u instanceof SeptimaObject) {
       return Object.fromEntries(Object.entries(u.toJSON()).map(([k, v]) => [k, this.toJs(v, debug)]))
     }
@@ -394,7 +398,7 @@ export class SeptimaVirtualMachine {
     }
 
     return u
-  }  
+  }
 }
 
 type ObjLike = Partial<Record<string, unknown>>
@@ -492,7 +496,7 @@ class SeptimaArray implements Iterable<unknown> {
   get length() {
     return this.values.length
   }
-  
+
   constructor(values: unknown[], spreads: number[] = []) {
     let j = 0
     for (let i = 0; i < values.length; ++i) {
@@ -536,7 +540,7 @@ class SeptimaArray implements Iterable<unknown> {
     return new SeptimaArray(arr)
   }
 
-  every(predicate: (value: unknown, index: number, array: unknown[])=> boolean) {
+  every(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
     return this.values.every(predicate)
   }
 
@@ -584,9 +588,7 @@ class SeptimaObject {
   static entries(o: SeptimaObject): [string, unknown][] {
     return Object.entries(o)
   }
-
 }
-
 
 function fromJs(u: unknown): unknown {
   if (u === null) {
