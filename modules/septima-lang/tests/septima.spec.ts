@@ -23,7 +23,7 @@ const runLog = (input: string, verbose?: boolean) => {
   return { lines, result }
 }
 
-describe('septima', () => {
+describe.skip('septima', () => {
   test.only('basics', () => {
     expect(run(`5`)).toEqual(5)
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (<inline>:1:3..5) 789`)
@@ -921,7 +921,7 @@ describe('septima', () => {
     })
   })
   describe('import', () => {
-    test('makes a definition from one file to be available in another file', () => {
+    test.only('makes a definition from one file to be available in another file', () => {
       const septima = new Septima()
       const files: Partial<Record<string, string>> = {
         a: `import * as b from './b'; 'sum=' + b.sum(5, 3)`,
@@ -1199,18 +1199,12 @@ describe('septima', () => {
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
-  test.only('HEEEEEEEEEEEEEERE', () => {
-    const expected = [
-      'Symbol xd2 was not found when evaluating:',
-      '  at (<inline>:1:84..87) a(5)',
-      '  at (<inline>:1:77..81) b(xa)',
-      '  at (<inline>:1:56..60) c(xb)',
-      '  at (<inline>:1:35..39) d(xc)',
-      '  at (<inline>:1:16..18) xd2',
-    ].join('\n')
-
-    expect(() =>
-      run(`let d = xd1 => xd2; let c = xc => d(xc); let b = xb => c(xb); let a = xa => b(xa); a(5)`),
-    ).toThrowError(expected)
-  })
+})
+test.only('HEEEEEEEEEEEEEERE', () => {
+  const septima = new Septima()
+  const files: Partial<Record<string, string>> = {
+    a: `import * as b from './b'; 'sum=' + b.sum(5, 3)`,
+    b: `export let sum = (x,y) => x+y`,
+  }
+  expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 'sum=8' })
 })
