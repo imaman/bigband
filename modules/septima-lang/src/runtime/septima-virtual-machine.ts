@@ -374,6 +374,9 @@ export class SeptimaVirtualMachine {
         console.log(x) // eslint-disable-line no-console
       })
 
+    // The objects we create below (e.g., the JSON object, the console object, etc.) are JS-native objects. This add
+    // some complexity elsewhere - the virtual machine cannot assume that all objects it sees are instances of SeptimaObject.
+    // TODO(imaman): consider using SeptimaObjects instead of JS-native objects here
     return ValTable.empty()
       .add('JSON', { stringify: JSON.stringify, parse: (x: string) => fromJs(JSON.parse(x)) })
       .add('Object', {
