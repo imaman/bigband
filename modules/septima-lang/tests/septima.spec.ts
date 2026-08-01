@@ -343,6 +343,9 @@ describe('septima', () => {
       expect(run(`['sun'][0]`)).toEqual('sun')
       expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; a[1]`)).toEqual('mon')
     })
+    test.only('array access cannot use strings', () => {
+      expect(() => run(`['sun']["0"]`)).toThrow('index into an array must be a number (got: 0)')
+    })
     test.only('the <index> value at the [<index>] notation can be a computed value', () => {
       expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; let f = fun(n) n-5; [a[3-1], a[18/6], a[f(5)]]`)).toEqual([
         'tue',

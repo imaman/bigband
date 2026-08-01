@@ -346,21 +346,26 @@ export class SeptimaVirtualMachine {
     }
   }
 
-  private lookupMember(receiver: unknown, memberName: string | number) {
+  private lookupMember(receiver: unknown, sel: string | number) {
     const bind = (x: unknown) =>
       typeof x === 'function' ? (...args: unknown[]) => fromJs(x.bind(receiver)(...(this.toJs(args) as unknown[]))) : x
 
     if (receiver === undefined || receiver === null) {
-      throw new Error(`Cannot read properties of undefined (reading '${memberName}')`)
+      throw new Error(`Cannot read properties of undefined (reading '${sel}')`)
     } else if (receiver instanceof SeptimaArray || typeof receiver === 'string') {
-      const v = typeof memberName === 'number' ? receiver.at(memberName) : (receiver as unknown as ObjLike)[memberName]
+      if (receiver instanceof SeptimaArray && typeof sel === 'string' && !Number.isNaN(Number(sel))) {
+        throw new Error(
+          `index into an ${typeof receiver === 'string' ? 'string' : 'array'} must be a number (got: ${sel})`,
+        )
+      }
+      const v = typeof sel === 'number' ? receiver.at(sel) : (receiver as unknown as ObjLike)[sel]
       return bind(v)
     } else if (receiver instanceof SeptimaObject) {
-      const v = SeptimaObject.at(receiver, memberName)
+      const v = SeptimaObject.at(receiver, sel)
       return bind(v)
     } else if (typeof receiver === 'object') {
-      this.mustBe(memberName, 'string')
-      const v = (receiver as ObjLike)[memberName]
+      this.mustBe(sel, 'string')
+      const v = (receiver as ObjLike)[sel]
       return bind(v)
     } else {
       throw new Error('----------tttttttttttttt---------')
