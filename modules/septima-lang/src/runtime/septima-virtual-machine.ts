@@ -326,6 +326,16 @@ export class SeptimaVirtualMachine {
         } else {
           this.push(v)
         }
+      } else if (at.tag === 'indexAccess') {
+        const sel = this.strOrNum()
+        const rec = this.pop()
+        if (rec instanceof SeptimaObject) {
+          this.push(SeptimaObject.at(rec, sel))
+        } else if (rec instanceof SeptimaArray) {
+          this.push(rec.at(sel))
+        } else {
+          throw new Error(`Index access not allowed on type ${typeof rec}`)
+        }
       } else if (at.tag === 'store') {
         frame.table = frame.table.add(at.param, this.pop())
       } else if (at.tag === 'reserve') {
@@ -337,16 +347,6 @@ export class SeptimaVirtualMachine {
         this.push(frame.table.lookup(at.param))
       } else if (at.tag === 'exitScope') {
         frame.table = frame.table.exitScope(at.param)
-      } else if (at.tag === 'indexAccess') {
-        const sel = this.strOrNum()
-        const rec = this.pop()
-        if (rec instanceof SeptimaObject) {
-          this.push(SeptimaObject.at(rec, sel))
-        } else if (rec instanceof SeptimaArray) {
-          this.push(rec.at(sel))
-        } else {
-          throw new Error(`Index access not allowed on type ${typeof rec}`)
-        }
       } else if (at.tag === 'ifFalse') {
         const b = this.bool()
         this.push(b)
