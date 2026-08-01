@@ -18,11 +18,11 @@ export class ValTable {
     return new ValTable(this, false, name, val)
   }
 
-  prepare(name: string, isExported: boolean) {
+  reserve(name: string, isExported: boolean) {
     return new ValTable(this, isExported, name, placeholder)
   }
 
-  resolve(name: string, val: unknown) {
+  fillIn(name: string, val: unknown) {
     for (let curr: ValTable | undefined = this; curr; curr = curr.earlier) {
       if (curr.name === name && curr.val === placeholder) {
         curr.val = val

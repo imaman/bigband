@@ -321,10 +321,10 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'store') {
         frame.table = frame.table.add(at.param, this.pop())
       } else if (at.tag === 'reserve') {
-        frame.table = frame.table.prepare(at.name, at.isExported)
+        frame.table = frame.table.reserve(at.name, at.isExported)
       } else if (at.tag === 'fillIn') {
         const v = this.pop()
-        frame.table.resolve(at.name, v)
+        frame.table.fillIn(at.name, v)
       } else if (at.tag === 'load') {
         this.push(frame.table.lookup(at.param))
       } else if (at.tag === 'exitScope') {
