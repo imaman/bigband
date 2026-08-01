@@ -305,11 +305,11 @@ export class SeptimaVirtualMachine {
         }
       } else if (at.tag === 'dot') {
         const receiver = this.pop()
-        this.lookupMember(receiver, at.param)
+        this.push(this.lookupMember(receiver, at.param))
       } else if (at.tag === 'indexAccess') {
         const sel = this.strOrNum()
         const receiver = this.pop()
-        this.lookupMember(receiver, sel)
+        this.push(this.lookupMember(receiver, sel))
       } else if (at.tag === 'store') {
         frame.table = frame.table.add(at.param, this.pop())
       } else if (at.tag === 'reserve') {
@@ -354,14 +354,14 @@ export class SeptimaVirtualMachine {
       throw new Error(`Cannot read properties of undefined (reading '${memberName}')`)
     } else if (receiver instanceof SeptimaArray || typeof receiver === 'string') {
       const v = typeof memberName === 'number' ? receiver.at(memberName) : (receiver as unknown as ObjLike)[memberName]
-      this.push(bind(v))
+      return bind(v)
     } else if (receiver instanceof SeptimaObject) {
       const v = SeptimaObject.at(receiver, memberName)
-      this.push(bind(v))
+      return bind(v)
     } else if (typeof receiver === 'object') {
       this.mustBe(memberName, 'string')
       const v = (receiver as ObjLike)[memberName]
-      this.push(bind(v))
+      return bind(v)
     } else {
       throw new Error('----------tttttttttttttt---------')
     }
