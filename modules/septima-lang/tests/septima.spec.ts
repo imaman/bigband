@@ -1194,6 +1194,8 @@ describe('septima', () => {
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
   // CRTICAL CRTICAL CRITICAL
+  test.todo('toJs() on a lambdaref and calling it from JS')
+  // CRTICAL CRTICAL CRITICAL
   test.todo('caching of imported units')
   // CRTICAL CRTICAL CRITICAL
   test.todo('a const initialized from a lambda in another const')
