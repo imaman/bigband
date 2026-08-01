@@ -6,11 +6,12 @@ import { failMe } from './fail-me.js'
 import { Outputter } from './outputter.js'
 import { Parser } from './parser.js'
 import { Result, ResultSink } from './result.js'
-import { Verbosity } from './runtime.js'
 import { Scanner } from './scanner.js'
 import { SeptimaVirtualMachine } from './septima-virtual-machine.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 import { SourceCode } from './source-code.js'
+
+type Verbosity = 'quiet' | 'trace'
 
 interface Options {
   verbose?: boolean
