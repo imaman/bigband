@@ -374,10 +374,17 @@ export class SeptimaVirtualMachine {
     return ValTable.empty()
       .add('JSON', { stringify: JSON.stringify, parse: (x: string) => fromJs(JSON.parse(x)) })
       .add('Object', {
-        keys: (o: ObjLike) => fromJs(Object.keys(o)),
-        entries: (o: ObjLike) => fromJs(Object.entries(o)),
-        fromEntries: (arr: Iterable<[string, unknown]>) =>
-          fromJs(Object.fromEntries(this.toJs(arr) as Iterable<[string, unknown]>)),
+        keys: (o: ObjLike) => new SeptimaArray(Object.keys(o)),
+        entries: (o: ObjLike) => new SeptimaArray(Object.entries(o)),
+        fromEntries: (arr: Iterable<[string, unknown]>) => {
+          if (typeof arr === 'function') {
+            throw new Error(`fromEntries() input (a function) is not an array`)
+          }
+          if (!Array.isArray(arr)) {
+            throw new Error(`fromEntries() input (${JSON.stringify(arr)}) is not an array`)
+          }
+          return new SeptimaObject([...arr])
+        },
       })
       .add('Array', { isArray: Array.isArray })
       .add('crypto', { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') })

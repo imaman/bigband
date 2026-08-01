@@ -819,11 +819,11 @@ describe('septima', () => {
       })
     })
     test.only('fails if applied to a non-array value', () => {
-      expect(() => run(`Object.fromEntries('a')`)).toThrowError('Iterator value a is not an entry object')
-      expect(() => run(`Object.fromEntries(5)`)).toThrowError('number 5 is not iterable')
-      expect(() => run(`Object.fromEntries(false)`)).toThrowError('boolean false is not iterable')
-      expect(() => run(`Object.fromEntries({x: 1})`)).toThrowError('object is not iterable')
-      expect(() => run(`Object.fromEntries(() => 5)`)).toThrowError('function is not iterable')
+      expect(() => run(`Object.fromEntries('a')`)).toThrowError(`fromEntries() input (\"a\") is not an array`)
+      expect(() => run(`Object.fromEntries(5)`)).toThrowError('fromEntries() input (5) is not an array')
+      expect(() => run(`Object.fromEntries(false)`)).toThrowError('fromEntries() input (false) is not an array')
+      expect(() => run(`Object.fromEntries({x: 1})`)).toThrowError('fromEntries() input ({"x":1}) is not an array')
+      expect(() => run(`Object.fromEntries(() => 5)`)).toThrowError('fromEntries() input (a function) is not an array')
     })
     test('the input array must be an array of pairs', () => {
       expect(() => run(`Object.fromEntries([['a', 1], ['b']])`)).toThrowError('each entry must be a [key, value] pair')
