@@ -353,9 +353,11 @@ export class SeptimaVirtualMachine {
     if (receiver === undefined || receiver === null) {
       throw new Error(`Cannot read properties of undefined (reading '${sel}')`)
     } else if (receiver instanceof SeptimaArray || typeof receiver === 'string') {
-      if (typeof sel === 'string' && !Number.isNaN(Number(sel))) {
+      if (typeof sel === 'string' && /^-?\d+$/.test(sel)) {
         throw new Error(
-          `index into ${typeof receiver === 'string' ? 'a string' : 'an array'} must be a number (got: ${sel})`,
+          `index into ${
+            typeof receiver === 'string' ? 'a string' : 'an array'
+          } must be an integer value (got: ${JSON.stringify(sel)})`,
         )
       }
       const v = typeof sel === 'number' ? receiver.at(sel) : (receiver as unknown as ObjLike)[sel]
