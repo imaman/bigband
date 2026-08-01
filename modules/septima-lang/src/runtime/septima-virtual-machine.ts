@@ -304,28 +304,8 @@ export class SeptimaVirtualMachine {
           this.push(-this.num())
         }
       } else if (at.tag === 'dot') {
-        const reciever = this.pop() as Record<string, unknown>
-        const v = reciever[at.param]
-        if (typeof reciever === 'string' || reciever instanceof SeptimaArray) {
-          let b = v
-          if (typeof v === 'function') {
-            // This can happen if an input passed to the septima program (from the outside world) is a function which
-            // is then getting called at septima-runtime. Now comes this question: should we (i) do a
-            // septima-to-js translate on the actual parameters passed to that function or (ii) keep them as-is?
-            // Note that SeptimaFunctions cannot be roundtripped. Hence, going with (i) means that if a septima function
-            // is passed as a parameter and then returned it is no longer a septima function. It is a native function
-            // inovcation of which breaks out of SpetimaVirtualMachine's runLoop thus adding a stack-frame to JS's
-            // native stack. Going with (ii) means that the invoked function cannot call callback it receives.
-            // Decision: we are going with (i)
-            const t = v.bind(reciever)
-            b = (...args: unknown[]) => fromJs(t(...(this.toJs(args) as unknown[])))
-          }
-          this.push(b)
-        } else if (typeof reciever !== 'object' || reciever === null) {
-          throw new Error('----------tttttttttttttt---------')
-        } else {
-          this.push(v)
-        }
+        const reciever = this.pop()
+        this.lookupMember(reciever, at.param)
       } else if (at.tag === 'indexAccess') {
         const sel = this.strOrNum()
         const rec = this.pop()
@@ -369,6 +349,30 @@ export class SeptimaVirtualMachine {
       }
 
       frame.pc += 1
+    }
+  }
+
+  private lookupMember(receiver: unknown, memberName: string) {
+    const v = (receiver as Record<string, unknown>)[memberName]
+    if (typeof receiver === 'string' || receiver instanceof SeptimaArray) {
+      let b = v
+      if (typeof v === 'function') {
+        // This can happen if an input passed to the septima program (from the outside world) is a function which
+        // is then getting called at septima-runtime. Now comes this question: should we (i) do a
+        // septima-to-js translate on the actual parameters passed to that function or (ii) keep them as-is?
+        // Note that SeptimaFunctions cannot be roundtripped. Hence, going with (i) means that if a septima function
+        // is passed as a parameter and then returned it is no longer a septima function. It is a native function
+        // inovcation of which breaks out of SpetimaVirtualMachine's runLoop thus adding a stack-frame to JS's
+        // native stack. Going with (ii) means that the invoked function cannot call callback it receives.
+        // Decision: we are going with (i)
+        const t = v.bind(receiver)
+        b = (...args: unknown[]) => fromJs(t(...(this.toJs(args) as unknown[])))
+      }
+      this.push(b)
+    } else if (typeof receiver !== 'object' || receiver === null) {
+      throw new Error('----------tttttttttttttt---------')
+    } else {
+      this.push(v)
     }
   }
 
