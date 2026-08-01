@@ -340,6 +340,7 @@ describe('septima', () => {
       expect(run(`[246,531,]`)).toEqual([246, 531])
     })
     test.only('individual elements of an array can be accessed via the [<index>] notation', () => {
+      expect(run(`['sun'][0]`)).toEqual('sun')
       expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; a[1]`)).toEqual('mon')
     })
     test.only('the <index> value at the [<index>] notation can be a computed value', () => {
@@ -1194,6 +1195,8 @@ describe('septima', () => {
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
   // CRTICAL CRTICAL CRITICAL
+  test.todo('const a = {}; const b = a.f; b() - should throw on the call site')
+  // CRTICAL CRTICAL CRITICAL
   test.todo('toJs() on a lambdaref and calling it from JS')
   // CRTICAL CRTICAL CRITICAL
   test.todo('caching of imported units')
@@ -1206,11 +1209,6 @@ describe('septima', () => {
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
   test.only('HEEEEEEEEEEEEEERE', () => {
-    const septima = new Septima()
-    const files: Partial<Record<string, string>> = {
-      a: `import * as b from './b'; 'sum=' + String(b.sum(5, 3))`,
-      b: `export let sum = (x,y) => x+y`,
-    }
-    expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 'sum=8' })
+    expect(run(`["", 'x', 'xx'].every(fun (item, i) item.length == i)`, true)).toEqual(true)
   })
 })
