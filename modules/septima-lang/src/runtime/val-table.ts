@@ -1,4 +1,4 @@
-import { failMe } from './fail-me.js'
+import { failMe } from '../fail-me.js'
 
 const placeholder = {}
 

@@ -2,13 +2,13 @@ import crypto from 'node:crypto'
 import { stringify } from 'safe-stable-stringify'
 import util from 'util'
 
-import { CodeFile } from './code-emitter.js'
-import { failMe } from './fail-me.js'
+import { CodeFile } from '../code-emitter.js'
+import { failMe } from '../fail-me.js'
+import { Outputter } from '../outputter.js'
+import { shouldNeverHappen } from '../should-never-happen.js'
 import { LambdaRef } from './lambda-ref.js'
-import { Outputter } from './outputter.js'
 import { SeptimaArray } from './septima-array.js'
 import { SeptimaObject } from './septima-object.js'
-import { shouldNeverHappen } from './should-never-happen.js'
 import { ValTable } from './val-table.js'
 
 interface StackFrame {
