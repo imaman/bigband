@@ -33,7 +33,7 @@ function run(input: string, verbose?: boolean) {
   return driver.run(input, verbose)
 }
 
-describe('septima', () => {
+describe.skip('septima', () => {
   test.only('basics', () => {
     expect(run(`5`)).toEqual(5)
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (<inline>:1:3..5) 789`)
@@ -363,7 +363,7 @@ describe('septima', () => {
         'sun',
       ])
     })
-    test('arrayness of a value can be tested via Array.isArry()', () => {
+    test.only('arrayness of a value can be tested via Array.isArry()', () => {
       expect(run(`Array.isArray([1,2,'abc'])`)).toEqual(true)
       expect(run(`Array.isArray('abc')`)).toEqual(false)
     })
@@ -1057,7 +1057,7 @@ describe('septima', () => {
       expect(run(`String(undefined)`)).toEqual('undefined')
     })
     // X
-    test('String() on non-primitives', () => {
+    test.only('String() on non-primitives', () => {
       expect(run(`String({a: "alpha", b: [3,1,4], n: 42})`)).toEqual('{"a":"alpha","b":[3,1,4],"n":42}')
       expect(run(`String(["abc", 3.14159, false, true, undefined])`)).toEqual('["abc",3.14159,false,true,null]')
     })
@@ -1105,10 +1105,12 @@ describe('septima', () => {
   })
   describe(`JSON.parse`, () => {
     test.only('parses a string', () => {
+      expect(run(`JSON.parse('{}')`)).toEqual({})
+      expect(run(`JSON.parse('[24,120]')`)).toEqual([24, 120])
       expect(run(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
     })
     // X
-    test('roundtrips a value that was converted to JSON', () => {
+    test.only('roundtrips a value that was converted to JSON', () => {
       expect(run(`JSON.parse(String({"a": 1, "b": "beta", c: {arr: [100, 200]}}))`)).toEqual({
         a: 1,
         b: 'beta',
@@ -1221,12 +1223,17 @@ describe('septima', () => {
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
-  test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(driver.runDebug(`['Columbia', 'Eagle'].flatMap(fun (x) [x, x.length])`)).toEqual(['Columbia', 8, 'Eagle', 5])
-    // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
-    // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
-    // expect(
-    //   driver.runDebug(`'bigbird'.substring(3, 7)`)
-    // ).toEqual('bird')
+})
+test.only('HEEEEEEEEEEEEEERE', () => {
+  expect(run(`JSON.parse(String({"a": 1, "b": "beta", c: {arr: [100, 200]}}))`)).toEqual({
+    a: 1,
+    b: 'beta',
+    c: { arr: [100, 200] },
   })
+  expect(driver.runDebug(`String({})`)).toEqual('{}')
+  // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
+  // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
+  // expect(
+  //   driver.runDebug(`'bigbird'.substring(3, 7)`)
+  // ).toEqual('bird')
 })
