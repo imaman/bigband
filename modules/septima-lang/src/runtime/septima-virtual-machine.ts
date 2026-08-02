@@ -6,6 +6,7 @@ import { CodeFile } from '../code-emitter.js'
 import { failMe } from '../fail-me.js'
 import { Outputter } from '../outputter.js'
 import { shouldNeverHappen } from '../should-never-happen.js'
+import { ForeignFunction } from './foreign-function.js'
 import { LambdaRef } from './lambda-ref.js'
 import { MachineCrashedError } from './machine-crashed-error.js'
 import { SeptimaArray } from './septima-array.js'
@@ -40,6 +41,7 @@ export class SeptimaVirtualMachine {
       u instanceof SeptimaArray ||
       u instanceof SeptimaObject ||
       u instanceof LambdaRef ||
+      u instanceof ForeignFunction ||
       typeof u === 'boolean' ||
       typeof u === 'string' ||
       typeof u === 'number' ||
