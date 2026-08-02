@@ -375,8 +375,7 @@ export class SeptimaVirtualMachine {
     if (sel === 'constructor') {
       return new SeptimaObject([['name', nameOf(receiver)]])
     }
-    const bind = (x: unknown) =>
-      isFunction(x) ? new ForeignFunction(receiver, x) : x instanceof EscapeFunction ? x.f : x
+    const bind = (x: unknown) => (isFunction(x) ? new ForeignFunction(receiver, x) : x)
 
     if (receiver === undefined || receiver === null) {
       throw new Error(`Cannot read properties of undefined (reading '${sel}')`)
@@ -418,8 +417,15 @@ export class SeptimaVirtualMachine {
     const combined = {
       JSON: { stringify: JSON.stringify, parse: (x: string) => JSON.parse(x) },
       Object: {
-        keys: Object.keys,
-        entries: Object.entries,
+        keys: (u: unknown) => {
+          return Object.keys(u as ObjLike)
+        },
+        entries: new EscapeFunction((u: unknown) => {
+          if (!(u instanceof SeptimaObject)) {
+            throw new Error(`value error: expected object but found ${nameOf(u)}`)
+          }
+          return new SeptimaArray(Object.entries(u))
+        }),
         fromEntries: (arr: Iterable<[string, unknown]>) => {
           if (typeof arr === 'function') {
             throw new Error(`fromEntries() input (a function) is not an array`)

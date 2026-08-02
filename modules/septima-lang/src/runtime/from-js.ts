@@ -1,5 +1,6 @@
 import util from 'util'
 
+import { EscapeFunction } from './escape-function.js'
 import { ForeignFunction } from './foreign-function.js'
 import { SeptimaArray } from './septima-array.js'
 import { SeptimaFunction } from './septima-function.js'
@@ -22,7 +23,8 @@ export function fromJs(u: unknown): unknown {
     u instanceof SeptimaArray ||
     u instanceof SeptimaObject ||
     u instanceof SeptimaFunction ||
-    u instanceof ForeignFunction
+    u instanceof ForeignFunction ||
+    u instanceof EscapeFunction
   ) {
     return u
   }
