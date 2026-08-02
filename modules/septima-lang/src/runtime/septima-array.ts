@@ -57,6 +57,24 @@ export class SeptimaArray implements Iterable<unknown> {
   every(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
     return this.values.every(predicate)
   }
+  filter(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
+    return this.values.filter(predicate)
+  }
+  some(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
+    return this.values.some(predicate)
+  }
+  find(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
+    return this.values.find(predicate)
+  }
+  findIndex(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
+    return this.values.findIndex(predicate)
+  }
+  map(callbackfn: (value: unknown, index: number, array: unknown[]) => unknown) {
+    return this.values.map(callbackfn)
+  }
+  flatMap(callbackfn: (value: unknown, index: number, array: unknown[]) => unknown) {
+    return this.values.flatMap(callbackfn)
+  }
 
   *[Symbol.iterator](): Iterator<unknown> {
     yield* this.values
