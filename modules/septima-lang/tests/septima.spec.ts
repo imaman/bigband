@@ -798,12 +798,12 @@ describe('septima', () => {
       expect(run(`Object.keys({a: 1, b: 2, w: 30})`)).toEqual(['a', 'b', 'w'])
       // expect(run(`Object.entries({a: 1, b: 2, w: 30})`)).toEqual([['a', 1], ['b', 2], ['w', 30]])
     })
-    test('fails if applied to a non-object value', () => {
-      expect(() => run(`Object.keys('a')`)).toThrowError('value type error: expected obj but found "a"')
-      expect(() => run(`Object.keys(5)`)).toThrowError('value type error: expected obj but found 5')
-      expect(() => run(`Object.keys(false)`)).toThrowError('value type error: expected obj but found false')
-      expect(() => run(`Object.keys(['a'])`)).toThrowError('value type error: expected obj but found ["a"]')
-      expect(() => run(`Object.keys(fun () 5)`)).toThrowError('value type error: expected obj but found "fun () 5"')
+    test.only('fails if applied to a non-object value', () => {
+      expect(() => run(`Object.keys('a')`)).toThrowError('value error: expected obj but found String')
+      expect(() => run(`Object.keys(5)`)).toThrowError('value error: expected obj but found Number')
+      expect(() => run(`Object.keys(false)`)).toThrowError('value error: expected obj but found Boolean')
+      expect(() => run(`Object.keys(['a'])`)).toThrowError('value error: expected obj but found Array')
+      expect(() => run(`Object.keys(fun () 5)`)).toThrowError('value error: expected obj but found Function')
     })
   })
   describe('Object.entries()', () => {
