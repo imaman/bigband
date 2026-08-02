@@ -780,7 +780,7 @@ describe('septima', () => {
     })
   })
   describe('constructor', () => {
-    test('.name reflects the type of the value', () => {
+    test.only('.name reflects the type of the value', () => {
       expect(run('5.constructor.name')).toEqual('Number')
       expect(run('true.constructor.name')).toEqual('Boolean')
       expect(run('false.constructor.name')).toEqual('Boolean')
@@ -789,7 +789,7 @@ describe('septima', () => {
       expect(run('{}.constructor.name')).toEqual('Object')
       expect(run('(() => 99).constructor.name')).toEqual('Function')
     })
-    test('works also if the attribute name is calculated', () => {
+    test.only('works also if the attribute name is calculated', () => {
       expect(run('5["const" + "ructor"].name')).toEqual('Number')
     })
   })

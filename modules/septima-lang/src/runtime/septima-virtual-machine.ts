@@ -371,6 +371,9 @@ export class SeptimaVirtualMachine {
   }
 
   private lookupMember(receiver: unknown, sel: string | number) {
+    if (sel === 'constructor') {
+      return new SeptimaObject([['name', nameOf(receiver)]])
+    }
     const bind = (x: unknown) =>
       isFunction(x) ? new ForeignFunction(receiver, x) : x instanceof EscapeFunction ? x.f : x
 
@@ -533,6 +536,40 @@ export class SeptimaVirtualMachine {
       return this.toJs(septimaRetVal)
     }
   }
+}
+
+function nameOf(u: unknown): string {
+  const t = typeof u
+  if (t === 'boolean') {
+    return 'Boolean'
+  }
+  if (t === 'string') {
+    return 'String'
+  }
+  if (t === 'number') {
+    return 'Number'
+  }
+
+  if (t === undefined) {
+    return 'Undefined'
+  }
+
+  if (u instanceof ForeignFunction) {
+    return 'Foreign'
+  }
+  if (u instanceof SeptimaFunction) {
+    return 'Function'
+  }
+
+  if (u instanceof SeptimaObject) {
+    return 'Object'
+  }
+
+  if (u instanceof SeptimaArray) {
+    return 'Array'
+  }
+
+  throw new Error(`unrecognizable type: ${t}`)
 }
 
 type ObjLike = Partial<Record<string, unknown>>
