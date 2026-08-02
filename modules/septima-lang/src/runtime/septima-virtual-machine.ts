@@ -239,8 +239,7 @@ export class SeptimaVirtualMachine {
             this.mustBe(rhs, 'number')
             this.push(lhs + rhs)
           } else if (typeof lhs === 'string') {
-            this.mustBe(rhs, 'string')
-            this.push(lhs + rhs)
+            this.push(lhs + String(rhs))
           } else {
             throw new Error(`+ not supported for type ${typeof lhs}`)
           }
@@ -506,15 +505,19 @@ export class SeptimaVirtualMachine {
    * @returns
    */
   private funcToJs(func: SeptimaFunction) {
-    return (...args: unknown[]) => {
+    return (...jsArgs: unknown[]) => {
+      // The args came from the JS side. We need to convert them to septima before running the function.
+      const sArgs = fromJs(jsArgs)
       this.callStack.push({
         chunkId: func.id,
         pc: 0,
         table: func.table,
-        args: fromJs(args) as unknown[],
+        args: sArgs as unknown[],
         export: false,
       })
-      return this.launch()
+      const septimaRetVal = this.launch()
+      // The return value came form the septima side. We need to convert it to JS before returning it.
+      return this.toJs(septimaRetVal)
     }
   }
 }

@@ -707,29 +707,29 @@ describe('septima', () => {
         run(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`),
       ).toEqual([true, false])
     })
-    test('filter', () => {
+    test.only('filter', () => {
       expect(run(`['foo', 'bar', 'goo'].filter(fun (item) item.endsWith('oo'))`)).toEqual(['foo', 'goo'])
       expect(run(`['a', 'b', 'c', 'd'].filter(fun (item, i) i % 2 == 1)`)).toEqual(['b', 'd'])
       expect(run(`[8, 8, 2, 2, 2, 7].filter(fun (x, i, a) x == a[(i + 1) % a.length])`)).toEqual([8, 2, 2])
     })
-    test('find', () => {
+    test.only('find', () => {
       expect(run(`[10, 20, 30, 40].find(fun (item, i) item + i == 21)`)).toEqual(20)
       expect(run(`[8, 3, 7, 7, 6, 9].find(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(7)
     })
-    test('findIndex', () => {
+    test.only('findIndex', () => {
       expect(run(`[10, 20, 30, 40].findIndex(fun (item, i) item + i == 32)`)).toEqual(2)
       expect(run(`[8, 3, 7, 7, 6, 9].findIndex(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(2)
     })
-    test('findIndex returns -1 if no matching element exists', () => {
+    test.only('findIndex returns -1 if no matching element exists', () => {
       expect(run(`[3, 5, 7, 9].findIndex(fun (x) x % 2 == 0)`)).toEqual(-1)
       expect(run(`[].findIndex(fun () true)`)).toEqual(-1)
     })
-    test('flatMap', () => {
+    test.only('flatMap', () => {
       expect(run(`['Columbia', 'Eagle'].flatMap(fun (x) [x, x.length])`)).toEqual(['Columbia', 8, 'Eagle', 5])
       expect(run(`[6,7,9].flatMap(fun (x,i) if (i % 2 == 0) [x, x/3] else [])`)).toEqual([6, 2, 9, 3])
       expect(run(`[2,1,6,5,9,8].flatMap(fun (x,i,a) if (i % 2 == 1) [x, a[i-1]] else [])`)).toEqual([1, 2, 5, 6, 8, 9])
     })
-    test('map', () => {
+    test.only('map', () => {
       expect(run(`['foo', 'bar', 'goo'].map(fun (s) s.charAt(0))`)).toEqual(['f', 'b', 'g'])
       expect(run(`['a', 'b'].map(fun (item, i) item + ':' + i)`)).toEqual(['a:0', 'b:1'])
       expect(run(`['a', 'b', 'p', 'q'].map(fun (x, i, a) x + a[a.length - (i+1)])`)).toEqual(['aq', 'bp', 'pb', 'qa'])
@@ -1221,12 +1221,12 @@ describe('septima', () => {
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
-  test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(driver.runDebug(`[2].every((at, i, a) => at == 5)`)).toEqual(false)
-    // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
-    // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
-    // expect(
-    //   driver.runDebug(`'bigbird'.substring(3, 7)`)
-    // ).toEqual('bird')
-  })
+})
+test.only('HEEEEEEEEEEEEEERE', () => {
+  expect(driver.runDebug(`['Columbia', 'Eagle'].flatMap(fun (x) [x, x.length])`)).toEqual(['Columbia', 8, 'Eagle', 5])
+  // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
+  // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
+  // expect(
+  //   driver.runDebug(`'bigbird'.substring(3, 7)`)
+  // ).toEqual('bird')
 })
