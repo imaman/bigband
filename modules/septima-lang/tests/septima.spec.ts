@@ -1229,6 +1229,8 @@ describe('septima', () => {
   test.todo('do not double load a module')
   // CRTICAL CRTICAL CRITICAL
   test.todo('protect against escaping the opstack')
+  // CRTICAL CRTICAL CRITICAL
+  test.todo('arrays and objects are finalized')
   test.only('HEEEEEEEEEEEEEERE', () => {
     expect(driver.runDebug(`export let x = 5`)).toEqual('')
   })
