@@ -1081,7 +1081,7 @@ describe('septima', () => {
       expect(run(`Number(false)`)).toEqual(0)
       expect(run(`Number(undefined)`)).toEqual(NaN)
       expect(run(`Number({})`)).toEqual(NaN)
-      expect(run(`Number([])`)).toEqual(0)
+      expect(run(`Number([])`)).toEqual(NaN)
     })
   })
   describe('console.log', () => {
