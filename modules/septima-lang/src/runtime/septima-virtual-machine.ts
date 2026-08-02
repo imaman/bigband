@@ -7,6 +7,7 @@ import { failMe } from '../fail-me.js'
 import { Outputter } from '../outputter.js'
 import { shouldNeverHappen } from '../should-never-happen.js'
 import { LambdaRef } from './lambda-ref.js'
+import { MachineCrashedError } from './machine-crashed-error.js'
 import { SeptimaArray } from './septima-array.js'
 import { SeptimaObject } from './septima-object.js'
 import { ValTable } from './val-table.js'
@@ -35,6 +36,17 @@ export class SeptimaVirtualMachine {
   private callStack: StackFrame[] = []
 
   private push(u: unknown) {
+    const allowed =
+      u instanceof SeptimaArray ||
+      u instanceof SeptimaObject ||
+      u instanceof LambdaRef ||
+      typeof u === 'boolean' ||
+      typeof u === 'string' ||
+      typeof u === 'number' ||
+      typeof u === 'undefined'
+    if (!allowed) {
+      throw new MachineCrashedError(`bad opstack state - cannot push ${typeof u}`)
+    }
     this.opstack.push(u)
   }
 
@@ -96,6 +108,9 @@ export class SeptimaVirtualMachine {
     try {
       value = this.launch()
     } catch (e) {
+      if (e instanceof MachineCrashedError) {
+        throw e
+      }
       const f = this.getFrame(-1)
       const { ast } = this.cf.read(f, true)
       const ee = e as { message?: unknown }
