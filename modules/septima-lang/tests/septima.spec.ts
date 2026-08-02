@@ -248,8 +248,47 @@ describe('septima', () => {
     test('supports string methods', () => {
       expect(run(`'bigbird'.substring(3, 7)`)).toEqual('bird')
       expect(run(`'bigbird'.indexOf('g')`)).toEqual(2)
+      expect(run(`const s = 'bigbird'; [s.indexOf('b'), s.indexOf('i')]`)).toEqual([0, 1])
+      expect(run(`const s = 'bigbird'; [s.lastIndexOf('b'), s.lastIndexOf('i')]`)).toEqual([3, 4])
+      expect(run(`"the".concat(" quick").concat(" brown").concat(" fox")`)).toEqual('the quick brown fox')
       expect(run(`'ab-cde-fghi-jkl'.split('-')`)).toEqual(['ab', 'cde', 'fghi', 'jkl'])
       expect(run(`const a = 'QwertY'; [a.toUpperCase(), a.toLowerCase()]`)).toEqual(['QWERTY', 'qwerty'])
+      expect(run(`const a = 'the slow brown fox'; a.replace('slow', 'quick')`)).toEqual('the quick brown fox')
+      expect(run(`const a = 'the quick brown fox'; [a.includes('quick'), a.includes('QUICK')]`)).toEqual([true, false])
+      expect(
+        run(
+          `const a = 'star wars'; [a.startsWith('st'), a.startsWith('star'), a.startsWith('ST'), a.startsWith('wars')]`,
+        ),
+      ).toEqual([true, true, false, false])
+      expect(run(`const a = 'star wars'; [a.charAt(0), a.charAt(1), a.charAt(7), a.charAt(8), a.charAt(9)]`)).toEqual([
+        's',
+        't',
+        'r',
+        's',
+        '',
+      ])
+      expect(run(`const a = 'star wars'; [a.at(0), a.at(1), a.at(7), a.at(8), a.at(9), a.at(-4)]`)).toEqual([
+        's',
+        't',
+        'r',
+        's',
+        undefined,
+        'w',
+      ])
+      expect(run(`const s = "four scores and seven years ago"; [s.search("e.r"), s.search("s[a-z]{3}n")]`)).toEqual([
+        23, 16,
+      ])
+      expect(run(`["w".repeat(3), "go".repeat(2), "x".repeat(0)]`)).toEqual(['www', 'gogo', ''])
+      expect(run(`["a".padStart(4, '.'), "a".padStart(2)]`)).toEqual(['...a', ' a'])
+      expect(run(`["a".padEnd(4, '.'), "a".padEnd(2)]`)).toEqual(['a...', 'a '])
+      expect(run(`const a = 'It was the best of times, it was the worst of times'; a.match('the [a-z]+ of')`)).toEqual([
+        'the best of',
+      ])
+      expect(run(`const a = 'abcdefghijkl'; [a.slice(3, 8), a.slice(0, -8), a.slice(-2)]`)).toEqual([
+        'defgh',
+        'abcd',
+        'kl',
+      ])
       expect(run(`let s = '  ab   cd     '; [s.trimStart(), s.trimEnd(), s.trim()]`)).toEqual([
         'ab   cd     ',
         '  ab   cd',
