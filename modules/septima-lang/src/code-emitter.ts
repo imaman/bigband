@@ -323,8 +323,8 @@ export class CodeEmitter {
         } else {
           shouldNeverHappen(part)
         }
-        cf.add({ tag: 'array', n: ast.parts.length, spreads: [] }, ast)
       }
+      cf.add({ tag: 'templateLiteral', n: ast.parts.length }, ast)
     } else if (ast.tag === 'unaryOperator') {
       this.emit(ast.operand, cf)
       cf.add({ tag: 'unop', mod: ast.operator }, ast)

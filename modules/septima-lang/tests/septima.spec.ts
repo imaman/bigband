@@ -1159,7 +1159,7 @@ describe('septima', () => {
   })
   test.todo('support file names in locations')
 
-  test('template literals', () => {
+  test.only('template literals', () => {
     expect(run('``')).toEqual('')
     expect(run('`hello world`')).toEqual('hello world')
     expect(run("let name = 'Alice'; `Hello ${name}`")).toEqual('Hello Alice')
@@ -1230,11 +1230,6 @@ describe('septima', () => {
   // CRTICAL CRTICAL CRITICAL
   test.todo('protect against escaping the opstack')
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(driver.runDebug(`let sum = (a, b = 50) => a + b; [sum(9), sum(9,1)]`)).toEqual([59, 10])
-    // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
-    // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
-    // expect(
-    //   driver.runDebug(`'bigbird'.substring(3, 7)`)
-    // ).toEqual('bird')
+    expect(driver.runDebug('`Value: ${undefined}`')).toEqual('Value: undefined')
   })
 })

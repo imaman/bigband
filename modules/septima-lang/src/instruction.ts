@@ -70,6 +70,10 @@ export type Instruction =
       spreads: number[]
     }
   | {
+      tag: 'templateLiteral'
+      n: number
+    }
+  | {
       tag: 'ifFalse' | 'jump' | 'ifTrue' | 'ifDefined'
       to: number
     }

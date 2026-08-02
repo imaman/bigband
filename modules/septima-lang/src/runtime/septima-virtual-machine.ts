@@ -285,6 +285,9 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'array') {
         const arr = this.popArray(at.n)
         this.push(new SeptimaArray(arr, at.spreads))
+      } else if (at.tag === 'templateLiteral') {
+        const arr = this.popArray(at.n)
+        this.push(arr.map(String).join(''))
       } else if (at.tag === 'constUndefined') {
         this.push(undefined)
       } else if (at.tag === 'object') {
