@@ -417,9 +417,12 @@ export class SeptimaVirtualMachine {
     const combined = {
       JSON: { stringify: JSON.stringify, parse: (x: string) => JSON.parse(x) },
       Object: {
-        keys: (u: unknown) => {
-          return Object.keys(u as ObjLike)
-        },
+        keys: new EscapeFunction((u: unknown) => {
+          if (!(u instanceof SeptimaObject)) {
+            throw new Error(`value error: expected object but found ${nameOf(u)}`)
+          }
+          return new SeptimaArray(Object.keys(u))
+        }),
         entries: new EscapeFunction((u: unknown) => {
           if (!(u instanceof SeptimaObject)) {
             throw new Error(`value error: expected object but found ${nameOf(u)}`)

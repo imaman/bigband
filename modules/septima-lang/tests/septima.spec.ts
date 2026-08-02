@@ -799,11 +799,11 @@ describe('septima', () => {
       // expect(run(`Object.entries({a: 1, b: 2, w: 30})`)).toEqual([['a', 1], ['b', 2], ['w', 30]])
     })
     test.only('fails if applied to a non-object value', () => {
-      expect(() => run(`Object.keys('a')`)).toThrowError('value error: expected obj but found String')
-      expect(() => run(`Object.keys(5)`)).toThrowError('value error: expected obj but found Number')
-      expect(() => run(`Object.keys(false)`)).toThrowError('value error: expected obj but found Boolean')
-      expect(() => run(`Object.keys(['a'])`)).toThrowError('value error: expected obj but found Array')
-      expect(() => run(`Object.keys(fun () 5)`)).toThrowError('value error: expected obj but found Function')
+      expect(() => run(`Object.keys('a')`)).toThrowError('value error: expected object but found String')
+      expect(() => run(`Object.keys(5)`)).toThrowError('value error: expected object but found Number')
+      expect(() => run(`Object.keys(false)`)).toThrowError('value error: expected object but found Boolean')
+      expect(() => run(`Object.keys(['a'])`)).toThrowError('value error: expected object but found Array')
+      expect(() => run(`Object.keys(fun () 5)`)).toThrowError('value error: expected object but found Function')
     })
   })
   describe('Object.entries()', () => {
@@ -1232,8 +1232,6 @@ describe('septima', () => {
   // CRTICAL CRTICAL CRITICAL
   test.todo('arrays and objects are finalized')
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(() => driver.runDebug(`Object.entries(fun () 5)`)).toThrowError(
-      'value error: expected object but found Function',
-    )
+    expect(() => driver.runDebug(`Object.keys(['a'])`)).toThrowError('value error: expected object but found Array')
   })
 })
