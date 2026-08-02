@@ -3,24 +3,34 @@ import crypto from 'crypto'
 
 import { Septima } from '../src/septima.js'
 
-/**
- * Runs a Septima program for testing purposes. If the program evaluates to `sink` an `undefined` is
- * returned.
- * @param input the Septima program to run
- */
-function run(input: string, verbose?: boolean) {
-  return Septima.run(input, {
-    onSink: x => {
-      throw new Error(x.message)
-    },
-    verbose,
-  })
+class Driver {
+  /**
+   * Runs a Septima program for testing purposes. If the program evaluates to `sink` an `undefined` is
+   * returned.
+   * @param input the Septima program to run
+   */
+  run(input: string, verbose?: boolean) {
+    return Septima.run(input, {
+      onSink: x => {
+        throw new Error(x.message)
+      },
+      verbose,
+    })
+  }
+  runDebug(input: string) {
+    return this.run(input, true)
+  }
+  runLog(input: string, verbose?: boolean) {
+    const lines: unknown[] = []
+    const result = Septima.run(input, { onSink: () => undefined, consoleLog: u => lines.push(u), verbose })
+    return { lines, result }
+  }
 }
 
-const runLog = (input: string, verbose?: boolean) => {
-  const lines: unknown[] = []
-  const result = Septima.run(input, { onSink: () => undefined, consoleLog: u => lines.push(u), verbose })
-  return { lines, result }
+const driver = new Driver()
+
+function run(input: string, verbose?: boolean) {
+  return driver.run(input, verbose)
 }
 
 describe('septima', () => {
@@ -1076,18 +1086,18 @@ describe('septima', () => {
   })
   describe('console.log', () => {
     test.only('prints its input', () => {
-      expect(runLog(`console.log(2*2*2*2)`).lines).toEqual(['16'])
-      expect(runLog(`console.log({a: 1, b: 2, c: ['d', 'e']})`).lines).toEqual(['{"a":1,"b":2,"c":["d","e"]}'])
+      expect(driver.runLog(`console.log(2*2*2*2)`).lines).toEqual(['16'])
+      expect(driver.runLog(`console.log({a: 1, b: 2, c: ['d', 'e']})`).lines).toEqual(['{"a":1,"b":2,"c":["d","e"]}'])
     })
     test('a program can have multiple console.log() calls', () => {
-      expect(runLog(`["red", "green", "blue"].map(at => console.log(at))`).lines).toEqual([
+      expect(driver.runLog(`["red", "green", "blue"].map(at => console.log(at))`).lines).toEqual([
         '"red"',
         '"green"',
         '"blue"',
       ])
     })
     test.only('returns its input', () => {
-      expect(runLog(`32*console.log(8)`)).toEqual({
+      expect(driver.runLog(`32*console.log(8)`)).toEqual({
         result: 256,
         lines: ['8'],
       })
@@ -1212,6 +1222,11 @@ describe('septima', () => {
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(run(`["", 'x', 'xx'].every(fun (item, i) item.length == i)`, true)).toEqual(true)
+    expect(driver.runDebug(`[2].every((at, i, a) => at == 5)`)).toEqual(false)
+    // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
+    // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
+    // expect(
+    //   driver.runDebug(`'bigbird'.substring(3, 7)`)
+    // ).toEqual('bird')
   })
 })
