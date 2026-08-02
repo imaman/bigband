@@ -238,7 +238,11 @@ export class CodeEmitter {
         cf.add({ tag: 'assertType', param: 'boolean' }, ast)
         cond.to = cf.offset
       } else if (op === '??') {
-        throw new Error(`not yet ${JSON.stringify(ast)}`)
+        this.emit(ast.lhs, cf)
+        const cond = cf.add({ tag: 'ifDefined', to: -1 }, ast)
+        cf.add({ tag: 'drop' }, ast.rhs)
+        this.emit(ast.rhs, cf)
+        cond.to = cf.offset
       } else if (
         op === '!=' ||
         op === '%' ||
