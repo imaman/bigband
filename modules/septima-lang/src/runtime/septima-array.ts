@@ -88,6 +88,10 @@ export class SeptimaArray implements Iterable<unknown> {
     return this.values.some(predicate)
   }
 
+  sort(compareFn?: (a: unknown, b: unknown) => number) {
+    return [...this.values].sort(compareFn)
+  }
+
   *[Symbol.iterator](): Iterator<unknown> {
     yield* this.values
   }

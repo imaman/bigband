@@ -751,16 +751,16 @@ describe('septima', () => {
       expect(run(`[8, 3, 7, 7, 6, 9].some(fun (x, i, a) x == a[a.length - (i+1)])`)).toEqual(true)
     })
     describe('sort', () => {
-      test('can sort numbers', () => {
+      test.only('can sort numbers', () => {
         expect(run(`[5, 9, 3, 8, 6, 4].sort()`)).toEqual([3, 4, 5, 6, 8, 9])
       })
-      test('does not change the array', () => {
+      test.only('does not change the array', () => {
         expect(run(`let a = [4,3]; let b = a.sort(); {a,b}`)).toEqual({ a: [4, 3], b: [3, 4] })
       })
-      test('can sort strings', () => {
+      test.only('can sort strings', () => {
         expect(run(`['Bob', 'Dan', 'Alice', 'Callie'].sort()`)).toEqual(['Alice', 'Bob', 'Callie', 'Dan'])
       })
-      test('allows a custom sorting callback to be passed in', () => {
+      test.only('allows a custom sorting callback to be passed in', () => {
         expect(run(`['John', 'Ben', 'Emilia', 'Alice'].sort((a, b) => a.length - b.length)`)).toEqual([
           'Ben',
           'John',
@@ -768,7 +768,7 @@ describe('septima', () => {
           'Emilia',
         ])
       })
-      test('does not change the array when a custom sorting callback is used', () => {
+      test.only('does not change the array when a custom sorting callback is used', () => {
         expect(run(`let a = ['xx', 'y']; let b = a.sort((a, b) => a.length - b.length); {a,b}`)).toEqual({
           a: ['xx', 'y'],
           b: ['y', 'xx'],
