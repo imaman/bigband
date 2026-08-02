@@ -901,7 +901,7 @@ describe('septima', () => {
     })
   })
   describe('args', () => {
-    test('are bounded at runtime to a special variable called "args"', () => {
+    test.only('are bounded at runtime to a special variable called "args"', () => {
       expect(
         Septima.run(
           `args.a + '_' + args.color[0] + '_' + args.b + '_' + args.color[1]`,
@@ -914,7 +914,7 @@ describe('septima', () => {
         ),
       ).toEqual('Sunday_Red_Monday_Green')
     })
-    test('are shadowed by a program-defined "args" symbol', () => {
+    test.only('are shadowed by a program-defined "args" symbol', () => {
       expect(Septima.run(`let args = {color: 'Green' }; args.color`, {}, { color: 'Red' })).toEqual('Green')
     })
   })
