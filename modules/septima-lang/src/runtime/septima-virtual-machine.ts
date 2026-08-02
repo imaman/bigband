@@ -177,7 +177,9 @@ export class SeptimaVirtualMachine {
 
       if (this.verbose) {
         // eslint-disable-next-line no-console
-        console.log(`[${frame.chunkId}.${frame.pc}] ${JSON.stringify(at)} -- ${JSON.stringify(this.opstack)}`)
+        console.log(
+          `opstack: ${JSON.stringify(this.opstack)}\n     pc: [${frame.chunkId}.${frame.pc}] ${JSON.stringify(at)}`,
+        )
       }
       if (at.tag === 'import') {
         // TODO(imaman): module cache
