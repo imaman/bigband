@@ -353,6 +353,12 @@ export class SeptimaVirtualMachine {
     if (receiver === undefined || receiver === null) {
       throw new Error(`Cannot read properties of undefined (reading '${sel}')`)
     } else if (receiver instanceof SeptimaArray || typeof receiver === 'string') {
+      // Ideal behavior: if the program needs to access an array/string element it should use a number (a[15]);
+      // if it needs to access a property/method it should use a string (a["concat"] or a["length"]) or the .<ident>
+      // notation (a.concat, a.length)
+
+      // Now comes the hard question: how should a["3"] behave? should it be identical to a[3] (implying coercion) or
+      // should it return undefined? Ditto for a["1e2"], a["5.0"], a["NaN"], or a["Infinity"]
       if (typeof sel === 'string' && /^-?\d+$/.test(sel)) {
         throw new Error(
           `index into ${
