@@ -599,7 +599,7 @@ describe('septima', () => {
       expect(run(`let pi = () => 3.14; 2*pi()`)).toEqual(6.28)
       expect(run(`(() => 3.14)()*2`)).toEqual(6.28)
     })
-    test('errors on arg list mismatch', () => {
+    test.only('errors on arg list mismatch', () => {
       expect(() => run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2)`)).toThrowError(
         'Expected at least 4 argument(s) but got 3 when evaluating',
       )
@@ -1223,6 +1223,12 @@ describe('septima', () => {
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
+  // CRTICAL CRTICAL CRITICAL
+  test.todo('trying to read more values from the opstack than there are there?')
+  // CRTICAL CRTICAL CRITICAL
+  test.todo('do not double load a module')
+  // CRTICAL CRTICAL CRITICAL
+  test.todo('protect against escaping the opstack')
   test.only('HEEEEEEEEEEEEEERE', () => {
     expect(driver.runDebug(`JSON.parse(String({"a": 1, "b": "beta", c: {arr: [100, 200]}}))`)).toEqual({
       a: 1,

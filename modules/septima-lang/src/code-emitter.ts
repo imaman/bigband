@@ -129,6 +129,7 @@ export class CodeEmitter {
         const at = this.workList[i]
         ++i
         cf.activateChunk(at.chunkId)
+        cf.add({ tag: 'checkNumArgs', n: at.ast.formalArgs.length }, ast)
         for (let i = 0; i < at.ast.formalArgs.length; ++i) {
           cf.add({ tag: 'loadArg', param: i }, ast)
           cf.add({ tag: 'store', param: at.ast.formalArgs[i].ident.t.text }, ast)

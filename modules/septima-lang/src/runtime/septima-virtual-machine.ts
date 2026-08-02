@@ -106,8 +106,7 @@ export class SeptimaVirtualMachine {
       // eslint-disable-next-line no-console
       console.log(`Program:\n${this.cf.format()}`)
     }
-    this.callStack.push({ chunkId: 0, pc: 0, table: this.stdLib(), args: [], export: false })
-
+    this.pushCallStack(0, this.stdLib(), [])
     let value
     try {
       value = this.launch()
@@ -185,13 +184,7 @@ export class SeptimaVirtualMachine {
       }
       if (at.tag === 'import') {
         // TODO(imaman): module cache
-        this.callStack.push({
-          chunkId: at.chunkId,
-          pc: 0,
-          table: this.stdLib(),
-          args: [],
-          export: true,
-        })
+        this.pushCallStack(at.chunkId, this.stdLib(), [], 'export')
       } else if (at.tag === 'export*') {
         if (frame.export) {
           const pairs = frame.table.collectExported(at.n)
@@ -226,13 +219,11 @@ export class SeptimaVirtualMachine {
             throw new Error(`ValTable of ${JSON.stringify(callee)} is missing`)
           }
 
-          this.callStack.push({
-            chunkId: callee.id,
-            pc: 0,
-            table: callee.table,
-            args,
-            export: false,
-          })
+          this.pushCallStack(callee.id, callee.table, args)
+        }
+      } else if (at.tag === 'checkNumArgs') {
+        if (frame.args.length < at.n) {
+          throw new Error(`Expected at least ${at.n} argument(s) but got ${frame.args.length}`)
         }
       } else if (at.tag === 'loadArg') {
         this.push(frame.args.at(at.param))
@@ -507,6 +498,16 @@ export class SeptimaVirtualMachine {
 
     return u
   }
+
+  private pushCallStack(chunkId: number, table: ValTable, args: unknown[], mode: 'export' | 'eval' = 'eval') {
+    this.callStack.push({
+      chunkId,
+      pc: 0,
+      table,
+      args,
+      export: mode === 'export',
+    })
+  }
   /**
    * Produces a JS-native function that wraps the given SeptimaFunction allowing it to be invoked from JS call sites
    * @param func
@@ -516,13 +517,7 @@ export class SeptimaVirtualMachine {
     return (...jsArgs: unknown[]) => {
       // The args came from the JS side. We need to convert them to septima before running the function.
       const sArgs = fromJs(jsArgs)
-      this.callStack.push({
-        chunkId: func.id,
-        pc: 0,
-        table: func.table,
-        args: sArgs as unknown[],
-        export: false,
-      })
+      this.pushCallStack(func.id, func.table, sArgs as unknown[])
       const septimaRetVal = this.launch()
       // The return value came form the septima side. We need to convert it to JS before returning it.
       return this.toJs(septimaRetVal)

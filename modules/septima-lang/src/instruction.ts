@@ -94,6 +94,11 @@ export type Instruction =
       param: number
     }
   | {
+      /** Checks that the frame has at least n args */
+      tag: 'checkNumArgs'
+      n: number
+    }
+  | {
       tag: 'reserve'
       name: string
       isExported: boolean
