@@ -98,6 +98,7 @@ export type AstNode =
       throwToken?: Token
       computation?: AstNode
       unitId: UnitId
+      isUnderUnit: boolean
     }
   | Let
   | Lambda

@@ -1230,6 +1230,6 @@ describe('septima', () => {
   // CRTICAL CRTICAL CRITICAL
   test.todo('protect against escaping the opstack')
   test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(driver.runDebug('`Value: ${undefined}`')).toEqual('Value: undefined')
+    expect(driver.runDebug(`export let x = 5`)).toEqual('')
   })
 })

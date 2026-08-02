@@ -154,8 +154,8 @@ export class CodeEmitter {
       for (const imp of ast.imports) {
         const importeeUnitId = this.reolveUnitId(ast.unitId, imp.pathToImportFrom.text)
         const importeeChunkId = cf.chunkIdByUnitId(importeeUnitId)
-        cf.add({ tag: 'import', chunkId: importeeChunkId }, ast)
-        cf.add({ tag: 'store', param: imp.ident.t.text }, ast)
+        cf.add({ tag: 'import', chunkId: importeeChunkId }, imp.ident)
+        cf.add({ tag: 'store', param: imp.ident.t.text }, imp.ident)
       }
       this.emit(ast.expression, cf)
     } else if (ast.tag === 'topLevelExpression') {
@@ -184,6 +184,8 @@ export class CodeEmitter {
 
       if (ast.computation) {
         this.emit(ast.computation, cf)
+      } else if (ast.isUnderUnit) {
+        cf.add({ tag: 'const', param: '' }, ast)
       }
 
       if (ast.definitions.length > 0) {

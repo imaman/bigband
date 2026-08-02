@@ -107,9 +107,10 @@ export class Parser {
   }
 
   expression(kind: 'TOP_LEVEL' | 'NESTED' = 'NESTED'): AstNode {
+    const isUnderUnit = { NESTED: false, TOP_LEVEL: true }[kind]
     const definitions = this.definitions(kind)
     if (kind === 'TOP_LEVEL' && this.scanner.eof()) {
-      return { tag: 'topLevelExpression', definitions, unitId: this.unitId }
+      return { tag: 'topLevelExpression', definitions, unitId: this.unitId, isUnderUnit }
     }
     const throwToken = this.scanner.consumeIf('throw')
     this.scanner.consumeIf('return')
@@ -119,7 +120,7 @@ export class Parser {
       return computation
     }
 
-    return { tag: 'topLevelExpression', definitions, throwToken, computation, unitId: this.unitId }
+    return { tag: 'topLevelExpression', definitions, throwToken, computation, unitId: this.unitId, isUnderUnit }
   }
 
   formalArg(): FormalArg {
