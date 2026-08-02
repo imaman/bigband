@@ -28,6 +28,7 @@ interface StackFrame {
 export class SeptimaVirtualMachine {
   constructor(
     private readonly cf: CodeFile,
+    private readonly programArgs: Partial<Record<string, unknown>>,
     private readonly consoleLog?: Outputter,
     private readonly verbose?: boolean,
   ) {}
@@ -440,6 +441,7 @@ export class SeptimaVirtualMachine {
       Boolean: new EscapeFunction(Boolean),
       Number: new EscapeFunction(Number),
       String: new EscapeFunction(String),
+      args: this.programArgs,
     }
 
     let ret = ValTable.empty()
@@ -447,7 +449,7 @@ export class SeptimaVirtualMachine {
       if (v instanceof EscapeFunction) {
         ret = ret.add(k, v)
       } else if (typeof v === 'object') {
-        ret = ret.add(k, new SeptimaObject(Object.entries(v)))
+        ret = ret.add(k, fromJs(v))
       } else if (isFunction(v)) {
         ret = ret.add(k, new ForeignFunction(undefined, v))
       } else {
