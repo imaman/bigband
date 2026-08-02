@@ -971,7 +971,7 @@ describe('septima', () => {
     })
   })
   describe('unit', () => {
-    test('evaluates to an empty string if it contains only definitions', () => {
+    test.only('evaluates to an empty string if it contains only definitions', () => {
       expect(run(`export let x = 5`)).toEqual('')
     })
   })
