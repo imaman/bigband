@@ -33,7 +33,7 @@ function run(input: string, verbose?: boolean) {
   return driver.run(input, verbose)
 }
 
-describe.skip('septima', () => {
+describe('septima', () => {
   test.only('basics', () => {
     expect(run(`5`)).toEqual(5)
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (<inline>:1:3..5) 789`)
@@ -1223,17 +1223,17 @@ describe.skip('septima', () => {
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
-})
-test.only('HEEEEEEEEEEEEEERE', () => {
-  expect(run(`JSON.parse(String({"a": 1, "b": "beta", c: {arr: [100, 200]}}))`)).toEqual({
-    a: 1,
-    b: 'beta',
-    c: { arr: [100, 200] },
+  test.only('HEEEEEEEEEEEEEERE', () => {
+    expect(driver.runDebug(`JSON.parse(String({"a": 1, "b": "beta", c: {arr: [100, 200]}}))`)).toEqual({
+      a: 1,
+      b: 'beta',
+      c: { arr: [100, 200] },
+    })
+    expect(driver.runDebug(`String({})`)).toEqual('{}')
+    // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
+    // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
+    // expect(
+    //   driver.runDebug(`'bigbird'.substring(3, 7)`)
+    // ).toEqual('bird')
   })
-  expect(driver.runDebug(`String({})`)).toEqual('{}')
-  // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
-  // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
-  // expect(
-  //   driver.runDebug(`'bigbird'.substring(3, 7)`)
-  // ).toEqual('bird')
 })

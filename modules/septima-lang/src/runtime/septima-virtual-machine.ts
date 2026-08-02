@@ -5,6 +5,7 @@ import { CodeFile } from '../code-emitter.js'
 import { failMe } from '../fail-me.js'
 import { Outputter } from '../outputter.js'
 import { shouldNeverHappen } from '../should-never-happen.js'
+import { EscapeFunction } from './escape-function.js'
 import { ForeignFunction, isFunction } from './foreign-function.js'
 import { fromJs } from './from-js.js'
 import { MachineCrashedError } from './machine-crashed-error.js'
@@ -42,6 +43,7 @@ export class SeptimaVirtualMachine {
       u instanceof SeptimaObject ||
       u instanceof SeptimaFunction ||
       u instanceof ForeignFunction ||
+      u instanceof EscapeFunction ||
       typeof u === 'boolean' ||
       typeof u === 'string' ||
       typeof u === 'number' ||
@@ -209,10 +211,13 @@ export class SeptimaVirtualMachine {
         this.push(new SeptimaFunction(at.id, frame.table))
       } else if (at.tag === 'call') {
         const callee = this.pop()
+        const args = this.popArray(at.param)
         if (callee instanceof ForeignFunction) {
-          const actuals = this.toJs(this.popArray(at.param)) as unknown[]
+          const actuals = this.toJs(args) as unknown[]
           const retVal = callee.invoke(actuals)
           this.push(retVal)
+        } else if (callee instanceof EscapeFunction) {
+          this.push(callee.f(...args))
         } else {
           if (!(callee instanceof SeptimaFunction)) {
             throw new Error(`Callee is not a function (it is: ${JSON.stringify(callee)})`)
@@ -225,7 +230,7 @@ export class SeptimaVirtualMachine {
             chunkId: callee.id,
             pc: 0,
             table: callee.table,
-            args: this.popArray(at.param),
+            args,
             export: false,
           })
         }
@@ -365,7 +370,8 @@ export class SeptimaVirtualMachine {
   }
 
   private lookupMember(receiver: unknown, sel: string | number) {
-    const bind = (x: unknown) => (isFunction(x) ? new ForeignFunction(receiver, x) : x)
+    const bind = (x: unknown) =>
+      isFunction(x) ? new ForeignFunction(receiver, x) : x instanceof EscapeFunction ? x.f : x
 
     if (receiver === undefined || receiver === null) {
       throw new Error(`Cannot read properties of undefined (reading '${sel}')`)
@@ -427,14 +433,16 @@ export class SeptimaVirtualMachine {
           return u
         },
       },
-      Boolean,
-      Number,
-      String,
+      Boolean: new EscapeFunction(Boolean),
+      Number: new EscapeFunction(Number),
+      String: new EscapeFunction(String),
     }
 
     let ret = ValTable.empty()
     for (const [k, v] of Object.entries(combined)) {
-      if (typeof v === 'object') {
+      if (v instanceof EscapeFunction) {
+        ret = ret.add(k, v)
+      } else if (typeof v === 'object') {
         ret = ret.add(k, new SeptimaObject(Object.entries(v)))
       } else if (isFunction(v)) {
         ret = ret.add(k, new ForeignFunction(undefined, v))
