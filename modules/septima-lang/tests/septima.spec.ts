@@ -1221,12 +1221,12 @@ describe('septima', () => {
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
-})
-test.only('HEEEEEEEEEEEEEERE', () => {
-  expect(driver.runDebug(`['Columbia', 'Eagle'].flatMap(fun (x) [x, x.length])`)).toEqual(['Columbia', 8, 'Eagle', 5])
-  // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
-  // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
-  // expect(
-  //   driver.runDebug(`'bigbird'.substring(3, 7)`)
-  // ).toEqual('bird')
+  test.only('HEEEEEEEEEEEEEERE', () => {
+    expect(driver.runDebug(`['Columbia', 'Eagle'].flatMap(fun (x) [x, x.length])`)).toEqual(['Columbia', 8, 'Eagle', 5])
+    // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
+    // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
+    // expect(
+    //   driver.runDebug(`'bigbird'.substring(3, 7)`)
+    // ).toEqual('bird')
+  })
 })
