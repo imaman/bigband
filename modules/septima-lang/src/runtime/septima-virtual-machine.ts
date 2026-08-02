@@ -203,7 +203,7 @@ export class SeptimaVirtualMachine {
         this.mustBeImpl(u, at.param)
       } else if (at.tag === 'const') {
         this.push(at.param)
-      } else if (at.tag === 'lambdaRef') {
+      } else if (at.tag === 'func') {
         this.push(new SeptimaFunction(at.id, frame.table))
       } else if (at.tag === 'call') {
         const callee = this.pop()
@@ -216,7 +216,7 @@ export class SeptimaVirtualMachine {
             throw new Error(`Callee is not a function (it is: ${JSON.stringify(callee)})`)
           }
           if (!callee.table) {
-            throw new Error(`ValTable of LambdaRef (${callee.id}) is missing`)
+            throw new Error(`ValTable of ${JSON.stringify(callee)} is missing`)
           }
 
           this.callStack.push({

@@ -81,7 +81,7 @@ export type Instruction =
       param: 'string' | 'number' | 'boolean'
     }
   | {
-      tag: 'lambdaRef'
+      tag: 'func'
       id: number
     }
   | {

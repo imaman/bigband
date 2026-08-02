@@ -279,7 +279,7 @@ export class CodeEmitter {
       cf.add({ tag: 'indexAccess' }, ast)
     } else if (ast.tag === 'lambda') {
       const id = this.registerLambda(ast, cf)
-      cf.add({ tag: 'lambdaRef', id }, ast)
+      cf.add({ tag: 'func', id }, ast)
     } else if (ast.tag === 'let') {
       this.emit(ast.value, cf)
       cf.add({ tag: 'fillIn', name: ast.ident.t.text }, ast)
