@@ -1,8 +1,8 @@
 import util from 'util'
 
 import { ForeignFunction } from './foreign-function.js'
-import { LambdaRef } from './lambda-ref.js'
 import { SeptimaArray } from './septima-array.js'
+import { SeptimaFunction } from './septima-function.js'
 import { SeptimaObject } from './septima-object.js'
 
 export function fromJs(u: unknown): unknown {
@@ -21,7 +21,7 @@ export function fromJs(u: unknown): unknown {
   if (
     u instanceof SeptimaArray ||
     u instanceof SeptimaObject ||
-    u instanceof LambdaRef ||
+    u instanceof SeptimaFunction ||
     u instanceof ForeignFunction
   ) {
     return u

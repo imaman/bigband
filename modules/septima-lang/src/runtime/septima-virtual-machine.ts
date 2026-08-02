@@ -7,9 +7,9 @@ import { Outputter } from '../outputter.js'
 import { shouldNeverHappen } from '../should-never-happen.js'
 import { ForeignFunction, isFunction } from './foreign-function.js'
 import { fromJs } from './from-js.js'
-import { LambdaRef } from './lambda-ref.js'
 import { MachineCrashedError } from './machine-crashed-error.js'
 import { SeptimaArray } from './septima-array.js'
+import { SeptimaFunction } from './septima-function.js'
 import { SeptimaObject } from './septima-object.js'
 import { ValTable } from './val-table.js'
 
@@ -40,7 +40,7 @@ export class SeptimaVirtualMachine {
     const allowed =
       u instanceof SeptimaArray ||
       u instanceof SeptimaObject ||
-      u instanceof LambdaRef ||
+      u instanceof SeptimaFunction ||
       u instanceof ForeignFunction ||
       typeof u === 'boolean' ||
       typeof u === 'string' ||
@@ -82,7 +82,7 @@ export class SeptimaVirtualMachine {
   }
 
   private format(u: unknown) {
-    return u instanceof LambdaRef ? 'a function' : JSON.stringify(u)
+    return u instanceof SeptimaFunction ? 'a function' : JSON.stringify(u)
   }
 
   private mustBe(u: unknown, expectedType: 'string'): asserts u is string
@@ -204,15 +204,15 @@ export class SeptimaVirtualMachine {
       } else if (at.tag === 'const') {
         this.push(at.param)
       } else if (at.tag === 'lambdaRef') {
-        this.push(new LambdaRef(at.id, frame.table))
+        this.push(new SeptimaFunction(at.id, frame.table))
       } else if (at.tag === 'call') {
         const callee = this.pop()
         if (callee instanceof ForeignFunction) {
           const actuals = this.toJs(this.popArray(at.param)) as unknown[]
-          const retVal = callee.call(actuals)
+          const retVal = callee.invoke(actuals)
           this.push(retVal)
         } else {
-          if (!(callee instanceof LambdaRef)) {
+          if (!(callee instanceof SeptimaFunction)) {
             throw new Error(`Callee is not a function (it is: ${JSON.stringify(callee)})`)
           }
           if (!callee.table) {
@@ -479,7 +479,7 @@ export class SeptimaVirtualMachine {
       return u.map(at => this.toJs(at, debug))
     }
 
-    if (u instanceof LambdaRef) {
+    if (u instanceof SeptimaFunction) {
       return (...args: unknown[]) => {
         this.callStack.push({
           chunkId: u.id,

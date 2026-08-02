@@ -10,7 +10,11 @@ export function isFunction(u: unknown): u is AnyFn {
 export class ForeignFunction {
   constructor(private readonly that: unknown, private readonly f: AnyFn) {}
 
-  call(args: unknown[]) {
+  invoke(args: unknown[]) {
     return fromJs(this.f.apply(this.that, args))
+  }
+
+  toJSON() {
+    return { cls: ForeignFunction.name, name: this.f.name }
   }
 }

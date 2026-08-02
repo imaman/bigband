@@ -1,9 +1,9 @@
 import { ValTable } from './val-table.js'
 
-export class LambdaRef {
+export class SeptimaFunction {
   constructor(readonly id: number, public readonly table: ValTable) {}
 
   toJSON() {
-    return { id: this.id, _lambdaRef: '' }
+    return { cls: SeptimaFunction.name, chunkId: this.id }
   }
 }
