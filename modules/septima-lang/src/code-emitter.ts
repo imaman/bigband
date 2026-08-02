@@ -185,6 +185,7 @@ export class CodeEmitter {
       if (ast.computation) {
         this.emit(ast.computation, cf)
       } else if (ast.isUnderUnit) {
+        // A unit with no expression should evaluate to an empty string
         cf.add({ tag: 'const', param: '' }, ast)
       }
 
