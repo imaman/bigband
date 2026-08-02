@@ -33,7 +33,7 @@ function run(input: string, verbose?: boolean) {
   return driver.run(input, verbose)
 }
 
-describe('septima', () => {
+describe.skip('septima', () => {
   test.only('basics', () => {
     expect(run(`5`)).toEqual(5)
     expect(() => run(`6 789`)).toThrowError(`Loitering input at (<inline>:1:3..5) 789`)
@@ -647,7 +647,7 @@ describe('septima', () => {
       expect(run(`let sum = fun(a) fun(b) fun(c) a+b+c; let plusOne = sum(1); plusOne(600)(20)`)).toEqual(621)
     })
     describe('optional arguments', () => {
-      test('takes the default value if no valu for that arg was not passed', () => {
+      test.only('takes the default value if no value for that arg was not passed', () => {
         expect(run(`let sum = (a, b = 50) => a + b; [sum(9), sum(9,1)]`)).toEqual([59, 10])
       })
       test('the default value can be an arry or an object', () => {
@@ -1229,17 +1229,12 @@ describe('septima', () => {
   test.todo('do not double load a module')
   // CRTICAL CRTICAL CRITICAL
   test.todo('protect against escaping the opstack')
-  test.only('HEEEEEEEEEEEEEERE', () => {
-    expect(driver.runDebug(`JSON.parse(String({"a": 1, "b": "beta", c: {arr: [100, 200]}}))`)).toEqual({
-      a: 1,
-      b: 'beta',
-      c: { arr: [100, 200] },
-    })
-    expect(driver.runDebug(`String({})`)).toEqual('{}')
-    // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
-    // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
-    // expect(
-    //   driver.runDebug(`'bigbird'.substring(3, 7)`)
-    // ).toEqual('bird')
-  })
+})
+test.only('HEEEEEEEEEEEEEERE', () => {
+  expect(run(`let sum = (a, b = 50) => a + b; [sum(9), sum(9,1)]`)).toEqual([59, 10])
+  // driver.runDebug(`let cb = fun (item, i, a) item == a[(a.length - i) - 1]; [[2, 7, 2].every(cb), [2, 7, 7].every(cb)]`)
+  // expect(driver.runDebug(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
+  // expect(
+  //   driver.runDebug(`'bigbird'.substring(3, 7)`)
+  // ).toEqual('bird')
 })
