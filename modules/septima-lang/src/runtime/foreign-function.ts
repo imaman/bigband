@@ -11,7 +11,8 @@ export class ForeignFunction {
   constructor(private readonly that: unknown, private readonly f: AnyFn) {}
 
   invoke(args: unknown[]) {
-    return fromJs(this.f.apply(this.that, args))
+    const jsRetVal = this.f.apply(this.that, args)
+    return fromJs(jsRetVal)
   }
 
   toJSON() {

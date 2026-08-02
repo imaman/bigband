@@ -480,16 +480,7 @@ export class SeptimaVirtualMachine {
     }
 
     if (u instanceof SeptimaFunction) {
-      return (...args: unknown[]) => {
-        this.callStack.push({
-          chunkId: u.id,
-          pc: 0,
-          table: u.table,
-          args: fromJs(args) as unknown[],
-          export: false,
-        })
-        return this.launch()
-      }
+      return this.funcToJs(u)
     }
 
     if (u instanceof SeptimaObject) {
@@ -506,6 +497,23 @@ export class SeptimaVirtualMachine {
     }
 
     return u
+  }
+  /**
+   * Produces a JS-native function that wraps the given SeptimaFunction allowing it to be invoked from JS call sites
+   * @param func
+   * @returns
+   */
+  private funcToJs(func: SeptimaFunction) {
+    return (...args: unknown[]) => {
+      this.callStack.push({
+        chunkId: func.id,
+        pc: 0,
+        table: func.table,
+        args: fromJs(args) as unknown[],
+        export: false,
+      })
+      return this.launch()
+    }
   }
 }
 
