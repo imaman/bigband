@@ -1,12 +1,12 @@
 import crypto from 'node:crypto'
 import { stringify } from 'safe-stable-stringify'
-import util from 'util'
 
 import { CodeFile } from '../code-emitter.js'
 import { failMe } from '../fail-me.js'
 import { Outputter } from '../outputter.js'
 import { shouldNeverHappen } from '../should-never-happen.js'
-import { ForeignFunction } from './foreign-function.js'
+import { ForeignFunction, isFunction } from './foreign-function.js'
+import { fromJs } from './from-js.js'
 import { LambdaRef } from './lambda-ref.js'
 import { MachineCrashedError } from './machine-crashed-error.js'
 import { SeptimaArray } from './septima-array.js'
@@ -47,7 +47,7 @@ export class SeptimaVirtualMachine {
       typeof u === 'number' ||
       typeof u === 'undefined'
     if (!allowed) {
-      throw new MachineCrashedError(`bad opstack state - cannot push ${typeof u}`)
+      throw new MachineCrashedError(`bad opstack state - cannot push ${typeof u}: ${JSON.stringify(u)}`)
     }
     this.opstack.push(u)
   }
@@ -207,9 +207,9 @@ export class SeptimaVirtualMachine {
         this.push(new LambdaRef(at.id, frame.table))
       } else if (at.tag === 'call') {
         const callee = this.pop()
-        if (typeof callee === 'function') {
+        if (callee instanceof ForeignFunction) {
           const actuals = this.toJs(this.popArray(at.param)) as unknown[]
-          const retVal = callee(...actuals)
+          const retVal = callee.call(actuals)
           this.push(retVal)
         } else {
           if (!(callee instanceof LambdaRef)) {
@@ -364,8 +364,7 @@ export class SeptimaVirtualMachine {
   }
 
   private lookupMember(receiver: unknown, sel: string | number) {
-    const bind = (x: unknown) =>
-      typeof x === 'function' ? (...args: unknown[]) => fromJs(x.bind(receiver)(...(this.toJs(args) as unknown[]))) : x
+    const bind = (x: unknown) => (isFunction(x) ? new ForeignFunction(receiver, x) : x)
 
     if (receiver === undefined || receiver === null) {
       throw new Error(`Cannot read properties of undefined (reading '${sel}')`)
@@ -404,12 +403,9 @@ export class SeptimaVirtualMachine {
         console.log(x) // eslint-disable-line no-console
       })
 
-    // The objects we create below (e.g., the JSON object, the console object, etc.) are JS-native objects. This add
-    // some complexity elsewhere - the virtual machine cannot assume that all objects it sees are instances of SeptimaObject.
-    // TODO(imaman): consider using SeptimaObjects instead of JS-native objects here
-    return ValTable.empty()
-      .add('JSON', { stringify: JSON.stringify, parse: (x: string) => fromJs(JSON.parse(x)) })
-      .add('Object', {
+    const combined = {
+      JSON: { stringify: JSON.stringify, parse: (x: string) => JSON.parse(x) },
+      Object: {
         keys: (o: ObjLike) => new SeptimaArray(Object.keys(o)),
         entries: (o: ObjLike) => new SeptimaArray(Object.entries(o)),
         fromEntries: (arr: Iterable<[string, unknown]>) => {
@@ -421,18 +417,32 @@ export class SeptimaVirtualMachine {
           }
           return new SeptimaObject([...arr])
         },
-      })
-      .add('Array', { isArray: Array.isArray })
-      .add('crypto', { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') })
-      .add('console', {
+      },
+      Array: { isArray: Array.isArray },
+      crypto: { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') },
+      console: {
         log: (u: unknown) => {
           log(JSON.stringify(u))
           return u
         },
-      })
-      .add('Boolean', Boolean)
-      .add('Number', Number)
-      .add('String', String)
+      },
+      Boolean,
+      Number,
+      String,
+    }
+
+    let ret = ValTable.empty()
+    for (const [k, v] of Object.entries(combined)) {
+      if (typeof v === 'object') {
+        ret = ret.add(k, new SeptimaObject(Object.entries(v)))
+      } else if (isFunction(v)) {
+        ret = ret.add(k, new ForeignFunction(undefined, v))
+      } else {
+        throw new MachineCrashedError(`bad stdlib: ${JSON.stringify(v)}`)
+      }
+    }
+
+    return ret
   }
 
   private toJs(u: unknown, debug = false): unknown {
@@ -500,34 +510,3 @@ export class SeptimaVirtualMachine {
 }
 
 type ObjLike = Partial<Record<string, unknown>>
-
-function fromJs(u: unknown): unknown {
-  if (u === null) {
-    return undefined
-  }
-  const t = typeof u
-  if (t === 'bigint' || t === 'boolean' || t === 'function' || t === 'number' || t === 'string' || t === 'undefined') {
-    return u
-  }
-
-  if (t === 'symbol') {
-    throw new Error(`cannot translate symbol: ${u}`)
-  }
-
-  if (u instanceof SeptimaArray || u instanceof SeptimaObject) {
-    return u
-  }
-
-  if (Array.isArray(u)) {
-    return new SeptimaArray(
-      u.map(at => fromJs(at)),
-      [],
-    )
-  }
-
-  if (typeof u === 'object') {
-    return new SeptimaObject(Object.entries(u).map(([k, v]) => [k, fromJs(v)]))
-  }
-
-  throw new Error(`Non translatable fromJs: ${util.inspect(u)}`)
-}
