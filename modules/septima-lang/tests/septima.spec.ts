@@ -249,6 +249,7 @@ describe('septima', () => {
       expect(run(`'bigbird'.substring(3, 7)`)).toEqual('bird')
       expect(run(`'bigbird'.indexOf('g')`)).toEqual(2)
       expect(run(`'ab-cde-fghi-jkl'.split('-')`)).toEqual(['ab', 'cde', 'fghi', 'jkl'])
+      expect(run(`const a = 'QwertY'; [a.toUpperCase(), a.toLowerCase()]`)).toEqual(['QWERTY', 'qwerty'])
       expect(run(`let s = '  ab   cd     '; [s.trimStart(), s.trimEnd(), s.trim()]`)).toEqual([
         'ab   cd     ',
         '  ab   cd',
