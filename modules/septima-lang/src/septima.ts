@@ -39,7 +39,7 @@ export interface Executable {
    * @param args exposed to the Septima code as the top-level `args` object.
    * @returns `{ tag: 'ok', value }` on success, or `{ tag: 'sink', ... }` if the program evaluated to `sink`.
    */
-  execute(args: Partial<Record<string, unknown>>): Result
+  execute(args: Record<string, unknown>): Result
 }
 
 type SyncCodeReader = (resolvePath: string) => string | undefined
@@ -156,18 +156,18 @@ export class Septima {
     this.unitOf(undefined, fileName)
 
     return {
-      execute: (args: Partial<Record<string, unknown>>) => {
+      execute: (args: Record<string, unknown>) => {
         return this.execute(fileName, 'quiet', args)
       },
     }
   }
 
-  private execute(fileName: string, _verbosity: Verbosity, args: Partial<Record<string, unknown>>): Result {
+  private execute(fileName: string, _verbosity: Verbosity, _args: Record<string, unknown>): Result {
     const cf = new CodeEmitter(
       (a, b) => this.unitOf(a, b),
       (a, b) => this.resolveUnitId(a, b),
     ).run(fileName)
-    const vm = new SeptimaVirtualMachine(cf, args, this.consoleLog, this.verbose)
+    const vm = new SeptimaVirtualMachine(cf, this.consoleLog, this.verbose)
     const ret = vm.run()
     if (ret.tag === 'ok') {
       return ret
