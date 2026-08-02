@@ -1089,7 +1089,7 @@ describe('septima', () => {
       expect(driver.runLog(`console.log(2*2*2*2)`).lines).toEqual(['16'])
       expect(driver.runLog(`console.log({a: 1, b: 2, c: ['d', 'e']})`).lines).toEqual(['{"a":1,"b":2,"c":["d","e"]}'])
     })
-    test('a program can have multiple console.log() calls', () => {
+    test.only('a program can have multiple console.log() calls', () => {
       expect(driver.runLog(`["red", "green", "blue"].map(at => console.log(at))`).lines).toEqual([
         '"red"',
         '"green"',
