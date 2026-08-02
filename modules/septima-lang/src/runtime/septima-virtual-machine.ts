@@ -406,8 +406,8 @@ export class SeptimaVirtualMachine {
     const combined = {
       JSON: { stringify: JSON.stringify, parse: (x: string) => JSON.parse(x) },
       Object: {
-        keys: (o: ObjLike) => new SeptimaArray(Object.keys(o)),
-        entries: (o: ObjLike) => new SeptimaArray(Object.entries(o)),
+        keys: Object.keys,
+        entries: Object.entries,
         fromEntries: (arr: Iterable<[string, unknown]>) => {
           if (typeof arr === 'function') {
             throw new Error(`fromEntries() input (a function) is not an array`)
@@ -415,7 +415,7 @@ export class SeptimaVirtualMachine {
           if (!Array.isArray(arr)) {
             throw new Error(`fromEntries() input (${JSON.stringify(arr)}) is not an array`)
           }
-          return new SeptimaObject([...arr])
+          return Object.fromEntries([...arr])
         },
       },
       Array: { isArray: Array.isArray },
