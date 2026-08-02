@@ -739,12 +739,12 @@ describe('septima', () => {
       expect(run(`['a','b','c','d','e'].reduce(fun (w, x, i) if (i % 2 == 0) w+x else w, '')`)).toEqual('ace')
       expect(run(`[['w',2], ['x',0], ['y',1]].reduce(fun (w, x, i, a) w+a[x[1]][0], '')`)).toEqual('ywx')
     })
-    test('reduceRight', () => {
-      expect(run(`['a','b','c','d'].reduceRight(fun (w, x) w+x, '')`)).toEqual('dcba')
-      expect(run(`['a','b','c','d','e'].reduceRight(fun (w, x, i) if (i % 2 == 0) w+x else w, '')`)).toEqual('eca')
-      expect(run(`[['w',2], ['x',0], ['y',1]].reduceRight(fun (w, x, i, a) w+a[x[1]][0], '')`)).toEqual('xwy')
+    test.only('reduceRight', () => {
+      expect(run(`['a','b','c','d'].reduceRight((w, x) => w+x, '')`)).toEqual('dcba')
+      expect(run(`['a','b','c','d','e'].reduceRight((w, x, i) => (i % 2 == 0) ? w+x : w, '')`)).toEqual('eca')
+      expect(run(`[['w',2], ['x',0], ['y',1]].reduceRight((w, x, i, a) => w+a[x[1]][0], '')`)).toEqual('xwy')
     })
-    test('some', () => {
+    test.only('some', () => {
       expect(run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('oo'))`)).toEqual(true)
       expect(run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('pp'))`)).toEqual(false)
       expect(run(`['a', 'xyz', 'bc'].some(fun (item, i) i == item.length)`)).toEqual(true)

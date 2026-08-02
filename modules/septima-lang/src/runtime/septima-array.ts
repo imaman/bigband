@@ -72,6 +72,18 @@ export class SeptimaArray implements Iterable<unknown> {
   map(callbackfn: (value: unknown, index: number, array: unknown[]) => unknown) {
     return this.values.map(callbackfn)
   }
+  reduce(
+    callbackfn: (previousValue: unknown, currentValue: unknown, currentIndex: number, array: unknown[]) => unknown,
+    initialValue: unknown,
+  ) {
+    return this.values.reduce(callbackfn, initialValue)
+  }
+  reduceRight(
+    callbackfn: (previousValue: unknown, currentValue: unknown, currentIndex: number, array: unknown[]) => unknown,
+    initialValue: unknown,
+  ) {
+    return this.values.reduceRight(callbackfn, initialValue)
+  }
   some(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
     return this.values.some(predicate)
   }
