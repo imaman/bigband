@@ -833,17 +833,17 @@ describe('septima', () => {
       })
     })
     test.only('fails if applied to a non-array value', () => {
-      expect(() => run(`Object.fromEntries('a')`)).toThrowError(`fromEntries() input (\"a\") is not an array`)
-      expect(() => run(`Object.fromEntries(5)`)).toThrowError('fromEntries() input (5) is not an array')
-      expect(() => run(`Object.fromEntries(false)`)).toThrowError('fromEntries() input (false) is not an array')
-      expect(() => run(`Object.fromEntries({x: 1})`)).toThrowError('fromEntries() input ({"x":1}) is not an array')
-      expect(() => run(`Object.fromEntries(() => 5)`)).toThrowError('fromEntries() input (a function) is not an array')
+      expect(() => run(`Object.fromEntries('a')`)).toThrowError(`expected Array but found String`)
+      expect(() => run(`Object.fromEntries(5)`)).toThrowError('expected Array but found Number')
+      expect(() => run(`Object.fromEntries(false)`)).toThrowError('expected Array but found Boolean')
+      expect(() => run(`Object.fromEntries({x: 1})`)).toThrowError('expected Array but found Object')
+      expect(() => run(`Object.fromEntries(() => 5)`)).toThrowError('expected Array but found Function')
     })
-    test('the input array must be an array of pairs', () => {
+    test.only('the input array must be an array of pairs', () => {
       expect(() => run(`Object.fromEntries([['a', 1], ['b']])`)).toThrowError('each entry must be a [key, value] pair')
     })
-    test('the first element in each pair must be a string', () => {
-      expect(() => run(`Object.fromEntries([[1, 'a']])`)).toThrowError('value type error: expected str but found 1')
+    test.only('the first element in each pair must be a string', () => {
+      expect(() => run(`Object.fromEntries([[1, 'a']])`)).toThrowError('expected String but found Number')
     })
   })
   describe('line comments', () => {

@@ -429,15 +429,31 @@ export class SeptimaVirtualMachine {
           }
           return new SeptimaArray(Object.entries(u))
         }),
-        fromEntries: (arr: Iterable<[string, unknown]>) => {
-          if (typeof arr === 'function') {
-            throw new Error(`fromEntries() input (a function) is not an array`)
+        fromEntries: new EscapeFunction((u: unknown) => {
+          if (!(u instanceof SeptimaArray)) {
+            throw new Error(`value error: expected Array but found ${nameOf(u)}`)
           }
-          if (!Array.isArray(arr)) {
-            throw new Error(`fromEntries() input (${JSON.stringify(arr)}) is not an array`)
+
+          const arr: [string, unknown][] = []
+          for (const pair of u.values) {
+            if (!(pair instanceof SeptimaArray) || pair.length !== 2) {
+              throw new Error(`each entry must be a [key, value] pair`)
+            }
+
+            const [k, v] = pair
+            if (typeof k !== 'string') {
+              throw new Error(`expected String but found ${nameOf(k)}`)
+            }
+
+            if (v === undefined) {
+              continue
+            }
+
+            arr.push([k, v])
           }
-          return Object.fromEntries([...arr])
-        },
+
+          return new SeptimaObject(arr)
+        }),
       },
       Array: { isArray: Array.isArray },
       crypto: { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') },
