@@ -70,7 +70,7 @@ export type Instruction =
       spreads: number[]
     }
   | {
-      tag: 'ifFalse' | 'jump' | 'ifTrue'
+      tag: 'ifFalse' | 'jump' | 'ifTrue' | 'ifDefined'
       to: number
     }
   | {

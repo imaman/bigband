@@ -129,10 +129,18 @@ export class CodeEmitter {
         const at = this.workList[i]
         ++i
         cf.activateChunk(at.chunkId)
-        cf.add({ tag: 'checkNumArgs', n: at.ast.formalArgs.length }, ast)
+        const numRequired = at.ast.formalArgs.filter(at => !at.defaultValue).length
+        cf.add({ tag: 'checkNumArgs', n: numRequired }, ast)
         for (let i = 0; i < at.ast.formalArgs.length; ++i) {
-          cf.add({ tag: 'loadArg', param: i }, ast)
-          cf.add({ tag: 'store', param: at.ast.formalArgs[i].ident.t.text }, ast)
+          const fa = at.ast.formalArgs[i]
+          cf.add({ tag: 'loadArg', param: i }, fa)
+          if (fa.defaultValue) {
+            const cond = cf.add({ tag: 'ifDefined', to: -1 }, fa)
+            cf.add({ tag: 'drop' }, fa)
+            this.emit(fa.defaultValue, cf)
+            cond.to = cf.offset
+          }
+          cf.add({ tag: 'store', param: fa.ident.t.text }, fa)
         }
         this.emit(at.ast.body, cf)
       }

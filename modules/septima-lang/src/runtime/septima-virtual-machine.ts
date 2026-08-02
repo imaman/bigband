@@ -349,6 +349,13 @@ export class SeptimaVirtualMachine {
           frame.pc = at.to
           continue
         }
+      } else if (at.tag === 'ifDefined') {
+        const v = this.pop()
+        this.push(v)
+        if (v !== undefined) {
+          frame.pc = at.to
+          continue
+        }
       } else if (at.tag === 'jump') {
         frame.pc = at.to
         continue
