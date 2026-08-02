@@ -650,16 +650,16 @@ describe('septima', () => {
       test.only('takes the default value if no value for that arg was not passed', () => {
         expect(run(`let sum = (a, b = 50) => a + b; [sum(9), sum(9,1)]`)).toEqual([59, 10])
       })
-      test('the default value can be an arry or an object', () => {
+      test.only('the default value can be an arry or an object', () => {
         expect(run(`let f = (i, vs = ['alpha', 'beta']) => vs[i]; [f(0), f(1)]`)).toEqual(['alpha', 'beta'])
         expect(run(`let f = (s, vs = {a: 1, b: 2}) => vs[s]; [f('a'), f('b')]`)).toEqual([1, 2])
       })
-      test('the default value can be an expression computed from other definision in the enclosing scope', () => {
+      test.only('the default value can be an expression computed from other definision in the enclosing scope', () => {
         expect(run(`let s = 'word'; let n = 100; let f = (a, g = s + n) => a + g.toUpperCase(); f('_')`)).toEqual(
           '_WORD100',
         )
       })
-      test('a single argument arrow function can have a default value', () => {
+      test.only('a single argument arrow function can have a default value', () => {
         expect(run(`let s = 'word'; let n = 100; let f = (a = s.toUpperCase()) => '%' + a + '%'; f()`)).toEqual(
           '%WORD%',
         )
@@ -669,25 +669,25 @@ describe('septima', () => {
           'A required parameter cannot follow an optional parameter: at (<inline>:1:23..33) c) => a+b+c',
         )
       })
-      test('when undefined is passed to an arg with a default value, the default value is used', () => {
+      test.only('when undefined is passed to an arg with a default value, the default value is used', () => {
         expect(run(`let f = (a, b = 2000, c = 3) => a+b+c; f(1, undefined, 5)`)).toEqual(2006)
       })
-      test('a dangling comma is allowed after last default value', () => {
+      test.only('a dangling comma is allowed after last default value', () => {
         expect(run(`let f = (a, b = 2000,) => a+b; f(5)`)).toEqual(2005)
         expect(run(`let f = (a, b = 2000,) => a+b; f(5,20)`)).toEqual(25)
       })
-      test('errors if too few arguments are passed', () => {
+      test.only('errors if too few arguments are passed', () => {
         expect(() => run(`let f = (a, b) => a+b; f(1)`)).toThrowError('Expected at least 2 argument(s) but got 1')
         expect(() => run(`let f = (a, b, c = 3) => a+b+c; f(1)`)).toThrowError(
           'Expected at least 2 argument(s) but got 1',
         )
       })
-      test('extra arguments are silently ignored', () => {
+      test.only('extra arguments are silently ignored', () => {
         expect(run(`let f = (a, b) => a+b; f(1, 2, 3)`)).toEqual(3)
         expect(run(`let f = (a, b = 2) => a+b; f(1, 2, 3)`)).toEqual(3)
         expect(run(`let f = () => 5; f(1)`)).toEqual(5)
       })
-      test('accepts correct number of arguments at boundaries', () => {
+      test.only('accepts correct number of arguments at boundaries', () => {
         expect(run(`let f = (a, b = 2) => a+b; f(1)`)).toEqual(3)
         expect(run(`let f = (a, b = 2) => a+b; f(1, 10)`)).toEqual(11)
         expect(run(`let f = (a = 1, b = 2) => a+b; f()`)).toEqual(3)
