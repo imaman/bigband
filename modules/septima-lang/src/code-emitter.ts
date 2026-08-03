@@ -181,9 +181,14 @@ export class CodeEmitter {
 
       // We export* even if there is nothing to export. This is intetnional and load-bearing: the export* command
       // populates the unit-cache which prevent the unit from being evaluated twice (when imported from two - or more -
-      // sources)
-
+      // sources).
+      // On top of that, we export* only from top-level-exporessions (TLEs) which are directly under the unit. This is
+      // bevause export* is (also) a control flow mechanism: it stops the execution of the current frame and returns
+      // to the caller. Hence, if it is emitted from a non-TLE it will make the empty object ({}) being exported for the
+      // containing file.
       if (ast.isUnderUnit) {
+        // TODO(imaman): we need to be less implicit here. instead of "n" we can export everything from the current
+        // table segement (or, alternatively, to name all the definitions to export).
         cf.add({ tag: 'export*', n: ast.definitions.length }, ast)
       }
 

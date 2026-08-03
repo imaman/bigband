@@ -1061,7 +1061,7 @@ describe('septima', () => {
       // a bug in the exporting mechanism can make the export* command run in the inner scope (after w is initialized).
       // there is nothing to export there (w is non-exported) so the object exported by b is {} and b.x evaluated to
       // undefined
-      expect(driver.run({ a: `import * as b from 'b'; b.x`, b: `export let x = (let w = 99; w)` })).toEqual('Yes')
+      expect(driver.run({ a: `import * as b from 'b'; b.x`, b: `export let x = (let w = 99; w)` })).toEqual(99)
     })
   })
   describe('import', () => {
