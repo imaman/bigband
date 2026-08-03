@@ -1061,13 +1061,13 @@ describe('septima', () => {
     })
     test('an imported file is evaluated just once', () => {
       expect(
-        driver.run({
-          a: `import * as b from './b';\nimport * as c from './c'\nimport * as d from './d'; [b.val, c.val, d.val]`,
-          b: `export let val = 100`,
-          c: `export let val = 20`,
-          d: `export let val = 3`,
+        driver.runLog({
+          a: `import * as b from './b'; import * as c from './c'; [b.val, c.val]`,
+          b: `import * as d from './d'; export let val = d.val+97`,
+          c: `import * as d from './d'; export let val = d.val+17`,
+          d: `export let val = console.log(3)`,
         }),
-      ).toEqual({ x: 1 })
+      ).toEqual({ lines: ['3'], result: [100, 20] })
     })
   })
   describe('unit', () => {
