@@ -228,7 +228,13 @@ describe('septima', () => {
     test('can be specified via the double-quotes notation', () => {
       expect(run(`""`)).toEqual('')
       expect(run(`"ab"`)).toEqual('ab')
+    })
+    test('can be concatenated via the + operator, which allows the rhs to be non-string', () => {
       expect(run(`"ab" + "cd"`)).toEqual('abcd')
+      expect(run(`"ab" + 5`)).toEqual('ab5')
+      expect(run(`"decision=" + true`)).toEqual('decision=true')
+      expect(run(`"decision=" + false`)).toEqual('decision=false')
+      expect(run(`"abc " + [1,90,'x']`)).toEqual('abc [1,90,"x"]')
     })
     test('can be specified via the single-quotes notation', () => {
       expect(run(`''`)).toEqual('')
