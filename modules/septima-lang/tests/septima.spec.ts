@@ -281,8 +281,14 @@ describe('septima', () => {
       expect(run(`["w".repeat(3), "go".repeat(2), "x".repeat(0)]`)).toEqual(['www', 'gogo', ''])
       expect(run(`["a".padStart(4, '.'), "a".padStart(2)]`)).toEqual(['...a', ' a'])
       expect(run(`["a".padEnd(4, '.'), "a".padEnd(2)]`)).toEqual(['a...', 'a '])
-      expect(run(`const a = 'It was the best of times, it was the worst of times'; a.match('the [a-z]+ of')`)).toEqual([
-        'the best of',
+      expect(
+        run(`const a = 'It was the best of times, it was the worst of times'; a.match('(t.e) ([a-z]+) of')`),
+      ).toEqual(['the best of', 'the', 'best'])
+      expect(
+        run(`const a = 'It was the best of times, it was the worst of times'; a.matchAll('(t.e) ([a-z]+) of')`),
+      ).toEqual([
+        ['the best of', 'the', 'best'],
+        ['the worst of', 'the', 'worst'],
       ])
       expect(run(`const a = 'abcdefghijkl'; [a.slice(3, 8), a.slice(0, -8), a.slice(-2)]`)).toEqual([
         'defgh',
