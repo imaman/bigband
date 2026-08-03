@@ -1,36 +1,53 @@
 /* eslint-disable jest/no-focused-tests, jest/require-top-level-describe */
 import crypto from 'crypto'
 
+import { failMe } from '../src/fail-me.js'
 import { Septima } from '../src/septima.js'
+import { shouldNeverHappen } from '../src/should-never-happen.js'
 
 class Driver {
-  /**
-   * Runs a Septima program for testing purposes. If the program evaluates to `sink` an `undefined` is
-   * returned.
-   * @param input the Septima program to run
-   */
-  run(input: string, verbose?: boolean) {
-    return Septima.run(input, {
-      onSink: x => {
-        throw new Error(x.message)
-      },
-      verbose,
-    })
-  }
-  runDebug(input: string) {
-    return this.run(input, true)
-  }
-  runLog(input: string, verbose?: boolean) {
+  constructor(readonly isDebug = false) {}
+
+  private runImpl(files: Partial<Record<string, string>>, mainFile: string) {
     const lines: unknown[] = []
-    const result = Septima.run(input, { onSink: () => undefined, consoleLog: u => lines.push(u), verbose })
-    return { lines, result }
+    const septima = new Septima(undefined, u => lines.push(u), this.isDebug)
+    const res = septima.compileSync(mainFile ?? failMe('no mainFile'), f => files[f]).execute({})
+    if (res.tag === 'ok') {
+      return { result: res.value, lines }
+    }
+    if (res.tag === 'sink') {
+      throw new Error(res.message)
+    }
+    shouldNeverHappen(res)
+  }
+
+  run(input: string): unknown
+  run(files: Partial<Record<string, string>>, mainFile?: string): unknown
+  run(...args: [string] | [Partial<Record<string, string>>, string?]): unknown {
+    const [files, mainFile] =
+      args.length === 2
+        ? [args[0], args[1]]
+        : typeof args[0] === 'object'
+        ? [args[0], Object.keys(args[0])[0]]
+        : [{ '<inline>': args[0] }, '<inline>']
+
+    const { result } = this.runImpl(files, mainFile ?? failMe('no mainFile'))
+    return result
+  }
+
+  runLog(input: string) {
+    return this.runImpl({ '<inline>': input }, '<inline>')
+  }
+
+  get debug(): Driver {
+    return this.isDebug ? this : new Driver(true)
   }
 }
 
 const driver = new Driver()
 
-function run(input: string, verbose?: boolean) {
-  return driver.run(input, verbose)
+function run(input: string) {
+  return driver.run(input)
 }
 
 describe('septima', () => {
@@ -1030,6 +1047,16 @@ describe('septima', () => {
       }
       expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [100, 20, 3] })
     })
+    test('an imported file is evaluated just once', () => {
+      const septima = new Septima()
+      const files: Partial<Record<string, string>> = {
+        a: `import * as b from './b';\nimport * as c from './c'\nimport * as d from './d'; [b.val, c.val, d.val]`,
+        b: `export let val = 100`,
+        c: `export let val = 20`,
+        d: `export let val = 3`,
+      }
+      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [100, 20, 3] })
+    })
   })
   describe('unit', () => {
     test('evaluates to an empty string if it contains only definitions', () => {
@@ -1287,6 +1314,6 @@ describe('septima', () => {
   // CRTICAL CRTICAL CRITICAL
   test.todo('arrays and objects are finalized')
   test('HEEEEEEEEEEEEEERE', () => {
-    expect(() => driver.runDebug(`Object.keys(['a'])`)).toThrowError('value error: expected object but found Array')
+    expect(() => driver.debug.run(`Object.keys(['a'])`)).toThrowError('value error: expected object but found Array')
   })
 })
