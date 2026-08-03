@@ -175,12 +175,14 @@ export class CodeEmitter {
         seen.add(name)
         this.emit(d, cf)
       }
-      if (hasExported) {
-        // TODO(imaman): this is a tiny security concern: he who writes the opcodes can tell the VM which definitions to
-        // export (by controlling the n value). A better approach is to let the VM decide which values to export. For this
-        // the VM needs to know when the current unit "started" (val-table wise).
-        cf.add({ tag: 'export*', n: ast.definitions.length }, ast)
-      }
+      // TODO(imaman): this is a tiny security concern: he who writes the opcodes can tell the VM which definitions to
+      // export (by controlling the n value). A better approach is to let the VM decide which values to export. For this
+      // the VM needs to know when the current unit "started" (val-table wise).
+
+      // We export* even if there is nothing to export. This is intetnional and load-bearing: the export* command
+      // populates the unit-cache which prevent the unit from being evaluated twice (when imported from two - or more -
+      // sources)
+      cf.add({ tag: 'export*', n: ast.definitions.length }, ast)
 
       if (ast.computation) {
         this.emit(ast.computation, cf)

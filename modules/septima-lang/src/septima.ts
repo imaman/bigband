@@ -115,7 +115,7 @@ export class Septima {
    */
   constructor(options: Options = {}) {
     this.sourceRoot = options.sourceRoot ?? ''
-    this.maxDepth = options.maxDepth ?? 655336
+    this.maxDepth = options.maxDepth ?? 65536
     this.consoleLog =
       options.consoleLog ??
       ((x: unknown) => {

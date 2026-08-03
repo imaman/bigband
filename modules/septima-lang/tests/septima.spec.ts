@@ -1000,7 +1000,7 @@ describe('septima', () => {
   })
   describe('evaluation stack', () => {
     test('can handle, by default, 64K calls', () => {
-      expect(run(`const count = (n) => (n <= 0) ? 0 : 1 + count(n-1); count(65536)`)).toEqual(65_536)
+      expect(run(`const count = (n) => (n <= 0) ? 0 : 1 + count(n-1); count(65534)`)).toEqual(65_534)
     })
     test('respect the maxDepth option', () => {
       const executeWithDepth = (maxDepth: number, x: number) => {
@@ -1100,6 +1100,16 @@ describe('septima', () => {
           b: `import * as d from './d'; export let val = d.val+97`,
           c: `import * as d from './d'; export let val = d.val+17`,
           d: `export let val = [console.log("d-is-loading!"), 3][1]`,
+        }),
+      ).toEqual({ lines: ['"d-is-loading!"'], result: [100, 20] })
+    })
+    test('an imported file the exports nothing is evaluated just once', () => {
+      expect(
+        driver.runLog({
+          a: `import * as b from './b'; import * as c from './c'; [b.val, c.val]`,
+          b: `import * as d from './d'; export let val = 100`,
+          c: `import * as d from './d'; export let val = 20`,
+          d: `let val = console.log("d-is-loading!")`,
         }),
       ).toEqual({ lines: ['"d-is-loading!"'], result: [100, 20] })
     })
