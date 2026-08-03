@@ -13,20 +13,6 @@ import { SourceCode } from './source-code.js'
 
 type Verbosity = 'quiet' | 'trace'
 
-interface Options {
-  verbose?: boolean
-  /**
-   * A callback function to be invoked when the Septima program evaluated to `sink`. Allows the caller to determine
-   * which value will be returned in that case. For instance, passing `() => undefined` will translate a `sink` value
-   * to `undefined`. The default behavior is to throw an error.
-   */
-  onSink?: (res: ResultSink) => unknown
-  /**
-   * A custom output function that will receive the values that are passed to console.log() calls in the septima code.
-   */
-  consoleLog?: Outputter
-}
-
 /**
  * A parsed, ready-to-run Septima program produced by `Septima.compile()` or `Septima.compileSync()`.
  * Holds onto its compiled units so it can be re-run easily with different `args`.
@@ -50,12 +36,26 @@ export interface SourceUnit {
   unit: Unit
 }
 
-interface Options {
-  sourceRoot?: string
+export interface Options {
+  /**
+   * A custom output function that will receive the values that are passed to console.log() calls in the septima code.
+   */
   consoleLog?: Outputter
+
+  sourceRoot?: string
   verbose?: boolean
   maxDepth?: number
 }
+
+export interface OnSinkOptions {
+  /**
+   * A callback function to be invoked when the Septima program evaluated to `sink`. Allows the caller to determine
+   * which value will be returned in that case. For instance, passing `() => undefined` will translate a `sink` value
+   * to `undefined`. The default behavior is to throw an error.
+   */
+  onSink?: (res: ResultSink) => unknown
+}
+
 /**
  * Entry point for evaluating Septima programs.
  *
@@ -78,13 +78,12 @@ export class Septima {
    * @param options
    * @returns the value that `input` evaluates to
    */
-  static run(input: string, options?: Options, args: Record<string, unknown> = {}): unknown {
+  static run(input: string, options?: Options & OnSinkOptions, args: Record<string, unknown> = {}): unknown {
     const onSink =
       options?.onSink ??
-      ((r: ResultSink) => {
-        throw new Error(r.message)
+      ((x: ResultSink) => {
+        throw new Error(x.message)
       })
-
     const fileName = '<inline>'
     const contentRec: Record<string, string> = { [fileName]: input }
     const readFile = (m: string) => contentRec[m]
@@ -116,7 +115,7 @@ export class Septima {
    */
   constructor(options: Options = {}) {
     this.sourceRoot = options.sourceRoot ?? ''
-    this.maxDepth = 655336
+    this.maxDepth = options.maxDepth ?? 655336
     this.consoleLog =
       options.consoleLog ??
       ((x: unknown) => {

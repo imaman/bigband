@@ -999,8 +999,29 @@ describe('septima', () => {
     })
   })
   describe('evaluation stack', () => {
-    test('max recursion depth', () => {
-      expect(run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(16384)`)).toEqual(16_384)
+    test('can handle, by default, 64K calls', () => {
+      expect(run(`const count = (n) => (n <= 0) ? 0 : 1 + count(n-1); count(65536)`)).toEqual(65_536)
+    })
+    test('respect the maxDepth option', () => {
+      const executeWithDepth = (maxDepth: number, x: number) => {
+        const m = '<inline>'
+        const read = (f: string) =>
+          f === m ? `const count = (n) => (n <= 0) ? 0 : 1 + count(n-1); count(args.x)` : undefined
+        return new Septima({ maxDepth }).compileSync(m, read).execute({ x })
+      }
+
+      expect(executeWithDepth(5, 3)).toEqual({ tag: 'ok', value: 3 })
+      expect(executeWithDepth(5, 4)).toMatchObject({
+        tag: 'sink',
+        message: [
+          `Stack overflow error of septima's call stack (5) when evaluating:`,
+          '  at (<inline>:1:53..65) count(args.x)',
+          '  at (<inline>:1:41..50) count(n-1)',
+          '  at (<inline>:1:41..50) count(n-1)',
+          '  at (<inline>:1:41..50) count(n-1)',
+          '  at (<inline>:1:41..50) count(n-1)',
+        ].join('\n'),
+      })
     })
   })
   describe('args', () => {
