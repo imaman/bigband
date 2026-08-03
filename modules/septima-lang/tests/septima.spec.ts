@@ -1065,7 +1065,7 @@ describe('septima', () => {
           a: `import * as b from './b'; import * as c from './c'; [b.val, c.val]`,
           b: `import * as d from './d'; export let val = d.val+97`,
           c: `import * as d from './d'; export let val = d.val+17`,
-          d: `export let val = console.log(3)`,
+          d: `export let val = [console.log("d-is-loading!"), 3][1]`,
         }),
       ).toEqual({ lines: ['3'], result: [100, 20] })
     })
