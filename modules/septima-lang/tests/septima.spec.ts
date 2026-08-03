@@ -1352,6 +1352,11 @@ describe('septima', () => {
         driver.run('args.three(x => `_${x}_`)', { three: (callback: (n: number) => void) => callback(3) }),
       ).toEqual('_3_')
     })
+    test('a lambda in an importer file is emitted once, even when the entry imports another unit', () => {
+      expect(
+        driver.run({ a: `import * as b from 'b'; let f = (x) => x * 2; f(3) + b.n`, b: `export let n = 1` }),
+      ).toEqual(7)
+    })
   })
   test.todo('optional type annotations?')
   test.todo('allow redundant commas')
