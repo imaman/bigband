@@ -1274,8 +1274,6 @@ describe('septima', () => {
   // CRTICAL CRTICAL CRITICAL
   test.todo('caching of imported units')
   // CRTICAL CRTICAL CRITICAL
-  test.todo('a const initialized from a lambda in another const')
-  // CRTICAL CRTICAL CRITICAL
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )

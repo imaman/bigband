@@ -107,7 +107,7 @@ export class SeptimaVirtualMachine {
       // eslint-disable-next-line no-console
       console.log(`Program:\n${this.cf.format()}`)
     }
-    this.pushCallStack(0, this.stdLib(), [])
+    this.pushCallStack(0, this.stdLib(true), [])
     let value
     try {
       value = this.launch()
@@ -185,7 +185,7 @@ export class SeptimaVirtualMachine {
       }
       if (at.tag === 'import') {
         // TODO(imaman): module cache
-        this.pushCallStack(at.chunkId, this.stdLib(), [], 'export')
+        this.pushCallStack(at.chunkId, this.stdLib(false), [], 'export')
       } else if (at.tag === 'export*') {
         if (frame.export) {
           const pairs = frame.table.collectExported(at.n)
@@ -407,7 +407,7 @@ export class SeptimaVirtualMachine {
     }
   }
 
-  private stdLib() {
+  private stdLib(includeProgramArgs: boolean) {
     const log =
       this.consoleLog ??
       ((x: unknown) => {
@@ -466,7 +466,7 @@ export class SeptimaVirtualMachine {
       Boolean: new EscapeFunction(Boolean),
       Number: new EscapeFunction(Number),
       String: new EscapeFunction(String),
-      args: this.programArgs,
+      ...(includeProgramArgs ? { args: this.programArgs } : {}),
     }
 
     let ret = ValTable.empty()

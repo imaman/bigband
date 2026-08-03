@@ -130,7 +130,7 @@ describe('septima-compile', () => {
   test('the args object is available only at the main module', () => {
     expect(() =>
       run('a', { a: `import * as b from 'b'; args.x + '_' + b.foo`, b: `let foo = args.x; {}` }, { x: 'Red' }),
-    ).toThrowError('at (b:1:11..16) args.x')
+    ).toThrowError('at (b:1:11..14) args')
   })
   describe('async compilation', () => {
     test('can use exported definitions from another module', async () => {
