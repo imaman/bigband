@@ -435,7 +435,7 @@ export class SeptimaVirtualMachine {
           if (!(u instanceof SeptimaObject)) {
             throw new Error(`value error: expected object but found ${nameOf(u)}`)
           }
-          return new SeptimaArray(Object.entries(u))
+          return new SeptimaArray(Object.entries(u).map(p => new SeptimaArray(p)))
         }),
         fromEntries: new EscapeFunction((u: unknown) => {
           if (!(u instanceof SeptimaArray)) {

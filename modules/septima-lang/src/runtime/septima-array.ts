@@ -92,6 +92,10 @@ export class SeptimaArray implements Iterable<unknown> {
     return [...this.values].sort(compareFn)
   }
 
+  join(delimiter?: string) {
+    return this.values.join(delimiter)
+  }
+
   *[Symbol.iterator](): Iterator<unknown> {
     yield* this.values
   }

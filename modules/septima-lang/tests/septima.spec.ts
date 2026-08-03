@@ -790,6 +790,12 @@ describe('septima', () => {
     test('concat', () => {
       expect(run(`['foo', 'bar', 'goo'].concat(['zoo', 'poo'])`)).toEqual(['foo', 'bar', 'goo', 'zoo', 'poo'])
     })
+    test('join', () => {
+      expect(run(`['foo', 'bar', 'goo'].join()`)).toEqual('foo,bar,goo')
+      expect(run(`['foo', 'bar', 'goo'].join('')`)).toEqual('foobargoo')
+      expect(run(`['foo', 'bar', 'goo'].join('|')`)).toEqual('foo|bar|goo')
+      expect(run(`['foo', 'bar', 'goo'].join(' >> ')`)).toEqual('foo >> bar >> goo')
+    })
     test('every', () => {
       expect(run(`["", 'x', 'xx'].every(fun (item, i) item.length == i)`)).toEqual(true)
       expect(run(`["", 'yy', 'zz'].every(fun (item, i) item.length == i)`)).toEqual(false)
@@ -903,6 +909,13 @@ describe('septima', () => {
         ['b', 2],
         ['w', 30],
       ])
+    })
+    test('each pair is a full-fledged array', () => {
+      expect(
+        run(
+          `Object.entries({a: "one", b: "two", d: "four"}).map(p => p.map(x => String(x).toUpperCase()).join('=')).join('; ')`,
+        ),
+      ).toEqual('A=ONE; B=TWO; D=FOUR')
     })
     test('fails if applied to a non-object value', () => {
       expect(() => run(`Object.entries('a')`)).toThrowError('value error: expected object but found String')
@@ -1318,8 +1331,6 @@ describe('septima', () => {
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
   // CRTICAL CRTICAL CRITICAL
-  test.todo('toJs() on a lambdaref and calling it from JS')
-  // CRTICAL CRTICAL CRITICAL
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
@@ -1330,6 +1341,6 @@ describe('septima', () => {
   // CRTICAL CRTICAL CRITICAL
   test.todo('arrays and objects are finalized')
   test('HEEEEEEEEEEEEEERE', () => {
-    expect(() => driver.debug.run(`Object.keys(['a'])`)).toThrowError('value error: expected object but found Array')
+    expect(driver.debug.run(`['foo', 'bar', 'goo'].join('|')`)).toEqual('foo|bar|goo')
   })
 })
