@@ -260,20 +260,20 @@ describe('septima', () => {
           `const a = 'star wars'; [a.startsWith('st'), a.startsWith('star'), a.startsWith('ST'), a.startsWith('wars')]`,
         ),
       ).toEqual([true, true, false, false])
-      expect(run(`const a = 'star wars'; [a.charAt(0), a.charAt(1), a.charAt(7), a.charAt(8), a.charAt(9)]`)).toEqual([
-        's',
+      expect(run(`const a = 'the quick'; [a.charAt(0), a.charAt(1), a.charAt(7), a.charAt(8), a.charAt(9)]`)).toEqual([
         't',
-        'r',
-        's',
+        'h',
+        'c',
+        'k',
         '',
       ])
-      expect(run(`const a = 'star wars'; [a.at(0), a.at(1), a.at(7), a.at(8), a.at(9), a.at(-4)]`)).toEqual([
-        's',
+      expect(run(`const a = 'the quick'; [a.at(0), a.at(1), a.at(7), a.at(8), a.at(9), a.at(-4)]`)).toEqual([
         't',
-        'r',
-        's',
+        'h',
+        'c',
+        'k',
         undefined,
-        'w',
+        'u',
       ])
       expect(run(`const s = "four scores and seven years ago"; [s.search("e.r"), s.search("s[a-z]{3}n")]`)).toEqual([
         23, 16,
