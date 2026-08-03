@@ -1014,48 +1014,48 @@ describe('septima', () => {
   })
   describe('import', () => {
     test('makes a definition from one file to be available in another file', () => {
-      const septima = new Septima()
-      const files: Partial<Record<string, string>> = {
-        a: `import * as b from './b'; 'sum=' + String(b.sum(5, 3))`,
-        b: `export let sum = (x,y) => x+y`,
-      }
-      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 'sum=8' })
+      expect(
+        driver.run({
+          a: `import * as b from './b'; 'sum=' + String(b.sum(5, 3))`,
+          b: `export let sum = (x,y) => x+y`,
+        }),
+      ).toEqual('sum=8')
     })
     test('all exported defintions are available at the import site', () => {
-      const septima = new Septima()
-      const files: Partial<Record<string, string>> = {
-        a: `import * as b from './b'; b.sum(b.four, b.six)`,
-        b: `export let sum = (x,y) => x+y; export let four = 4; export let six = 6`,
-      }
-      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 10 })
+      expect(
+        driver.run({
+          a: `import * as b from './b'; b.sum(b.four, b.six)`,
+          b: `export let sum = (x,y) => x+y; export let four = 4; export let six = 6`,
+        }),
+      ).toEqual(10)
     })
     test('non-exported definitions become undefined', () => {
-      const septima = new Septima()
-      const files: Partial<Record<string, string>> = {
-        a: `import * as b from './b';\n[b.four,\nb.six]`,
-        b: `export let four = 4; let six = 6`,
-      }
-      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [4, undefined] })
+      expect(
+        driver.run({
+          a: `import * as b from './b';\n[b.four,\nb.six]`,
+          b: `export let four = 4; let six = 6`,
+        }),
+      ).toEqual([4, undefined])
     })
     test('can import from multiple files', () => {
-      const septima = new Septima()
-      const files: Partial<Record<string, string>> = {
-        a: `import * as b from './b';\nimport * as c from './c'\nimport * as d from './d'; [b.val, c.val, d.val]`,
-        b: `export let val = 100`,
-        c: `export let val = 20`,
-        d: `export let val = 3`,
-      }
-      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [100, 20, 3] })
+      expect(
+        driver.run({
+          a: `import * as b from './b';\nimport * as c from './c'\nimport * as d from './d'; [b.val, c.val, d.val]`,
+          b: `export let val = 100`,
+          c: `export let val = 20`,
+          d: `export let val = 3`,
+        }),
+      ).toEqual([100, 20, 3])
     })
     test('an imported file is evaluated just once', () => {
-      const septima = new Septima()
-      const files: Partial<Record<string, string>> = {
-        a: `import * as b from './b';\nimport * as c from './c'\nimport * as d from './d'; [b.val, c.val, d.val]`,
-        b: `export let val = 100`,
-        c: `export let val = 20`,
-        d: `export let val = 3`,
-      }
-      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [100, 20, 3] })
+      expect(
+        driver.run({
+          a: `import * as b from './b';\nimport * as c from './c'\nimport * as d from './d'; [b.val, c.val, d.val]`,
+          b: `export let val = 100`,
+          c: `export let val = 20`,
+          d: `export let val = 3`,
+        }),
+      ).toEqual({ x: 1 })
     })
   })
   describe('unit', () => {
