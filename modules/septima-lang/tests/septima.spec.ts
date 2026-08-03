@@ -1295,6 +1295,14 @@ describe('septima', () => {
     expect(run('let inner = `world`; `Hello ${inner}!`')).toEqual('Hello world!')
     expect(run('`outer ${`inner ${42}`}`')).toEqual('outer inner 42')
   })
+
+  describe('edge cases', () => {
+    test('a septima function can be passed and called from the JS side', () => {
+      expect(
+        driver.run('args.three(x => `_${x}_`)', { three: (callback: (n: number) => void) => callback(3) }),
+      ).toEqual('_3_')
+    })
+  })
   test.todo('optional type annotations?')
   test.todo('allow redundant commas')
   test.todo('left associativity of +/-')
