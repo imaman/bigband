@@ -120,11 +120,11 @@ export class CodeEmitter {
   run(unitId: string) {
     const cf = new CodeFile()
     const chunkedUnits = this.discoverUnits(unitId, cf)
+    let i = 0
     for (const { ast, chunkId } of chunkedUnits) {
       cf.activateChunk(chunkId)
       this.emit(ast, cf)
 
-      let i = 0
       while (i < this.workList.length) {
         const at = this.workList[i]
         ++i
