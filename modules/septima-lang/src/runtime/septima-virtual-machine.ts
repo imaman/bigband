@@ -38,8 +38,6 @@ export class SeptimaVirtualMachine {
 
   private callStack: StackFrame[] = []
 
-  private readonly unitCache = new Map<number, SeptimaObject>()
-
   private push(u: unknown) {
     const allowed =
       u instanceof SeptimaArray ||
@@ -186,19 +184,13 @@ export class SeptimaVirtualMachine {
         )
       }
       if (at.tag === 'import') {
-        const cached = this.unitCache.get(at.chunkId)
-        if (cached) {
-          this.push(cached)
-        } else {
-          this.pushCallStack(at.chunkId, this.stdLib(false), [], 'export')
-        }
+        // TODO(imaman): module cache
+        this.pushCallStack(at.chunkId, this.stdLib(false), [], 'export')
       } else if (at.tag === 'export*') {
         if (frame.export) {
           const pairs = frame.table.collectExported(at.n)
-          const v = new SeptimaObject(pairs)
-          this.push(v)
+          this.push(new SeptimaObject(pairs))
           this.callStack.pop()
-          this.unitCache.set(frame.chunkId, v)
           continue
         }
       } else if (at.tag === 'drop') {

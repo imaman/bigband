@@ -1310,6 +1310,8 @@ describe('septima', () => {
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
   // CRTICAL CRTICAL CRITICAL
+  test.todo('const a = {}; const b = a.f; b() - should throw on the call site')
+  // CRTICAL CRTICAL CRITICAL
   test.todo('toJs() on a lambdaref and calling it from JS')
   // CRTICAL CRTICAL CRITICAL
   test.todo('caching of imported units')
