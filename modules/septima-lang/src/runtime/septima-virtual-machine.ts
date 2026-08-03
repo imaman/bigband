@@ -29,8 +29,9 @@ export class SeptimaVirtualMachine {
   constructor(
     private readonly cf: CodeFile,
     private readonly programArgs: Partial<Record<string, unknown>>,
-    private readonly consoleLog?: Outputter,
-    private readonly verbose?: boolean,
+    private readonly maxDepth: number,
+    private readonly consoleLog: Outputter,
+    private readonly verbose: boolean,
   ) {}
 
   /** the machine's operand stack */
@@ -416,12 +417,6 @@ export class SeptimaVirtualMachine {
   }
 
   private stdLib(includeProgramArgs: boolean) {
-    const log =
-      this.consoleLog ??
-      ((x: unknown) => {
-        console.log(x) // eslint-disable-line no-console
-      })
-
     const combined = {
       JSON: { stringify: JSON.stringify, parse: (x: string) => JSON.parse(x) },
       Object: {
@@ -467,7 +462,7 @@ export class SeptimaVirtualMachine {
       crypto: { hash224: (u: unknown) => crypto.createHash('sha224').update(JSON.stringify(u)).digest('hex') },
       console: {
         log: (u: unknown) => {
-          log(JSON.stringify(u))
+          this.consoleLog(JSON.stringify(u))
           return u
         },
       },
@@ -548,6 +543,9 @@ export class SeptimaVirtualMachine {
   }
 
   private pushCallStack(chunkId: number, table: ValTable, args: unknown[], mode: 'export' | 'eval' = 'eval') {
+    if (this.callStack.length >= this.maxDepth) {
+      throw new Error(`Stack overflow error of septima's call stack (${this.callStack.length})`)
+    }
     this.callStack.push({
       chunkId,
       pc: 0,

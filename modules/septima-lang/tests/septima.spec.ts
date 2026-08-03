@@ -10,7 +10,7 @@ class Driver {
 
   private runImpl(files: Partial<Record<string, string>>, mainFile: string, args?: Partial<Record<string, unknown>>) {
     const lines: unknown[] = []
-    const septima = new Septima(undefined, u => lines.push(u), this.isDebug)
+    const septima = new Septima({ consoleLog: u => lines.push(u), verbose: this.isDebug })
     const res = septima.compileSync(mainFile ?? failMe('no mainFile'), f => files[f]).execute(args ?? {})
     if (res.tag === 'ok') {
       return { result: res.value, lines }

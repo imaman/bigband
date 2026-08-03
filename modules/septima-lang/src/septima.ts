@@ -50,6 +50,12 @@ export interface SourceUnit {
   unit: Unit
 }
 
+interface Options {
+  sourceRoot?: string
+  consoleLog?: Outputter
+  verbose?: boolean
+  maxDepth?: number
+}
 /**
  * Entry point for evaluating Septima programs.
  *
@@ -82,7 +88,7 @@ export class Septima {
     const fileName = '<inline>'
     const contentRec: Record<string, string> = { [fileName]: input }
     const readFile = (m: string) => contentRec[m]
-    const res = new Septima(undefined, options?.consoleLog, options?.verbose)
+    const res = new Septima({ consoleLog: options?.consoleLog, verbose: options?.verbose })
       .compileSync(fileName, readFile)
       .execute(args)
     if (res.tag === 'ok') {
@@ -98,16 +104,27 @@ export class Septima {
 
   private readonly unitByUnitId = new Map<UnitId, SourceUnit>()
 
+  private readonly sourceRoot: string
+  private readonly consoleLog: Outputter
+  private readonly verbose: boolean
+  private readonly maxDepth: number
+
   /**
    * @param sourceRoot directory that import paths and the `fileName` passed to `compile*()` are resolved against.
    *   Imports resolving outside this root are rejected. Defaults to `''` (no root - paths are used as-is).
    * @param consoleLog receives values from `console.log()` calls in the Septima program. Defaults to discarding them.
    */
-  constructor(
-    private readonly sourceRoot = '',
-    private readonly consoleLog?: Outputter,
-    private readonly verbose?: boolean,
-  ) {}
+  constructor(options: Options = {}) {
+    this.sourceRoot = options.sourceRoot ?? ''
+    this.maxDepth = 655336
+    this.consoleLog =
+      options.consoleLog ??
+      ((x: unknown) => {
+        console.log(x) // eslint-disable-line no-console
+      })
+
+    this.verbose = options.verbose ?? false
+  }
 
   /**
    * Parses `fileName` and every file it (transitively) imports, then returns an `Executable` for the entry file.
@@ -167,7 +184,7 @@ export class Septima {
       (a, b) => this.unitOf(a, b),
       (a, b) => this.resolveUnitId(a, b),
     ).run(fileName)
-    const vm = new SeptimaVirtualMachine(cf, args, this.consoleLog, this.verbose)
+    const vm = new SeptimaVirtualMachine(cf, args, this.maxDepth, this.consoleLog, this.verbose)
     const ret = vm.run()
     if (ret.tag === 'ok') {
       return ret

@@ -22,7 +22,7 @@ function run(
   args: Record<string, unknown> = {},
   sourceRoot = '',
 ) {
-  const septima = new Septima(sourceRoot)
+  const septima = new Septima({ sourceRoot })
   return runExecutable(
     septima.compileSync(mainFileName, (m: string) => inputs[m]),
     args,
@@ -35,7 +35,7 @@ async function runPromise(
   args: Record<string, unknown> = {},
   sourceRoot = '',
 ) {
-  const septima = new Septima(sourceRoot)
+  const septima = new Septima({ sourceRoot })
   const executable = await septima.compile(mainFileName, (m: string) => Promise.resolve(inputs[m]))
   return runExecutable(executable, args)
 }
