@@ -671,6 +671,10 @@ describe('septima', () => {
     test('can forward reference another function', () => {
       expect(run(`const f1 = (n) => f2(-n); const f2 = (n) => n/5; f1(35)`)).toEqual(-7)
     })
+    test('a const can be initialized from the result of a lambda expression', () => {
+      expect(run(`const f = (s) => '<'+ s + '>'; const p = f('p'); const q = f('q'); p+q`)).toEqual('<p><q>')
+    })
+
     test('can access definitions from the enclosing scope', () => {
       expect(run(`let a = 1; (let inc = fun(n) n+a; inc(2))`)).toEqual(3)
       expect(run(`let by2 = fun(x) x*2; (let by10 = (let by5 = fun(x) x*5; fun(x) by2(by5(x))); by10(20))`)).toEqual(
@@ -1271,8 +1275,6 @@ describe('septima', () => {
   test.todo('caching of imported units')
   // CRTICAL CRTICAL CRITICAL
   test.todo('a const initialized from a lambda in another const')
-  // CRTICAL CRTICAL CRITICAL
-  test.todo('number + string, and string+number works')
   // CRTICAL CRTICAL CRITICAL
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
