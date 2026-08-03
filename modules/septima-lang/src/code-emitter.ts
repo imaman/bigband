@@ -182,7 +182,10 @@ export class CodeEmitter {
       // We export* even if there is nothing to export. This is intetnional and load-bearing: the export* command
       // populates the unit-cache which prevent the unit from being evaluated twice (when imported from two - or more -
       // sources)
-      cf.add({ tag: 'export*', n: ast.definitions.length }, ast)
+
+      if (ast.isUnderUnit) {
+        cf.add({ tag: 'export*', n: ast.definitions.length }, ast)
+      }
 
       if (ast.computation) {
         this.emit(ast.computation, cf)

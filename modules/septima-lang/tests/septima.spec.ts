@@ -1057,6 +1057,12 @@ describe('septima', () => {
         'non-top-level definition cannot be exported at (<inline>:1:10..36) export let y = 4; y+1); x+3',
       )
     })
+    test('exported value is not corrupted by inner definitions', () => {
+      // a bug in the exporting mechanism can make the export* command run in the inner scope (after w is initialized).
+      // there is nothing to export there (w is non-exported) so the object exported by b is {} and b.x evaluated to
+      // undefined
+      expect(driver.run({ a: `import * as b from 'b'; b.x`, b: `export let x = (let w = 99; w)` })).toEqual('Yes')
+    })
   })
   describe('import', () => {
     test('makes a definition from one file to be available in another file', () => {
@@ -1372,6 +1378,8 @@ describe('septima', () => {
   // CRTICAL CRTICAL CRITICAL
   test.todo('arrays and objects are finalized')
   test('HEEEEEEEEEEEEEERE', () => {
-    expect(driver.debug.run(`['foo', 'bar', 'goo'].join('|')`)).toEqual('foo|bar|goo')
+    expect(
+      driver.debug.run({ a: `import * as b from 'b'; b.x ?? 'No'`, b: `export let x = (let w = 'Yes'; w)` }),
+    ).toEqual('Yes')
   })
 })
