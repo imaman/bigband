@@ -160,10 +160,8 @@ export class CodeEmitter {
       this.emit(ast.expression, cf)
     } else if (ast.tag === 'topLevelExpression') {
       const seen = new Set<string>()
-      let hasExported = false
       for (const d of ast.definitions) {
         cf.add({ tag: 'reserve', name: d.ident.t.text, isExported: d.isExported }, ast)
-        hasExported = hasExported || d.isExported
       }
       for (const d of ast.definitions) {
         const name = d.ident.t.text
@@ -182,7 +180,9 @@ export class CodeEmitter {
       // We export* even if there is nothing to export. This is intetnional and load-bearing: the export* command
       // populates the unit-cache which prevent the unit from being evaluated twice (when imported from two - or more -
       // sources)
-      cf.add({ tag: 'export*', n: ast.definitions.length }, ast)
+      if (ast.isUnderUnit) {
+        cf.add({ tag: 'export*', n: ast.definitions.length }, ast)
+      }
 
       if (ast.computation) {
         this.emit(ast.computation, cf)
