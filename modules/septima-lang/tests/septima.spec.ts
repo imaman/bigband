@@ -24,6 +24,19 @@ class Driver {
   run(input: string): unknown
   run(files: Partial<Record<string, string>>, mainFile?: string): unknown
   run(...args: [string] | [Partial<Record<string, string>>, string?]): unknown {
+    const { files, mainFile } = this.extract(...args)
+    const { result } = this.runImpl(files, mainFile)
+    return result
+  }
+
+  runLog(input: string): { result: unknown; lines: string[] }
+  runLog(files: Partial<Record<string, string>>, mainFile?: string): { result: unknown; lines: string[] }
+  runLog(...args: [string] | [Partial<Record<string, string>>, string?]) {
+    const { files, mainFile } = this.extract(...args)
+    return this.runImpl(files, mainFile)
+  }
+
+  private extract(...args: [string] | [Partial<Record<string, string>>, string?]) {
     const [files, mainFile] =
       args.length === 2
         ? [args[0], args[1]]
@@ -31,12 +44,11 @@ class Driver {
         ? [args[0], Object.keys(args[0])[0]]
         : [{ '<inline>': args[0] }, '<inline>']
 
-    const { result } = this.runImpl(files, mainFile ?? failMe('no mainFile'))
-    return result
-  }
+    if (!mainFile) {
+      throw new Error('no mainFile')
+    }
 
-  runLog(input: string) {
-    return this.runImpl({ '<inline>': input }, '<inline>')
+    return { files, mainFile }
   }
 
   get debug(): Driver {
