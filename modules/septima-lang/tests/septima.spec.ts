@@ -8,10 +8,10 @@ import { shouldNeverHappen } from '../src/should-never-happen.js'
 class Driver {
   constructor(readonly isDebug = false) {}
 
-  private runImpl(files: Partial<Record<string, string>>, mainFile: string) {
+  private runImpl(files: Partial<Record<string, string>>, mainFile: string, args?: Partial<Record<string, unknown>>) {
     const lines: unknown[] = []
     const septima = new Septima(undefined, u => lines.push(u), this.isDebug)
-    const res = septima.compileSync(mainFile ?? failMe('no mainFile'), f => files[f]).execute({})
+    const res = septima.compileSync(mainFile ?? failMe('no mainFile'), f => files[f]).execute(args ?? {})
     if (res.tag === 'ok') {
       return { result: res.value, lines }
     }
@@ -21,34 +21,34 @@ class Driver {
     shouldNeverHappen(res)
   }
 
-  run(input: string): unknown
+  run(input: string, args?: Partial<Record<string, unknown>>): unknown
   run(files: Partial<Record<string, string>>, mainFile?: string): unknown
-  run(...args: [string] | [Partial<Record<string, string>>, string?]): unknown {
-    const { files, mainFile } = this.extract(...args)
-    const { result } = this.runImpl(files, mainFile)
+  run(...args: [string, Partial<Record<string, unknown>>?] | [Partial<Record<string, string>>, string?]): unknown {
+    const { files, mainFile, programArgs } = this.extract(...args)
+    const { result } = this.runImpl(files, mainFile, programArgs)
     return result
   }
 
-  runLog(input: string): { result: unknown; lines: string[] }
+  runLog(input: string, args?: Partial<Record<string, unknown>>): { result: unknown; lines: string[] }
   runLog(files: Partial<Record<string, string>>, mainFile?: string): { result: unknown; lines: string[] }
-  runLog(...args: [string] | [Partial<Record<string, string>>, string?]) {
-    const { files, mainFile } = this.extract(...args)
-    return this.runImpl(files, mainFile)
+  runLog(...args: [string, Partial<Record<string, unknown>>?] | [Partial<Record<string, string>>, string?]) {
+    const { files, mainFile, programArgs } = this.extract(...args)
+    return this.runImpl(files, mainFile, programArgs)
   }
 
-  private extract(...args: [string] | [Partial<Record<string, string>>, string?]) {
-    const [files, mainFile] =
-      args.length === 2
-        ? [args[0], args[1]]
+  private extract(...args: [string, Partial<Record<string, unknown>>?] | [Partial<Record<string, string>>, string?]) {
+    const [files, mainFile, programArgs] =
+      typeof args[0] === 'object' && args.length === 2
+        ? [args[0], args[1], {}]
         : typeof args[0] === 'object'
-        ? [args[0], Object.keys(args[0])[0]]
-        : [{ '<inline>': args[0] }, '<inline>']
+        ? [args[0], Object.keys(args[0])[0], {}]
+        : [{ '<inline>': args[0] }, '<inline>', args[1] ?? {}]
 
-    if (!mainFile) {
+    if (!mainFile || typeof mainFile !== 'string') {
       throw new Error('no mainFile')
     }
 
-    return { files, mainFile }
+    return { files, mainFile, programArgs }
   }
 
   get debug(): Driver {
@@ -1312,15 +1312,11 @@ describe('septima', () => {
   // CRTICAL CRTICAL CRITICAL
   test.todo('toJs() on a lambdaref and calling it from JS')
   // CRTICAL CRTICAL CRITICAL
-  test.todo('caching of imported units')
-  // CRTICAL CRTICAL CRITICAL
   test.todo(
     'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
   )
   // CRTICAL CRTICAL CRITICAL
   test.todo('trying to read more values from the opstack than there are there?')
-  // CRTICAL CRTICAL CRITICAL
-  test.todo('do not double load a module')
   // CRTICAL CRTICAL CRITICAL
   test.todo('protect against escaping the opstack')
   // CRTICAL CRTICAL CRITICAL
