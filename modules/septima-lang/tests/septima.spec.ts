@@ -115,6 +115,9 @@ describe('septima', () => {
 
     expect(() => run(`9 * 8 * 'zxcvbnm' * 7`)).toThrowError(expected)
   })
+  test('stacktrace should specify the call site', () => {
+    expect(() => run('const a = {}; const b = a.f; b()')).toThrow('at (<inline>:1:30..32) b()')
+  })
 
   describe('equality', () => {
     test('of numbers', () => {
