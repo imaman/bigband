@@ -691,6 +691,11 @@ describe('septima', () => {
       )
       expect(run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2,6)`)).toEqual(20)
     })
+    test('arg list mismatch error is pinned to the right location', () => {
+      expect(() => run(`let sum = (a,b) => a+b; sum(4)`)).toThrowError(
+        'Expected at least 4 argument(s) but got 3 when evaluating\nssss',
+      )
+    })
     test('can be recursive', () => {
       expect(run(`let factorial = fun(n) if (n > 0) n*factorial(n-1) else 1; factorial(6)`)).toEqual(720)
       expect(run(`let gcd = fun(a, b) if (b == 0) a else gcd(b, a % b); [gcd(24, 60), gcd(1071, 462)]`)).toEqual([
