@@ -693,7 +693,7 @@ describe('septima', () => {
     })
     test('arg list mismatch error is pinned to the right location', () => {
       expect(() => run(`let sum = (a,b) => a+b; sum(4)`)).toThrowError(
-        'Expected at least 4 argument(s) but got 3 when evaluating\n  at (<inline>:1:25..30) sum(4)\n  at (<inline>:1:11..22) (a,b) => a+b',
+        'Expected at least 2 argument(s) but got 1 when evaluating:\n  at (<inline>:1:25..30) sum(4)\n  at (<inline>:1:11..22) (a,b) => a+b',
       )
     })
     test('can be recursive', () => {
