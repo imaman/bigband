@@ -1352,10 +1352,21 @@ describe('septima', () => {
         driver.run('args.three(x => `_${x}_`)', { three: (callback: (n: number) => void) => callback(3) }),
       ).toEqual('_3_')
     })
-    test('a lambda in an importer file is emitted once, even when the entry imports another unit', () => {
+    test('a lambda in an importer file is emitted once', () => {
+      // We used to have a bug when a lambda could have been emitted multiple times (once for each imported file).
+      // When it was called the surplus copies left stray values on the opstack which broke the invariant checked
+      // at the end of the execution
       expect(
         driver.run({ a: `import * as b from 'b'; let f = (x) => x * 2; f(3) + b.n`, b: `export let n = 1` }),
       ).toEqual(7)
+      expect(driver.run({ a: `import * as b from 'b'; b.double(3)`, b: `export let double = (x) => x * 2` })).toEqual(6)
+      expect(
+        driver.run({
+          a: `import * as b from 'b'; import * as c from 'c'; let f = (x) => x * 2; f(3) + b.n + c.n`,
+          b: `export let n = 1`,
+          c: `export let n = 2`,
+        }),
+      ).toEqual(9)
     })
   })
   test.todo('optional type annotations?')
