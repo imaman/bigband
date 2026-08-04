@@ -92,10 +92,6 @@ export class SeptimaArray implements Iterable<unknown> {
     return [...this.values].sort(compareFn)
   }
 
-  join(delimiter?: string) {
-    return this.values.join(delimiter)
-  }
-
   *[Symbol.iterator](): Iterator<unknown> {
     yield* this.values
   }
@@ -106,5 +102,13 @@ export class SeptimaArray implements Iterable<unknown> {
 
   toString() {
     return JSON.stringify(this.toJSON())
+  }
+
+  static getMethod(arr: SeptimaArray, selector: string) {
+    if (selector === 'join') {
+      return (x?: string) => arr.values.join(x)
+    }
+
+    return undefined
   }
 }

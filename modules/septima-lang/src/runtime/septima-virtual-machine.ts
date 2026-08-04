@@ -386,9 +386,7 @@ export class SeptimaVirtualMachine {
     }
     const bind = (x: unknown) => (isFunction(x) ? new ForeignFunction(receiver, x) : x)
 
-    if (receiver === undefined || receiver === null) {
-      throw new Error(`Cannot read properties of undefined (reading '${sel}')`)
-    } else if (receiver instanceof SeptimaArray || typeof receiver === 'string') {
+    const assertNotNum = (sel: string | number) => {
       // Ideal behavior: if the program needs to access an array/string element it should use a number (a[15]);
       // if it needs to access a property/method it should use a string (a["concat"] or a["length"]) or the .<ident>
       // notation (a.concat, a.length)
@@ -402,6 +400,24 @@ export class SeptimaVirtualMachine {
           } must be an integer value (got: ${JSON.stringify(sel)})`,
         )
       }
+      return sel
+    }
+    if (receiver === undefined || receiver === null) {
+      throw new Error(`Cannot read properties of undefined (reading '${sel}')`)
+    } else if (receiver instanceof SeptimaArray) {
+      if (typeof sel === 'number') {
+        return receiver.at(sel)
+      }
+
+      assertNotNum(sel)
+      const m = SeptimaArray.getMethod(receiver, sel)
+      if (m) {
+        return new EscapeFunction(m)
+      }
+      return bind((receiver as unknown as ObjLike)[sel])
+    }
+    if (typeof receiver === 'string') {
+      assertNotNum(sel)
       const v = typeof sel === 'number' ? receiver.at(sel) : (receiver as unknown as ObjLike)[sel]
       return bind(v)
     } else if (receiver instanceof SeptimaObject) {

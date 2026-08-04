@@ -1,4 +1,3 @@
-/* eslint-disable jest/no-focused-tests, jest/require-top-level-describe */
 import crypto from 'crypto'
 
 import { failMe } from '../src/fail-me.js'
@@ -1398,9 +1397,9 @@ describe('septima', () => {
   test.todo('protect against escaping the opstack')
   // CRTICAL CRTICAL CRITICAL
   test.todo('arrays and objects are finalized')
-  test('HEEEEEEEEEEEEEERE', () => {
-    expect(
-      driver.debug.run({ a: `import * as b from 'b'; b.x ?? 'No'`, b: `export let x = (let w = 'Yes'; w)` }),
-    ).toEqual('Yes')
+  test('DEBUG-AIDE: this testcase is intended for ease of debugging', () => {
+    expect(driver.run({ a: `import * as b from 'b'; b.x ?? 'No'`, b: `export let x = (let w = 'Yes'; w)` })).toEqual(
+      'Yes',
+    )
   })
 })
