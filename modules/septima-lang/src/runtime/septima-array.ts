@@ -1,3 +1,5 @@
+import { SeptimaFunction } from './septima-function.js'
+
 /**
  * Why do we need our own object?
  * (1) JS's native arrays' toString() format is not JSON.
@@ -38,20 +40,6 @@ export class SeptimaArray implements Iterable<unknown> {
     }
 
     return this.values.at(index)
-  }
-
-  concat(...args: unknown[]) {
-    const arr: unknown[] = [...this.values]
-    for (const a of args) {
-      if (a instanceof SeptimaArray) {
-        arr.push(...a.values)
-      } else if (Array.isArray(a)) {
-        arr.push(...a)
-      } else {
-        arr.push(a)
-      }
-    }
-    return new SeptimaArray(arr)
   }
 
   every(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
@@ -104,9 +92,29 @@ export class SeptimaArray implements Iterable<unknown> {
     return JSON.stringify(this.toJSON())
   }
 
-  static getMethod(arr: SeptimaArray, selector: string) {
+  static getMethod(
+    that: SeptimaArray,
+    selector: string,
+    _caller: (func: SeptimaFunction, sArgs: unknown[]) => unknown,
+  ) {
     if (selector === 'join') {
-      return (x?: string) => arr.values.join(x)
+      return (x?: string) => that.values.join(x)
+    }
+
+    if (selector === 'concat') {
+      return (...args: unknown[]) => {
+        const arr: unknown[] = [...that.values]
+        for (const a of args) {
+          if (a instanceof SeptimaArray) {
+            arr.push(...a.values)
+          } else if (Array.isArray(a)) {
+            arr.push(...a)
+          } else {
+            arr.push(a)
+          }
+        }
+        return new SeptimaArray(arr)
+      }
     }
 
     return undefined

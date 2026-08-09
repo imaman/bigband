@@ -410,7 +410,7 @@ export class SeptimaVirtualMachine {
       }
 
       assertNotNum(sel)
-      const m = SeptimaArray.getMethod(receiver, sel)
+      const m = SeptimaArray.getMethod(receiver, sel, this.invokeFromOutside.bind(this))
       if (m) {
         return new EscapeFunction(m)
       }
@@ -584,6 +584,11 @@ export class SeptimaVirtualMachine {
       // The return value came form the septima side. We need to convert it to JS before returning it.
       return this.toJs(septimaRetVal)
     }
+  }
+
+  private invokeFromOutside(func: SeptimaFunction, sArgs: unknown[]) {
+    this.pushCallStack(func.id, func.table, sArgs)
+    return this.launch()
   }
 }
 
