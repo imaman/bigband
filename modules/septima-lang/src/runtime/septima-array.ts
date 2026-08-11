@@ -40,10 +40,6 @@ export class SeptimaArray implements Iterable<unknown> {
     return this.values.at(index)
   }
 
-  flatMap(callbackfn: (value: unknown, index: number, array: unknown[]) => unknown) {
-    return this.values.flatMap(callbackfn)
-  }
-
   *[Symbol.iterator](): Iterator<unknown> {
     yield* this.values
   }
@@ -64,6 +60,11 @@ export class SeptimaArray implements Iterable<unknown> {
     if (selector === 'map') {
       return (callback: unknown) =>
         new SeptimaArray(that.values.map((item, index) => _caller(callback, [item, index, that])))
+    }
+
+    if (selector === 'flatMap') {
+      return (callback: unknown) =>
+        new SeptimaArray(that.values.flatMap((item, index) => _caller(callback, [item, index, that])))
     }
 
     if (selector === 'every') {
