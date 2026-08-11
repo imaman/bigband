@@ -181,9 +181,12 @@ export class SeptimaVirtualMachine {
       const at = instructions[frame.pc]
 
       if (this.verbose) {
+        const args = frame.pc === 0 ? `| args: ${JSON.stringify(frame.args)}` : ''
         // eslint-disable-next-line no-console
         console.log(
-          `opstack: ${JSON.stringify(this.opstack)}\n     pc: [${frame.chunkId}.${frame.pc}] ${JSON.stringify(at)}`,
+          `opstack: ${JSON.stringify(this.opstack)}${args}\n     pc: [${frame.chunkId}.${frame.pc}] ${JSON.stringify(
+            at,
+          )}`,
         )
       }
       if (at.tag === 'import') {
@@ -586,7 +589,10 @@ export class SeptimaVirtualMachine {
     }
   }
 
-  private invokeFromOutside(func: SeptimaFunction, sArgs: unknown[]) {
+  private invokeFromOutside(func: unknown, sArgs: unknown[]) {
+    if (!(func instanceof SeptimaFunction)) {
+      throw new Error(`not a function`)
+    }
     this.pushCallStack(func.id, func.table, sArgs)
     return this.launch()
   }

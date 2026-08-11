@@ -1,5 +1,3 @@
-import { SeptimaFunction } from './septima-function.js'
-
 /**
  * Why do we need our own object?
  * (1) JS's native arrays' toString() format is not JSON.
@@ -92,13 +90,14 @@ export class SeptimaArray implements Iterable<unknown> {
     return JSON.stringify(this.toJSON())
   }
 
-  static getMethod(
-    that: SeptimaArray,
-    selector: string,
-    _caller: (func: SeptimaFunction, sArgs: unknown[]) => unknown,
-  ) {
+  static getMethod(that: SeptimaArray, selector: string, _caller: (func: unknown, sArgs: unknown[]) => unknown) {
     if (selector === 'join') {
       return (x?: string) => that.values.join(x)
+    }
+
+    if (selector === 'map') {
+      return (callback: unknown) =>
+        new SeptimaArray(that.values.map((item, index) => _caller(callback, [item, index, that])))
     }
 
     if (selector === 'concat') {
