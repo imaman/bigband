@@ -40,23 +40,8 @@ export class SeptimaArray implements Iterable<unknown> {
     return this.values.at(index)
   }
 
-  every(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
-    return this.values.every(predicate)
-  }
-  filter(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
-    return this.values.filter(predicate)
-  }
-  find(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
-    return this.values.find(predicate)
-  }
-  findIndex(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
-    return this.values.findIndex(predicate)
-  }
   flatMap(callbackfn: (value: unknown, index: number, array: unknown[]) => unknown) {
     return this.values.flatMap(callbackfn)
-  }
-  map(callbackfn: (value: unknown, index: number, array: unknown[]) => unknown) {
-    return this.values.map(callbackfn)
   }
   reduce(
     callbackfn: (previousValue: unknown, currentValue: unknown, currentIndex: number, array: unknown[]) => unknown,
@@ -69,13 +54,6 @@ export class SeptimaArray implements Iterable<unknown> {
     initialValue: unknown,
   ) {
     return this.values.reduceRight(callbackfn, initialValue)
-  }
-  some(predicate: (value: unknown, index: number, array: unknown[]) => boolean) {
-    return this.values.some(predicate)
-  }
-
-  sort(compareFn?: (a: unknown, b: unknown) => number) {
-    return [...this.values].sort(compareFn)
   }
 
   *[Symbol.iterator](): Iterator<unknown> {
@@ -102,6 +80,41 @@ export class SeptimaArray implements Iterable<unknown> {
 
     if (selector === 'every') {
       return (predicate: unknown) => that.values.every((item, index) => _caller(predicate, [item, index, that]))
+    }
+
+    if (selector === 'some') {
+      return (predicate: unknown) => that.values.some((item, index) => _caller(predicate, [item, index, that]))
+    }
+
+    if (selector === 'filter') {
+      return (predicate: unknown) =>
+        new SeptimaArray(that.values.filter((item, index) => _caller(predicate, [item, index, that])))
+    }
+
+    if (selector === 'find') {
+      return (predicate: unknown) => that.values.find((item, index) => _caller(predicate, [item, index, that]))
+    }
+
+    if (selector === 'findIndex') {
+      return (predicate: unknown) => that.values.findIndex((item, index) => _caller(predicate, [item, index, that]))
+    }
+
+    if (selector === 'sort') {
+      return (comparator?: unknown) =>
+        new SeptimaArray(
+          [...that.values].sort(
+            !comparator
+              ? undefined
+              : (lhs: unknown, rhs: unknown) => {
+                  const ret = _caller(comparator, [lhs, rhs])
+                  if (typeof ret === 'number') {
+                    return ret
+                  }
+
+                  throw new Error(`not a number: ${JSON.stringify(ret)}`)
+                },
+          ),
+        )
     }
 
     if (selector === 'concat') {
