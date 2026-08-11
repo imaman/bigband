@@ -1,10 +1,10 @@
 import crypto from 'node:crypto'
-import { stringify } from 'safe-stable-stringify'
 
 import { CodeFile } from '../code-emitter.js'
 import { failMe } from '../fail-me.js'
 import { Outputter } from '../outputter.js'
 import { shouldNeverHappen } from '../should-never-happen.js'
+import { areEqual } from './are-equal.js'
 import { EscapeFunction } from './escape-function.js'
 import { ForeignFunction, isFunction } from './foreign-function.js'
 import { fromJs } from './from-js.js'
@@ -289,7 +289,7 @@ export class SeptimaVirtualMachine {
         } else {
           const rhs = this.pop()
           const lhs = this.pop()
-          const eq = lhs === rhs || stringify(lhs) === stringify(rhs)
+          const eq = areEqual(lhs, rhs)
           const v = at.mod === '==' ? eq : at.mod === '!=' ? !eq : shouldNeverHappen(at.mod)
           this.push(v)
         }

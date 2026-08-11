@@ -1,3 +1,5 @@
+import { areEqual } from './are-equal.js'
+
 /**
  * Why do we need our own object?
  * (1) JS's native arrays' toString() format is not JSON.
@@ -55,6 +57,30 @@ export class SeptimaArray implements Iterable<unknown> {
   static getMethod(that: SeptimaArray, selector: string, _caller: (func: unknown, sArgs: unknown[]) => unknown) {
     if (selector === 'join') {
       return (x?: string) => that.values.join(x)
+    }
+
+    if (selector === 'slice') {
+      return (a?: number, b?: number) => new SeptimaArray(that.values.slice(a, b))
+    }
+    if (selector === 'entries') {
+      return () => new SeptimaArray([...that.values.entries()].map(kv => new SeptimaArray(kv)))
+    }
+    if (selector === 'flat') {
+      return (depth?: number) => {
+        let arr = that.values
+        for (let i = 0; i < (depth ?? 1); ++i) {
+          const next: unknown[] = []
+          for (const curr of arr) {
+            if (curr instanceof SeptimaArray) {
+              next.push(...curr)
+            } else {
+              next.push(curr)
+            }
+          }
+          arr = next
+        }
+        return new SeptimaArray(arr)
+      }
     }
 
     if (selector === 'map') {
@@ -125,6 +151,10 @@ export class SeptimaArray implements Iterable<unknown> {
         )
     }
 
+    if (selector === 'reverse') {
+      return () => new SeptimaArray([...that.values].reverse())
+    }
+
     if (selector === 'concat') {
       return (...args: unknown[]) => {
         const arr: unknown[] = [...that.values]
@@ -138,6 +168,39 @@ export class SeptimaArray implements Iterable<unknown> {
           }
         }
         return new SeptimaArray(arr)
+      }
+    }
+
+    if (selector === 'lastIndexOf') {
+      return (searchElement: unknown, fromIndex?: number) => {
+        for (let i = fromIndex ?? that.values.length - 1; i >= 0; --i) {
+          if (areEqual(that.values[i], searchElement)) {
+            return i
+          }
+        }
+        return -1
+      }
+    }
+
+    if (selector === 'indexOf') {
+      return (searchElement: unknown, fromIndex?: number) => {
+        for (let i = fromIndex ?? 0; i < that.values.length; ++i) {
+          if (areEqual(that.values[i], searchElement)) {
+            return i
+          }
+        }
+        return -1
+      }
+    }
+
+    if (selector === 'includes') {
+      return (searchElement: unknown, fromIndex?: number) => {
+        for (let i = fromIndex ?? 0; i < that.values.length; ++i) {
+          if (areEqual(that.values[i], searchElement)) {
+            return true
+          }
+        }
+        return false
       }
     }
 
