@@ -43,12 +43,6 @@ export class SeptimaArray implements Iterable<unknown> {
   flatMap(callbackfn: (value: unknown, index: number, array: unknown[]) => unknown) {
     return this.values.flatMap(callbackfn)
   }
-  reduceRight(
-    callbackfn: (previousValue: unknown, currentValue: unknown, currentIndex: number, array: unknown[]) => unknown,
-    initialValue: unknown,
-  ) {
-    return this.values.reduceRight(callbackfn, initialValue)
-  }
 
   *[Symbol.iterator](): Iterator<unknown> {
     yield* this.values
@@ -96,6 +90,11 @@ export class SeptimaArray implements Iterable<unknown> {
     if (selector === 'reduce') {
       return (reducer: (acc: unknown, curr: unknown) => unknown, initialValue: unknown) =>
         that.values.reduce((x, y, i) => _caller(reducer, [x, y, i, that]), initialValue)
+    }
+
+    if (selector === 'reduceRight') {
+      return (reducer: (acc: unknown, curr: unknown) => unknown, initialValue: unknown) =>
+        that.values.reduceRight((x, y, i) => _caller(reducer, [x, y, i, that]), initialValue)
     }
 
     if (selector === 'sort') {
