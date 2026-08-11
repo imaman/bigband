@@ -11,11 +11,11 @@ export class SeptimaArray implements Iterable<unknown> {
     return this.values.length
   }
 
-  constructor(values: unknown[], spreads: number[] = []) {
+  constructor(values: unknown[], spreads: 'ALL' | number[] = []) {
     let j = 0
     for (let i = 0; i < values.length; ++i) {
       const v = values[i]
-      const isSpread = j < spreads.length && spreads[j] === i
+      const isSpread = spreads === 'ALL' || (j < spreads.length && spreads[j] === i)
       if (isSpread) {
         ++j
         if (v === undefined) {
@@ -63,8 +63,17 @@ export class SeptimaArray implements Iterable<unknown> {
     }
 
     if (selector === 'flatMap') {
-      return (callback: unknown) =>
-        new SeptimaArray(that.values.flatMap((item, index) => _caller(callback, [item, index, that])))
+      return (callback: unknown) => {
+        const parts = that.values.map((item, index) => {
+          const a = _caller(callback, [item, index, that])
+          if (!(a instanceof SeptimaArray)) {
+            throw new Error(`Expected an array got a ${JSON.stringify(a)}`)
+          }
+
+          return a
+        })
+        return new SeptimaArray(parts, 'ALL')
+      }
     }
 
     if (selector === 'every') {
