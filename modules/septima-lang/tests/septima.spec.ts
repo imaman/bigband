@@ -1,14 +1,64 @@
 import crypto from 'crypto'
 
+import { failMe } from '../src/fail-me.js'
 import { Septima } from '../src/septima.js'
+import { shouldNeverHappen } from '../src/should-never-happen.js'
 
-/**
- * Runs a Septima program for testing purposes. If the program evaluates to `sink` an `undefined` is
- * returned.
- * @param input the Septima program to run
- */
+class Driver {
+  constructor(readonly isDebug = false) {}
+
+  private runImpl(files: Partial<Record<string, string>>, mainFile: string, args?: Partial<Record<string, unknown>>) {
+    const lines: unknown[] = []
+    const septima = new Septima({ consoleLog: u => lines.push(u), verbose: this.isDebug })
+    const res = septima.compileSync(mainFile ?? failMe('no mainFile'), f => files[f]).execute(args ?? {})
+    if (res.tag === 'ok') {
+      return { result: res.value, lines }
+    }
+    if (res.tag === 'sink') {
+      throw new Error(res.message)
+    }
+    shouldNeverHappen(res)
+  }
+
+  run(input: string, args?: Partial<Record<string, unknown>>): unknown
+  run(files: Partial<Record<string, string>>, mainFile?: string): unknown
+  run(...args: [string, Partial<Record<string, unknown>>?] | [Partial<Record<string, string>>, string?]): unknown {
+    const { files, mainFile, programArgs } = this.extract(...args)
+    const { result } = this.runImpl(files, mainFile, programArgs)
+    return result
+  }
+
+  runLog(input: string, args?: Partial<Record<string, unknown>>): { result: unknown; lines: string[] }
+  runLog(files: Partial<Record<string, string>>, mainFile?: string): { result: unknown; lines: string[] }
+  runLog(...args: [string, Partial<Record<string, unknown>>?] | [Partial<Record<string, string>>, string?]) {
+    const { files, mainFile, programArgs } = this.extract(...args)
+    return this.runImpl(files, mainFile, programArgs)
+  }
+
+  private extract(...args: [string, Partial<Record<string, unknown>>?] | [Partial<Record<string, string>>, string?]) {
+    const [files, mainFile, programArgs] =
+      typeof args[0] === 'object' && args.length === 2
+        ? [args[0], args[1], {}]
+        : typeof args[0] === 'object'
+        ? [args[0], Object.keys(args[0])[0], {}]
+        : [{ '<inline>': args[0] }, '<inline>', args[1] ?? {}]
+
+    if (!mainFile || typeof mainFile !== 'string') {
+      throw new Error('no mainFile')
+    }
+
+    return { files, mainFile, programArgs }
+  }
+
+  get debug(): Driver {
+    return this.isDebug ? this : new Driver(true)
+  }
+}
+
+const driver = new Driver()
+
 function run(input: string) {
-  return Septima.run(input, { onSink: () => undefined })
+  return driver.run(input)
 }
 
 describe('septima', () => {
@@ -21,6 +71,13 @@ describe('septima', () => {
     expect(run(`const x = 5; x`)).toEqual(5)
     expect(run(`const f = (a, b) => a + b; f(3, 4)`)).toEqual(7)
     expect(run(`const a = 1; let b = 2; const c = 3; a + b + c`)).toEqual(6)
+  })
+  test('expression cannot forward reference variables', () => {
+    expect(() => run(`const x = y+3; const y = 7; x`)).toThrow('Unresolved definition: y')
+  })
+  test('does not allow duplicate definitions in the same top-level-expression', () => {
+    // TODO(imaman): guard against this at parsing time
+    expect(() => run(`let a = 1; let b = 2; let a = 999; b+a`)).toThrow(`duplicate definition: "a"`)
   })
   test('an optional return keyword can be placed before the result', () => {
     expect(run(`return 5`)).toEqual(5)
@@ -44,6 +101,12 @@ describe('septima', () => {
     expect(run(`true && false`)).toEqual(false)
     expect(run(`false && true`)).toEqual(false)
     expect(run(`false && false`)).toEqual(false)
+  })
+  test('rhs of && must be boolean', () => {
+    expect(() => run(`true && 5`)).toThrow('value type error: expected bool but found 5')
+  })
+  test('rhs of || must be boolean', () => {
+    expect(() => run(`false || 6`)).toThrow('value type error: expected bool but found 6')
   })
 
   test('arithmetics', () => {
@@ -75,13 +138,13 @@ describe('septima', () => {
 
     const expected = [
       `value type error: expected num but found "zxcvbnm" when evaluating:`,
-      `  at (<inline>:1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
-      `  at (<inline>:1:1..21) 9 * 8 * 'zxcvbnm' * 7`,
-      `  at (<inline>:1:5..21) 8 * 'zxcvbnm' * 7`,
       `  at (<inline>:1:10..21) zxcvbnm' * 7`,
     ].join('\n')
 
     expect(() => run(`9 * 8 * 'zxcvbnm' * 7`)).toThrowError(expected)
+  })
+  test('stacktrace should specify the call site', () => {
+    expect(() => run('const a = {}; const b = a.f; b()')).toThrow('at (<inline>:1:30..32) b()')
   })
 
   describe('equality', () => {
@@ -178,7 +241,7 @@ describe('septima', () => {
       expect(() => run(`+true`)).toThrowError('expected num but found true')
       expect(() => run(`+[]`)).toThrowError('expected num but found []')
       expect(() => run(`+{}`)).toThrowError('expected num but found {}')
-      expect(() => run(`+(fun (x) x*2)`)).toThrowError('expected num but found "fun (x) (x * 2)"')
+      expect(() => run(`+(fun (x) x*2)`)).toThrowError('expected num but found a function')
       expect(() => run(`+'abc'`)).toThrowError(`expected num but found "abc"`)
     })
     test('-', () => {
@@ -196,7 +259,13 @@ describe('septima', () => {
     test('can be specified via the double-quotes notation', () => {
       expect(run(`""`)).toEqual('')
       expect(run(`"ab"`)).toEqual('ab')
+    })
+    test('can be concatenated via the + operator, which allows the rhs to be non-string', () => {
       expect(run(`"ab" + "cd"`)).toEqual('abcd')
+      expect(run(`"ab" + 5`)).toEqual('ab5')
+      expect(run(`"decision=" + true`)).toEqual('decision=true')
+      expect(run(`"decision=" + false`)).toEqual('decision=false')
+      expect(run(`"abc " + [1,90,'x']`)).toEqual('abc [1,90,"x"]')
     })
     test('can be specified via the single-quotes notation', () => {
       expect(run(`''`)).toEqual('')
@@ -216,7 +285,47 @@ describe('septima', () => {
     test('supports string methods', () => {
       expect(run(`'bigbird'.substring(3, 7)`)).toEqual('bird')
       expect(run(`'bigbird'.indexOf('g')`)).toEqual(2)
+      expect(run(`const s = 'bigbird'; [s.indexOf('b'), s.indexOf('i')]`)).toEqual([0, 1])
+      expect(run(`const s = 'bigbird'; [s.lastIndexOf('b'), s.lastIndexOf('i')]`)).toEqual([3, 4])
+      expect(run(`"the".concat(" quick").concat(" brown").concat(" fox")`)).toEqual('the quick brown fox')
       expect(run(`'ab-cde-fghi-jkl'.split('-')`)).toEqual(['ab', 'cde', 'fghi', 'jkl'])
+      expect(run(`const a = 'QwertY'; [a.toUpperCase(), a.toLowerCase()]`)).toEqual(['QWERTY', 'qwerty'])
+      expect(run(`const a = 'the slow brown fox'; a.replace('slow', 'quick')`)).toEqual('the quick brown fox')
+      expect(run(`const a = 'the quick brown fox'; [a.includes('quick'), a.includes('QUICK')]`)).toEqual([true, false])
+      expect(
+        run(
+          `const a = 'star wars'; [a.startsWith('st'), a.startsWith('star'), a.startsWith('ST'), a.startsWith('wars')]`,
+        ),
+      ).toEqual([true, true, false, false])
+      expect(run(`const a = 'the quick'; [a.charAt(0), a.charAt(1), a.charAt(7), a.charAt(8), a.charAt(9)]`)).toEqual([
+        't',
+        'h',
+        'c',
+        'k',
+        '',
+      ])
+      expect(run(`const a = 'the quick'; [a.at(0), a.at(1), a.at(7), a.at(8), a.at(9), a.at(-4)]`)).toEqual([
+        't',
+        'h',
+        'c',
+        'k',
+        undefined,
+        'u',
+      ])
+      expect(run(`const s = "four scores and seven years ago"; [s.search("e.r"), s.search("s[a-z]{3}n")]`)).toEqual([
+        23, 16,
+      ])
+      expect(run(`["w".repeat(3), "go".repeat(2), "x".repeat(0)]`)).toEqual(['www', 'gogo', ''])
+      expect(run(`["a".padStart(4, '.'), "a".padStart(2)]`)).toEqual(['...a', ' a'])
+      expect(run(`["a".padEnd(4, '.'), "a".padEnd(2)]`)).toEqual(['a...', 'a '])
+      expect(
+        run(`const a = 'It was the best of times, it was the worst of times'; a.match('(t.e) ([a-z]+) of')`),
+      ).toEqual(['the best of', 'the', 'best'])
+      expect(run(`const a = 'abcdefghijkl'; [a.slice(3, 8), a.slice(0, -8), a.slice(-2)]`)).toEqual([
+        'defgh',
+        'abcd',
+        'kl',
+      ])
       expect(run(`let s = '  ab   cd     '; [s.trimStart(), s.trimEnd(), s.trim()]`)).toEqual([
         'ab   cd     ',
         '  ab   cd',
@@ -226,13 +335,21 @@ describe('septima', () => {
     test('supports optional arguments of string methods', () => {
       expect(run(`'bigbird'.substring(5)`)).toEqual('rd')
     })
+    test.skip('matchAll', () => {
+      expect(
+        run(`const a = 'It was the best of times, it was the worst of times'; a.matchAll('(t.e) ([a-z]+) of')`),
+      ).toEqual([
+        ['the best of', 'the', 'best'],
+        ['the worst of', 'the', 'worst'],
+      ])
+    })
   })
   describe('let', () => {
     test('binds values to variables', () => {
       expect(run(`let x = 5; x+3`)).toEqual(8)
       expect(run(`let x = 5; let y = 20; x*y+4`)).toEqual(104)
     })
-    test('do not need the trailing semicolon', () => {
+    test('does not need the trailing semicolon', () => {
       expect(run(`let x = 5 x+3`)).toEqual(8)
       expect(run(`let x = 5 let y = 20 x*y+4`)).toEqual(104)
     })
@@ -279,7 +396,7 @@ describe('septima', () => {
       expect(run(`let x = 10;  let y = x*2;  y*2`)).toEqual(40)
     })
     test('the body of a definition cannot reference a latter definition from the same scope', () => {
-      expect(() => run(`let y = x*2; let x = 10;  y*2`)).toThrowError(`Symbol x was not found`)
+      expect(() => run(`let y = x*2; let x = 10;  y*2`)).toThrowError(`Unresolved definition: x`)
     })
     test('the body of a definition cannot reference itself', () => {
       expect(() => run(`let x = 10;  let y = if (x > 0) y else x; y*2`)).toThrowError(`Unresolved definition: y`)
@@ -318,7 +435,11 @@ describe('septima', () => {
       expect(run(`[246,531,]`)).toEqual([246, 531])
     })
     test('individual elements of an array can be accessed via the [<index>] notation', () => {
+      expect(run(`['sun'][0]`)).toEqual('sun')
       expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; a[1]`)).toEqual('mon')
+    })
+    test('array access cannot use strings', () => {
+      expect(() => run(`['sun']["0"]`)).toThrow('index into an array must be an integer value (got: "0")')
     })
     test('the <index> value at the [<index>] notation can be a computed value', () => {
       expect(run(`let a = ['sun', 'mon', 'tue', 'wed']; let f = fun(n) n-5; [a[3-1], a[18/6], a[f(5)]]`)).toEqual([
@@ -362,6 +483,12 @@ describe('septima', () => {
       })
       test('supports shorthand notation for initializing an attribute from an identifier', () => {
         expect(run(`let a = 'A'; let b = 42; {a, b}`)).toEqual({ a: 'A', b: 42 })
+      })
+      test('maintain the order of the entries', () => {
+        expect(Object.entries(run(`{a: 100, b: 200}`) as Record<string, unknown>)).toEqual([
+          ['a', 100],
+          ['b', 200],
+        ])
       })
     })
     describe('attributes', () => {
@@ -554,8 +681,8 @@ describe('septima', () => {
       })
     })
     test('can have no args', () => {
-      expect(run(`let pi = fun() 3.14; 2*pi()`)).toEqual(6.28)
-      expect(run(`(fun() 3.14)()*2`)).toEqual(6.28)
+      expect(run(`let pi = () => 3.14; 2*pi()`)).toEqual(6.28)
+      expect(run(`(() => 3.14)()*2`)).toEqual(6.28)
     })
     test('errors on arg list mismatch', () => {
       expect(() => run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2)`)).toThrowError(
@@ -563,12 +690,27 @@ describe('septima', () => {
       )
       expect(run(`let quadSum = fun(a,b,c,d) a+b+c+d; quadSum(4,8,2,6)`)).toEqual(20)
     })
+    test('arg list mismatch error is pinned to the right location', () => {
+      expect(() => run(`let sum = (a,b) => a+b; sum(4)`)).toThrowError(
+        'Expected at least 2 argument(s) but got 1 when evaluating:\n  at (<inline>:1:25..30) sum(4)\n  at (<inline>:1:11..22) (a,b) => a+b',
+      )
+    })
     test('can be recursive', () => {
       expect(run(`let factorial = fun(n) if (n > 0) n*factorial(n-1) else 1; factorial(6)`)).toEqual(720)
       expect(run(`let gcd = fun(a, b) if (b == 0) a else gcd(b, a % b); [gcd(24, 60), gcd(1071, 462)]`)).toEqual([
         12, 21,
       ])
     })
+    test('can be mutually recursive', () => {
+      expect(run(`const f1 = (n) => n == 0 ? 0 : n%10+f2(n); const f2 = (n) => f1((n-n%10)/10); f1(261)`)).toEqual(9)
+    })
+    test('can forward reference another function', () => {
+      expect(run(`const f1 = (n) => f2(-n); const f2 = (n) => n/5; f1(35)`)).toEqual(-7)
+    })
+    test('a const can be initialized from the result of a lambda expression', () => {
+      expect(run(`const f = (s) => '<'+ s + '>'; const p = f('p'); const q = f('q'); p+q`)).toEqual('<p><q>')
+    })
+
     test('can access definitions from the enclosing scope', () => {
       expect(run(`let a = 1; (let inc = fun(n) n+a; inc(2))`)).toEqual(3)
       expect(run(`let by2 = fun(x) x*2; (let by10 = (let by5 = fun(x) x*5; fun(x) by2(by5(x))); by10(20))`)).toEqual(
@@ -577,16 +719,16 @@ describe('septima', () => {
     })
     test('expression trace on error', () => {
       const expected = [
-        '  at (<inline>:1:1..88) let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(...',
-        '  at (<inline>:1:85..88) a(5)',
-        '  at (<inline>:1:79..82) b(x)',
-        '  at (<inline>:1:58..61) c(x)',
-        '  at (<inline>:1:36..39) d(x)',
-        '  at (<inline>:1:17..18) x2',
+        'Symbol xd2 was not found when evaluating:',
+        '  at (<inline>:1:84..87) a(5)',
+        '  at (<inline>:1:77..81) b(xa)',
+        '  at (<inline>:1:56..60) c(xb)',
+        '  at (<inline>:1:35..39) d(xc)',
+        '  at (<inline>:1:16..18) xd2',
       ].join('\n')
 
       expect(() =>
-        run(`let d = fun(x1) x2; let c = fun(x) d(x); let b = fun (x) c(x); let a = fun(x) b(x); a(5)`),
+        run(`let d = xd1 => xd2; let c = xc => d(xc); let b = xb => c(xb); let a = xa => b(xa); a(5)`),
       ).toThrowError(expected)
     })
     test('only lexical scope is considered when looking up a definition', () => {
@@ -599,7 +741,7 @@ describe('septima', () => {
       expect(run(`let sum = fun(a) fun(b) fun(c) a+b+c; let plusOne = sum(1); plusOne(600)(20)`)).toEqual(621)
     })
     describe('optional arguments', () => {
-      test('takes the default value if no valu for that arg was not passed', () => {
+      test('takes the default value if no value for that arg was not passed', () => {
         expect(run(`let sum = (a, b = 50) => a + b; [sum(9), sum(9,1)]`)).toEqual([59, 10])
       })
       test('the default value can be an arry or an object', () => {
@@ -652,6 +794,12 @@ describe('septima', () => {
     test('concat', () => {
       expect(run(`['foo', 'bar', 'goo'].concat(['zoo', 'poo'])`)).toEqual(['foo', 'bar', 'goo', 'zoo', 'poo'])
     })
+    test('join', () => {
+      expect(run(`['foo', 'bar', 'goo'].join()`)).toEqual('foo,bar,goo')
+      expect(run(`['foo', 'bar', 'goo'].join('')`)).toEqual('foobargoo')
+      expect(run(`['foo', 'bar', 'goo'].join('|')`)).toEqual('foo|bar|goo')
+      expect(run(`['foo', 'bar', 'goo'].join(' >> ')`)).toEqual('foo >> bar >> goo')
+    })
     test('every', () => {
       expect(run(`["", 'x', 'xx'].every(fun (item, i) item.length == i)`)).toEqual(true)
       expect(run(`["", 'yy', 'zz'].every(fun (item, i) item.length == i)`)).toEqual(false)
@@ -692,9 +840,9 @@ describe('septima', () => {
       expect(run(`[['w',2], ['x',0], ['y',1]].reduce(fun (w, x, i, a) w+a[x[1]][0], '')`)).toEqual('ywx')
     })
     test('reduceRight', () => {
-      expect(run(`['a','b','c','d'].reduceRight(fun (w, x) w+x, '')`)).toEqual('dcba')
-      expect(run(`['a','b','c','d','e'].reduceRight(fun (w, x, i) if (i % 2 == 0) w+x else w, '')`)).toEqual('eca')
-      expect(run(`[['w',2], ['x',0], ['y',1]].reduceRight(fun (w, x, i, a) w+a[x[1]][0], '')`)).toEqual('xwy')
+      expect(run(`['a','b','c','d'].reduceRight((w, x) => w+x, '')`)).toEqual('dcba')
+      expect(run(`['a','b','c','d','e'].reduceRight((w, x, i) => (i % 2 == 0) ? w+x : w, '')`)).toEqual('eca')
+      expect(run(`[['w',2], ['x',0], ['y',1]].reduceRight((w, x, i, a) => w+a[x[1]][0], '')`)).toEqual('xwy')
     })
     test('some', () => {
       expect(run(`['foo', 'bar', 'goo'].some(fun (item) item.endsWith('oo'))`)).toEqual(true)
@@ -728,7 +876,64 @@ describe('septima', () => {
       })
     })
     test('push is not allowed', () => {
-      expect(() => run(`let a = [1,2]; a.push(5)`)).toThrowError('Unrecognized array method: push')
+      expect(() => run(`let a = [1,2]; a.push(5)`)).toThrowError('Callee is not a function (it is: undefined)')
+    })
+    test('includes', () => {
+      expect(run(`[10, 20, 30].includes(20)`)).toEqual(true)
+      expect(run(`[10, 20, 30].includes(25)`)).toEqual(false)
+      expect(run(`[].includes(1)`)).toEqual(false)
+      // comparison is structural (as in the == operator), not by reference
+      expect(run(`[{a: 1}, {a: 2}].includes({a: 2})`)).toEqual(true)
+      expect(run(`[[1, 2], [3]].includes([3])`)).toEqual(true)
+    })
+    test('indexOf', () => {
+      expect(run(`[10, 20, 30].indexOf(30)`)).toEqual(2)
+      expect(run(`[10, 20, 10].indexOf(10)`)).toEqual(0)
+      expect(run(`[10, 20, 30].indexOf(25)`)).toEqual(-1)
+      // comparison is structural (as in the == operator), not by reference
+      expect(run(`[{a: 1}, {a: 2}].indexOf({a: 2})`)).toEqual(1)
+    })
+    test('lastIndexOf', () => {
+      expect(run(`[10, 20, 10].lastIndexOf(10)`)).toEqual(2)
+      expect(run(`[10, 20, 30].lastIndexOf(20)`)).toEqual(1)
+      expect(run(`[10, 20, 30].lastIndexOf(25)`)).toEqual(-1)
+      // comparison is structural (as in the == operator), not by reference
+      expect(run(`[{a: 1}, {a: 2}, {a: 1}].lastIndexOf({a: 1})`)).toEqual(2)
+    })
+    test('slice', () => {
+      expect(run(`[1, 2, 3, 4, 5].slice(1, 3)`)).toEqual([2, 3])
+      expect(run(`[1, 2, 3, 4, 5].slice(3)`)).toEqual([4, 5])
+      expect(run(`[1, 2, 3, 4, 5].slice(-2)`)).toEqual([4, 5])
+      expect(run(`[1, 2, 3].slice()`)).toEqual([1, 2, 3])
+      expect(run(`[1, 2, 3].slice(9)`)).toEqual([])
+    })
+    test('slice does not change the array', () => {
+      expect(run(`let a = [1, 2, 3]; let b = a.slice(0, 2); {a, b}`)).toEqual({ a: [1, 2, 3], b: [1, 2] })
+    })
+    test('reverse', () => {
+      expect(run(`[1, 2, 3].reverse()`)).toEqual([3, 2, 1])
+      expect(run(`[].reverse()`)).toEqual([])
+      expect(run(`['a'].reverse()`)).toEqual(['a'])
+    })
+    test('reverse does not change the array', () => {
+      expect(run(`let a = [1, 2, 3]; let b = a.reverse(); {a, b}`)).toEqual({ a: [1, 2, 3], b: [3, 2, 1] })
+    })
+    test('flat', () => {
+      // flattens a single level, as JS's flat() does by default
+      expect(run(`[[1, 2], [3], [], [4]].flat()`)).toEqual([1, 2, 3, 4])
+      expect(run(`[1, [2, 3], 4].flat()`)).toEqual([1, 2, 3, 4])
+      expect(run(`[[1, [2]], [3]].flat()`)).toEqual([1, [2], 3])
+      expect(run(`[].flat()`)).toEqual([])
+    })
+    test('entries', () => {
+      expect(run(`['a', 'b'].entries()`)).toEqual([
+        [0, 'a'],
+        [1, 'b'],
+      ])
+      expect(run(`[].entries()`)).toEqual([])
+      // the pairs are septima arrays, so they can be indexed into from septima code
+      expect(run(`['a', 'b'].entries()[1][1]`)).toEqual('b')
+      expect(run(`['a', 'b'].entries().map(p => p[0])`)).toEqual([0, 1])
     })
   })
   describe('constructor', () => {
@@ -751,11 +956,11 @@ describe('septima', () => {
       // expect(run(`Object.entries({a: 1, b: 2, w: 30})`)).toEqual([['a', 1], ['b', 2], ['w', 30]])
     })
     test('fails if applied to a non-object value', () => {
-      expect(() => run(`Object.keys('a')`)).toThrowError('value type error: expected obj but found "a"')
-      expect(() => run(`Object.keys(5)`)).toThrowError('value type error: expected obj but found 5')
-      expect(() => run(`Object.keys(false)`)).toThrowError('value type error: expected obj but found false')
-      expect(() => run(`Object.keys(['a'])`)).toThrowError('value type error: expected obj but found ["a"]')
-      expect(() => run(`Object.keys(fun () 5)`)).toThrowError('value type error: expected obj but found "fun () 5"')
+      expect(() => run(`Object.keys('a')`)).toThrowError('value error: expected object but found String')
+      expect(() => run(`Object.keys(5)`)).toThrowError('value error: expected object but found Number')
+      expect(() => run(`Object.keys(false)`)).toThrowError('value error: expected object but found Boolean')
+      expect(() => run(`Object.keys(['a'])`)).toThrowError('value error: expected object but found Array')
+      expect(() => run(`Object.keys(fun () 5)`)).toThrowError('value error: expected object but found Function')
     })
   })
   describe('Object.entries()', () => {
@@ -766,12 +971,19 @@ describe('septima', () => {
         ['w', 30],
       ])
     })
+    test('each pair is a full-fledged array', () => {
+      expect(
+        run(
+          `Object.entries({a: "one", b: "two", d: "four"}).map(p => p.map(x => String(x).toUpperCase()).join('=')).join('; ')`,
+        ),
+      ).toEqual('A=ONE; B=TWO; D=FOUR')
+    })
     test('fails if applied to a non-object value', () => {
-      expect(() => run(`Object.entries('a')`)).toThrowError('type error: expected obj but found "a"')
-      expect(() => run(`Object.entries(5)`)).toThrowError('type error: expected obj but found 5')
-      expect(() => run(`Object.entries(false)`)).toThrowError('type error: expected obj but found false')
-      expect(() => run(`Object.entries(['a'])`)).toThrowError('type error: expected obj but found ["a"]')
-      expect(() => run(`Object.entries(fun () 5)`)).toThrowError('type error: expected obj but found "fun () 5"')
+      expect(() => run(`Object.entries('a')`)).toThrowError('value error: expected object but found String')
+      expect(() => run(`Object.entries(5)`)).toThrowError('value error: expected object but found Number')
+      expect(() => run(`Object.entries(false)`)).toThrowError('value error: expected object but found Boolean')
+      expect(() => run(`Object.entries(['a'])`)).toThrowError('value error: expected object but found Array')
+      expect(() => run(`Object.entries(fun () 5)`)).toThrowError('value error: expected object but found Function')
     })
   })
   describe('Object.fromEntries()', () => {
@@ -785,17 +997,17 @@ describe('septima', () => {
       })
     })
     test('fails if applied to a non-array value', () => {
-      expect(() => run(`Object.fromEntries('a')`)).toThrowError('type error: expected arr but found "a"')
-      expect(() => run(`Object.fromEntries(5)`)).toThrowError('type error: expected arr but found 5')
-      expect(() => run(`Object.fromEntries(false)`)).toThrowError('type error: expected arr but found false')
-      expect(() => run(`Object.fromEntries({x: 1})`)).toThrowError('type error: expected arr but found {"x":1}')
-      expect(() => run(`Object.fromEntries(fun () 5)`)).toThrowError('type error: expected arr but found "fun () 5"')
+      expect(() => run(`Object.fromEntries('a')`)).toThrowError(`expected Array but found String`)
+      expect(() => run(`Object.fromEntries(5)`)).toThrowError('expected Array but found Number')
+      expect(() => run(`Object.fromEntries(false)`)).toThrowError('expected Array but found Boolean')
+      expect(() => run(`Object.fromEntries({x: 1})`)).toThrowError('expected Array but found Object')
+      expect(() => run(`Object.fromEntries(() => 5)`)).toThrowError('expected Array but found Function')
     })
     test('the input array must be an array of pairs', () => {
       expect(() => run(`Object.fromEntries([['a', 1], ['b']])`)).toThrowError('each entry must be a [key, value] pair')
     })
     test('the first element in each pair must be a string', () => {
-      expect(() => run(`Object.fromEntries([[1, 'a']])`)).toThrowError('value type error: expected str but found 1')
+      expect(() => run(`Object.fromEntries([[1, 'a']])`)).toThrowError('expected String but found Number')
     })
   })
   describe('line comments', () => {
@@ -848,8 +1060,29 @@ describe('septima', () => {
     })
   })
   describe('evaluation stack', () => {
-    test('max recursion depth', () => {
-      expect(run(`let count = fun (n) if (n <= 0) 0 else 1 + count(n-1); count(260)`)).toEqual(260)
+    test('can handle, by default, 64K calls', () => {
+      expect(run(`const count = (n) => (n <= 0) ? 0 : 1 + count(n-1); count(65534)`)).toEqual(65_534)
+    })
+    test('respect the maxDepth option', () => {
+      const executeWithDepth = (maxDepth: number, x: number) => {
+        const m = '<inline>'
+        const read = (f: string) =>
+          f === m ? `const count = (n) => (n <= 0) ? 0 : 1 + count(n-1); count(args.x)` : undefined
+        return new Septima({ maxDepth }).compileSync(m, read).execute({ x })
+      }
+
+      expect(executeWithDepth(5, 3)).toEqual({ tag: 'ok', value: 3 })
+      expect(executeWithDepth(5, 4)).toMatchObject({
+        tag: 'sink',
+        message: [
+          `Stack overflow error of septima's call stack (5) when evaluating:`,
+          '  at (<inline>:1:53..65) count(args.x)',
+          '  at (<inline>:1:41..50) count(n-1)',
+          '  at (<inline>:1:41..50) count(n-1)',
+          '  at (<inline>:1:41..50) count(n-1)',
+          '  at (<inline>:1:41..50) count(n-1)',
+        ].join('\n'),
+      })
     })
   })
   describe('args', () => {
@@ -885,41 +1118,67 @@ describe('septima', () => {
         'non-top-level definition cannot be exported at (<inline>:1:10..36) export let y = 4; y+1); x+3',
       )
     })
+    test('exported value is not corrupted by inner definitions', () => {
+      // a bug in the exporting mechanism can make the export* command run in the inner scope (after w is initialized).
+      // there is nothing to export there (w is non-exported) so the object exported by b is {} and b.x evaluated to
+      // undefined
+      expect(driver.run({ a: `import * as b from 'b'; b.x`, b: `export let x = (let w = 99; w)` })).toEqual(99)
+    })
   })
   describe('import', () => {
     test('makes a definition from one file to be available in another file', () => {
-      const septima = new Septima()
-      const files: Partial<Record<string, string>> = {
-        a: `import * as b from './b'; 'sum=' + b.sum(5, 3)`,
-        b: `export let sum = (x,y) => x+y`,
-      }
-      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 'sum=8' })
+      expect(
+        driver.run({
+          a: `import * as b from './b'; 'sum=' + String(b.sum(5, 3))`,
+          b: `export let sum = (x,y) => x+y`,
+        }),
+      ).toEqual('sum=8')
     })
     test('all exported defintions are available at the import site', () => {
-      const septima = new Septima()
-      const files: Partial<Record<string, string>> = {
-        a: `import * as b from './b'; b.sum(b.four, b.six)`,
-        b: `export let sum = (x,y) => x+y; export let four = 4; export let six = 6`,
-      }
-      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: 10 })
+      expect(
+        driver.run({
+          a: `import * as b from './b'; b.sum(b.four, b.six)`,
+          b: `export let sum = (x,y) => x+y; export let four = 4; export let six = 6`,
+        }),
+      ).toEqual(10)
     })
     test('non-exported definitions become undefined', () => {
-      const septima = new Septima()
-      const files: Partial<Record<string, string>> = {
-        a: `import * as b from './b';\n[b.four,\nb.six]`,
-        b: `export let four = 4; let six = 6`,
-      }
-      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [4, undefined] })
+      expect(
+        driver.run({
+          a: `import * as b from './b';\n[b.four,\nb.six]`,
+          b: `export let four = 4; let six = 6`,
+        }),
+      ).toEqual([4, undefined])
     })
     test('can import from multiple files', () => {
-      const septima = new Septima()
-      const files: Partial<Record<string, string>> = {
-        a: `import * as b from './b';\nimport * as c from './c'\nimport * as d from './d'; [b.val, c.val, d.val]`,
-        b: `export let val = 100`,
-        c: `export let val = 20`,
-        d: `export let val = 3`,
-      }
-      expect(septima.compileSync('a', f => files[f]).execute({})).toEqual({ tag: 'ok', value: [100, 20, 3] })
+      expect(
+        driver.run({
+          a: `import * as b from './b';\nimport * as c from './c'\nimport * as d from './d'; [b.val, c.val, d.val]`,
+          b: `export let val = 100`,
+          c: `export let val = 20`,
+          d: `export let val = 3`,
+        }),
+      ).toEqual([100, 20, 3])
+    })
+    test('an imported file is evaluated just once', () => {
+      expect(
+        driver.runLog({
+          a: `import * as b from './b'; import * as c from './c'; [b.val, c.val]`,
+          b: `import * as d from './d'; export let val = d.val+97`,
+          c: `import * as d from './d'; export let val = d.val+17`,
+          d: `export let val = [console.log("d-is-loading!"), 3][1]`,
+        }),
+      ).toEqual({ lines: ['"d-is-loading!"'], result: [100, 20] })
+    })
+    test('an imported file the exports nothing is evaluated just once', () => {
+      expect(
+        driver.runLog({
+          a: `import * as b from './b'; import * as c from './c'; [b.val, c.val]`,
+          b: `import * as d from './d'; export let val = 100`,
+          c: `import * as d from './d'; export let val = 20`,
+          d: `let val = console.log("d-is-loading!")`,
+        }),
+      ).toEqual({ lines: ['"d-is-loading!"'], result: [100, 20] })
     })
   })
   describe('unit', () => {
@@ -967,14 +1226,12 @@ describe('septima', () => {
       }
 
       expect(message?.split('\n')).toEqual([
-        'Error: value type error: expected either str, arr or obj but found undefined when evaluating:',
-        '  at (<inline>:1:1..22) let x = undefined; x.a',
-        '  at (<inline>:1:1..22) let x = undefined; x.a',
+        `Error: Cannot read properties of undefined (reading 'a') when evaluating:`,
         '  at (<inline>:1:20..22) x.a',
       ])
     })
     test('errors when calling a method on undefined', () => {
-      expect(() => run(`let x = undefined; x.a()`)).toThrowError('at (<inline>:1:20..24) x.a()')
+      expect(() => run(`let x = undefined; x.a()`)).toThrowError('at (<inline>:1:20..22) x.a')
     })
     test('errors when using undefined in arithmetic expressions', () => {
       expect(() => run(`4 + undefined`)).toThrowError('at (<inline>:1:1..13) 4 + undefined')
@@ -1009,6 +1266,9 @@ describe('septima', () => {
       expect(run(`String(true)`)).toEqual('true')
       expect(run(`String(false)`)).toEqual('false')
       expect(run(`String(undefined)`)).toEqual('undefined')
+    })
+    // X
+    test('String() on non-primitives', () => {
       expect(run(`String({a: "alpha", b: [3,1,4], n: 42})`)).toEqual('{"a":"alpha","b":[3,1,4],"n":42}')
       expect(run(`String(["abc", 3.14159, false, true, undefined])`)).toEqual('["abc",3.14159,false,true,null]')
     })
@@ -1036,24 +1296,19 @@ describe('septima', () => {
     })
   })
   describe('console.log', () => {
-    const runLog = (input: string) => {
-      const lines: unknown[] = []
-      const result = Septima.run(input, { onSink: () => undefined, consoleLog: u => lines.push(u) })
-      return { lines, result }
-    }
     test('prints its input', () => {
-      expect(runLog(`console.log(2*2*2*2)`).lines).toEqual(['16'])
-      expect(runLog(`console.log({a: 1, b: 2, c: ['d', 'e']})`).lines).toEqual(['{"a":1,"b":2,"c":["d","e"]}'])
+      expect(driver.runLog(`console.log(2*2*2*2)`).lines).toEqual(['16'])
+      expect(driver.runLog(`console.log({a: 1, b: 2, c: ['d', 'e']})`).lines).toEqual(['{"a":1,"b":2,"c":["d","e"]}'])
     })
     test('a program can have multiple console.log() calls', () => {
-      expect(runLog(`["red", "green", "blue"].map(at => console.log(at))`).lines).toEqual([
+      expect(driver.runLog(`["red", "green", "blue"].map(at => console.log(at))`).lines).toEqual([
         '"red"',
         '"green"',
         '"blue"',
       ])
     })
     test('returns its input', () => {
-      expect(runLog(`32*console.log(8)`)).toEqual({
+      expect(driver.runLog(`32*console.log(8)`)).toEqual({
         result: 256,
         lines: ['8'],
       })
@@ -1061,8 +1316,11 @@ describe('septima', () => {
   })
   describe(`JSON.parse`, () => {
     test('parses a string', () => {
+      expect(run(`JSON.parse('{}')`)).toEqual({})
+      expect(run(`JSON.parse('[24,120]')`)).toEqual([24, 120])
       expect(run(`JSON.parse('{"a": 1, "b": "beta"}')`)).toEqual({ a: 1, b: 'beta' })
     })
+    // X
     test('roundtrips a value that was converted to JSON', () => {
       expect(run(`JSON.parse(String({"a": 1, "b": "beta", c: {arr: [100, 200]}}))`)).toEqual({
         a: 1,
@@ -1093,24 +1351,20 @@ describe('septima', () => {
   describe('throw', () => {
     test('it raises an error that is propagated all the way out', () => {
       expect(() => run(`throw "bo" + "om"`)).toThrowError(
-        `"boom" when evaluating:\n` + `  at (<inline>:1:8..16) bo" + "om\n` + `  at (<inline>:1:8..16) bo" + "om`,
+        `boom when evaluating:\n` + `  at (<inline>:1:8..16) bo" + "om`,
       )
     })
     test('the error message contains a septima stack trace that reflects the entire call chain', () => {
-      expect(() => run(`let g = (n) => throw "n=" + n;\nlet f = (n) => n > 0 ? f(n-1) : g(n);\nf(3)`)).toThrowError(
-        `"n=0" when evaluating:\n` +
-          `  at (<inline>:1:1..3:4) let g = (n) => throw \"n=\" + n;...\n` +
-          `  at (<inline>:1:1..3:4) let g = (n) => throw \"n=\" + n;...\n` +
+      expect(() =>
+        run(`let g = (n) => throw "n=" + String(n);\nlet f = (n) => n > 0 ? f(n-1) : g(n);\nf(3)`),
+      ).toThrowError(
+        `n=0 when evaluating:\n` +
           `  at (<inline>:3:1..4) f(3)\n` +
-          `  at (<inline>:2:16..36) n > 0 ? f(n-1) : g(n)\n` +
           `  at (<inline>:2:24..29) f(n-1)\n` +
-          `  at (<inline>:2:16..36) n > 0 ? f(n-1) : g(n)\n` +
           `  at (<inline>:2:24..29) f(n-1)\n` +
-          `  at (<inline>:2:16..36) n > 0 ? f(n-1) : g(n)\n` +
           `  at (<inline>:2:24..29) f(n-1)\n` +
-          `  at (<inline>:2:16..36) n > 0 ? f(n-1) : g(n)\n` +
           `  at (<inline>:2:33..36) g(n)\n` +
-          `  at (<inline>:1:23..29) n=" + n`,
+          `  at (<inline>:1:23..37) n=" + String(n)`,
       )
     })
   })
@@ -1152,6 +1406,30 @@ describe('septima', () => {
     expect(run('let inner = `world`; `Hello ${inner}!`')).toEqual('Hello world!')
     expect(run('`outer ${`inner ${42}`}`')).toEqual('outer inner 42')
   })
+
+  describe('edge cases', () => {
+    test('a septima function can be passed and called from the JS side', () => {
+      expect(
+        driver.run('args.three(x => `_${x}_`)', { three: (callback: (n: number) => void) => callback(3) }),
+      ).toEqual('_3_')
+    })
+    test('a lambda in an importer file is emitted once', () => {
+      // We used to have a bug when a lambda could have been emitted multiple times (once for each imported file).
+      // When it was called the surplus copies left stray values on the opstack which broke the invariant checked
+      // at the end of the execution
+      expect(
+        driver.run({ a: `import * as b from 'b'; let f = (x) => x * 2; f(3) + b.n`, b: `export let n = 1` }),
+      ).toEqual(7)
+      expect(driver.run({ a: `import * as b from 'b'; b.double(3)`, b: `export let double = (x) => x * 2` })).toEqual(6)
+      expect(
+        driver.run({
+          a: `import * as b from 'b'; import * as c from 'c'; let f = (x) => x * 2; f(3) + b.n + c.n`,
+          b: `export let n = 1`,
+          c: `export let n = 2`,
+        }),
+      ).toEqual(9)
+    })
+  })
   test.todo('optional type annotations?')
   test.todo('allow redundant commas')
   test.todo('left associativity of +/-')
@@ -1166,4 +1444,19 @@ describe('septima', () => {
   test.todo('proper internal representation of arrow function, in particular: show(), span()')
   test.todo('sink sinkifies arrays and objects it is stored at')
   test.todo('{foo}')
+  // CRTICAL CRTICAL CRITICAL
+  test.todo(
+    'roundtripping to js and back via fromjs/tojs should preserve special spetima values such as function pointers',
+  )
+  // CRTICAL CRTICAL CRITICAL
+  test.todo('trying to read more values from the opstack than there are there?')
+  // CRTICAL CRTICAL CRITICAL
+  test.todo('protect against escaping the opstack')
+  // CRTICAL CRTICAL CRITICAL
+  test.todo('arrays and objects are finalized')
+  test('DEBUG-AIDE: this testcase is intended for ease of debugging', () => {
+    expect(driver.run({ a: `import * as b from 'b'; b.x ?? 'No'`, b: `export let x = (let w = 'Yes'; w)` })).toEqual(
+      'Yes',
+    )
+  })
 })

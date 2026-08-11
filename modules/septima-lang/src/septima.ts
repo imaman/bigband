@@ -1,26 +1,17 @@
 import * as path from 'path'
 
 import { Unit, UnitId } from './ast-node.js'
+import { CodeEmitter } from './code-emitter.js'
 import { failMe } from './fail-me.js'
+import { Outputter } from './outputter.js'
 import { Parser } from './parser.js'
-import { formatTrace, Result, ResultSink } from './result.js'
-import { Outputter, Runtime, Verbosity } from './runtime.js'
+import { Result, ResultSink } from './result.js'
+import { SeptimaVirtualMachine } from './runtime/septima-virtual-machine.js'
 import { Scanner } from './scanner.js'
 import { shouldNeverHappen } from './should-never-happen.js'
 import { SourceCode } from './source-code.js'
 
-interface Options {
-  /**
-   * A callback function to be invoked when the Septima program evaluated to `sink`. Allows the caller to determine
-   * which value will be returned in that case. For instance, passing `() => undefined` will translate a `sink` value
-   * to `undefined`. The default behavior is to throw an error.
-   */
-  onSink?: (res: ResultSink) => unknown
-  /**
-   * A custom output function that will receive the values that are passed to console.log() calls in the septima code.
-   */
-  consoleLog?: Outputter
-}
+type Verbosity = 'quiet' | 'trace'
 
 /**
  * A parsed, ready-to-run Septima program produced by `Septima.compile()` or `Septima.compileSync()`.
@@ -34,7 +25,7 @@ export interface Executable {
    * @param args exposed to the Septima code as the top-level `args` object.
    * @returns `{ tag: 'ok', value }` on success, or `{ tag: 'sink', ... }` if the program evaluated to `sink`.
    */
-  execute(args: Record<string, unknown>): Result
+  execute(args: Partial<Record<string, unknown>>): Result
 }
 
 type SyncCodeReader = (resolvePath: string) => string | undefined
@@ -43,6 +34,26 @@ type CodeReader = (resolvePath: string) => Promise<string | undefined>
 export interface SourceUnit {
   sourceCode: SourceCode
   unit: Unit
+}
+
+export interface Options {
+  /**
+   * A custom output function that will receive the values that are passed to console.log() calls in the septima code.
+   */
+  consoleLog?: Outputter
+
+  sourceRoot?: string
+  verbose?: boolean
+  maxDepth?: number
+}
+
+export interface OnSinkOptions {
+  /**
+   * A callback function to be invoked when the Septima program evaluated to `sink`. Allows the caller to determine
+   * which value will be returned in that case. For instance, passing `() => undefined` will translate a `sink` value
+   * to `undefined`. The default behavior is to throw an error.
+   */
+  onSink?: (res: ResultSink) => unknown
 }
 
 /**
@@ -67,17 +78,18 @@ export class Septima {
    * @param options
    * @returns the value that `input` evaluates to
    */
-  static run(input: string, options?: Options, args: Record<string, unknown> = {}): unknown {
+  static run(input: string, options?: Options & OnSinkOptions, args: Record<string, unknown> = {}): unknown {
     const onSink =
       options?.onSink ??
-      ((r: ResultSink) => {
-        throw new Error(r.message)
+      ((x: ResultSink) => {
+        throw new Error(x.message)
       })
-
     const fileName = '<inline>'
     const contentRec: Record<string, string> = { [fileName]: input }
     const readFile = (m: string) => contentRec[m]
-    const res = new Septima(undefined, options?.consoleLog).compileSync(fileName, readFile).execute(args)
+    const res = new Septima({ consoleLog: options?.consoleLog, verbose: options?.verbose })
+      .compileSync(fileName, readFile)
+      .execute(args)
     if (res.tag === 'ok') {
       return res.value
     }
@@ -91,12 +103,27 @@ export class Septima {
 
   private readonly unitByUnitId = new Map<UnitId, SourceUnit>()
 
+  private readonly sourceRoot: string
+  private readonly consoleLog: Outputter
+  private readonly verbose: boolean
+  private readonly maxDepth: number
+
   /**
    * @param sourceRoot directory that import paths and the `fileName` passed to `compile*()` are resolved against.
    *   Imports resolving outside this root are rejected. Defaults to `''` (no root - paths are used as-is).
    * @param consoleLog receives values from `console.log()` calls in the Septima program. Defaults to discarding them.
    */
-  constructor(private readonly sourceRoot = '', private readonly consoleLog?: Outputter) {}
+  constructor(options: Options = {}) {
+    this.sourceRoot = options.sourceRoot ?? ''
+    this.maxDepth = options.maxDepth ?? 65536
+    this.consoleLog =
+      options.consoleLog ??
+      ((x: unknown) => {
+        console.log(x) // eslint-disable-line no-console
+      })
+
+    this.verbose = options.verbose ?? false
+  }
 
   /**
    * Parses `fileName` and every file it (transitively) imports, then returns an `Executable` for the entry file.
@@ -145,30 +172,41 @@ export class Septima {
     this.unitOf(undefined, fileName)
 
     return {
-      execute: (args: Record<string, unknown>) => {
-        const value = this.execute(fileName, 'quiet', args)
-        const ret: Result = { value: value.export(), tag: 'ok' }
-        return ret
+      execute: (args: Partial<Record<string, unknown>>) => {
+        return this.execute(fileName, 'quiet', args)
       },
     }
   }
 
-  private execute(fileName: string, verbosity: Verbosity, args: Record<string, unknown>) {
-    const runtime = new Runtime(
-      this.unitOf(undefined, fileName),
-      verbosity,
+  private execute(fileName: string, _verbosity: Verbosity, args: Partial<Record<string, unknown>>): Result {
+    const cf = new CodeEmitter(
       (a, b) => this.unitOf(a, b),
-      args,
-      this.consoleLog,
-    )
-    const c = runtime.compute()
-
-    if (c.value) {
-      return c.value
+      (a, b) => this.resolveUnitId(a, b),
+    ).run(fileName)
+    const vm = new SeptimaVirtualMachine(cf, args, this.maxDepth, this.consoleLog, this.verbose)
+    const ret = vm.run()
+    if (ret.tag === 'ok') {
+      return ret
     }
 
-    const formatted = formatTrace(c.expressionTrace, this.unitByUnitId)
-    throw new Error(`${c.errorMessage} when evaluating:\n${formatted}`)
+    const indent = '  '
+    const trace =
+      indent +
+      ret.trace
+        .map(at => {
+          const u = this.unitByUnitId.get(at.unitId) ?? failMe(`unit not found: ${at.unitId}`)
+          return u?.sourceCode.formatAst(at)
+        })
+        .join(`\n${indent}`)
+
+    const message = `${ret.message} when evaluating:\n${trace}`
+
+    return {
+      tag: 'sink',
+      message,
+      symbols: undefined,
+      trace,
+    }
   }
 
   /**
@@ -201,10 +239,17 @@ export class Septima {
   }
 
   private unitOf(importerPathFromSourceRoot: string | undefined, relativePath: string) {
-    const p = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
+    const p = this.resolveUnitId(importerPathFromSourceRoot, relativePath)
     const { unit } =
       this.unitByUnitId.get(p) ?? failMe(`Encluntered a file which has not been loaded (file name: ${p})`)
     return unit
+  }
+  private resolveUnitId(importerPathFromSourceRoot: string | undefined, relativePath: string) {
+    const ret = this.getPathFromSourceRoot(importerPathFromSourceRoot, relativePath)
+    if (!this.unitByUnitId.has(ret)) {
+      throw new Error(`Import target not found (${importerPathFromSourceRoot} -> ${relativePath})`)
+    }
+    return ret
   }
 
   private getPathFromSourceRoot(startingPoint: string | undefined, relativePath: string) {

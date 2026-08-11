@@ -1,11 +1,9 @@
 import { AstNode, UnitId } from './ast-node.js'
 import { failMe } from './fail-me.js'
-import { Span } from './location.js'
 import { SourceUnit } from './septima.js'
 
 export type ResultSink = {
   tag: 'sink'
-  where: Span | undefined
   trace: string | undefined
   symbols: Record<string, unknown> | undefined
   message: string

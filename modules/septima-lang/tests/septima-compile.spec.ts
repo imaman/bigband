@@ -22,7 +22,7 @@ function run(
   args: Record<string, unknown> = {},
   sourceRoot = '',
 ) {
-  const septima = new Septima(sourceRoot)
+  const septima = new Septima({ sourceRoot })
   return runExecutable(
     septima.compileSync(mainFileName, (m: string) => inputs[m]),
     args,
@@ -35,7 +35,7 @@ async function runPromise(
   args: Record<string, unknown> = {},
   sourceRoot = '',
 ) {
-  const septima = new Septima(sourceRoot)
+  const septima = new Septima({ sourceRoot })
   const executable = await septima.compile(mainFileName, (m: string) => Promise.resolve(inputs[m]))
   return runExecutable(executable, args)
 }
@@ -130,7 +130,7 @@ describe('septima-compile', () => {
   test('the args object is available only at the main module', () => {
     expect(() =>
       run('a', { a: `import * as b from 'b'; args.x + '_' + b.foo`, b: `let foo = args.x; {}` }, { x: 'Red' }),
-    ).toThrowError('at (b:1:11..16) args.x')
+    ).toThrowError('at (b:1:11..14) args')
   })
   describe('async compilation', () => {
     test('can use exported definitions from another module', async () => {

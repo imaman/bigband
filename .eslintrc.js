@@ -24,7 +24,10 @@ module.exports = {
       files: ['*.ts'],
       extends: ['plugin:@typescript-eslint/recommended'],
       rules: {
-        '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
+        '@typescript-eslint/consistent-type-assertions': [
+          'error',
+          { assertionStyle: 'as', objectLiteralTypeAssertions: 'never' },
+        ],
         '@typescript-eslint/member-delimiter-style': 'off',
         '@typescript-eslint/explicit-function-return-type': 'off',
         '@typescript-eslint/explicit-module-boundary-types': 'off',
