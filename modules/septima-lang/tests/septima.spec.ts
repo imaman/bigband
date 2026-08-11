@@ -878,6 +878,63 @@ describe('septima', () => {
     test('push is not allowed', () => {
       expect(() => run(`let a = [1,2]; a.push(5)`)).toThrowError('Callee is not a function (it is: undefined)')
     })
+    test('includes', () => {
+      expect(run(`[10, 20, 30].includes(20)`)).toEqual(true)
+      expect(run(`[10, 20, 30].includes(25)`)).toEqual(false)
+      expect(run(`[].includes(1)`)).toEqual(false)
+      // comparison is structural (as in the == operator), not by reference
+      expect(run(`[{a: 1}, {a: 2}].includes({a: 2})`)).toEqual(true)
+      expect(run(`[[1, 2], [3]].includes([3])`)).toEqual(true)
+    })
+    test('indexOf', () => {
+      expect(run(`[10, 20, 30].indexOf(30)`)).toEqual(2)
+      expect(run(`[10, 20, 10].indexOf(10)`)).toEqual(0)
+      expect(run(`[10, 20, 30].indexOf(25)`)).toEqual(-1)
+      // comparison is structural (as in the == operator), not by reference
+      expect(run(`[{a: 1}, {a: 2}].indexOf({a: 2})`)).toEqual(1)
+    })
+    test('lastIndexOf', () => {
+      expect(run(`[10, 20, 10].lastIndexOf(10)`)).toEqual(2)
+      expect(run(`[10, 20, 30].lastIndexOf(20)`)).toEqual(1)
+      expect(run(`[10, 20, 30].lastIndexOf(25)`)).toEqual(-1)
+      // comparison is structural (as in the == operator), not by reference
+      expect(run(`[{a: 1}, {a: 2}, {a: 1}].lastIndexOf({a: 1})`)).toEqual(2)
+    })
+    test('slice', () => {
+      expect(run(`[1, 2, 3, 4, 5].slice(1, 3)`)).toEqual([2, 3])
+      expect(run(`[1, 2, 3, 4, 5].slice(3)`)).toEqual([4, 5])
+      expect(run(`[1, 2, 3, 4, 5].slice(-2)`)).toEqual([4, 5])
+      expect(run(`[1, 2, 3].slice()`)).toEqual([1, 2, 3])
+      expect(run(`[1, 2, 3].slice(9)`)).toEqual([])
+    })
+    test('slice does not change the array', () => {
+      expect(run(`let a = [1, 2, 3]; let b = a.slice(0, 2); {a, b}`)).toEqual({ a: [1, 2, 3], b: [1, 2] })
+    })
+    test('reverse', () => {
+      expect(run(`[1, 2, 3].reverse()`)).toEqual([3, 2, 1])
+      expect(run(`[].reverse()`)).toEqual([])
+      expect(run(`['a'].reverse()`)).toEqual(['a'])
+    })
+    test('reverse does not change the array', () => {
+      expect(run(`let a = [1, 2, 3]; let b = a.reverse(); {a, b}`)).toEqual({ a: [1, 2, 3], b: [3, 2, 1] })
+    })
+    test('flat', () => {
+      // flattens a single level, as JS's flat() does by default
+      expect(run(`[[1, 2], [3], [], [4]].flat()`)).toEqual([1, 2, 3, 4])
+      expect(run(`[1, [2, 3], 4].flat()`)).toEqual([1, 2, 3, 4])
+      expect(run(`[[1, [2]], [3]].flat()`)).toEqual([1, [2], 3])
+      expect(run(`[].flat()`)).toEqual([])
+    })
+    test('entries', () => {
+      expect(run(`['a', 'b'].entries()`)).toEqual([
+        [0, 'a'],
+        [1, 'b'],
+      ])
+      expect(run(`[].entries()`)).toEqual([])
+      // the pairs are septima arrays, so they can be indexed into from septima code
+      expect(run(`['a', 'b'].entries()[1][1]`)).toEqual('b')
+      expect(run(`['a', 'b'].entries().map(p => p[0])`)).toEqual([0, 1])
+    })
   })
   describe('constructor', () => {
     test('.name reflects the type of the value', () => {
