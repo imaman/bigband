@@ -7,7 +7,7 @@
       "name": "Debug current test file",
       "cwd": "${fileDirname}/..",
       "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["--runTestsByPath", "dist/tests/${fileBasenameNoExtension}.js", "--runInBand"],
+      "args": ["--verbose", "--runTestsByPath", "dist/tests/${fileBasenameNoExtension}.js", "--runInBand"],
       "env": {
         "NODE_OPTIONS": "--experimental-vm-modules"
       },
