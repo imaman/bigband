@@ -100,6 +100,10 @@ export class SeptimaArray implements Iterable<unknown> {
         new SeptimaArray(that.values.map((item, index) => _caller(callback, [item, index, that])))
     }
 
+    if (selector === 'every') {
+      return (predicate: unknown) => that.values.every((item, index) => _caller(predicate, [item, index, that]))
+    }
+
     if (selector === 'concat') {
       return (...args: unknown[]) => {
         const arr: unknown[] = [...that.values]
