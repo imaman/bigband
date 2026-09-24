@@ -32,6 +32,14 @@ wrangler default of the package root) so that build-raptor, which fingerprints o
 - `tests/vitest.config.mts` points vitest at the compiled `dist/tests/**/*.spec.js`, like every other module, while
   the `SELF` integration path is bundled by wrangler from `src/index.ts`. The config lives under `tests/` (passed via
   `--config`) so that editing it invalidates build-raptor's cache.
+- The vitest config defines two projects. `workerd` runs `*.spec.ts` inside the Workers runtime via the Workers vitest
+  integration. `harness` runs `*.harness.spec.ts` in Node.js and drives the worker through wrangler's
+  `createTestHarness()` (https://developers.cloudflare.com/workers/testing/test-harness/), i.e. the same way
+  `wrangler dev`/`wrangler deploy` run it: bundled from `src/index.ts` with exactly the compatibility date, flags and
+  bindings of `wrangler.jsonc`. Keep at least one harness test per worker: the Workers vitest integration injects
+  extra compatibility flags (`nodejs_compat` among them) so that vitest itself can run in workerd, so a `SELF` test
+  can pass on code that would throw in production (e.g. `Buffer` under a compatibility date before 2026-08-04).
+  Prefer `*.spec.ts` for anything else; the harness spawns a workerd per test file and is slower.
 - Cache-invisible files: `wrangler.jsonc` and `tsconfig-base.json` are not build-raptor inputs, so after editing
   them a cached build/test result may be replayed. Force a rerun by also touching `package.json` (e.g. a comment in
   a script), or run `yarn test` from `modules/brainbox` directly.
