@@ -6,3 +6,8 @@ node_modules
 tsconfig.json
 prepare-pack
 .out
+
+# Cloudflare Workers (modules/brainbox)
+.wrangler
+.dev.vars*
+!.dev.vars.example
