@@ -6,7 +6,7 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "brainbox",
   "main": "src/index.ts",
-  "compatibility_date": "2026-08-03",
+  "compatibility_date": "2026-09-21",
   "observability": {
     "enabled": true
   },
