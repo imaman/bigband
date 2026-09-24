@@ -14,8 +14,7 @@
  * function.
  */
 export function handleRequest(_request: Request): Response {
-  const b = Buffer.from(String(new Date()))
-  return new Response(`Hello Worker - ${b.toString('base64')}`)
+  return new Response(`Hello Worker - ${new Date()}`)
 }
 
 // `satisfies` (rather than a type annotation) checks the object against `ExportedHandler<Env>` while keeping the
