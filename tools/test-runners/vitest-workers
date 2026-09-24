@@ -8,4 +8,4 @@ set -e
 cd "$1"
 # Invoke the package-local binary directly: `npx` prints "npm warn Unknown env config" lines
 # under yarn's environment, which pollutes the captured test output.
-exec ./node_modules/.bin/vitest run
+exec ./node_modules/.bin/vitest run --config tests/vitest.config.mts

@@ -11,23 +11,30 @@ KV, R2, D1, Durable Objects, Queues, Vectorize, AI, or Agents SDK code. Limits a
 | ----------------- | ------------------------------------------------------------------- |
 | `yarn dev`        | Local development server (`wrangler dev`)                           |
 | `yarn deploy`     | Deploy to Cloudflare (`wrangler deploy`)                            |
-| `yarn cf-typegen` | Regenerate `worker-configuration.d.ts` (`wrangler types`)           |
+| `yarn cf-typegen` | Regenerate `src/worker-configuration.d.ts` (`wrangler types`)       |
 | `yarn build`      | Type-check and compile to `dist/` (monorepo standard, via `tsc -b`) |
 | `yarn test`       | Run vitest (inside workerd) against `dist/tests`; build first       |
 
-Run `yarn cf-typegen` after changing bindings in `wrangler.jsonc`. `worker-configuration.d.ts` is generated: it is
-prettier-ignored and carries its own `eslint-disable` header.
+Run `yarn cf-typegen` after changing bindings in `wrangler.jsonc`. `src/worker-configuration.d.ts` is generated: it
+is prettier- and eslint-ignored and carries its own `eslint-disable` header. It lives under `src/` (rather than the
+wrangler default of the package root) so that build-raptor, which fingerprints only `src/`, `tests/`, and
+`package.json`, rebuilds and retests when the bindings change.
 
 ## How this module differs from the other modules
 
 - The compiled `dist/` output is only used for tests. Wrangler bundles the worker straight from `src/index.ts`.
-- `tsconfig-base.json` drops the `DOM` lib and pulls in the Workers runtime types instead; the two conflict.
+- `tsconfig-base.json` drops the `DOM` lib; the Workers runtime types in `src/worker-configuration.d.ts` replace it
+  (the two conflict) and are compiled as part of `src/`.
 - Tests use vitest + `@cloudflare/vitest-plugin` instead of jest, so they run inside workerd with the real
   `Request`, `env`, and `ExecutionContext` (imported from `cloudflare:test`). build-raptor invokes them via the
   custom runner `tools/test-runners/vitest-workers` (declared as `buildRaptor.testCommand` in package.json);
   editing the runner script does not invalidate build-raptor's test cache, changing `testCommand` does.
-- `vitest.config.mts` points vitest at the compiled `dist/tests/**/*.spec.js`, like every other module, while the
-  `SELF` integration path is bundled by wrangler from `src/index.ts`.
+- `tests/vitest.config.mts` points vitest at the compiled `dist/tests/**/*.spec.js`, like every other module, while
+  the `SELF` integration path is bundled by wrangler from `src/index.ts`. The config lives under `tests/` (passed via
+  `--config`) so that editing it invalidates build-raptor's cache.
+- Cache-invisible files: `wrangler.jsonc` and `tsconfig-base.json` are not build-raptor inputs, so after editing
+  them a cached build/test result may be replayed. Force a rerun by also touching `package.json` (e.g. a comment in
+  a script), or run `yarn test` from `modules/brainbox` directly.
 - Local wrangler state (`.wrangler/`) and secrets (`.dev.vars*`) are gitignored at the repo root.
 
 ## Local Explorer (debugging with `yarn dev`)

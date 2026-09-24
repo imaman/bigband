@@ -2,4 +2,4 @@
 !.huskyrc.js
 **/node_modules/*
 **/dist/*
-modules/brainbox/worker-configuration.d.ts
+modules/brainbox/src/worker-configuration.d.ts

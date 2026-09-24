@@ -9,10 +9,10 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc -b",
-    "cf-typegen": "wrangler types",
+    "cf-typegen": "wrangler types src/worker-configuration.d.ts",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
-    "test": "vitest run"
+    "test": "vitest run --config tests/vitest.config.mts"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.2.4",
