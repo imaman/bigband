@@ -6,4 +6,6 @@
 #   $3 - absolute path of the rerun file (unused: vitest reruns everything)
 set -e
 cd "$1"
-exec npx vitest run
+# Invoke the package-local binary directly: `npx` prints "npm warn Unknown env config" lines
+# under yarn's environment, which pollutes the captured test output.
+exec ./node_modules/.bin/vitest run
