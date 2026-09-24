@@ -6059,18 +6059,6 @@ mimic-response@^3.1.0:
   resolved "https://registry.yarnpkg.com/mimic-response/-/mimic-response-3.1.0.tgz#2d1d59af9c1b129815accc2c46a022a5ce1fa3c9"
   integrity sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==
 
-miniflare@5.20260921.0-alpha:
-  version "5.20260921.0-alpha"
-  resolved "https://registry.yarnpkg.com/miniflare/-/miniflare-5.20260921.0-alpha.tgz#d214492cb28728072ad99eb512028ff44f6ab8ff"
-  integrity sha512-vHH/unOYvV2jA1Q9SdkmzrQhhMoksdwg5jegu6ZeKaaRzgxZhVbt1NdTpQjHF2VTgiBjgP8SiUlUMfruB3N3SQ==
-  dependencies:
-    "@cspotcode/source-map-support" "0.8.1"
-    sharp "0.35.4"
-    undici "7.29.0"
-    workerd "1.20260921.1"
-    ws "8.21.0"
-    youch "4.1.0-beta.10"
-
 miniflare@5.20260921.1-alpha:
   version "5.20260921.1-alpha"
   resolved "https://registry.yarnpkg.com/miniflare/-/miniflare-5.20260921.1-alpha.tgz#ade7b7190d5a250dddb82465510b730eb4c2eeb4"
@@ -7648,7 +7636,7 @@ workerd@1.20260921.1:
     "@cloudflare/workerd-linux-arm64" "1.20260921.1"
     "@cloudflare/workerd-windows-64" "1.20260921.1"
 
-wrangler@4.138.0:
+wrangler@4.138.0, wrangler@^4.138.0:
   version "4.138.0"
   resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-4.138.0.tgz#3f555c69de7e4dede5288d9ad17873ff675173f3"
   integrity sha512-jxNlOfssgyMo+eUcWBX+BxAuU6/AZAn8mNimicLv4igxbRH40OFRBMtGJT8z4kJwXPJriy1O4TB7A8lYjKb82w==
@@ -7658,22 +7646,6 @@ wrangler@4.138.0:
     blake3-wasm "2.1.5"
     esbuild "0.28.1"
     miniflare "5.20260921.1-alpha"
-    path-to-regexp "6.3.0"
-    unenv "2.0.0-rc.24"
-    workerd "1.20260921.1"
-  optionalDependencies:
-    fsevents "2.3.3"
-
-wrangler@^4.137.0:
-  version "4.137.0"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-4.137.0.tgz#3a3c37709473d258de1dab3dc76a0ad6dc210265"
-  integrity sha512-vq2JmxkvwOjnsMUejQwd89/EK6u1d20OMlGUVVmb55gVi2zSBKp2rvmxUiPqrSEntK8NwzpTF3DQ/S2I9/TLsg==
-  dependencies:
-    "@cloudflare/kv-asset-handler" "0.5.0"
-    "@cloudflare/unenv-preset" "2.16.2"
-    blake3-wasm "2.1.5"
-    esbuild "0.28.1"
-    miniflare "5.20260921.0-alpha"
     path-to-regexp "6.3.0"
     unenv "2.0.0-rc.24"
     workerd "1.20260921.1"

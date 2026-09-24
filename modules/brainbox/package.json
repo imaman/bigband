@@ -17,7 +17,7 @@
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.2.4",
     "vitest": "~4.1.0",
-    "wrangler": "^4.137.0"
+    "wrangler": "^4.138.0"
   },
   "buildRaptor": {
     "testCommand": "tools/test-runners/vitest-workers"
