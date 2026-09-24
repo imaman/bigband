@@ -17,10 +17,10 @@ export function handleRequest(_request: Request): Response {
   return new Response(`Hello Worker - ${new Date()}`)
 }
 
-const fetch: ExportedHandlerFetchHandler<Env> = async request => handleRequest(request)
-
-// Typed via the handler (rather than `ExportedHandler<Env>`, where `fetch` is optional) so tests can call
-// `worker.fetch` directly.
-const worker = { fetch }
-
-export default worker
+// `satisfies` (rather than a type annotation) checks the object against `ExportedHandler<Env>` while keeping the
+// inferred type, so `fetch` stays required and tests can call `worker.fetch` directly.
+export default {
+  async fetch(request, _env, _ctx) {
+    return handleRequest(request)
+  },
+} satisfies ExportedHandler<Env>
