@@ -1,0 +1,9 @@
+#!/bin/bash
+# build-raptor custom test runner (see buildRaptor.testCommand in the package's package.json).
+# Runs vitest with the Cloudflare Workers plugin so tests execute inside workerd.
+#   $1 - absolute path of the package directory
+#   $2 - package name
+#   $3 - absolute path of the rerun file (unused: vitest reruns everything)
+set -e
+cd "$1"
+exec npx vitest run
