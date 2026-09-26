@@ -37,4 +37,12 @@ describe('brainbox (test harness)', () => {
     expect(await response.text()).toMatch(/<title>Brainbox<\/title>/)
     expect(server.getLogs().filter(log => log.level === 'error')).toEqual([])
   })
+
+  // Checks, under the exact `assets` config of wrangler.jsonc, that the asset router lets API requests through to the
+  // worker.
+  it('routes /api/greeting past the asset router to the worker', async () => {
+    const response = await server.fetch('/api/greeting?name=alice')
+    expect(response.status).toEqual(200)
+    expect(await response.json()).toEqual({ greeting: 'Hello, alice!' })
+  })
 })

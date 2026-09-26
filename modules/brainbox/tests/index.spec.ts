@@ -20,4 +20,31 @@ describe('brainbox', () => {
     expect(response.status).toEqual(200)
     expect(await response.json()).toEqual({ greeting: 'Hello, alice!' })
   })
+
+  it('responds with JSON', async () => {
+    const response = await exports.default.fetch('https://example.com/api/greeting?name=alice')
+    expect(response.headers.get('content-type')).toMatch(/^application\/json/)
+  })
+
+  it('trims the name', async () => {
+    const response = await exports.default.fetch('https://example.com/api/greeting?name=%20alice%20')
+    expect(await response.json()).toEqual({ greeting: 'Hello, alice!' })
+  })
+
+  it('greets a stranger when the name is missing', async () => {
+    const response = await exports.default.fetch('https://example.com/api/greeting')
+    expect(await response.json()).toEqual({ greeting: 'Hello, stranger!' })
+  })
+
+  it('greets a stranger when the name is empty or whitespace only', async () => {
+    const empty = await exports.default.fetch('https://example.com/api/greeting?name=')
+    expect(await empty.json()).toEqual({ greeting: 'Hello, stranger!' })
+    const blank = await exports.default.fetch('https://example.com/api/greeting?name=%20%20')
+    expect(await blank.json()).toEqual({ greeting: 'Hello, stranger!' })
+  })
+
+  it('responds with 404 to an unknown path', async () => {
+    const response = await exports.default.fetch('https://example.com/no-such-path')
+    expect(response.status).toEqual(404)
+  })
 })
