@@ -21,7 +21,8 @@ export function handleRequest(request: Request): Response {
     return Response.json({ greeting: `Hello, ${name}!` })
   }
 
-  // ...your existing routes...
+  // Files under public/ are served by the asset router before the worker runs, so an unmatched path here is a
+  // genuine miss.
   return new Response('Not found', { status: 404 })
 }
 
