@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: yarn
           cache-dependency-path: yarn.lock
 
@@ -33,7 +33,7 @@ jobs:
         run: yarn --frozen-lockfile
 
       - name: Build and test
-        run: yarn test
+        run: yarn test --labels build-ci
         env:
           s3_cache: ${{ secrets.S3_CACHE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

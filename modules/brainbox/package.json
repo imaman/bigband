@@ -1,0 +1,25 @@
+{
+  "name": "brainbox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker (brainbox)",
+  "keywords": [],
+  "author": "",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "cf-typegen": "wrangler types src/worker-configuration.d.ts",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "test": "vitest run --config tests/vitest.config.mts"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.2.4",
+    "vitest": "~4.1.0",
+    "wrangler": "^4.138.0"
+  },
+  "buildRaptor": {
+    "testCommand": "tools/test-runners/vitest-workers"
+  }
+}

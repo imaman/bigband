@@ -21,7 +21,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['*.ts'],
+      files: ['*.ts', '*.mts'],
       extends: ['plugin:@typescript-eslint/recommended'],
       rules: {
         '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
