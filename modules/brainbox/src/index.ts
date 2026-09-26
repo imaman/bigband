@@ -14,7 +14,7 @@
  * function.
  */
 export function handleRequest(_request: Request): Response {
-  return new Response(`Hello Worker - ${new Date()}`)
+  return new Response(`Hello Worker - ${new Date().toISOString()}`)
 }
 
 // `satisfies` (rather than a type annotation) checks the object against `ExportedHandler<Env>` while keeping the
