@@ -11,8 +11,8 @@
   ],
   "scripts": {
     "build": "build-raptor build --compact",
-    "lint": "eslint --max-warnings 0 'modules/*/**/*.{ts,mts,js,json,d.ts}'",
-    "lint:fix": "eslint --fix 'modules/*/**/*.{ts,mts,js,json,d.ts}'",
+    "lint": "build-raptor generate-tsconfig && eslint --no-eslintrc -c .eslintrc.typed.js --max-warnings 0 'modules/*/**/*.{ts,mts,js,json,d.ts}'",
+    "lint:fix": "build-raptor generate-tsconfig && eslint --no-eslintrc -c .eslintrc.typed.js --fix 'modules/*/**/*.{ts,mts,js,json,d.ts}'",
     "sort-package-json": "sort-package-json 'modules/*/package.json' 'package.json'",
     "test": "NODE_OPTIONS=--experimental-vm-modules build-raptor test"
   },
@@ -33,6 +33,7 @@
     "build-raptor": "^0.150.0",
     "eslint": "^8.4.1",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-deprecation": "^2.0.0",
     "eslint-plugin-jest": "^25.3.0",
     "eslint-plugin-json": "^3.1.0",
     "eslint-plugin-prettier": "^4.0.0",
@@ -50,5 +51,8 @@
     "syncpack": "10.6.1",
     "typescript": "^5.7.3"
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "engines": {
+    "node": ">=22"
+  }
 }

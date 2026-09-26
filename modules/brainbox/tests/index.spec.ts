@@ -1,4 +1,5 @@
-import { createExecutionContext, env, SELF, waitOnExecutionContext } from 'cloudflare:test'
+import { createExecutionContext, waitOnExecutionContext } from 'cloudflare:test'
+import { env, exports } from 'cloudflare:workers'
 import { describe, expect, it } from 'vitest'
 
 import worker from '../src/index.js'
@@ -15,7 +16,7 @@ describe('brainbox', () => {
   })
 
   it('responds with a greeting (integration style)', async () => {
-    const response = await SELF.fetch('https://example.com')
+    const response = await exports.default.fetch('https://example.com')
     expect(response.status).toEqual(200)
     expect(await response.text()).toMatch(/^Hello Worker - /)
   })

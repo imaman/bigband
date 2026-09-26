@@ -78,8 +78,9 @@ A Cloudflare Worker (see `modules/brainbox/CLAUDE.md` for Workers-specific guida
 lint, and test conventions, with a few deliberate differences:
 
 - Wrangler bundles the worker straight from `src/index.ts`; the `dist/` output exists only so the tests can run.
-- Tests use vitest with `@cloudflare/vitest-plugin`, so they execute inside workerd (`cloudflare:test` provides
-  `env`, `SELF`, and `createExecutionContext()`). build-raptor runs them through its custom test runner hook:
+- Tests use vitest with `@cloudflare/vitest-plugin`, so they execute inside workerd (`cloudflare:workers` provides
+  `env` and `exports`, `cloudflare:test` provides `createExecutionContext()`). build-raptor runs them through its
+  custom test runner hook:
   `buildRaptor.testCommand` in the module's package.json points at `tools/test-runners/vitest-workers`, which runs
   `vitest run` on the compiled `dist/tests` files. `yarn test` at the root still covers the module.
 - `tsconfig-base.json` swaps the `DOM` lib for the Workers runtime types in `worker-configuration.d.ts`. That file
@@ -90,6 +91,13 @@ lint, and test conventions, with a few deliberate differences:
 ## Linting
 
 Linting runs automatically via a pre-commit hook. Do NOT run `yarn lint` or `yarn lint:fix` after each change. Lint-level fixes (unused imports, import sorting, etc.) can be safely deferred until commit time — the hook will catch them and `yarn lint:fix` can be used to auto-fix before retrying the commit.
+
+There are two ESLint configs. The pre-commit hook uses `.eslintrc.js` (fast, no type information). `yarn lint`, which
+CI runs, uses `.eslintrc.typed.js` on top of it: it adds type-aware rules, currently `deprecation/deprecation`, which
+resolve each `.ts`/`.mts` file against the module's build-raptor-generated `tsconfig.json` (the `lint` script
+regenerates those first). Node removes an API only after a full major of runtime deprecation, and `@types/node` marks
+those APIs `@deprecated` at the same time, so this rule is what catches "compiles against `@types/node` 22, gone on
+Node 24" before it ships. A `@deprecated` usage therefore passes the commit hook but fails CI.
 
 ## Code Conventions
 
