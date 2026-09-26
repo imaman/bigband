@@ -92,12 +92,16 @@ lint, and test conventions, with a few deliberate differences:
 
 Linting runs automatically via a pre-commit hook. Do NOT run `yarn lint` or `yarn lint:fix` after each change. Lint-level fixes (unused imports, import sorting, etc.) can be safely deferred until commit time — the hook will catch them and `yarn lint:fix` can be used to auto-fix before retrying the commit.
 
-There are two ESLint configs. The pre-commit hook uses `.eslintrc.js` (fast, no type information). `yarn lint`, which
-CI runs, uses `.eslintrc.typed.js` on top of it: it adds type-aware rules, currently `deprecation/deprecation`, which
-resolve each `.ts`/`.mts` file against the module's build-raptor-generated `tsconfig.json` (the `lint` script
-regenerates those first). Node removes an API only after a full major of runtime deprecation, and `@types/node` marks
-those APIs `@deprecated` at the same time, so this rule is what catches "compiles against `@types/node` 22, gone on
-Node 24" before it ships. A `@deprecated` usage therefore passes the commit hook but fails CI.
+There are two ESLint configs. The pre-commit hook uses `.eslintrc.js` (fast, no type information). `yarn lint` uses
+`.eslintrc.typed.js` on top of it: it adds type-aware rules, currently `deprecation/deprecation`, which resolve each
+`.ts`/`.mts` file against the module's build-raptor-generated `tsconfig.json`. build-raptor writes those files while
+planning a build, so they exist after any `yarn build`/`yarn test`; on a fresh clone run one of those before a manual
+`yarn lint`. On CI, `yarn lint` runs as the `lint-the-repo` build task of `modules/repo-craft` (label `build-ci`),
+never via a nested build-raptor: build-raptor scrubs the `s3_cache` env var to `_` for its child processes, and a
+nested build-raptor fails trying to parse that. Node removes an API only after a full major of runtime deprecation,
+and `@types/node` marks those APIs `@deprecated` at the same time, so this rule is what catches "compiles against
+`@types/node` 22, gone on Node 24" before it ships. A `@deprecated` usage therefore passes the commit hook but fails
+CI.
 
 ## Code Conventions
 
