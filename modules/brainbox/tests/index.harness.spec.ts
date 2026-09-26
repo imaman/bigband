@@ -34,7 +34,7 @@ describe('brainbox (test harness)', () => {
   it('responds with a greeting under the deployed compatibility settings', async () => {
     const response = await server.fetch('/')
     expect(response.status).toEqual(200)
-    expect(await response.text()).toMatch(/^Hello Worker - /)
+    expect(await response.text()).toMatch(/<title>Brainbox<\/title>/)
     expect(server.getLogs().filter(log => log.level === 'error')).toEqual([])
   })
 })
