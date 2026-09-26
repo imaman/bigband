@@ -13,8 +13,16 @@
  * Handles a single incoming request. Kept separate from the `fetch` export so request handling stays a plain
  * function.
  */
-export function handleRequest(_request: Request): Response {
-  return new Response(`Hello Worker - ${new Date().toISOString()}`)
+export function handleRequest(request: Request): Response {
+  const url = new URL(request.url)
+
+  if (url.pathname === '/api/greeting') {
+    const name = url.searchParams.get('name')?.trim() || 'stranger'
+    return Response.json({ greeting: `Hello, ${name}!` })
+  }
+
+  // ...your existing routes...
+  return new Response('Not found', { status: 404 })
 }
 
 // `satisfies` (rather than a type annotation) checks the object against `ExportedHandler<Env>` while keeping the
