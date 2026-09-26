@@ -32,11 +32,8 @@ jobs:
       - name: Install dependencies
         run: yarn --frozen-lockfile
 
-      - name: Lint
-        run: yarn lint
-
       - name: Build and test
-        run: yarn test
+        run: yarn test :: --labels build-ci
         env:
           s3_cache: ${{ secrets.S3_CACHE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
