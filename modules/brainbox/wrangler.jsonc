@@ -7,6 +7,14 @@
   "name": "brainbox",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-21",
+  /**
+   * Node.js compatibility (https://developers.cloudflare.com/workers/runtime-apis/nodejs/)
+   * Already the default for compatibility dates from 2026-08-04 on. Spelled out because the type surface relies on it:
+   * `@types/node` is in the module's TypeScript program (via tsconfig-base.json and, transitively, the vitest
+   * plugin), so `Buffer`, `process`, `node:*` etc. type-check in src/ and must also exist at runtime. Lowering the
+   * compatibility date without this flag would leave the types in place while the runtime lost the APIs.
+   */
+  "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "enabled": true
   },
