@@ -33,7 +33,7 @@ jobs:
         run: yarn --frozen-lockfile
 
       - name: Build and test
-        run: yarn test :: --labels build-ci
+        run: yarn test --labels build-ci
         env:
           s3_cache: ${{ secrets.S3_CACHE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -11,8 +11,8 @@
   ],
   "scripts": {
     "build": "build-raptor build --compact",
-    "lint": "build-raptor generate-tsconfig && eslint --no-eslintrc -c .eslintrc.typed.js --max-warnings 0 'modules/*/**/*.{ts,mts,js,json,d.ts}'",
-    "lint:fix": "build-raptor generate-tsconfig && eslint --no-eslintrc -c .eslintrc.typed.js --fix 'modules/*/**/*.{ts,mts,js,json,d.ts}'",
+    "lint": "eslint --no-eslintrc -c .eslintrc.typed.js --max-warnings 0 'modules/*/**/*.{ts,mts,js,json,d.ts}'",
+    "lint:fix": "eslint --no-eslintrc -c .eslintrc.typed.js --fix 'modules/*/**/*.{ts,mts,js,json,d.ts}'",
     "sort-package-json": "sort-package-json 'modules/*/package.json' 'package.json'",
     "test": "NODE_OPTIONS=--experimental-vm-modules build-raptor test"
   },
