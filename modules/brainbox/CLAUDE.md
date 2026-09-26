@@ -42,6 +42,10 @@ wrangler default of the package root) so that build-raptor, which fingerprints o
   extra compatibility flags (`nodejs_compat` among them) so that vitest itself can run in workerd, so an
   `exports.default.fetch()` test
   can pass on code that would throw in production (e.g. `Buffer` under a compatibility date before 2026-08-04).
+  The harness is also the only net for Node APIs that `@types/node` declares but workerd does not implement: see the
+  partially supported modules and non-functional stubs at
+  https://developers.cloudflare.com/workers/runtime-apis/nodejs/ (e.g. `node:http2`, `node:vm`,
+  `node:child_process`). Such code type-checks and fails at runtime, so exercise it in a harness test.
   Prefer `*.spec.ts` for anything else; the harness spawns a workerd per test file and is slower.
 - Cache-invisible files: `wrangler.jsonc` and `tsconfig-base.json` are not build-raptor inputs, so after editing
   them a cached build/test result may be replayed. Force a rerun by also touching `package.json` (e.g. a comment in

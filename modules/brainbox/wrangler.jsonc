@@ -11,8 +11,12 @@
    * Node.js compatibility (https://developers.cloudflare.com/workers/runtime-apis/nodejs/)
    * Already the default for compatibility dates from 2026-08-04 on. Spelled out because the type surface relies on it:
    * `@types/node` is in the module's TypeScript program (via tsconfig-base.json and, transitively, the vitest
-   * plugin), so `Buffer`, `process`, `node:*` etc. type-check in src/ and must also exist at runtime. Lowering the
-   * compatibility date without this flag would leave the types in place while the runtime lost the APIs.
+   * plugin), so `Buffer`, `process`, `node:*` etc. type-check in src/. Lowering the compatibility date without this
+   * flag would leave the types in place while the runtime lost the APIs.
+   * The flag does not make types and runtime agree completely: `@types/node` describes all of Node, workerd
+   * implements a subset (some modules are partial, e.g. node:os and node:tls; others are non-functional stubs, e.g.
+   * node:http2, node:vm, node:child_process). Such code type-checks and fails at runtime; only the harness test
+   * (tests/*.harness.spec.ts), which runs the worker with this exact configuration, can catch it.
    */
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
