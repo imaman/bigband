@@ -18,6 +18,13 @@ const server = createTestHarness({
   workers: [{ configPath: wranglerConfigPath }],
 })
 
+function countOf(body: unknown): number {
+  if (typeof body === 'object' && body !== null && 'count' in body && typeof body.count === 'number') {
+    return body.count
+  }
+  throw new Error(`No numeric count in ${JSON.stringify(body)}`)
+}
+
 describe('brainbox (test harness)', () => {
   beforeAll(async () => {
     await server.listen()
@@ -38,11 +45,18 @@ describe('brainbox (test harness)', () => {
     expect(server.getLogs().filter(log => log.level === 'error')).toEqual([])
   })
 
+  // Checks, under the exact `durable_objects`/`migrations` config of wrangler.jsonc, that the counter persists.
+  it('increments the request count across requests', async () => {
+    const first = countOf(await (await server.fetch('/api/greeting')).json())
+    const second = countOf(await (await server.fetch('/api/greeting')).json())
+    expect(second).toEqual(first + 1)
+  })
+
   // Checks, under the exact `assets` config of wrangler.jsonc, that the asset router lets API requests through to the
   // worker.
   it('routes /api/greeting past the asset router to the worker', async () => {
     const response = await server.fetch('/api/greeting?name=alice')
     expect(response.status).toEqual(200)
-    expect(await response.json()).toEqual({ greeting: 'Hello, alice!' })
+    expect(await response.json()).toEqual({ greeting: 'Hello, alice!', count: expect.any(Number) })
   })
 })
