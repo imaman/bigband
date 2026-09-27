@@ -63,5 +63,16 @@
    * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
    */
   // "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
-  "previews": {}
+
+  /**
+   * Previews (https://developers.cloudflare.com/workers/previews/configuration/)
+   * Bindings are not inherited from the top level: every binding the code reads from `env` must be repeated here, or
+   * it is `undefined` in a Preview. Durable Object classes and migrations stay at the top level; each Preview gets its
+   * own Durable Object namespace and storage.
+   */
+  "previews": {
+    "durable_objects": {
+      "bindings": [{ "name": "COUNTER", "class_name": "Counter" }]
+    }
+  }
 }
