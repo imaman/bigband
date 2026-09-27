@@ -1,11 +1,15 @@
-import { createExecutionContext, waitOnExecutionContext } from 'cloudflare:test'
+import { createExecutionContext, reset, waitOnExecutionContext } from 'cloudflare:test'
 import { env, exports } from 'cloudflare:workers'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import worker from '../src/index.js'
-import { GreetingResponse } from './greeting-response.js'
 
 describe('brainbox', () => {
+  // The Workers vitest integration isolates storage per test file, not per test, so wipe it after each test.
+  afterEach(async () => {
+    await reset()
+  })
+
   it('responds with a greeting (unit style)', async () => {
     const request = new Request<unknown, IncomingRequestCfProperties>('http://example.com/api/greeting?name=alice')
     const ctx = createExecutionContext()
@@ -46,17 +50,15 @@ describe('brainbox', () => {
 
   it('includes the request count in the greeting', async () => {
     const first = await exports.default.fetch('https://example.com/api/greeting?name=alice')
-    const { count } = GreetingResponse.parse(await first.json())
+    expect(await first.json()).toEqual({ greeting: 'Hello, alice!', count: 1 })
     const second = await exports.default.fetch('https://example.com/api/greeting?name=alice')
-    expect(await second.json()).toEqual({ greeting: 'Hello, alice!', count: count + 1 })
+    expect(await second.json()).toEqual({ greeting: 'Hello, alice!', count: 2 })
   })
 
   it('counts every request that reaches the worker, not only greetings', async () => {
-    const before = await exports.default.fetch('https://example.com/api/greeting')
-    const { count } = GreetingResponse.parse(await before.json())
     await exports.default.fetch('https://example.com/no-such-path')
-    const after = await exports.default.fetch('https://example.com/api/greeting')
-    expect(await after.json()).toMatchObject({ count: count + 2 })
+    const response = await exports.default.fetch('https://example.com/api/greeting')
+    expect(await response.json()).toMatchObject({ count: 2 })
   })
 
   it('increments a counter by one per call', async () => {

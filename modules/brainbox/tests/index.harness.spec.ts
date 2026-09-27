@@ -43,8 +43,9 @@ describe('brainbox (test harness)', () => {
   // Checks, under the exact `durable_objects`/`migrations` config of wrangler.jsonc, that the counter persists.
   it('increments the request count across requests', async () => {
     const first = GreetingResponse.parse(await (await server.fetch('/api/greeting')).json())
+    expect(first.count).toEqual(1)
     const second = GreetingResponse.parse(await (await server.fetch('/api/greeting')).json())
-    expect(second.count).toEqual(first.count + 1)
+    expect(second.count).toEqual(2)
   })
 
   // Checks, under the exact `assets` config of wrangler.jsonc, that the asset router lets API requests through to the
