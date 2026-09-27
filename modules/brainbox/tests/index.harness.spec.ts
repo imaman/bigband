@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { createTestHarness } from 'wrangler'
 
+import { GreetingResponse } from './greeting-response.js'
+
 // This spec runs compiled, from dist/tests/, so the package root is two levels up. Anchor the wrangler config to it
 // (rather than to process.cwd(), which is what a relative `configPath` resolves against) so the harness works no
 // matter which directory vitest is launched from, same as tests/vitest.config.mts does for the workerd project.
@@ -17,13 +19,6 @@ const wranglerConfigPath = path.join(packageRoot, 'wrangler.jsonc')
 const server = createTestHarness({
   workers: [{ configPath: wranglerConfigPath }],
 })
-
-function countOf(body: unknown): number {
-  if (typeof body === 'object' && body !== null && 'count' in body && typeof body.count === 'number') {
-    return body.count
-  }
-  throw new Error(`No numeric count in ${JSON.stringify(body)}`)
-}
 
 describe('brainbox (test harness)', () => {
   beforeAll(async () => {
@@ -47,9 +42,9 @@ describe('brainbox (test harness)', () => {
 
   // Checks, under the exact `durable_objects`/`migrations` config of wrangler.jsonc, that the counter persists.
   it('increments the request count across requests', async () => {
-    const first = countOf(await (await server.fetch('/api/greeting')).json())
-    const second = countOf(await (await server.fetch('/api/greeting')).json())
-    expect(second).toEqual(first + 1)
+    const first = GreetingResponse.parse(await (await server.fetch('/api/greeting')).json())
+    const second = GreetingResponse.parse(await (await server.fetch('/api/greeting')).json())
+    expect(second.count).toEqual(first.count + 1)
   })
 
   // Checks, under the exact `assets` config of wrangler.jsonc, that the asset router lets API requests through to the

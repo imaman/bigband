@@ -3,6 +3,7 @@ import { env, exports } from 'cloudflare:workers'
 import { describe, expect, it } from 'vitest'
 
 import worker from '../src/index.js'
+import { GreetingResponse } from './greeting-response.js'
 
 describe('brainbox', () => {
   it('responds with a greeting (unit style)', async () => {
@@ -45,15 +46,14 @@ describe('brainbox', () => {
 
   it('includes the request count in the greeting', async () => {
     const first = await exports.default.fetch('https://example.com/api/greeting?name=alice')
-    const { count } = await first.json<{ count: number }>()
-    expect(count).toBeGreaterThan(0)
+    const { count } = GreetingResponse.parse(await first.json())
     const second = await exports.default.fetch('https://example.com/api/greeting?name=alice')
     expect(await second.json()).toEqual({ greeting: 'Hello, alice!', count: count + 1 })
   })
 
   it('counts every request that reaches the worker, not only greetings', async () => {
     const before = await exports.default.fetch('https://example.com/api/greeting')
-    const { count } = await before.json<{ count: number }>()
+    const { count } = GreetingResponse.parse(await before.json())
     await exports.default.fetch('https://example.com/no-such-path')
     const after = await exports.default.fetch('https://example.com/api/greeting')
     expect(await after.json()).toMatchObject({ count: count + 2 })
