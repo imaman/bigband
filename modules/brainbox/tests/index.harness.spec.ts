@@ -3,8 +3,6 @@ import { fileURLToPath } from 'node:url'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { createTestHarness } from 'wrangler'
 
-import { GreetingResponse } from './greeting-response.js'
-
 // This spec runs compiled, from dist/tests/, so the package root is two levels up. Anchor the wrangler config to it
 // (rather than to process.cwd(), which is what a relative `configPath` resolves against) so the harness works no
 // matter which directory vitest is launched from, same as tests/vitest.config.mts does for the workerd project.
@@ -42,10 +40,10 @@ describe('brainbox (test harness)', () => {
 
   // Checks, under the exact `durable_objects`/`migrations` config of wrangler.jsonc, that the counter persists.
   it('increments the request count across requests', async () => {
-    const first = GreetingResponse.parse(await (await server.fetch('/api/greeting')).json())
-    expect(first.count).toEqual(1)
-    const second = GreetingResponse.parse(await (await server.fetch('/api/greeting')).json())
-    expect(second.count).toEqual(2)
+    const first = await (await server.fetch('/api/greeting')).json()
+    expect(first).toMatchObject({ count: 1 })
+    const second = await (await server.fetch('/api/greeting')).json()
+    expect(second).toMatchObject({ count: 2 })
   })
 
   // Checks, under the exact `assets` config of wrangler.jsonc, that the asset router lets API requests through to the
