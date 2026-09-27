@@ -8,14 +8,13 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc -b",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "lint-the-repo": "yarn --cwd ../.. lint"
+    "lint-the-repo": "yarn --cwd ../.. lint",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "jest": {
     "preset": "../../jest.preset.js"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "buildTasks": {
     "lint-the-repo": {
       "inputs": "_ALWAYS_",

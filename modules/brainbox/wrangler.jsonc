@@ -45,12 +45,34 @@
    * Static Assets
    * https://developers.cloudflare.com/workers/static-assets/binding/
    */
-  "assets": {  "directory": "./public/" },
+  "assets": { "directory": "./public/" },
+
+  /**
+   * Durable Objects
+   * https://developers.cloudflare.com/durable-objects/
+   * `Counter` (src/counter.ts) counts the requests that reach the worker. A new Durable Object class must be declared
+   * in a migration; `new_sqlite_classes` gives it the SQLite storage backend (the one available on the free plan).
+   */
+  "durable_objects": {
+    "bindings": [{ "name": "COUNTER", "class_name": "Counter" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Counter"] }],
 
   /**
    * Service Bindings (communicate between multiple Workers)
    * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
    */
   // "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
-  "previews": {},
+
+  /**
+   * Previews (https://developers.cloudflare.com/workers/previews/configuration/)
+   * Bindings are not inherited from the top level: every binding the code reads from `env` must be repeated here, or
+   * it is `undefined` in a Preview. Durable Object classes and migrations stay at the top level; each Preview gets its
+   * own Durable Object namespace and storage.
+   */
+  "previews": {
+    "durable_objects": {
+      "bindings": [{ "name": "COUNTER", "class_name": "Counter" }]
+    }
+  }
 }
