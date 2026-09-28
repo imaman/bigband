@@ -10,7 +10,7 @@ const packageRoot = fileURLToPath(new URL('../..', import.meta.url))
 const wranglerConfigPath = path.join(packageRoot, 'wrangler.jsonc')
 
 // Runs the worker the way `wrangler dev` / `wrangler deploy` do: wrangler bundles `src/index.ts` and starts it in
-// workerd with exactly the compatibility date, flags and bindings of `wrangler.jsonc`. The tests in `index.spec.ts`
+// workerd with exactly the compatibility date, flags and bindings of `wrangler.jsonc`. The tests in `brainbox.spec.ts`
 // run inside the Workers vitest integration instead, which adds compatibility flags of its own (e.g. `nodejs_compat`)
 // so that vitest can run in workerd; they can therefore pass on code that relies on APIs the deployed worker lacks.
 // Follows https://developers.cloudflare.com/workers/testing/test-harness/get-started/

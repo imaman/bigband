@@ -1,12 +1,5 @@
 /**
- * Cloudflare Worker entry point.
- *
- * - `yarn dev` starts a local development server (http://localhost:8787/)
- * - `yarn deploy` publishes the worker
- * - `yarn cf-typegen` regenerates `worker-configuration.d.ts` (the `Env` type) after changing bindings in
- *   `wrangler.jsonc`
- *
- * Learn more at https://developers.cloudflare.com/workers/
+ * Request handling for the worker. The entry point (`src/index.ts`) exposes `brainbox` as its default export.
  */
 
 /**
