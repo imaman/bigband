@@ -1,8 +1,4 @@
 /**
- * Request handling for the worker. The entry point (`src/index.ts`) exposes `brainbox` as its default export.
- */
-
-/**
  * Handles a single incoming request. Kept separate from the `fetch` export so request handling stays a plain
  * function. Every request that reaches the worker increments the request counter.
  */
