@@ -2,8 +2,8 @@ import { createExecutionContext, reset, waitOnExecutionContext } from 'cloudflar
 import { env, exports } from 'cloudflare:workers'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { brainbox } from '../src/brainbox.js'
-const worker = brainbox
+import { brainboxService } from '../src/brainbox-service.js'
+const worker = brainboxService
 
 describe('brainbox', () => {
   // The Workers vitest integration isolates storage per test file, not per test, so wipe it after each test.

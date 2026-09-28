@@ -8,5 +8,5 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
-export { brainbox as default } from './brainbox.js'
+export { brainboxService as default } from './brainbox-service.js'
 export { Counter } from './counter.js'

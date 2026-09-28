@@ -22,7 +22,7 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
 
 // `satisfies` (rather than a type annotation) checks the object against `ExportedHandler<Env>` while keeping the
 // inferred type, so `fetch` stays required and tests can call `worker.fetch` directly.
-export const brainbox = {
+export const brainboxService = {
   async fetch(request, env, _ctx) {
     return handleRequest(request, env)
   },
