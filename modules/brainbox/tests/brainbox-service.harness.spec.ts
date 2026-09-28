@@ -18,7 +18,7 @@ const server = createTestHarness({
   workers: [{ configPath: wranglerConfigPath }],
 })
 
-describe('brainbox (test harness)', () => {
+describe('brainbox-service.harness', () => {
   beforeAll(async () => {
     await server.listen()
   })
