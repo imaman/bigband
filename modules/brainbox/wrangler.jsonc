@@ -4,6 +4,7 @@
  */
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
+  // This sets the subdomain
   "name": "brainbox",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-21",
