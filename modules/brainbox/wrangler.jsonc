@@ -4,6 +4,11 @@
  */
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
+  /**
+   * The Worker's name. It is the first label of the workers.dev URL (https://<name>.<account-subdomain>.workers.dev),
+   * and it is how `wrangler deploy` identifies the Worker to update. Changing it deploys a new Worker next to the old
+   * one, which keeps running. The new Worker also gets its own Durable Object storage, so it starts with no data.
+   */
   "name": "brainbox",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-21",

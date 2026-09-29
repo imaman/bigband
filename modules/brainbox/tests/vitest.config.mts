@@ -16,7 +16,8 @@ export default defineConfig({
   test: {
     projects: [
       {
-        // Tests that run inside workerd via the Workers vitest integration (`cloudflare:test`, `SELF`, `env`).
+        // Tests that run inside workerd via the Workers vitest integration (`cloudflare:test`, and `env`/`exports`
+        // from `cloudflare:workers`).
         plugins: [cloudflareTest({ wrangler: { configPath: wranglerConfigPath } })],
         test: {
           name: 'workerd',
