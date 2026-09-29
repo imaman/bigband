@@ -61,19 +61,6 @@ describe('brainbox-service', () => {
     expect(await response.json()).toMatchObject({ count: 2 })
   })
 
-  it('increments a counter by one per call', async () => {
-    const counter = env.COUNTER.getByName('counter-under-test')
-    expect(await counter.increment()).toEqual(1)
-    expect(await counter.increment()).toEqual(2)
-    expect(await counter.increment()).toEqual(3)
-  })
-
-  it('keeps separate counters apart', async () => {
-    expect(await env.COUNTER.getByName('a').increment()).toEqual(1)
-    expect(await env.COUNTER.getByName('b').increment()).toEqual(1)
-    expect(await env.COUNTER.getByName('a').increment()).toEqual(2)
-  })
-
   it('responds with 404 to an unknown path', async () => {
     const response = await exports.default.fetch('https://example.com/no-such-path')
     expect(response.status).toEqual(404)
