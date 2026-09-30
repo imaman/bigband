@@ -44,6 +44,7 @@ export class Counter extends DurableObject<Env> {
           minute: { started: '1970-01-01Z', n: 0 },
         }
     const n = parsed.n + 1
+    parsed.n = n
 
     const d = align(now, parsed, n, 'day')
     const h = align(now, parsed, n, 'hour')
@@ -66,5 +67,5 @@ function align(now: number, data: Data, n: number, k: keyof typeof buckets) {
   }
 
   const consumed = n - data[k].n
-  return consumed > allowance[k] ? k : undefined
+  return consumed >= allowance[k] ? k : undefined
 }
