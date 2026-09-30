@@ -1,11 +1,12 @@
 import { reset } from 'cloudflare:test'
 import { exports } from 'cloudflare:workers'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 describe('brainbox-service', () => {
   // The Workers vitest integration isolates storage per test file, not per test, so wipe it after each test.
   afterEach(async () => {
     await reset()
+    vi.useRealTimers()
   })
 
   it('responds with a greeting', async () => {
@@ -52,5 +53,18 @@ describe('brainbox-service', () => {
   it('responds with 404 to an unknown path', async () => {
     const response = await exports.default.fetch('https://example.com/no-such-path')
     expect(response.status).toEqual(404)
+  })
+
+  it('responds with 429 once the per-minute allowance is used up', async () => {
+    // Pins the clock (only `Date`) so that the requests cannot straddle a minute boundary.
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2030-01-01T00:00:10Z'))
+    // The default per-minute allowance of `Counter.trafficTick` is 15.
+    for (let i = 0; i < 15; ++i) {
+      const response = await exports.default.fetch('https://example.com/api/greeting')
+      expect(response.status).toEqual(200)
+    }
+    const response = await exports.default.fetch('https://example.com/api/greeting')
+    expect(response.status).toEqual(429)
   })
 })

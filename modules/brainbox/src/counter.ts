@@ -76,8 +76,18 @@ function align(now: number, data: Data, n: number, tf: Timeframe) {
 function check(data: Data, tf: Timeframe, allowance: Allowance) {
   const consumed = data.n - data.tracking[tf].n
   if (consumed >= allowance[tf]) {
-    throw new Error(`Traffic allowance excceded (${tf})`)
+    throw new Error(`${allowanceExceeded} (${tf})`)
   }
+}
+
+const allowanceExceeded = 'Traffic allowance excceded'
+
+/**
+ * Whether `e` reports an exceeded traffic allowance. Matches on the message because the error class does not survive
+ * the RPC boundary: callers of the Durable Object receive a plain `Error`.
+ */
+export function isAllowanceExceeded(e: unknown) {
+  return e instanceof Error && e.message.startsWith(allowanceExceeded)
 }
 
 const storageKey = `usageTracking`

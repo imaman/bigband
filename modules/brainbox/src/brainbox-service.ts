@@ -1,9 +1,19 @@
+import { isAllowanceExceeded } from './counter.js'
+
 /**
  * Handles a single incoming request. Kept separate from the `fetch` export so request handling stays a plain
  * function. Every request that reaches the worker increments the request counter.
  */
 export async function handleRequest(request: Request, env: Env): Promise<Response> {
-  const count = await env.COUNTER.getByName('requests').trafficTick(Date.now())
+  let count: number
+  try {
+    count = await env.COUNTER.getByName('requests').trafficTick()
+  } catch (e) {
+    if (isAllowanceExceeded(e)) {
+      return new Response('Too many requests', { status: 429 })
+    }
+    throw e
+  }
   const url = new URL(request.url)
 
   if (url.pathname === '/api/greeting') {
