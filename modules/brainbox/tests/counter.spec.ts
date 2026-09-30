@@ -142,4 +142,12 @@ describe('counter', () => {
     ])
     expect(await run(steps('minutes', 53, 54), { hour: 3 }, 'beta')).toEqual(['ok', 'ok'])
   })
+
+  it('allows same-timestamp requests', async () => {
+    expect(await runSteps({ minute: 2 }, 'seconds', 7, 7, 7)).toEqual([
+      'ok',
+      'ok',
+      'Traffic allowance excceded (minute)',
+    ])
+  })
 })
