@@ -8,7 +8,7 @@ describe('brainbox-service', () => {
     await reset()
   })
 
-  it('responds with a greeting (integration style)', async () => {
+  it('responds with a greeting', async () => {
     const response = await exports.default.fetch('https://example.com/api/greeting?name=alice')
     expect(response.status).toEqual(200)
     expect(await response.json()).toMatchObject({ greeting: 'Hello, alice!' })
