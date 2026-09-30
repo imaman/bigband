@@ -15,18 +15,19 @@ const hour = 60 * minute
 const day = 24 * hour
 
 const buckets = {
-  minute: { millis: minute, allowance: 15 },
-  hour: { millis: hour, allowance: 30 },
-  day: { millis: day, allowance: 15 },
+  minute,
+  hour,
+  day,
 } as const
 
+type Allowance = Record<Timeframe, number>
 /**
  * A persistent counter. All requests for a given name are routed to a single instance, which handles them one at a
  * time, so increments are never lost.
  */
 export class Counter extends DurableObject<Env> {
   /** Adds one to the counter and returns the new value (1 on the first call). */
-  trafficTick(now: number) {
+  trafficTick(now: number, allowance: Allowance = { day: 40, hour: 30, minute: 15 }) {
     const r = this.ctx.storage.kv.get(storageKey)
     const data = r
       ? Data.parse(r)
@@ -48,13 +49,13 @@ export class Counter extends DurableObject<Env> {
     this.ctx.storage.kv.put(storageKey, next)
 
     for (const tf of timeframes) {
-      check(next, tf)
+      check(next, tf, allowance)
     }
   }
 }
 
 function align(now: number, data: Data, n: number, tf: Timeframe) {
-  const started = new Date(now - (now % buckets[tf].millis)).toISOString()
+  const started = new Date(now - (now % buckets[tf])).toISOString()
   if (started > data.tracking[tf].started) {
     return { started, n }
   }
@@ -62,9 +63,9 @@ function align(now: number, data: Data, n: number, tf: Timeframe) {
   return data.tracking[tf]
 }
 
-function check(data: Data, tf: Timeframe) {
+function check(data: Data, tf: Timeframe, allowance: Allowance) {
   const consumed = data.n - data.tracking[tf].n
-  if (consumed >= buckets[tf].allowance) {
+  if (consumed >= allowance[tf]) {
     throw new Error(`Traffic allowance excceded (${tf})`)
   }
 }
