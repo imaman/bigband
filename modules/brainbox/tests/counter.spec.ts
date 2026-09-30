@@ -1,18 +1,18 @@
-import { reset } from 'cloudflare:test'
+import { abortAllDurableObjects, reset } from 'cloudflare:test'
 import { env } from 'cloudflare:workers'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { Allowance } from '../src/counter.js'
 
 /**
- * Calls `provision` once per timestamp, in order. Returns 'ok' for each accepted call and the error message for each
+ * Calls `trafficTick` once per timestamp, in order. Returns 'ok' for each accepted call and the error message for each
  * rejected one. Rejections are turned into values right away: handing the RPC promise itself to `expect(...).rejects`
  * leaves unhandled rejections behind.
  */
-async function runAll(times: number[], allowance: Partial<Allowance>, name = 'c') {
+async function runAll(timestamps: number[], allowance: Partial<Allowance>, name = 'c') {
   const counter = env.COUNTER.getByName(name)
   const ret: string[] = []
-  for (const t of times) {
+  for (const t of timestamps) {
     ret.push(
       await counter
         .trafficTick(t, {
@@ -109,5 +109,33 @@ describe('counter', () => {
       'ok',
       'ok',
     ])
+  })
+
+  it('keeps its usage across instance restarts', async () => {
+    expect(await runAll(steps('minutes', 1, 40, 50, 52), { hour: 3 })).toEqual([
+      'ok',
+      'ok',
+      'ok',
+      'Traffic allowance excceded (hour)',
+    ])
+    await abortAllDurableObjects()
+
+    expect(await runAll(steps('minutes', 53, 54, 59, 61, 62), { hour: 3 })).toEqual([
+      'Traffic allowance excceded (hour)',
+      'Traffic allowance excceded (hour)',
+      'Traffic allowance excceded (hour)',
+      'ok',
+      'ok',
+    ])
+  })
+
+  it('keeps separate counters apart', async () => {
+    expect(await runAll(steps('minutes', 1, 40, 50, 52), { hour: 3 }, 'alpha')).toEqual([
+      'ok',
+      'ok',
+      'ok',
+      'Traffic allowance excceded (hour)',
+    ])
+    expect(await runAll(steps('minutes', 53, 54), { hour: 3 }, 'beta')).toEqual(['ok', 'ok'])
   })
 })
