@@ -151,11 +151,12 @@ describe('counter', () => {
     ])
   })
   it('yells if the clock goes backwards', async () => {
-    expect(await runSteps({ minute: 4 }, 'seconds', 7, 7, 6, 5, 7)).toEqual([
+    expect(await runSteps({ minute: 4 }, 'seconds', 7, 7, 6, 5, 6, 7)).toEqual([
       'ok',
       'ok',
-      'Clock is off',
-      'Clock is off',
+      'Clock is off: 2030-01-01T00:00:06.000Z',
+      'Clock is off: 2030-01-01T00:00:05.000Z',
+      'Clock is off: 2030-01-01T00:00:06.000Z',
       'ok',
     ])
   })
