@@ -1,11 +1,11 @@
 import { DurableObject } from 'cloudflare:workers'
 import { z } from 'zod'
 
+const ws = ['day', 'hour', 'minute'] as const
+
 const Data = z.object({
   n: z.number(),
-  day: z.object({ started: z.string(), n: z.number() }),
-  hour: z.object({ started: z.string(), n: z.number() }),
-  minute: z.object({ started: z.string(), n: z.number() }),
+  tracking: z.record(z.enum(ws), z.object({ started: z.string(), n: z.number() })),
 })
 type Data = z.infer<typeof Data>
 
@@ -32,40 +32,46 @@ const allowance = {
 export class Counter extends DurableObject<Env> {
   /** Adds one to the counter and returns the new value (1 on the first call). */
   provision(now: number) {
-    // const d = new Date(now - (now % b.len))
-    const k = `usageTracking`
-    const r = this.ctx.storage.kv.get(k)
-    const parsed = r
+    const r = this.ctx.storage.kv.get(storageKey)
+    const data = r
       ? Data.parse(r)
-      : {
+      : ({
           n: 0,
-          day: { started: '1970-01-01Z', n: 0 },
-          hour: { started: '1970-01-01Z', n: 0 },
-          minute: { started: '1970-01-01Z', n: 0 },
-        }
-    const n = parsed.n + 1
-    parsed.n = n
+          tracking: {
+            day: { started: '1970-01-01Z', n: 0 },
+            hour: { started: '1970-01-01Z', n: 0 },
+            minute: { started: '1970-01-01Z', n: 0 },
+          },
+        } satisfies Data)
+    const n = data.n + 1
 
-    const d = align(now, parsed, n, 'day')
-    const h = align(now, parsed, n, 'hour')
-    const m = align(now, parsed, n, 'minute')
+    const day = align(now, data, n, 'day')
+    const hour = align(now, data, n, 'hour')
+    const minute = align(now, data, n, 'minute')
 
-    this.ctx.storage.kv.put(k, parsed)
-    if (!d && !h && !m) {
-      return
-    }
+    const next = { n, tracking: { day, hour, minute } } satisfies Data
+    this.ctx.storage.kv.put(storageKey, next)
 
-    throw new Error(`Exceeded traffic allownce [${d ?? h ?? m}]`)
+    check('day', next)
+    check('hour', next)
+    check('minute', next)
   }
 }
 
 function align(now: number, data: Data, n: number, k: keyof typeof buckets) {
   const started = new Date(now - (now % buckets[k])).toISOString()
-  if (started > data[k].started) {
-    data[k] = { started, n }
-    return
+  if (started > data.tracking[k].started) {
+    return { started, n }
   }
 
-  const consumed = n - data[k].n
-  return consumed >= allowance[k] ? k : undefined
+  return data.tracking[k]
 }
+
+function check(k: keyof typeof buckets, data: Data) {
+  const consumed = data.n - data.tracking[k].n
+  if (consumed >= allowance[k]) {
+    throw new Error(`Traffic allowance excceded (${k})`)
+  }
+}
+
+const storageKey = `usageTracking`
