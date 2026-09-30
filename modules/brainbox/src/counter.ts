@@ -1,12 +1,12 @@
 import { DurableObject } from 'cloudflare:workers'
 import { z } from 'zod'
 
-const ws = ['day', 'hour', 'minute'] as const
-type Keys = (typeof ws)[number]
+const timeframes = ['day', 'hour', 'minute'] as const
+type Timeframe = (typeof timeframes)[number]
 
 const Data = z.object({
   n: z.number(),
-  tracking: z.record(z.enum(ws), z.object({ started: z.string(), n: z.number() })),
+  tracking: z.record(z.enum(timeframes), z.object({ started: z.string(), n: z.number() })),
 })
 type Data = z.infer<typeof Data>
 
@@ -47,31 +47,31 @@ export class Counter extends DurableObject<Env> {
     const n = data.n + 1
 
     const copy = { ...data.tracking }
-    for (const w of ws) {
-      copy[w] = align(now, data, n, w)
+    for (const tf of timeframes) {
+      copy[tf] = align(now, data, n, tf)
     }
     const next = { n, tracking: copy } satisfies Data
     this.ctx.storage.kv.put(storageKey, next)
 
-    for (const w of ws) {
-      check(w, next)
+    for (const tf of timeframes) {
+      check(next, tf)
     }
   }
 }
 
-function align(now: number, data: Data, n: number, k: keyof typeof buckets) {
-  const started = new Date(now - (now % buckets[k])).toISOString()
-  if (started > data.tracking[k].started) {
+function align(now: number, data: Data, n: number, tf: Timeframe) {
+  const started = new Date(now - (now % buckets[tf])).toISOString()
+  if (started > data.tracking[tf].started) {
     return { started, n }
   }
 
-  return data.tracking[k]
+  return data.tracking[tf]
 }
 
-function check(k: Keys, data: Data) {
-  const consumed = data.n - data.tracking[k].n
-  if (consumed >= allowance[k]) {
-    throw new Error(`Traffic allowance excceded (${k})`)
+function check(data: Data, tf: Timeframe) {
+  const consumed = data.n - data.tracking[tf].n
+  if (consumed >= allowance[tf]) {
+    throw new Error(`Traffic allowance excceded (${tf})`)
   }
 }
 
