@@ -29,7 +29,10 @@ export type Allowance = Record<Timeframe, number>
  */
 export class Counter extends DurableObject<Env> {
   /** Adds one to the counter and returns the new value (1 on the first call). */
-  trafficTick(nowMillis?: number, allowance: Allowance = { day: 40, hour: 30, minute: 15 }) {
+  trafficTick(
+    nowMillis?: number,
+    allowance: Allowance = { day: 40, hour: 30, minute: 15 },
+  ): number | { tag: 'tooManyRequest'; retryAfterMillis: number } {
     const now = new Date(nowMillis ?? Date.now())
     const r = this.ctx.storage.kv.get(storageKey)
     const data = r
@@ -57,7 +60,9 @@ export class Counter extends DurableObject<Env> {
     this.ctx.storage.kv.put(storageKey, next)
 
     for (const tf of timeframes) {
-      check(next, tf, allowance)
+      if (!check(next, tf, allowance)) {
+        return { tag: 'tooManyRequest', retryAfterMillis: buckets[tf] }
+      }
     }
 
     return n
@@ -75,9 +80,7 @@ function align(now: number, data: Data, n: number, tf: Timeframe) {
 
 function check(data: Data, tf: Timeframe, allowance: Allowance) {
   const consumed = data.n - data.tracking[tf].n
-  if (consumed >= allowance[tf]) {
-    throw new Error(`${allowanceExceeded} (${tf})`)
-  }
+  return consumed < allowance[tf]
 }
 
 const allowanceExceeded = 'Traffic allowance excceded'
