@@ -150,4 +150,13 @@ describe('counter', () => {
       'Traffic allowance excceded (minute)',
     ])
   })
+  it('yells if the clock goes backwards', async () => {
+    expect(await runSteps({ minute: 4 }, 'seconds', 7, 7, 6, 5, 7)).toEqual([
+      'ok',
+      'ok',
+      'Clock is off',
+      'Clock is off',
+      'ok',
+    ])
+  })
 })
