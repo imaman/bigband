@@ -26,7 +26,7 @@ const buckets = {
  */
 export class Counter extends DurableObject<Env> {
   /** Adds one to the counter and returns the new value (1 on the first call). */
-  provision(now: number) {
+  trafficTick(now: number) {
     const r = this.ctx.storage.kv.get(storageKey)
     const data = r
       ? Data.parse(r)

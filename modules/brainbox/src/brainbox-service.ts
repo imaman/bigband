@@ -3,7 +3,7 @@
  * function. Every request that reaches the worker increments the request counter.
  */
 export async function handleRequest(request: Request, env: Env): Promise<Response> {
-  const count = await env.COUNTER.getByName('requests').increment()
+  const count = await env.COUNTER.getByName('requests').trafficTick(Date.now())
   const url = new URL(request.url)
 
   if (url.pathname === '/api/greeting') {
