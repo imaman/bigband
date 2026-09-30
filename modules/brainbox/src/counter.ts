@@ -20,7 +20,8 @@ const buckets = {
   day,
 } as const
 
-type Allowance = Record<Timeframe, number>
+export type Allowance = Record<Timeframe, number>
+
 /**
  * A persistent counter. All requests for a given name are routed to a single instance, which handles them one at a
  * time, so increments are never lost.
