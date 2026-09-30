@@ -2,6 +2,7 @@ import { DurableObject } from 'cloudflare:workers'
 import { z } from 'zod'
 
 const ws = ['day', 'hour', 'minute'] as const
+type Keys = (typeof ws)[number]
 
 const Data = z.object({
   n: z.number(),
@@ -45,16 +46,16 @@ export class Counter extends DurableObject<Env> {
         } satisfies Data)
     const n = data.n + 1
 
-    const day = align(now, data, n, 'day')
-    const hour = align(now, data, n, 'hour')
-    const minute = align(now, data, n, 'minute')
-
-    const next = { n, tracking: { day, hour, minute } } satisfies Data
+    const copy = { ...data.tracking }
+    for (const w of ws) {
+      copy[w] = align(now, data, n, w)
+    }
+    const next = { n, tracking: copy } satisfies Data
     this.ctx.storage.kv.put(storageKey, next)
 
-    check('day', next)
-    check('hour', next)
-    check('minute', next)
+    for (const w of ws) {
+      check(w, next)
+    }
   }
 }
 
@@ -67,7 +68,7 @@ function align(now: number, data: Data, n: number, k: keyof typeof buckets) {
   return data.tracking[k]
 }
 
-function check(k: keyof typeof buckets, data: Data) {
+function check(k: Keys, data: Data) {
   const consumed = data.n - data.tracking[k].n
   if (consumed >= allowance[k]) {
     throw new Error(`Traffic allowance excceded (${k})`)
