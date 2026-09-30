@@ -1,23 +1,11 @@
-import { createExecutionContext, reset, waitOnExecutionContext } from 'cloudflare:test'
-import { env, exports } from 'cloudflare:workers'
+import { reset } from 'cloudflare:test'
+import { exports } from 'cloudflare:workers'
 import { afterEach, describe, expect, it } from 'vitest'
-
-import { brainboxService } from '../src/brainbox-service.js'
 
 describe('brainbox-service', () => {
   // The Workers vitest integration isolates storage per test file, not per test, so wipe it after each test.
   afterEach(async () => {
     await reset()
-  })
-
-  it('responds with a greeting (unit style)', async () => {
-    const request = new Request<unknown, IncomingRequestCfProperties>('http://example.com/api/greeting?name=alice')
-    const ctx = createExecutionContext()
-    const response = await brainboxService.fetch(request, env, ctx)
-    // Wait for all `Promise`s passed to `ctx.waitUntil()` to settle before asserting
-    await waitOnExecutionContext(ctx)
-    expect(response.status).toEqual(200)
-    expect(await response.json()).toMatchObject({ greeting: 'Hello, alice!' })
   })
 
   it('responds with a greeting (integration style)', async () => {
