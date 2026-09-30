@@ -9,7 +9,7 @@ import { Allowance } from '../src/counter.js'
  * rejected one. Rejections are turned into values right away: handing the RPC promise itself to `expect(...).rejects`
  * leaves unhandled rejections behind.
  */
-async function runAll(timestamps: number[], allowance: Partial<Allowance>, name = 'c') {
+async function run(timestamps: number[], allowance: Partial<Allowance>, name = 'c') {
   const counter = env.COUNTER.getByName(name)
   const ret: string[] = []
   for (const t of timestamps) {
@@ -42,6 +42,10 @@ function steps(unit: 'hours' | 'minutes' | 'seconds', ...vals: number[]) {
   return vals.map(at => t0 + millis[unit] * at)
 }
 
+function runSteps(allowance: Partial<Allowance>, unit: 'hours' | 'minutes' | 'seconds', ...vals: number[]) {
+  return run(steps(unit, ...vals), allowance)
+}
+
 describe('counter', () => {
   // The Workers vitest integration isolates storage per test file, not per test, so wipe it after each test.
   afterEach(async () => {
@@ -49,7 +53,7 @@ describe('counter', () => {
   })
 
   it('allows up to the given per-minute allowance, rejects overage', async () => {
-    expect(await runAll(steps('seconds', 2, 30, 50, 58, 59), { minute: 4 })).toEqual([
+    expect(await runSteps({ minute: 4 }, 'seconds', 2, 30, 50, 58, 59)).toEqual([
       'ok',
       'ok',
       'ok',
@@ -58,7 +62,7 @@ describe('counter', () => {
     ])
   })
   it('allows up to the given per-hour allowance, rejects overage', async () => {
-    expect(await runAll(steps('seconds', 2, 30, 40, 50, 59), { hour: 4 })).toEqual([
+    expect(await runSteps({ hour: 4 }, 'seconds', 2, 30, 40, 50, 59)).toEqual([
       'ok',
       'ok',
       'ok',
@@ -67,7 +71,7 @@ describe('counter', () => {
     ])
   })
   it('allows up to the given per-day allowance, rejects overage', async () => {
-    expect(await runAll(steps('hours', 1, 21, 22, 23), { day: 3 })).toEqual([
+    expect(await runSteps({ day: 3 }, 'hours', 1, 21, 22, 23)).toEqual([
       'ok',
       'ok',
       'ok',
@@ -75,7 +79,7 @@ describe('counter', () => {
     ])
   })
   it('reallows when a new daily timeframe starts', async () => {
-    expect(await runAll(steps('hours', 3, 20, 21, 22, 23, 25, 26), { day: 3 })).toEqual([
+    expect(await runSteps({ day: 3 }, 'hours', 3, 20, 21, 22, 23, 25, 26)).toEqual([
       'ok',
       'ok',
       'ok',
@@ -86,7 +90,7 @@ describe('counter', () => {
     ])
   })
   it('reallows when a new hourly timeframe starts', async () => {
-    expect(await runAll(steps('minutes', 50, 52, 56, 57, 58, 59, 61, 62), { hour: 4 })).toEqual([
+    expect(await runSteps({ hour: 4 }, 'minutes', 50, 52, 56, 57, 58, 59, 61, 62)).toEqual([
       'ok',
       'ok',
       'ok',
@@ -98,7 +102,7 @@ describe('counter', () => {
     ])
   })
   it('reallows when a new minutely timeframe starts', async () => {
-    expect(await runAll(steps('seconds', 50, 52, 55, 56, 57, 58, 59, 61, 62), { minute: 5 })).toEqual([
+    expect(await runSteps({ minute: 5 }, 'seconds', 50, 52, 55, 56, 57, 58, 59, 61, 62)).toEqual([
       'ok',
       'ok',
       'ok',
@@ -112,7 +116,7 @@ describe('counter', () => {
   })
 
   it('keeps its usage across instance restarts', async () => {
-    expect(await runAll(steps('minutes', 1, 40, 50, 52), { hour: 3 })).toEqual([
+    expect(await runSteps({ hour: 3 }, 'minutes', 1, 40, 50, 52)).toEqual([
       'ok',
       'ok',
       'ok',
@@ -120,7 +124,7 @@ describe('counter', () => {
     ])
     await abortAllDurableObjects()
 
-    expect(await runAll(steps('minutes', 53, 54, 59, 61, 62), { hour: 3 })).toEqual([
+    expect(await runSteps({ hour: 3 }, 'minutes', 53, 54, 59, 61, 62)).toEqual([
       'Traffic allowance excceded (hour)',
       'Traffic allowance excceded (hour)',
       'Traffic allowance excceded (hour)',
@@ -130,12 +134,12 @@ describe('counter', () => {
   })
 
   it('keeps separate counters apart', async () => {
-    expect(await runAll(steps('minutes', 1, 40, 50, 52), { hour: 3 }, 'alpha')).toEqual([
+    expect(await run(steps('minutes', 1, 40, 50, 52), { hour: 3 }, 'alpha')).toEqual([
       'ok',
       'ok',
       'ok',
       'Traffic allowance excceded (hour)',
     ])
-    expect(await runAll(steps('minutes', 53, 54), { hour: 3 }, 'beta')).toEqual(['ok', 'ok'])
+    expect(await run(steps('minutes', 53, 54), { hour: 3 }, 'beta')).toEqual(['ok', 'ok'])
   })
 })
