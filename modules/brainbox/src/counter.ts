@@ -29,8 +29,8 @@ export type Allowance = Record<Timeframe, number>
  */
 export class Counter extends DurableObject<Env> {
   /** Adds one to the counter and returns the new value (1 on the first call). */
-  trafficTick(nowMillis: number, allowance: Allowance = { day: 40, hour: 30, minute: 15 }) {
-    const now = new Date(nowMillis)
+  trafficTick(nowMillis?: number, allowance: Allowance = { day: 40, hour: 30, minute: 15 }) {
+    const now = new Date(nowMillis ?? Date.now())
     const r = this.ctx.storage.kv.get(storageKey)
     const data = r
       ? Data.parse(r)
