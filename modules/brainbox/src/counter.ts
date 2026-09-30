@@ -59,6 +59,8 @@ export class Counter extends DurableObject<Env> {
     for (const tf of timeframes) {
       check(next, tf, allowance)
     }
+
+    return n
   }
 }
 
