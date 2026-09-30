@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { brainboxService } from '../src/brainbox-service.js'
 
-describe.skip('brainbox-service', () => {
+describe('brainbox-service', () => {
   // The Workers vitest integration isolates storage per test file, not per test, so wipe it after each test.
   afterEach(async () => {
     await reset()
