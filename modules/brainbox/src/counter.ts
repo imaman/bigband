@@ -15,16 +15,10 @@ const hour = 60 * minute
 const day = 24 * hour
 
 const buckets = {
-  minute,
-  hour,
-  day,
+  minute: { millis: minute, allowance: 15 },
+  hour: { millis: hour, allowance: 30 },
+  day: { millis: day, allowance: 15 },
 } as const
-
-const allowance = {
-  day: 100,
-  hour: 30,
-  minute: 15,
-}
 
 /**
  * A persistent counter. All requests for a given name are routed to a single instance, which handles them one at a
@@ -50,7 +44,7 @@ export class Counter extends DurableObject<Env> {
     for (const tf of timeframes) {
       copy[tf] = align(now, data, n, tf)
     }
-    const next = { n, tracking: copy } satisfies Data
+    const next = Data.parse({ n, tracking: copy } satisfies Data)
     this.ctx.storage.kv.put(storageKey, next)
 
     for (const tf of timeframes) {
@@ -60,7 +54,7 @@ export class Counter extends DurableObject<Env> {
 }
 
 function align(now: number, data: Data, n: number, tf: Timeframe) {
-  const started = new Date(now - (now % buckets[tf])).toISOString()
+  const started = new Date(now - (now % buckets[tf].millis)).toISOString()
   if (started > data.tracking[tf].started) {
     return { started, n }
   }
@@ -70,7 +64,7 @@ function align(now: number, data: Data, n: number, tf: Timeframe) {
 
 function check(data: Data, tf: Timeframe) {
   const consumed = data.n - data.tracking[tf].n
-  if (consumed >= allowance[tf]) {
+  if (consumed >= buckets[tf].allowance) {
     throw new Error(`Traffic allowance excceded (${tf})`)
   }
 }
