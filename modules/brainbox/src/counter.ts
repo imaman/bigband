@@ -1,14 +1,29 @@
 import { DurableObject } from 'cloudflare:workers'
+import { z } from 'zod'
+
+const Data = z.object({
+  n: z.number(),
+  day: z.object({ started: z.string(), n: z.number() }),
+  hour: z.object({ started: z.string(), n: z.number() }),
+  minute: z.object({ started: z.string(), n: z.number() }),
+})
+type Data = z.infer<typeof Data>
 
 const minute = 60 * 1000
 const hour = 60 * minute
 const day = 24 * hour
 
-const buckets = [
-  { len: minute, allowance: 2_000, name: 'minute' },
-  { len: hour, allowance: 10_000, name: 'hour' },
-  { len: day, allowance: 50_000, name: 'day' },
-]
+const buckets = {
+  minute,
+  hour,
+  day,
+} as const
+
+const allowance = {
+  day: 100,
+  hour: 30,
+  minute: 15,
+}
 
 /**
  * A persistent counter. All requests for a given name are routed to a single instance, which handles them one at a
@@ -17,16 +32,38 @@ const buckets = [
 export class Counter extends DurableObject<Env> {
   /** Adds one to the counter and returns the new value (1 on the first call). */
   provision(now: number) {
-    for (const b of buckets) {
-      const d = new Date(now - (now % b.len))
-      const k = `usage-${b.name}-${d.toISOString()}`
-      // The synchronous KV API of SQLite-backed Durable Objects: no `await` between the read and the write, so no other
-      // request can interleave.
-      const next = (this.ctx.storage.kv.get<number>(k) ?? 0) + 1
-      this.ctx.storage.kv.put(k, next)
-      if (next > b.allowance) {
-        throw new Error(`Traffic spike protection kicked in`)
-      }
+    // const d = new Date(now - (now % b.len))
+    const k = `usageTracking`
+    const r = this.ctx.storage.kv.get(k)
+    const parsed = r
+      ? Data.parse(r)
+      : {
+          n: 0,
+          day: { started: '1970-01-01Z', n: 0 },
+          hour: { started: '1970-01-01Z', n: 0 },
+          minute: { started: '1970-01-01Z', n: 0 },
+        }
+    const n = parsed.n + 1
+
+    const d = align(now, parsed, n, 'day')
+    const h = align(now, parsed, n, 'hour')
+    const m = align(now, parsed, n, 'minute')
+
+    if (!d && !h && !m) {
+      return
     }
+
+    throw new Error(`Exceeded traffic allownce [${d ?? h ?? m}]`)
   }
+}
+
+function align(now: number, parsed: Data, n: number, k: keyof typeof buckets) {
+  const started = new Date(now - (now % buckets[k])).toISOString()
+  if (started > parsed[k].started) {
+    parsed[k] = { started, n }
+    return
+  }
+
+  const consumed = n - parsed[k].n
+  return consumed > allowance[k] ? k : undefined
 }
