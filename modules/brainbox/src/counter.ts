@@ -49,6 +49,7 @@ export class Counter extends DurableObject<Env> {
     const h = align(now, parsed, n, 'hour')
     const m = align(now, parsed, n, 'minute')
 
+    this.ctx.storage.kv.put(k, parsed)
     if (!d && !h && !m) {
       return
     }
@@ -57,13 +58,13 @@ export class Counter extends DurableObject<Env> {
   }
 }
 
-function align(now: number, parsed: Data, n: number, k: keyof typeof buckets) {
+function align(now: number, data: Data, n: number, k: keyof typeof buckets) {
   const started = new Date(now - (now % buckets[k])).toISOString()
-  if (started > parsed[k].started) {
-    parsed[k] = { started, n }
+  if (started > data[k].started) {
+    data[k] = { started, n }
     return
   }
 
-  const consumed = n - parsed[k].n
+  const consumed = n - data[k].n
   return consumed > allowance[k] ? k : undefined
 }
