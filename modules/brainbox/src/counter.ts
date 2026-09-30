@@ -23,16 +23,15 @@ const buckets = {
 
 export type Allowance = Record<Timeframe, number>
 
+export type TrafficTickResult = number | { tag: 'tooManyRequest'; retryAfterMillis: number }
+
 /**
  * A persistent counter. All requests for a given name are routed to a single instance, which handles them one at a
  * time, so increments are never lost.
  */
 export class Counter extends DurableObject<Env> {
   /** Adds one to the counter and returns the new value (1 on the first call). */
-  trafficTick(
-    nowMillis?: number,
-    allowance: Allowance = { day: 40, hour: 30, minute: 15 },
-  ): number | { tag: 'tooManyRequest'; retryAfterMillis: number } {
+  trafficTick(nowMillis?: number, allowance: Allowance = { day: 40, hour: 30, minute: 15 }): TrafficTickResult {
     const now = new Date(nowMillis ?? Date.now())
     const r = this.ctx.storage.kv.get(storageKey)
     const data = r

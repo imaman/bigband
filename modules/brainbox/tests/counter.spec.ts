@@ -2,7 +2,7 @@ import { abortAllDurableObjects, reset } from 'cloudflare:test'
 import { env } from 'cloudflare:workers'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { Allowance } from '../src/counter.js'
+import { Allowance, TrafficTickResult } from '../src/counter.js'
 
 /**
  * Calls `trafficTick` once per timestamp, in order. Returns 'ok' for each accepted call and the error message for each
@@ -22,7 +22,12 @@ async function run(timestamps: number[], allowance: Partial<Allowance>, name = '
           ...allowance,
         })
         .then(
-          () => 'ok',
+          (v: TrafficTickResult) => {
+            if (typeof v === 'number') {
+              return 'ok'
+            }
+            return `${v.tag} ${v.retryAfterMillis}`
+          },
           (e: unknown) => (e instanceof Error ? e.message : String(e)),
         ),
     )
