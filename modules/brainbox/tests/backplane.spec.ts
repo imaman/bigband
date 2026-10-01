@@ -2,7 +2,7 @@ import { abortAllDurableObjects, reset } from 'cloudflare:test'
 import { env } from 'cloudflare:workers'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { Allowance, TrafficTickResult } from '../src/counter.js'
+import { Allowance, TrafficTickResult } from '../src/backplane.js'
 
 /**
  * Calls `trafficTick` once per timestamp, in order. Returns 'ok' for each accepted call,

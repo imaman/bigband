@@ -29,7 +29,7 @@ export type TrafficTickResult = number | { tag: 'tooManyRequest'; retryAfterMill
  * A persistent counter. All requests for a given name are routed to a single instance, which handles them one at a
  * time, so increments are never lost.
  */
-export class Counter extends DurableObject<Env> {
+export class Backplane extends DurableObject<Env> {
   /**
    * Records one request at `nowMillis` (defaults to the Durable Object's clock). Returns the running request count, or
    * `tooManyRequest` with the time left until the exhausted timeframe ends if the request exceeds `allowance`.
