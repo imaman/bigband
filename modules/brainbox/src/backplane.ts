@@ -26,7 +26,7 @@ export type Allowance = Record<Timeframe, number>
 export type TrafficTickResult = number | { tag: 'tooManyRequest'; retryAfterMillis: number }
 
 /**
- * A persistent counter. All requests for a given name are routed to a single instance, which handles them one at a
+ * A persistent global bus. All requests for a given name are routed to a single instance, which handles them one at a
  * time, so increments are never lost.
  */
 export class Backplane extends DurableObject<Env> {
