@@ -58,34 +58,29 @@ export class Counter extends DurableObject<Env> {
     for (const tf of timeframes) {
       copy[tf] = align(now.getTime(), data, n, tf)
     }
-    const next = Data.parse({ n, lastUpdated: now.toISOString(), tracking: copy } satisfies Data)
-    this.ctx.storage.kv.put(storageKey, next)
+    const toWrite = Data.parse({ n, lastUpdated: now.toISOString(), tracking: copy } satisfies Data)
+    this.ctx.storage.kv.put(storageKey, toWrite)
 
-    // Compute the "retry-after" value.
-    // Timeframes are aligned to the clock: they start at whole minutes/hours/days (e.g., 10:00:00 - 10:59:59.999 for
-    // the hour), regardless of when the first request within them arrived. A request at 10:59:50 thus falls into the
-    // hour that started at 10:00, not into an hour ending at 11:59:50. Consequently, they nest: a minute never outlasts
-    // its hour, nor an hour its day, and the largest exceeded timeframe ends last. Taking the max keeps this correct
-    // should timeframes stop nesting (e.g., if they were anchored to the first request).
-    const max = timeframes.reduce((soFar, tf) => {
-      const c = check(next, tf, allowance)
+    // Compute when can the request be retried, or -1 if it can go in now.
+    const retryAt = timeframes.reduce((soFar, tf) => {
+      const c = isAllowed(toWrite, tf, allowance)
       if (c) {
         return soFar
       }
 
-      const nextTimeframeStart = Date.parse(next.tracking[tf].started) + buckets[tf]
+      const nextTimeframeStart = Date.parse(toWrite.tracking[tf].started) + buckets[tf]
       return Math.max(soFar, nextTimeframeStart)
     }, -1)
-    if (max < 0) {
+    if (retryAt < 0) {
       return n
     }
 
-    return { tag: 'tooManyRequest', retryAfterMillis: max - now.getTime() }
+    return { tag: 'tooManyRequest', retryAfterMillis: retryAt - now.getTime() }
   }
 }
 
 function align(now: number, data: Data, n: number, tf: Timeframe) {
-  const started = new Date(now - (now % buckets[tf])).toISOString()
+  const started = computeTimeframeStart(now, tf).toISOString()
   if (started > data.tracking[tf].started) {
     return { started, n }
   }
@@ -93,9 +88,16 @@ function align(now: number, data: Data, n: number, tf: Timeframe) {
   return data.tracking[tf]
 }
 
-function check(data: Data, tf: Timeframe, allowance: Allowance) {
+function isAllowed(data: Data, tf: Timeframe, allowance: Allowance) {
   const consumed = data.n - data.tracking[tf].n
   return consumed < allowance[tf]
 }
 
 const storageKey = `usageTracking`
+
+/**
+ * Returns the start time of the most recent timeframe (compared to now)
+ */
+function computeTimeframeStart(now: number, tf: Timeframe) {
+  return new Date(now - (now % buckets[tf]))
+}
