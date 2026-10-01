@@ -5,9 +5,10 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { Allowance, TrafficTickResult } from '../src/counter.js'
 
 /**
- * Calls `trafficTick` once per timestamp, in order. Returns 'ok' for each accepted call and the error message for each
- * rejected one. Rejections are turned into values right away: handing the RPC promise itself to `expect(...).rejects`
- * leaves unhandled rejections behind.
+ * Calls `trafficTick` once per timestamp, in order. Returns 'ok' for each accepted call,
+ * `tooManyRequest <retryAfterMillis>` for each rejected one, and the error message for each that throws. Errors are
+ * turned into values right away: handing the RPC promise itself to `expect(...).rejects` leaves unhandled rejections
+ * behind.
  */
 async function run(timestamps: number[], allowance: Partial<Allowance>, name = 'c') {
   const counter = env.COUNTER.getByName(name)
@@ -63,7 +64,7 @@ describe('counter', () => {
       'ok',
       'ok',
       'ok',
-      'Traffic allowance excceded (minute)',
+      'tooManyRequest 1000',
     ])
   })
   it('allows up to the given per-hour allowance, rejects overage', async () => {
@@ -72,24 +73,19 @@ describe('counter', () => {
       'ok',
       'ok',
       'ok',
-      'Traffic allowance excceded (hour)',
+      'tooManyRequest 3541000',
     ])
   })
   it('allows up to the given per-day allowance, rejects overage', async () => {
-    expect(await runSteps({ day: 3 }, 'hours', 1, 21, 22, 23)).toEqual([
-      'ok',
-      'ok',
-      'ok',
-      'Traffic allowance excceded (day)',
-    ])
+    expect(await runSteps({ day: 3 }, 'hours', 1, 21, 22, 23)).toEqual(['ok', 'ok', 'ok', 'tooManyRequest 3600000'])
   })
   it('reallows when a new daily timeframe starts', async () => {
     expect(await runSteps({ day: 3 }, 'hours', 3, 20, 21, 22, 23, 25, 26)).toEqual([
       'ok',
       'ok',
       'ok',
-      'Traffic allowance excceded (day)',
-      'Traffic allowance excceded (day)',
+      'tooManyRequest 7200000',
+      'tooManyRequest 3600000',
       'ok',
       'ok',
     ])
@@ -100,8 +96,8 @@ describe('counter', () => {
       'ok',
       'ok',
       'ok',
-      'Traffic allowance excceded (hour)',
-      'Traffic allowance excceded (hour)',
+      'tooManyRequest 120000',
+      'tooManyRequest 60000',
       'ok',
       'ok',
     ])
@@ -113,26 +109,21 @@ describe('counter', () => {
       'ok',
       'ok',
       'ok',
-      'Traffic allowance excceded (minute)',
-      'Traffic allowance excceded (minute)',
+      'tooManyRequest 2000',
+      'tooManyRequest 1000',
       'ok',
       'ok',
     ])
   })
 
   it('keeps its usage across instance restarts', async () => {
-    expect(await runSteps({ hour: 3 }, 'minutes', 1, 40, 50, 52)).toEqual([
-      'ok',
-      'ok',
-      'ok',
-      'Traffic allowance excceded (hour)',
-    ])
+    expect(await runSteps({ hour: 3 }, 'minutes', 1, 40, 50, 52)).toEqual(['ok', 'ok', 'ok', 'tooManyRequest 480000'])
     await abortAllDurableObjects()
 
     expect(await runSteps({ hour: 3 }, 'minutes', 53, 54, 59, 61, 62)).toEqual([
-      'Traffic allowance excceded (hour)',
-      'Traffic allowance excceded (hour)',
-      'Traffic allowance excceded (hour)',
+      'tooManyRequest 420000',
+      'tooManyRequest 360000',
+      'tooManyRequest 60000',
       'ok',
       'ok',
     ])
@@ -143,17 +134,13 @@ describe('counter', () => {
       'ok',
       'ok',
       'ok',
-      'Traffic allowance excceded (hour)',
+      'tooManyRequest 480000',
     ])
     expect(await run(steps('minutes', 53, 54), { hour: 3 }, 'beta')).toEqual(['ok', 'ok'])
   })
 
   it('allows same-timestamp requests', async () => {
-    expect(await runSteps({ minute: 2 }, 'seconds', 7, 7, 7)).toEqual([
-      'ok',
-      'ok',
-      'Traffic allowance excceded (minute)',
-    ])
+    expect(await runSteps({ minute: 2 }, 'seconds', 7, 7, 7)).toEqual(['ok', 'ok', 'tooManyRequest 53000'])
   })
   it('yells if the clock goes backwards', async () => {
     expect(await runSteps({ minute: 4 }, 'seconds', 7, 7, 6, 5, 6, 7)).toEqual([

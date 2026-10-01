@@ -30,7 +30,10 @@ export type TrafficTickResult = number | { tag: 'tooManyRequest'; retryAfterMill
  * time, so increments are never lost.
  */
 export class Counter extends DurableObject<Env> {
-  /** Adds one to the counter and returns the new value (1 on the first call). */
+  /**
+   * Records one request at `nowMillis` (defaults to the Durable Object's clock). Returns the running request count, or
+   * `tooManyRequest` with the time left until the exhausted timeframe ends if the request exceeds `allowance`.
+   */
   trafficTick(nowMillis?: number, allowance: Allowance = { day: 40, hour: 30, minute: 15 }): TrafficTickResult {
     const now = new Date(nowMillis ?? Date.now())
     const r = this.ctx.storage.kv.get(storageKey)
@@ -60,7 +63,8 @@ export class Counter extends DurableObject<Env> {
 
     for (const tf of timeframes) {
       if (!check(next, tf, allowance)) {
-        return { tag: 'tooManyRequest', retryAfterMillis: buckets[tf] }
+        const endsAt = Date.parse(next.tracking[tf].started) + buckets[tf]
+        return { tag: 'tooManyRequest', retryAfterMillis: endsAt - now.getTime() }
       }
     }
 
@@ -80,16 +84,6 @@ function align(now: number, data: Data, n: number, tf: Timeframe) {
 function check(data: Data, tf: Timeframe, allowance: Allowance) {
   const consumed = data.n - data.tracking[tf].n
   return consumed < allowance[tf]
-}
-
-const allowanceExceeded = 'Traffic allowance excceded'
-
-/**
- * Whether `e` reports an exceeded traffic allowance. Matches on the message because the error class does not survive
- * the RPC boundary: callers of the Durable Object receive a plain `Error`.
- */
-export function isAllowanceExceeded(e: unknown) {
-  return e instanceof Error && e.message.startsWith(allowanceExceeded)
 }
 
 const storageKey = `usageTracking`

@@ -66,5 +66,7 @@ describe('brainbox-service', () => {
     }
     const response = await exports.default.fetch('https://example.com/api/greeting')
     expect(response.status).toEqual(429)
+    // 00:00:10 leaves 50 seconds of the current minute.
+    expect(response.headers.get('Retry-After')).toEqual('50')
   })
 })
