@@ -3,7 +3,11 @@
  * function. Every request that reaches the worker increments the request counter.
  */
 export async function handleRequest(request: Request, env: Env): Promise<Response> {
-  const count = await env.COUNTER.getByName('requests').increment()
+  const count = await env.COUNTER.getByName('requests').trafficTick()
+  if (typeof count !== 'number') {
+    const retryAfterSeconds = Math.ceil(count.retryAfterMillis / 1000)
+    return new Response('Too many requests', { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } })
+  }
   const url = new URL(request.url)
 
   if (url.pathname === '/api/greeting') {

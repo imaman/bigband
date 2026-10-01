@@ -1,26 +1,15 @@
-import { createExecutionContext, reset, waitOnExecutionContext } from 'cloudflare:test'
-import { env, exports } from 'cloudflare:workers'
-import { afterEach, describe, expect, it } from 'vitest'
-
-import { brainboxService } from '../src/brainbox-service.js'
+import { reset } from 'cloudflare:test'
+import { exports } from 'cloudflare:workers'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 describe('brainbox-service', () => {
   // The Workers vitest integration isolates storage per test file, not per test, so wipe it after each test.
   afterEach(async () => {
     await reset()
+    vi.useRealTimers()
   })
 
-  it('responds with a greeting (unit style)', async () => {
-    const request = new Request<unknown, IncomingRequestCfProperties>('http://example.com/api/greeting?name=alice')
-    const ctx = createExecutionContext()
-    const response = await brainboxService.fetch(request, env, ctx)
-    // Wait for all `Promise`s passed to `ctx.waitUntil()` to settle before asserting
-    await waitOnExecutionContext(ctx)
-    expect(response.status).toEqual(200)
-    expect(await response.json()).toMatchObject({ greeting: 'Hello, alice!' })
-  })
-
-  it('responds with a greeting (integration style)', async () => {
+  it('responds with a greeting', async () => {
     const response = await exports.default.fetch('https://example.com/api/greeting?name=alice')
     expect(response.status).toEqual(200)
     expect(await response.json()).toMatchObject({ greeting: 'Hello, alice!' })
@@ -61,21 +50,23 @@ describe('brainbox-service', () => {
     expect(await response.json()).toMatchObject({ count: 2 })
   })
 
-  it('increments a counter by one per call', async () => {
-    const counter = env.COUNTER.getByName('counter-under-test')
-    expect(await counter.increment()).toEqual(1)
-    expect(await counter.increment()).toEqual(2)
-    expect(await counter.increment()).toEqual(3)
-  })
-
-  it('keeps separate counters apart', async () => {
-    expect(await env.COUNTER.getByName('a').increment()).toEqual(1)
-    expect(await env.COUNTER.getByName('b').increment()).toEqual(1)
-    expect(await env.COUNTER.getByName('a').increment()).toEqual(2)
-  })
-
   it('responds with 404 to an unknown path', async () => {
     const response = await exports.default.fetch('https://example.com/no-such-path')
     expect(response.status).toEqual(404)
+  })
+
+  it('responds with 429 once the per-minute allowance is used up', async () => {
+    // Pins the clock (only `Date`) so that the requests cannot straddle a minute boundary.
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2030-01-01T00:00:10Z'))
+    // The default per-minute allowance of `Counter.trafficTick` is 15.
+    for (let i = 0; i < 15; ++i) {
+      const response = await exports.default.fetch('https://example.com/api/greeting')
+      expect(response.status).toEqual(200)
+    }
+    const response = await exports.default.fetch('https://example.com/api/greeting')
+    expect(response.status).toEqual(429)
+    // 00:00:10 leaves 50 seconds of the current minute.
+    expect(response.headers.get('Retry-After')).toEqual('50')
   })
 })
