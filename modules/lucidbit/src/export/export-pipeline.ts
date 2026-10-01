@@ -1,9 +1,9 @@
 import { ArrayBufferTarget, Muxer } from 'mp4-muxer'
 
-import { failMe } from '../fail-me'
-import type { DisplayWord } from '../rsvp/display-rules'
-import { findCurrentWord } from '../rsvp/display-rules'
-import { renderRsvpFrame } from '../rsvp/rsvp-renderer'
+import { failMe } from '../fail-me.js'
+import type { DisplayWord } from '../rsvp/display-rules.js'
+import { findCurrentWord } from '../rsvp/display-rules.js'
+import { renderRsvpFrame } from '../rsvp/rsvp-renderer.js'
 
 const WIDTH = 1080
 const HEIGHT = 1920

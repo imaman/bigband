@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { WhisperWord } from '../types'
+import type { WhisperWord } from '../types.js'
 
 const WhisperResponseSchema = z.object({
   words: z.array(z.object({ word: z.string(), start: z.number(), end: z.number() })).optional(),

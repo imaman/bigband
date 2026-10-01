@@ -1,4 +1,4 @@
-import { failMe } from '../fail-me'
+import { failMe } from '../fail-me.js'
 
 export function encodeWav(audioBuffer: AudioBuffer): ArrayBuffer {
   const numChannels = audioBuffer.numberOfChannels
