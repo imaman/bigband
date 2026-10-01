@@ -11,7 +11,7 @@ import { Allowance, TrafficTickResult } from '../src/backplane.js'
  * behind.
  */
 async function run(timestamps: number[], allowance: Partial<Allowance>, name = 'c') {
-  const counter = env.COUNTER.getByName(name)
+  const counter = env.BACKPLANE.getByName(name)
   const ret: string[] = []
   for (const t of timestamps) {
     ret.push(
