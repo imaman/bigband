@@ -63,8 +63,8 @@ export class Counter extends DurableObject<Env> {
 
     for (const tf of timeframes) {
       if (!check(next, tf, allowance)) {
-        const endsAt = Date.parse(next.tracking[tf].started) + buckets[tf]
-        return { tag: 'tooManyRequest', retryAfterMillis: endsAt - now.getTime() }
+        const nextTimeframeStart = Date.parse(next.tracking[tf].started) + buckets[tf]
+        return { tag: 'tooManyRequest', retryAfterMillis: nextTimeframeStart - now.getTime() }
       }
     }
 
