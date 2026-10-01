@@ -61,6 +61,12 @@ export class Counter extends DurableObject<Env> {
     const next = Data.parse({ n, lastUpdated: now.toISOString(), tracking: copy } satisfies Data)
     this.ctx.storage.kv.put(storageKey, next)
 
+    // Compute the "retry-after" value.
+    // Timeframes are aligned to the clock: they start at whole minutes/hours/days (e.g., 10:00:00 - 10:59:59.999 for
+    // the hour), regardless of when the first request within them arrived. A request at 10:59:50 thus falls into the
+    // hour that started at 10:00, not into an hour ending at 11:59:50. Consequently, they nest: a minute never outlasts
+    // its hour, nor an hour its day, and the largest exceeded timeframe ends last. Taking the max keeps this correct
+    // should timeframes stop nesting (e.g., if they were anchored to the first request).
     const max = timeframes.reduce((soFar, tf) => {
       const c = check(next, tf, allowance)
       if (c) {
