@@ -96,7 +96,8 @@ function isAllowed(data: Data, tf: Timeframe, allowance: Allowance) {
 const storageKey = `usageTracking`
 
 /**
- * Returns the start time of the most recent timeframe (compared to now)
+ * Returns the start of the `tf` timeframe that contains `now`. All timeframes are aligned to the Unix epoch, so for
+ * e.g. "hour" this is the top of the UTC hour that `now` falls in.
  */
 function computeTimeframeStart(now: number, tf: Timeframe) {
   return new Date(now - (now % buckets[tf]))
