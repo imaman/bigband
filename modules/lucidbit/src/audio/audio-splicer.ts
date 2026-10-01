@@ -1,5 +1,5 @@
-import { failMe } from '../fail-me'
-import type { WhisperWord } from '../types'
+import { failMe } from '../fail-me.js'
+import type { WhisperWord } from '../types.js'
 
 interface KeepRange {
   start: number

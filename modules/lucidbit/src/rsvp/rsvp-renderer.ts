@@ -1,5 +1,5 @@
-import { failMe } from '../fail-me'
-import type { DisplayWord } from './display-rules'
+import { failMe } from '../fail-me.js'
+import type { DisplayWord } from './display-rules.js'
 
 export interface RsvpRenderOptions {
   width: number

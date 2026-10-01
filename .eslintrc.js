@@ -53,6 +53,16 @@ module.exports = {
           { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' },
         ],
         'no-constant-condition': ['error', { checkLoops: false }],
+        // Relative imports must spell out the extension of the emitted file (e.g. './name.js'). Under NodeNext tsc
+        // enforces this itself, but modules that use `moduleResolution: Bundler` (brainbox) accept extensionless
+        // paths, so the convention is enforced here.
+        'no-restricted-syntax': [
+          'error',
+          ...['ImportDeclaration', 'ExportNamedDeclaration', 'ExportAllDeclaration', 'ImportExpression'].map(t => ({
+            selector: `${t} > Literal.source[value=/^\\.(?!.*\\.([cm]?js|json)$)/]`,
+            message: "Relative imports must include the file extension (e.g. './name.js').",
+          })),
+        ],
         'no-inner-declarations': 'off',
       },
     },
