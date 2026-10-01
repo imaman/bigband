@@ -61,14 +61,20 @@ export class Counter extends DurableObject<Env> {
     const next = Data.parse({ n, lastUpdated: now.toISOString(), tracking: copy } satisfies Data)
     this.ctx.storage.kv.put(storageKey, next)
 
-    for (const tf of timeframes) {
-      if (!check(next, tf, allowance)) {
-        const nextTimeframeStart = Date.parse(next.tracking[tf].started) + buckets[tf]
-        return { tag: 'tooManyRequest', retryAfterMillis: nextTimeframeStart - now.getTime() }
+    const max = timeframes.reduce((soFar, tf) => {
+      const c = check(next, tf, allowance)
+      if (c) {
+        return soFar
       }
+
+      const nextTimeframeStart = Date.parse(next.tracking[tf].started) + buckets[tf]
+      return Math.max(soFar, nextTimeframeStart)
+    }, -1)
+    if (max < 0) {
+      return n
     }
 
-    return n
+    return { tag: 'tooManyRequest', retryAfterMillis: max - now.getTime() }
   }
 }
 
