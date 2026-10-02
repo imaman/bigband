@@ -40,7 +40,6 @@ describe('brainbox-service.harness', () => {
     expect(server.getLogs().filter(log => log.level === 'error')).toEqual([])
   })
 
-  // Checks, under the exact `durable_objects`/`migrations` config of wrangler.jsonc, that the counter persists.
   it('increments the request count across requests', async () => {
     const first = await (await server.fetch('/api/greeting')).json()
     expect(first).toMatchObject({ count: 1 })
@@ -48,8 +47,6 @@ describe('brainbox-service.harness', () => {
     expect(second).toMatchObject({ count: 2 })
   })
 
-  // Checks, under the exact `assets` config of wrangler.jsonc, that the asset router lets API requests through to the
-  // worker.
   it('routes /api/greeting past the asset router to the worker', async () => {
     const response = await server.fetch('/api/greeting?name=alice')
     expect(response.status).toEqual(200)

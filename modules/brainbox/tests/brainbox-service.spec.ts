@@ -59,7 +59,7 @@ describe('brainbox-service', () => {
     // Pins the clock (only `Date`) so that the requests cannot straddle a minute boundary.
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2030-01-01T00:00:10Z'))
-    // The default per-minute allowance of `Counter.trafficTick` is 15.
+    // The default per-minute allowance of `Backplane` is 15.
     for (let i = 0; i < 15; ++i) {
       const response = await exports.default.fetch('https://example.com/api/greeting')
       expect(response.status).toEqual(200)

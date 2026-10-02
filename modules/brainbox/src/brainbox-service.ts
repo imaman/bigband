@@ -1,6 +1,6 @@
 /**
  * Handles a single incoming request. Kept separate from the `fetch` export so request handling stays a plain
- * function. Every request that reaches the worker increments the request counter.
+ * function.
  */
 export async function handleRequest(request: Request, env: Env): Promise<Response> {
   const count = await env.BACKPLANE.getByName('requests').trafficTick()
