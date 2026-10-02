@@ -86,6 +86,7 @@
       "bindings": [{ "name": "BACKPLANE", "class_name": "Backplane" }]
     },
     "vars": {
+      "foo": 5,
       "ALLOWANCE": {
         "day": 40,
         "hour": 30,
