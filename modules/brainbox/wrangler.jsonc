@@ -95,6 +95,9 @@
     "durable_objects": {
       "bindings": [{ "name": "BACKPLANE", "class_name": "Backplane" }]
     },
+    "secrets": {
+      "required": ["BRAINBOX_SERVICE_SECRET"]
+    },
     "vars": {
       "ALLOWANCE": {
         "day": 40,
