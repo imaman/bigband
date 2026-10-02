@@ -37,6 +37,8 @@ export class Backplane extends DurableObject<Env> {
     this.allowance = env.ALLOWANCE
   }
 
+  doIt() {}
+
   /**
    * Records one request at `nowMillis` (defaults to the Durable Object's clock). Returns the running request count, or
    * `tooManyRequest` with the time left until the exhausted timeframe ends if the request exceeds `allowance`.
