@@ -46,7 +46,6 @@
    * https://developers.cloudflare.com/workers/configuration/secrets/
    */
   "vars": {
-    "fooboo": "zoo",
     "ALLOWANCE": {
       "day": 40,
       "hour": 30,
@@ -66,7 +65,10 @@
    * in a migration; `new_sqlite_classes` gives it the SQLite storage backend (the one available on the free plan).
    */
   "durable_objects": {
-    "bindings": [{ "name": "BACKPLANE", "class_name": "Backplane" }]
+    "bindings": [
+      { "name": "BACKPLANE", "class_name": "Backplane" },
+      { "name": "BACKPLANE2", "class_name": "Backplane" }
+    ]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Backplane"] }],
 
