@@ -44,9 +44,9 @@ describe('brainbox-service', () => {
 
   it('includes the request count in the greeting', async () => {
     const first = await exports.default.fetch('https://example.com/api/greeting?name=alice')
-    expect(await first.json()).toEqual({ greeting: 'Hello, alice!', count: 1 })
+    expect(await first.json()).toEqual({ greeting: 'Hello, alice!', count: 1, blended: expect.any(String) })
     const second = await exports.default.fetch('https://example.com/api/greeting?name=alice')
-    expect(await second.json()).toEqual({ greeting: 'Hello, alice!', count: 2 })
+    expect(await second.json()).toEqual({ greeting: 'Hello, alice!', count: 2, blended: expect.any(String) })
   })
 
   it('counts every request that reaches the worker, not only greetings', async () => {

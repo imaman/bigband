@@ -13,7 +13,12 @@ const wranglerConfigPath = path.join(packageRoot, 'wrangler.jsonc')
 
 // Follows https://developers.cloudflare.com/workers/testing/test-harness/get-started/
 const server = createTestHarness({
-  workers: [{ configPath: wranglerConfigPath }],
+  workers: [
+    {
+      configPath: wranglerConfigPath,
+      secrets: { BRAINBOX_SERVICE_SECRET: '12345' },
+    },
+  ],
 })
 
 // Out-of-process tests of the worker as deployed:
@@ -65,6 +70,10 @@ describe('brainbox-service.harness', () => {
   it('routes /api/greeting past the asset router to the worker', async () => {
     const response = await server.fetch('/api/greeting?name=alice')
     expect(response.status).toEqual(200)
-    expect(await response.json()).toEqual({ greeting: 'Hello, alice!', count: expect.any(Number) })
+    expect(await response.json()).toEqual({
+      greeting: 'Hello, alice!',
+      count: expect.any(Number),
+      blended: expect.any(String),
+    })
   })
 })
