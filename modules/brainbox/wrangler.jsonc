@@ -45,7 +45,13 @@
    * Note: Use secrets to store sensitive data.
    * https://developers.cloudflare.com/workers/configuration/secrets/
    */
-  // "vars": {  "MY_VARIABLE": "production_value" }
+  "vars": {
+    "ALLOWANCE": {
+      "day": 40,
+      "hour": 30,
+      "minute": 15
+    }
+  },
   /**
    * Static Assets
    * https://developers.cloudflare.com/workers/static-assets/binding/
@@ -78,6 +84,13 @@
   "previews": {
     "durable_objects": {
       "bindings": [{ "name": "BACKPLANE", "class_name": "Backplane" }]
+    },
+    "vars": {
+      "ALLOWANCE": {
+        "day": 40,
+        "hour": 30,
+        "minute": 15
+      }
     }
   }
 }

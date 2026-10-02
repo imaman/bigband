@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc -b",
     "cf-typegen": "wrangler types src/worker-configuration.d.ts",
+    "check-cf-types": "wrangler types --check src/worker-configuration.d.ts",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "test": "vitest run --config tests/vitest.config.mts"
@@ -24,5 +25,12 @@
   },
   "buildRaptor": {
     "testCommand": "tools/test-runners/vitest-workers"
+  },
+  "buildTasks": {
+    "check-cf-types": {
+      "inputs": "_ALWAYS_",
+      "outputs": [],
+      "labels": "build-ci"
+    }
   }
 }
