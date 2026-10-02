@@ -9,19 +9,17 @@ import { createTestHarness } from 'wrangler'
 const packageRoot = fileURLToPath(new URL('../..', import.meta.url))
 const wranglerConfigPath = path.join(packageRoot, 'wrangler.jsonc')
 
-// Runs the worker the way `wrangler dev` / `wrangler deploy` do: wrangler bundles `src/index.ts` and starts it in
-// workerd with exactly the compatibility date, flags and bindings of `wrangler.jsonc`. The tests in
-// `brainbox-service.spec.ts` run inside the Workers vitest integration instead, which adds compatibility flags of its
-// own (e.g. `nodejs_compat`) so that vitest can run in workerd; they can therefore pass on code that relies on APIs the
-// deployed worker lacks.
-//
 // Follows https://developers.cloudflare.com/workers/testing/test-harness/get-started/
 const server = createTestHarness({
   workers: [{ configPath: wranglerConfigPath }],
 })
 
-// An E2E test which is a highly-accurate clone of production. The tests runs out of process from the worker and
-// communicates with via network calls.
+// Out-of-process tests of the worker as deployed:
+// - Wrangler bundles and runs the worker exactly as `wrangler dev` / `wrangler deploy` do, with the compatibility
+//   date, flags and bindings of `wrangler.jsonc`.
+// - The tests run out of process and reach the worker over HTTP, including the static-assets router.
+// - Catches code that relies on APIs the deployed worker lacks.
+// - Tests cannot reach inside the worker (no fake timers, no direct `env` access).
 describe('brainbox-service.harness', () => {
   beforeAll(async () => {
     await server.listen()

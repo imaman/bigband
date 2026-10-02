@@ -2,7 +2,11 @@ import { reset } from 'cloudflare:test'
 import { exports } from 'cloudflare:workers'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-// A more unit-like test: the requests to the worker-under-test are made by in-process calls.
+// In-process tests of the worker:
+// - Requests are in-process calls into the worker (same workerd isolate, no socket).
+// - Tests can control the worker's environment (e.g. fake `Date`).
+// - Requests skip the static-assets router.
+// - The worker runs under the Workers vitest integration's compatibility settings, not the deployed ones.
 describe('brainbox-service', () => {
   // The Workers vitest integration isolates storage per test file, not per test, so wipe it after each test.
   afterEach(async () => {
