@@ -13,7 +13,12 @@ const wranglerConfigPath = path.join(packageRoot, 'wrangler.jsonc')
 
 // Follows https://developers.cloudflare.com/workers/testing/test-harness/get-started/
 const server = createTestHarness({
-  workers: [{ configPath: wranglerConfigPath }],
+  workers: [
+    {
+      configPath: wranglerConfigPath,
+      secrets: { BRAINBOX_SERVICE_SECRET: '12345' },
+    },
+  ],
 })
 
 // Out-of-process tests of the worker as deployed:
