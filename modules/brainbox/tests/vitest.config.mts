@@ -18,7 +18,16 @@ export default defineConfig({
       {
         // Tests that run inside workerd via the Workers vitest integration (`cloudflare:test`, and `env`/`exports`
         // from `cloudflare:workers`).
-        plugins: [cloudflareTest({ wrangler: { configPath: wranglerConfigPath } })],
+        plugins: [
+          cloudflareTest({
+            wrangler: { configPath: wranglerConfigPath },
+            miniflare: {
+              bindings: {
+                BRAINBOX_SERVICE_SECRET: '54321',
+              },
+            },
+          }),
+        ],
         test: {
           name: 'workerd',
           root: packageRoot,
