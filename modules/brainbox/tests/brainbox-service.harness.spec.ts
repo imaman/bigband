@@ -20,6 +20,8 @@ const server = createTestHarness({
   workers: [{ configPath: wranglerConfigPath }],
 })
 
+// An E2E test which is a highly-accurate clone of production. The tests runs out of process from the worker and
+// communicates with via network calls.
 describe('brainbox-service.harness', () => {
   beforeAll(async () => {
     await server.listen()

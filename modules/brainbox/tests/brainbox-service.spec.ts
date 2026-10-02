@@ -2,6 +2,7 @@ import { reset } from 'cloudflare:test'
 import { exports } from 'cloudflare:workers'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+// A more unit-like test: the requests to the worker-under-test are made by in-process calls.
 describe('brainbox-service', () => {
   // The Workers vitest integration isolates storage per test file, not per test, so wipe it after each test.
   afterEach(async () => {
