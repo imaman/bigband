@@ -67,7 +67,10 @@
   "durable_objects": {
     "bindings": [{ "name": "BACKPLANE", "class_name": "Backplane" }]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Backplane"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Counter"] },
+    { "tag": "v2", "renamed_classes": [{ "from": "Counter", "to": "Backplane" }] }
+  ],
 
   /**
    * Service Bindings (communicate between multiple Workers)
