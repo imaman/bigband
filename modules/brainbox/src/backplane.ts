@@ -30,11 +30,19 @@ export type TrafficTickResult = number | { tag: 'tooManyRequest'; retryAfterMill
  * time, so increments are never lost.
  */
 export class Backplane extends DurableObject<Env> {
+  private readonly allowance
+
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env)
+    this.allowance = env.ALLOWANCE
+  }
+
   /**
    * Records one request at `nowMillis` (defaults to the Durable Object's clock). Returns the running request count, or
    * `tooManyRequest` with the time left until the exhausted timeframe ends if the request exceeds `allowance`.
    */
-  trafficTick(nowMillis?: number, allowance: Allowance = { day: 40, hour: 30, minute: 15 }): TrafficTickResult {
+  trafficTick(nowMillis?: number, allowance?: Allowance): TrafficTickResult {
+    allowance = allowance ?? this.allowance
     const now = new Date(nowMillis ?? Date.now())
     const r = this.ctx.storage.kv.get(storageKey)
     const data = r
