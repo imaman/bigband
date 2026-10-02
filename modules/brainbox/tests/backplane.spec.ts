@@ -2,7 +2,7 @@ import { abortAllDurableObjects, reset } from 'cloudflare:test'
 import { env } from 'cloudflare:workers'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { Allowance, TrafficTickResult } from '../src/counter.js'
+import { Allowance, TrafficTickResult } from '../src/backplane.js'
 
 /**
  * Calls `trafficTick` once per timestamp, in order. Returns 'ok' for each accepted call,
@@ -10,12 +10,12 @@ import { Allowance, TrafficTickResult } from '../src/counter.js'
  * turned into values right away: handing the RPC promise itself to `expect(...).rejects` leaves unhandled rejections
  * behind.
  */
-async function run(timestamps: number[], allowance: Partial<Allowance>, name = 'c') {
-  const counter = env.COUNTER.getByName(name)
+async function run(timestamps: number[], allowance: Partial<Allowance>, instanceName = 'aaa') {
+  const backplane = env.BACKPLANE.getByName(instanceName)
   const ret: string[] = []
   for (const t of timestamps) {
     ret.push(
-      await counter
+      await backplane
         .trafficTick(t, {
           day: Number.MAX_SAFE_INTEGER,
           hour: Number.MAX_SAFE_INTEGER,
@@ -52,7 +52,7 @@ function runSteps(allowance: Partial<Allowance>, unit: 'hours' | 'minutes' | 'se
   return run(steps(unit, ...vals), allowance)
 }
 
-describe('counter', () => {
+describe('backplane', () => {
   // The Workers vitest integration isolates storage per test file, not per test, so wipe it after each test.
   afterEach(async () => {
     await reset()
@@ -129,7 +129,7 @@ describe('counter', () => {
     ])
   })
 
-  it('keeps separate counters apart', async () => {
+  it('keeps separate instances apart', async () => {
     expect(await run(steps('minutes', 1, 40, 50, 52), { hour: 3 }, 'alpha')).toEqual([
       'ok',
       'ok',

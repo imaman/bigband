@@ -26,10 +26,10 @@ export type Allowance = Record<Timeframe, number>
 export type TrafficTickResult = number | { tag: 'tooManyRequest'; retryAfterMillis: number }
 
 /**
- * A persistent counter. All requests for a given name are routed to a single instance, which handles them one at a
+ * A persistent global bus. All requests for a given name are routed to a single instance, which handles them one at a
  * time, so increments are never lost.
  */
-export class Counter extends DurableObject<Env> {
+export class Backplane extends DurableObject<Env> {
   /**
    * Records one request at `nowMillis` (defaults to the Durable Object's clock). Returns the running request count, or
    * `tooManyRequest` with the time left until the exhausted timeframe ends if the request exceeds `allowance`.
@@ -96,7 +96,8 @@ function isAllowed(data: Data, tf: Timeframe, allowance: Allowance) {
 const storageKey = `usageTracking`
 
 /**
- * Returns the start time of the most recent timeframe (compared to now)
+ * Returns the start of the `tf` timeframe that contains `now`. All timeframes are aligned to the Unix epoch, so for
+ * e.g. "hour" this is the top of the UTC hour that `now` falls in.
  */
 function computeTimeframeStart(now: number, tf: Timeframe) {
   return new Date(now - (now % buckets[tf]))

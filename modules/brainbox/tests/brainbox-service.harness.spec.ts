@@ -9,17 +9,17 @@ import { createTestHarness } from 'wrangler'
 const packageRoot = fileURLToPath(new URL('../..', import.meta.url))
 const wranglerConfigPath = path.join(packageRoot, 'wrangler.jsonc')
 
-// Runs the worker the way `wrangler dev` / `wrangler deploy` do: wrangler bundles `src/index.ts` and starts it in
-// workerd with exactly the compatibility date, flags and bindings of `wrangler.jsonc`. The tests in
-// `brainbox-service.spec.ts` run inside the Workers vitest integration instead, which adds compatibility flags of its
-// own (e.g. `nodejs_compat`) so that vitest can run in workerd; they can therefore pass on code that relies on APIs the
-// deployed worker lacks.
-//
 // Follows https://developers.cloudflare.com/workers/testing/test-harness/get-started/
 const server = createTestHarness({
   workers: [{ configPath: wranglerConfigPath }],
 })
 
+// Out-of-process tests of the worker as deployed:
+// - Wrangler bundles and runs the worker exactly as `wrangler dev` / `wrangler deploy` do, with the compatibility
+//   date, flags and bindings of `wrangler.jsonc`.
+// - The tests run out of process and reach the worker over HTTP, including the static-assets router.
+// - Catches code that relies on APIs the deployed worker lacks.
+// - Tests cannot reach inside the worker (no fake timers, no direct `env` access).
 describe('brainbox-service.harness', () => {
   beforeAll(async () => {
     await server.listen()
@@ -40,7 +40,6 @@ describe('brainbox-service.harness', () => {
     expect(server.getLogs().filter(log => log.level === 'error')).toEqual([])
   })
 
-  // Checks, under the exact `durable_objects`/`migrations` config of wrangler.jsonc, that the counter persists.
   it('increments the request count across requests', async () => {
     const first = await (await server.fetch('/api/greeting')).json()
     expect(first).toMatchObject({ count: 1 })
@@ -48,8 +47,6 @@ describe('brainbox-service.harness', () => {
     expect(second).toMatchObject({ count: 2 })
   })
 
-  // Checks, under the exact `assets` config of wrangler.jsonc, that the asset router lets API requests through to the
-  // worker.
   it('routes /api/greeting past the asset router to the worker', async () => {
     const response = await server.fetch('/api/greeting?name=alice')
     expect(response.status).toEqual(200)
