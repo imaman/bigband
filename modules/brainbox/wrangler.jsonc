@@ -61,8 +61,12 @@
   /**
    * Durable Objects
    * https://developers.cloudflare.com/durable-objects/
-   * `Backplane` counts the requests that reach the worker. A new Durable Object class must be declared
-   * in a migration; `new_sqlite_classes` gives it the SQLite storage backend (the one available on the free plan).
+   * A new Durable Object class must be declared in a migration; `new_sqlite_classes` gives it the SQLite storage
+   * backend (the one available on the free plan).
+   *
+   * Cloudflare applies each migration tag once and never re-runs it, so a deployed migration must not be edited:
+   * renaming or deleting a class takes a new tag (`renamed_classes` / `deleted_classes`). `Backplane` was first
+   * deployed as `Counter`, hence v1 + v2.
    */
   "durable_objects": {
     "bindings": [{ "name": "BACKPLANE", "class_name": "Backplane" }]
