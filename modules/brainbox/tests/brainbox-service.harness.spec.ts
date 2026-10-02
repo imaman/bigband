@@ -65,6 +65,10 @@ describe('brainbox-service.harness', () => {
   it('routes /api/greeting past the asset router to the worker', async () => {
     const response = await server.fetch('/api/greeting?name=alice')
     expect(response.status).toEqual(200)
-    expect(await response.json()).toEqual({ greeting: 'Hello, alice!', count: expect.any(Number) })
+    expect(await response.json()).toEqual({
+      greeting: 'Hello, alice!',
+      count: expect.any(Number),
+      blended: expect.any(String),
+    })
   })
 })
