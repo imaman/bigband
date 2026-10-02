@@ -52,6 +52,9 @@
       "minute": 15
     }
   },
+  "secrets": {
+    "required": ["BRAINBOX_SERVICE_SECRET"]
+  },
   /**
    * Static Assets
    * https://developers.cloudflare.com/workers/static-assets/binding/
