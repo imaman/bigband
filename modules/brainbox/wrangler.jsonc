@@ -46,6 +46,7 @@
    * https://developers.cloudflare.com/workers/configuration/secrets/
    */
   "vars": {
+    "fooboo": "zoo",
     "ALLOWANCE": {
       "day": 40,
       "hour": 30,
