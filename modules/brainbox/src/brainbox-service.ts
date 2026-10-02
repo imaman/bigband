@@ -45,8 +45,8 @@ function encrypt(secret: string, plaintext: string) {
 }
 
 function deriveKey(secret: string, salt: Buffer) {
-  if (typeof secret !== 'string' || secret.length === 0) {
-    throw new Error('Key must be a non-empty string')
+  if (secret.length === 0) {
+    throw new Error('Key must be a non-empty string ')
   }
   return Buffer.from(crypto.hkdfSync('sha256', Buffer.from(secret, 'utf8'), salt, INFO, 32))
 }
