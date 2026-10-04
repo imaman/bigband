@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
 
+import { SessionAge } from './session-age.js'
+
 const GreetingResponse = z.object({ greeting: z.string() })
 
 export function App() {
@@ -28,5 +30,10 @@ export function App() {
     return () => controller.abort()
   }, [])
 
-  return <h1 id="greeting">{text}</h1>
+  return (
+    <>
+      <SessionAge />
+      <h1 id="greeting">{text}</h1>
+    </>
+  )
 }
