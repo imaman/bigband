@@ -57,9 +57,12 @@
   },
   /**
    * Static Assets
-   * https://developers.cloudflare.com/workers/static-assets/binding/
+   * https://developers.cloudflare.com/workers/vite-plugin/reference/static-assets/
+   * No `assets` field: the UI (index.html, ui/) is built by the Cloudflare Vite plugin, which adds `assets` (pointing
+   * at its client build output) to the wrangler.json it generates under vite-dist/. That generated file, not this
+   * one, is what `wrangler deploy` and the harness tests use. Add an `assets` field here only for routing options
+   * (e.g. `not_found_handling`) or an assets binding.
    */
-  "assets": { "directory": "./public/" },
 
   /**
    * Durable Objects

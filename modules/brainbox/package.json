@@ -9,17 +9,27 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc -b",
+    "build-ui": "tsc -p tsconfig-ui.json && vite build && rm -f vite-dist/brainbox/.dev.vars",
     "cf-typegen": "wrangler types src/worker-configuration.d.ts",
     "check-cf-types": "wrangler types --check src/worker-configuration.d.ts",
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "test": "vitest run --config tests/vitest.config.mts"
+    "deploy": "vite build && wrangler deploy",
+    "dev": "vite dev",
+    "preview": "vite build && vite preview",
+    "test": "vitest run --config tests/vitest.config.mts",
+    "test-harness": "vitest run --config tests/vitest.harness.config.mts"
   },
   "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.62.5",
     "@cloudflare/vitest-plugin": "^1.2.4",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.7",
     "vitest": "~4.1.0",
     "wrangler": "^4.147.0"
   },
@@ -27,10 +37,32 @@
     "testCommand": "tools/test-runners/vitest-workers"
   },
   "buildTasks": {
+    "build-ui": {
+      "inputs": [
+        "index.html",
+        "ui",
+        "src",
+        "vite.config.ts",
+        "tsconfig-ui.json",
+        "wrangler.jsonc"
+      ],
+      "outputs": [
+        "vite-dist"
+      ],
+      "labels": "build"
+    },
     "check-cf-types": {
       "inputs": "_ALWAYS_",
       "outputs": [],
       "labels": "build-ci"
+    },
+    "test-harness": {
+      "inputs": [
+        "dist/tests",
+        "vite-dist"
+      ],
+      "outputs": [],
+      "labels": "test"
     }
   }
 }
