@@ -93,9 +93,17 @@
    * Bindings are not inherited from the top level: every binding the code reads from `env` must be repeated here, or
    * it is `undefined` in a Preview. Durable Object classes and migrations stay at the top level; each Preview gets its
    * own Durable Object namespace and storage.
-   * Secrets are the exception: they cannot be set here (wrangler ignores a `previews.secrets` field and warns about
-   * it). Set them once in the Previews Base configuration, which every new Preview copies:
+   * Secret values for Previews are set once in the Previews Base configuration, which every new Preview copies:
    *   npx wrangler preview base-config secret put BRAINBOX_SERVICE_SECRET
+   * The list of required secret names is not repeated here as `previews.secrets.required`, because wrangler 4.147.0
+   * does not support that field: it warns ("Unexpected fields found in previews field: secrets") and ignores it.
+   * - The validator's list of allowed `previews` fields omits "secrets" (it has only "secrets_store_secrets"):
+   *   https://github.com/cloudflare/workers-sdk/blob/64c1337155a6bc7224b5d47f58ca521d8b8ee3fe/packages/workers-utils/src/config/validation.ts#L6546-L6589
+   * - Yet the `PreviewsConfig` type, from which config-schema.json is generated, includes `secrets` (it extends
+   *   `EnvironmentNonInheritable`), so editors accept the field:
+   *   https://github.com/cloudflare/workers-sdk/blob/64c1337155a6bc7224b5d47f58ca521d8b8ee3fe/packages/workers-utils/src/config/environment.ts#L2090-L2100
+   * - Nothing in wrangler's bundle (node_modules/wrangler/wrangler-dist/cli.js) reads `previews.secrets`.
+   * Revisit when upgrading wrangler: once the field is supported, `previews.secrets.required` can come back.
    */
   "previews": {
     "durable_objects": {
