@@ -21,7 +21,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['*.ts', '*.mts'],
+      files: ['*.ts', '*.mts', '*.tsx'],
       extends: ['plugin:@typescript-eslint/recommended'],
       rules: {
         '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
@@ -70,6 +70,16 @@ module.exports = {
       files: ['*.spec.ts'],
       rules: {
         '@typescript-eslint/no-non-null-assertion': 'off',
+      },
+    },
+    {
+      // React components (e.g. modules/brainbox/ui/). Only the two classic hooks rules: the plugin's `recommended`
+      // preset also turns on its React Compiler rules, which this repo does not use.
+      files: ['*.tsx'],
+      plugins: ['react-hooks'],
+      rules: {
+        'react-hooks/rules-of-hooks': 'error',
+        'react-hooks/exhaustive-deps': 'error',
       },
     },
   ],

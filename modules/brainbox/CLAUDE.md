@@ -37,8 +37,9 @@ wrangler default of the package root) so that build-raptor, which fingerprints o
 - `tsconfig-base.json` drops the `DOM` lib; the Workers runtime types in `src/worker-configuration.d.ts` replace it
   (the two conflict) and are compiled as part of `src/`. The UI needs `DOM`, so `ui/` has its own
   `tsconfig-ui.json`, which build-raptor's generated `tsconfig.json` (covering `src/` and `tests/` only) ignores. It
-  is type-checked by `yarn build-ui`; Vite itself only strips types. ESLint's globs do not cover `.tsx` files yet, so
-  `ui/` is not linted.
+  is type-checked by `yarn build-ui`; Vite itself only strips types. The type-aware lint (`.eslintrc.typed.js`) also
+  resolves `ui/` against `tsconfig-ui.json`. `.tsx` files get the React hooks rules (`rules-of-hooks`,
+  `exhaustive-deps`) on top of the TypeScript ones.
 - Two custom build-raptor tasks (`buildTasks` in package.json) cover the UI, because the standard build and test
   tasks only see `src/`, `tests/` and `dist/`:
   - `build-ui` (label `build`) runs `yarn build-ui`. Its inputs include `ui/`, `src/`, `index.html`,
