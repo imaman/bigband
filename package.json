@@ -22,9 +22,6 @@
       "pre-push": "syncpack list-mismatches && npm run build"
     }
   },
-  "resolutions": {
-    "jest/**/semver": "^7.5.2"
-  },
   "devDependencies": {
     "@types/jest": "^26.0.14",
     "@types/node": "^22.9.0",
