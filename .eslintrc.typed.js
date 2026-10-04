@@ -24,7 +24,7 @@ module.exports = {
       },
     },
     {
-      // Tool configs at a module's root (e.g. lucidbit/vite.config.ts) are outside the generated tsconfig's include
+      // Tool configs at a module's root (e.g. a vite.config.ts) are outside the generated tsconfig's include
       // list, so they cannot be type-checked; lint them without type information.
       files: ['modules/*/*.ts', 'modules/*/*.mts'],
       parserOptions: {
