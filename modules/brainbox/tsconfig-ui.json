@@ -1,6 +1,4 @@
 {
-  // Type-checks the browser UI (ui/), which build-raptor's generated tsconfig.json does not include: that one compiles
-  // src/ and tests/ against the Workers runtime types, which conflict with the DOM lib. Run by the build-ui task.
   "extends": "../../tsconfig-base.json",
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
