@@ -8,42 +8,26 @@ import { configDefaults, defineConfig } from 'vitest/config'
 const packageRoot = fileURLToPath(new URL('..', import.meta.url))
 const wranglerConfigPath = path.join(packageRoot, 'wrangler.jsonc')
 
-// build-raptor's test task runs the compiled tests (dist/tests), like every other module in the repo.
-const harnessSpecs = 'dist/tests/**/*.harness.spec.js'
-
+// Tests that run inside workerd via the Workers vitest integration (`cloudflare:test`, and `env`/`exports` from
+// `cloudflare:workers`). build-raptor's test task runs the compiled tests (dist/tests), like every other module in the
+// repo. The harness specs have their own config (vitest.harness.config.mts) and build task (test-harness), because
+// they need the output of `vite build`.
 export default defineConfig({
   root: packageRoot,
+  plugins: [
+    cloudflareTest({
+      wrangler: { configPath: wranglerConfigPath },
+      miniflare: {
+        bindings: {
+          BRAINBOX_SERVICE_SECRET: '54321',
+        },
+      },
+    }),
+  ],
   test: {
-    projects: [
-      {
-        // Tests that run inside workerd via the Workers vitest integration (`cloudflare:test`, and `env`/`exports`
-        // from `cloudflare:workers`).
-        plugins: [
-          cloudflareTest({
-            wrangler: { configPath: wranglerConfigPath },
-            miniflare: {
-              bindings: {
-                BRAINBOX_SERVICE_SECRET: '54321',
-              },
-            },
-          }),
-        ],
-        test: {
-          name: 'workerd',
-          root: packageRoot,
-          include: ['dist/tests/**/*.spec.js'],
-          exclude: [...configDefaults.exclude, harnessSpecs],
-        },
-      },
-      {
-        // Tests that run in Node.js and drive the worker through wrangler's test harness (`createTestHarness`).
-        test: {
-          name: 'harness',
-          root: packageRoot,
-          include: [harnessSpecs],
-          environment: 'node',
-        },
-      },
-    ],
+    name: 'workerd',
+    root: packageRoot,
+    include: ['dist/tests/**/*.spec.js'],
+    exclude: [...configDefaults.exclude, 'dist/tests/**/*.harness.spec.js'],
   },
 })

@@ -7,9 +7,12 @@ import { failMe } from './fail-me.js'
 
 // This spec runs compiled, from dist/tests/, so the package root is two levels up. Anchor the wrangler config to it
 // (rather than to process.cwd(), which is what a relative `configPath` resolves against) so the harness works no
-// matter which directory vitest is launched from, same as tests/vitest.config.mts does for the workerd project.
+// matter which directory vitest is launched from, same as tests/vitest.config.mts does for the workerd tests.
 const packageRoot = fileURLToPath(new URL('../..', import.meta.url))
-const wranglerConfigPath = path.join(packageRoot, 'wrangler.jsonc')
+// The config that `vite build` generates, i.e. the one `wrangler deploy` uses: it runs the worker bundle that Vite
+// built and serves the built UI as static assets. See
+// https://developers.cloudflare.com/workers/testing/test-harness/configure/
+const wranglerConfigPath = path.join(packageRoot, 'vite-dist/brainbox/wrangler.json')
 
 // Follows https://developers.cloudflare.com/workers/testing/test-harness/get-started/
 const server = createTestHarness({
@@ -22,8 +25,8 @@ const server = createTestHarness({
 })
 
 // Out-of-process tests of the worker as deployed:
-// - Wrangler bundles and runs the worker exactly as `wrangler dev` / `wrangler deploy` do, with the compatibility
-//   date, flags and bindings of `wrangler.jsonc`.
+// - Runs exactly what `wrangler deploy` ships: the worker and UI bundles of `vite build`, with the compatibility
+//   date, flags and bindings of the wrangler.json it generated (from `wrangler.jsonc`).
 // - The tests run out of process and reach the worker over HTTP, including the static-assets router.
 // - Catches code that relies on APIs the deployed worker lacks.
 // - Tests cannot reach inside the worker (no fake timers, no direct `env` access).
@@ -43,7 +46,10 @@ describe('brainbox-service.harness', () => {
   it('responds with a greeting under the deployed compatibility settings', async () => {
     const response = await server.fetch('/')
     expect(response.status).toEqual(200)
-    expect(await response.text()).toMatch(/<title>Brainbox<\/title>/)
+    const html = await response.text()
+    expect(html).toMatch(/<title>Brainbox<\/title>/)
+    // The built page (vite-dist/client/index.html) loads the hashed bundle rather than the ui/ sources.
+    expect(html).toMatch(/<script type="module"[^>]* src="\/assets\/index-[\w-]+\.js"/)
     expect(server.getLogs().filter(log => log.level === 'error')).toEqual([])
   })
 
