@@ -8,7 +8,7 @@ module.exports = {
   plugins: ['deprecation'],
   overrides: [
     {
-      files: ['*.ts', '*.mts'],
+      files: ['*.ts', '*.mts', '*.tsx'],
       parserOptions: {
         // `project: true` resolves each file against the nearest tsconfig.json, i.e. the one build-raptor writes per
         // module while planning a build. On a fresh clone run `yarn build` (or `build-raptor generate-tsconfig`) before
@@ -32,6 +32,14 @@ module.exports = {
       },
       rules: {
         'deprecation/deprecation': 'off',
+      },
+    },
+    {
+      // brainbox's UI is outside the generated tsconfig.json (it needs the DOM lib, which conflicts with the Workers
+      // types), so resolve it against its own tsconfig.
+      files: ['modules/brainbox/ui/**'],
+      parserOptions: {
+        project: './modules/brainbox/tsconfig-ui.json',
       },
     },
   ],

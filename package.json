@@ -11,8 +11,8 @@
   ],
   "scripts": {
     "build": "build-raptor build --compact",
-    "lint": "eslint --no-eslintrc -c .eslintrc.typed.js --max-warnings 0 'modules/*/**/*.{ts,mts,js,json,d.ts}'",
-    "lint:fix": "eslint --no-eslintrc -c .eslintrc.typed.js --fix 'modules/*/**/*.{ts,mts,js,json,d.ts}'",
+    "lint": "eslint --no-eslintrc -c .eslintrc.typed.js --max-warnings 0 'modules/*/**/*.{ts,mts,tsx,js,json,d.ts}'",
+    "lint:fix": "eslint --no-eslintrc -c .eslintrc.typed.js --fix 'modules/*/**/*.{ts,mts,tsx,js,json,d.ts}'",
     "sort-package-json": "sort-package-json 'modules/*/package.json' 'package.json'",
     "test": "NODE_OPTIONS=--experimental-vm-modules build-raptor test"
   },
@@ -37,6 +37,7 @@
     "eslint-plugin-jest": "^25.3.0",
     "eslint-plugin-json": "^3.1.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "globby": "^11.0.0",
