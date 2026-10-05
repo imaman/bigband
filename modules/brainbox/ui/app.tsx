@@ -1,5 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
 
 import { SessionAge } from './session-age.js'
@@ -7,34 +6,40 @@ import { SessionAge } from './session-age.js'
 const GreetingResponse = z.object({ greeting: z.string() })
 
 export function App() {
-  const [text, setText] = useState('Loading…')
-
-  const { mutate } = useMutation({
-    mutationFn: async ({ name }: { name: string }) => {
-      await fetch(`/api/greeting?name=${encodeURIComponent(name)}`)
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`)
-          return res.json()
-        })
-        .then(data => {
-          setText(GreetingResponse.parse(data).greeting)
-        })
-        .catch(err => {
-          // if (!controller.signal.aborted) {
-          setText(`Error: ${err instanceof Error ? err.message : String(err)}`)
-          // }
-        })
+  const name = new URLSearchParams(location.search).get('yourName') ?? ''
+  const { isPending, error, data } = useQuery({
+    queryKey: ['greeting', name],
+    queryFn: async () => {
+      const r = await fetch(`/api/greeting?name=${encodeURIComponent(name)}`)
+      if (!r.ok) {
+        throw new Error(`Backend call came back with ${r.status}`)
+      }
+      return GreetingResponse.parse(await r.json())
     },
   })
-  useEffect(() => {
-    const name = new URLSearchParams(location.search).get('yourName') ?? ''
-    mutate({ name })
-  }, [mutate])
+  //     .then(res => {
+  //       if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  //       return res.json()
+  //     })
+  //     .then(data => {
+  //       setText(GreetingResponse.parse(data).greeting)
+  // })
+  //     .catch(err => {
+  //       // if (!controller.signal.aborted) {
+  //       setText(`Error: ${err instanceof Error ? err.message : String(err)}`)
+  //       // }
+  //     })
+  // },
+  // useEffect(() => {
+  //   mutate({ name })
+  // }, [mutate])
 
   return (
     <>
       <SessionAge />
-      <h1 id="greeting">{text}</h1>
+      <h1 id="greeting">
+        {isPending ? 'Loading...' : error ? (error instanceof Error ? error.message : String(error)) : data.greeting}
+      </h1>
     </>
   )
 }
