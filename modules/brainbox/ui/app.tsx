@@ -8,12 +8,17 @@ const GreetingResponse = z.object({ greeting: z.string() })
 export function App() {
   const [text, setText] = useState('Loading…')
 
+  // const mutation = useMutation({
+  //   mutationFn: (newTodo) => {
+  //     return axios.post('/todos', newTodo)
+  //   },
+  // })
   useEffect(() => {
     const name = new URLSearchParams(location.search).get('yourName') ?? ''
     // Aborts the request when the component unmounts (StrictMode mounts twice in development).
     const controller = new AbortController()
 
-    fetch(`/api/greeting?name=${encodeURIComponent(name)}`, { signal: controller.signal })
+    fetch(`/ap_i/greeting?name=${encodeURIComponent(name)}`, { signal: controller.signal })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()
