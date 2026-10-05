@@ -11,7 +11,7 @@ export function App() {
 
   const { mutate } = useMutation({
     mutationFn: async ({ name }: { name: string }) => {
-      fetch(`/api/greeting?name=${encodeURIComponent(name)}`)
+      await fetch(`/api/greeting?name=${encodeURIComponent(name)}`)
         .then(res => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
           return res.json()
