@@ -1,10 +1,10 @@
 import { z } from 'zod'
 
-import { AbstractInstrument } from './abstract-instrument'
-import { Resolution } from './instrument'
-import { Role } from './role'
-import { S3Bucket } from './s3-bucket'
-import { ResolvedSection } from './section'
+import { AbstractInstrument } from './abstract-instrument.js'
+import { Resolution } from './instrument.js'
+import { Role } from './role.js'
+import { S3Bucket } from './s3-bucket.js'
+import { ResolvedSection } from './section.js'
 
 const Description = z.string().max(256).optional()
 const EphemeralStorageSize = z.number().int().min(512).max(10240)

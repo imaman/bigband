@@ -3,13 +3,14 @@
 import { spawn } from 'child_process'
 import electron from 'electron'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
-import { formatTargetTime, parseDuration } from './utils'
+import { formatTargetTime, parseDuration } from './utils.js'
 
 const electronPath = String(electron)
-const mainScript = path.join(__dirname, 'main.js')
+const mainScript = path.join(path.dirname(fileURLToPath(import.meta.url)), 'main.js')
 
 function spawnElectron(args: string[]): void {
   const child = spawn(electronPath, ['--no-sandbox', mainScript, ...args], {

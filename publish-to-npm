@@ -5,12 +5,11 @@ set -e
 yarn test
 
 REPORT_FILE=$(mktemp)
-# pushd modules/septima-lang
-npx monocrate modules/septima-lang --bump=patch --report=$REPORT_FILE
+npx monocrate@0.17.0 publish modules/septima-lang --bump=patch --report=$REPORT_FILE
 
-V=$(head -n 1 "$REPORT_FILE")
+NEXT_VERSION=$(node -p "fs.readFileSync(\"$REPORT_FILE\").toString().trim()")
 
-T="published@$V"
+T="published@$NEXT_VERSION"
 echo tagging "$T"
 git tag "$T"
 git push --tags

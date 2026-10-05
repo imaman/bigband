@@ -2,3 +2,6 @@
 !.huskyrc.js
 **/node_modules/*
 **/dist/*
+modules/brainbox/src/worker-configuration.d.ts
+# Vite build output of the brainbox UI and worker (see modules/brainbox/vite.config.ts)
+modules/brainbox/vite-dist/

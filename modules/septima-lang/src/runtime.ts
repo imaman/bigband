@@ -1,13 +1,13 @@
 import crypto from 'crypto'
 
-import { AstNode, show, Unit, UnitId } from './ast-node'
-import { extractMessage } from './extract-message'
-import { failMe } from './fail-me'
-import { shouldNeverHappen } from './should-never-happen'
-import * as Stack from './stack'
-import { switchOn } from './switch-on'
-import { SymbolTable, Visibility } from './symbol-table'
-import { Value } from './value'
+import { AstNode, show, Unit, UnitId } from './ast-node.js'
+import { extractMessage } from './extract-message.js'
+import { failMe } from './fail-me.js'
+import { shouldNeverHappen } from './should-never-happen.js'
+import * as Stack from './stack.js'
+import { switchOn } from './switch-on.js'
+import { SymbolTable, Visibility } from './symbol-table.js'
+import { Value } from './value.js'
 
 interface Placeholder {
   destination: undefined | Value
@@ -168,7 +168,8 @@ export class Runtime {
       exp.tag === 'objectLiteral' ||
       exp.tag === 'templateLiteral' ||
       exp.tag === 'unaryOperator' ||
-      exp.tag === 'unit'
+      exp.tag === 'unit' ||
+      exp.tag === 'let'
     ) {
       // TODO(imaman): throw an error on non-exporting unit?
       return Value.obj({})
@@ -207,11 +208,10 @@ export class Runtime {
     if (ast.tag === 'topLevelExpression') {
       let newTable = table
       for (const def of ast.definitions) {
-        const name = def.ident.t.text
         const placeholder: Placeholder = { destination: undefined }
-        newTable = new SymbolFrame(name, placeholder, newTable, def.isExported ? 'EXPORTED' : 'INTERNAL')
-        const v = this.evalNode(def.value, newTable)
-        placeholder.destination = v
+        newTable = new SymbolFrame(def.ident.t.text, placeholder, newTable, def.isExported ? 'EXPORTED' : 'INTERNAL')
+        const letValue = this.evalNode(def, newTable)
+        placeholder.destination = letValue
       }
 
       if (!ast.computation) {
@@ -428,6 +428,10 @@ export class Runtime {
       const rec = this.evalNode(ast.receiver, table)
       const index = this.evalNode(ast.index, table)
       return rec.access(index, (callee, args) => this.call(callee, args))
+    }
+
+    if (ast.tag === 'let') {
+      return this.evalNode(ast.value, table)
     }
 
     shouldNeverHappen(ast)

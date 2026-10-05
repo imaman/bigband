@@ -1,6 +1,6 @@
-import { AbstractInstrument } from './abstract-instrument'
-import { Instrument, Resolution } from './instrument'
-import { ResolvedSection } from './section'
+import { AbstractInstrument } from './abstract-instrument.js'
+import { Instrument, Resolution } from './instrument.js'
+import { ResolvedSection } from './section.js'
 
 interface RoleProperties {
   ManagedPolicyArns?: string[]

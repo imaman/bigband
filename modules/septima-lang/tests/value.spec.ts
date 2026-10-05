@@ -1,4 +1,4 @@
-import { Value } from '../src/value'
+import { Value } from '../src/value.js'
 
 const err = () => {
   throw new Error(`should not run`)

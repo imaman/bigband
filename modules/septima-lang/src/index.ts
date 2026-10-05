@@ -1,1 +1,1 @@
-export * from './septima'
+export * from './septima.js'

@@ -1,4 +1,4 @@
-import { formatTargetTime, parseDelayMs, parseDuration } from '../src/utils'
+import { formatTargetTime, parseDelayMs, parseDuration } from '../src/utils.js'
 
 describe('wake-me-up', () => {
   describe('parseDuration', () => {

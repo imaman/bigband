@@ -1,4 +1,4 @@
-import { AstNode } from './ast-node'
+import { AstNode } from './ast-node.js'
 export type T = { ast: AstNode; next: T } | undefined
 
 export function push(ast: AstNode, s: T) {

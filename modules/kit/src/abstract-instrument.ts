@@ -1,6 +1,6 @@
-import { Instrument, Resolution } from './instrument'
-import { Name } from './name'
-import { ResolvedSection } from './section'
+import { Instrument, Resolution } from './instrument.js'
+import { Name } from './name.js'
+import { ResolvedSection } from './section.js'
 
 export interface ArnDetails {
   serviceName: string

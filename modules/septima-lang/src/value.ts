@@ -1,10 +1,10 @@
-import { AstNode, FormalArg, Lambda, show } from './ast-node'
-import { failMe } from './fail-me'
-import { CallEvaluator, findArrayMethod } from './find-array-method'
-import { findStringMethod } from './find-string-method'
-import { shouldNeverHappen } from './should-never-happen'
-import { switchOn } from './switch-on'
-import { SymbolTable } from './symbol-table'
+import { AstNode, FormalArg, Lambda, show } from './ast-node.js'
+import { failMe } from './fail-me.js'
+import { CallEvaluator, findArrayMethod } from './find-array-method.js'
+import { findStringMethod } from './find-string-method.js'
+import { shouldNeverHappen } from './should-never-happen.js'
+import { switchOn } from './switch-on.js'
+import { SymbolTable } from './symbol-table.js'
 
 type LambdaEvaluator = (formals: FormalArg[], ast: AstNode, table: SymbolTable) => Value
 
@@ -218,9 +218,26 @@ export class Value {
       str: err,
     })
   }
+  assertForeign() {
+    const err = badType('foreign')
+    return selectRaw(this, {
+      arr: err,
+      bool: err,
+      foreign: a => a,
+      lambda: err,
+      num: err,
+      undef: err,
+      obj: err,
+      str: err,
+    })
+  }
 
   isLambda() {
     return this.inner.tag === 'lambda'
+  }
+
+  isForeign() {
+    return this.inner.tag === 'foreign'
   }
 
   isArray() {
@@ -521,6 +538,20 @@ export class Value {
     return selectRaw(this, {
       arr: err,
       bool: b => b,
+      foreign: err,
+      lambda: err,
+      num: err,
+      undef: err,
+      obj: err,
+      str: err,
+    })
+  }
+
+  isFalse(): boolean {
+    const err = badType('bool')
+    return selectRaw(this, {
+      arr: err,
+      bool: b => !b,
       foreign: err,
       lambda: err,
       num: err,

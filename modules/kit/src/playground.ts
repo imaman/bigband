@@ -1,9 +1,9 @@
 import * as child_process from 'child_process'
 import * as fs from 'fs'
 
-import { Bigband } from './bigband'
-import { Lambda } from './lambda'
-import { S3Bucket } from './s3-bucket'
+import { Bigband } from './bigband.js'
+import { Lambda } from './lambda.js'
+import { S3Bucket } from './s3-bucket.js'
 
 function print(...args: unknown[]) {
   console.log(...args) // eslint-disable-line no-console

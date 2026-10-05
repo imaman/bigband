@@ -1,0 +1,25 @@
+{
+  "name": "repo-craft",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "author": "",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "lint-the-repo": "yarn --cwd ../.. lint",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "jest": {
+    "preset": "../../jest.preset.js"
+  },
+  "dependencies": {},
+  "buildTasks": {
+    "lint-the-repo": {
+      "inputs": "_ALWAYS_",
+      "outputs": [],
+      "labels": "build-ci"
+    }
+  }
+}

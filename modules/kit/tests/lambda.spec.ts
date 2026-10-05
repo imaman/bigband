@@ -1,6 +1,6 @@
-import { Bigband } from '../src/bigband'
-import { Lambda } from '../src/lambda'
-import { S3Bucket } from '../src/s3-bucket'
+import { Bigband } from '../src/bigband.js'
+import { Lambda } from '../src/lambda.js'
+import { S3Bucket } from '../src/s3-bucket.js'
 
 describe('lambda', () => {
   const loc = { bucket: new S3Bucket('aaa', {}), path: 'bbb' }

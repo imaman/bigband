@@ -21,7 +21,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['*.ts'],
+      files: ['*.ts', '*.mts', '*.tsx'],
       extends: ['plugin:@typescript-eslint/recommended'],
       rules: {
         '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
@@ -53,6 +53,16 @@ module.exports = {
           { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' },
         ],
         'no-constant-condition': ['error', { checkLoops: false }],
+        // Relative imports must spell out the extension of the emitted file (e.g. './name.js'). Under NodeNext tsc
+        // enforces this itself, but modules that use `moduleResolution: Bundler` (brainbox) accept extensionless
+        // paths, so the convention is enforced here.
+        'no-restricted-syntax': [
+          'error',
+          ...['ImportDeclaration', 'ExportNamedDeclaration', 'ExportAllDeclaration', 'ImportExpression'].map(t => ({
+            selector: `${t} > Literal.source[value=/^\\.(?!.*\\.([cm]?js|json)$)/]`,
+            message: "Relative imports must include the file extension (e.g. './name.js').",
+          })),
+        ],
         'no-inner-declarations': 'off',
       },
     },
@@ -60,6 +70,16 @@ module.exports = {
       files: ['*.spec.ts'],
       rules: {
         '@typescript-eslint/no-non-null-assertion': 'off',
+      },
+    },
+    {
+      // React components (e.g. modules/brainbox/ui/). Only the two classic hooks rules: the plugin's `recommended`
+      // preset also turns on its React Compiler rules, which this repo does not use.
+      files: ['*.tsx'],
+      plugins: ['react-hooks'],
+      rules: {
+        'react-hooks/rules-of-hooks': 'error',
+        'react-hooks/exhaustive-deps': 'error',
       },
     },
   ],

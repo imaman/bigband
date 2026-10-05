@@ -10,9 +10,9 @@ import {
   span,
   TemplatePart,
   Unit,
-} from './ast-node'
-import { Scanner, Token } from './scanner'
-import { switchOn } from './switch-on'
+} from './ast-node.js'
+import { Scanner, Token } from './scanner.js'
+import { switchOn } from './switch-on.js'
 
 export class Parser {
   constructor(private readonly scanner: Scanner) {}
@@ -90,7 +90,7 @@ export class Parser {
       const ident = this.identifier()
       this.scanner.consume('=')
       const value = this.lambda()
-      ret.push({ start, ident, value, isExported })
+      ret.push({ tag: 'let', start, ident, value, isExported, unitId: this.unitId })
 
       if (this.scanner.headMatches(';')) {
         continue

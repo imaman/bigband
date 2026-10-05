@@ -1,4 +1,4 @@
-import { ResolvedSection } from './section'
+import { ResolvedSection } from './section.js'
 
 export class Name {
   constructor(private readonly value: string) {

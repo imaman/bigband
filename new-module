@@ -27,10 +27,11 @@ cat > package.json <<EOF
   "description": "",
   "keywords": [],
   "author": "",
+  "type": "module",
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc -b",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "jest": {
     "preset": "../../jest.preset.js"
@@ -42,7 +43,7 @@ EOF
 
 
 cat > src/index.ts <<EOF
-export * from './$module_name'
+export * from './$module_name.js'
 EOF
 
 cat > src/$1.ts <<EOF

@@ -1,7 +1,7 @@
-import { show, span } from '../src/ast-node'
-import { Parser } from '../src/parser'
-import { Scanner } from '../src/scanner'
-import { SourceCode } from '../src/source-code'
+import { show, span } from '../src/ast-node.js'
+import { Parser } from '../src/parser.js'
+import { Scanner } from '../src/scanner.js'
+import { SourceCode } from '../src/source-code.js'
 
 function parse(arg: string) {
   const parser = new Parser(new Scanner(new SourceCode(arg, '<test-file>')))

@@ -1,0 +1,120 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  /**
+   * The Worker's name. It is the first label of the workers.dev URL (https://<name>.<account-subdomain>.workers.dev),
+   * and it is how `wrangler deploy` identifies the Worker to update. Changing it deploys a new Worker next to the old
+   * one, which keeps running. The new Worker also gets its own Durable Object storage, so it starts with no data.
+   */
+  "name": "brainbox",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-21",
+  /**
+   * Node.js compatibility (https://developers.cloudflare.com/workers/runtime-apis/nodejs/)
+   * Already the default for compatibility dates from 2026-08-04 on. Spelled out because the type surface relies on it:
+   * `@types/node` is in the module's TypeScript program (via tsconfig-base.json and, transitively, the vitest
+   * plugin), so `Buffer`, `process`, `node:*` etc. type-check in src/. Lowering the compatibility date without this
+   * flag would leave the types in place while the runtime lost the APIs.
+   * The flag does not make types and runtime agree completely: `@types/node` describes all of Node, workerd
+   * implements a subset (some modules are partial, e.g. node:os and node:tls; others are non-functional stubs, e.g.
+   * node:http2, node:vm, node:child_process). Such code type-checks and fails at runtime; only the harness test
+   * (tests/*.harness.spec.ts), which runs the worker with this exact configuration, can catch it.
+   */
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "upload_source_maps": true,
+  /**
+   * Smart Placement
+   * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+   */
+  // "placement": {  "mode": "smart" }
+  /**
+   * Bindings
+   * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
+   * databases, object storage, AI inference, real-time communication and more.
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/
+   */
+  /**
+   * Environment Variables
+   * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
+   * Note: Use secrets to store sensitive data.
+   * https://developers.cloudflare.com/workers/configuration/secrets/
+   */
+  "vars": {
+    "ALLOWANCE": {
+      "day": 40,
+      "hour": 30,
+      "minute": 15
+    }
+  },
+  "secrets": {
+    "required": ["BRAINBOX_SERVICE_SECRET"]
+  },
+  /**
+   * Static Assets
+   * https://developers.cloudflare.com/workers/vite-plugin/reference/static-assets/
+   * No `assets` field: the UI (index.html, ui/) is built by the Cloudflare Vite plugin, which adds `assets` (pointing
+   * at its client build output) to the wrangler.json it generates under vite-dist/. That generated file, not this
+   * one, is what `wrangler deploy` and the harness tests use. Add an `assets` field here only for routing options
+   * (e.g. `not_found_handling`) or an assets binding.
+   */
+
+  /**
+   * Durable Objects
+   * https://developers.cloudflare.com/durable-objects/
+   * A new Durable Object class must be declared in a migration; `new_sqlite_classes` gives it the SQLite storage
+   * backend (the one available on the free plan).
+   *
+   * Cloudflare applies each migration tag once and never re-runs it, so a deployed migration must not be edited:
+   * renaming or deleting a class takes a new tag (`renamed_classes` / `deleted_classes`). `Backplane` was first
+   * deployed as `Counter`, hence v1 + v2.
+   */
+  "durable_objects": {
+    "bindings": [{ "name": "BACKPLANE", "class_name": "Backplane" }]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Counter"] },
+    { "tag": "v2", "renamed_classes": [{ "from": "Counter", "to": "Backplane" }] }
+  ],
+
+  /**
+   * Service Bindings (communicate between multiple Workers)
+   * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+   */
+  // "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+
+  /**
+   * Previews (https://developers.cloudflare.com/workers/previews/configuration/)
+   * Bindings are not inherited from the top level: every binding the code reads from `env` must be repeated here, or
+   * it is `undefined` in a Preview. Durable Object classes and migrations stay at the top level; each Preview gets its
+   * own Durable Object namespace and storage.
+   * Secret values for Previews are set once in the Previews Base configuration, which every new Preview copies:
+   *   npx wrangler preview base-config secret put BRAINBOX_SERVICE_SECRET
+   * The list of required secret names is not repeated here as `previews.secrets.required`, because wrangler 4.147.0
+   * does not support that field: it warns ("Unexpected fields found in previews field: secrets") and ignores it.
+   * - The validator's list of allowed `previews` fields omits "secrets" (it has only "secrets_store_secrets"):
+   *   https://github.com/cloudflare/workers-sdk/blob/64c1337155a6bc7224b5d47f58ca521d8b8ee3fe/packages/workers-utils/src/config/validation.ts#L6546-L6589
+   * - Yet the `PreviewsConfig` type, from which config-schema.json is generated, includes `secrets` (it extends
+   *   `EnvironmentNonInheritable`), so editors accept the field:
+   *   https://github.com/cloudflare/workers-sdk/blob/64c1337155a6bc7224b5d47f58ca521d8b8ee3fe/packages/workers-utils/src/config/environment.ts#L2090-L2100
+   * - Nothing in wrangler's bundle (node_modules/wrangler/wrangler-dist/cli.js) reads `previews.secrets`.
+   * Revisit when upgrading wrangler: once the field is supported, `previews.secrets.required` can come back.
+   */
+  "previews": {
+    "durable_objects": {
+      "bindings": [{ "name": "BACKPLANE", "class_name": "Backplane" }]
+    },
+    "vars": {
+      "ALLOWANCE": {
+        "day": 40,
+        "hour": 30,
+        "minute": 15
+      }
+    }
+  }
+}

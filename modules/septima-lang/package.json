@@ -5,11 +5,15 @@
   "keywords": [],
   "license": "MIT",
   "author": "imaman",
+  "type": "module",
   "main": "dist/src/index.js",
+  "files": [
+    "dist/src"
+  ],
   "scripts": {
     "benchmark": "node dist/src/benchmark.js",
     "build": "tsc -b",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "jest": {
     "preset": "../../jest.preset.js"

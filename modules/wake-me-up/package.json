@@ -4,6 +4,7 @@
   "description": "",
   "keywords": [],
   "author": "",
+  "type": "module",
   "main": "dist/src/index.js",
   "bin": {
     "wake-me-up": "dist/src/wake-me-up.js"
@@ -11,7 +12,7 @@
   "scripts": {
     "build": "tsc -b",
     "install-desktop": "bash install-desktop.sh",
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "uninstall-desktop": "rm -f ~/.local/share/applications/wake-me-up.desktop"
   },
   "jest": {

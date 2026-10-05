@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-import { Septima } from '../src/septima'
+import { Septima } from '../src/septima.js'
 
 /**
  * Runs a Septima program for testing purposes. If the program evaluates to `sink` an `undefined` is

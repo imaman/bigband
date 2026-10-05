@@ -1,5 +1,5 @@
-import { AstNode, span } from './ast-node'
-import { Location, Location2d, Span } from './location'
+import { AstNode, span } from './ast-node.js'
+import { Location, Location2d, Span } from './location.js'
 
 export class SourceCode {
   constructor(readonly input: string, readonly pathFromSourceRoot: string) {}

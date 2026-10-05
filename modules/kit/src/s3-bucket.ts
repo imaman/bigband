@@ -1,6 +1,6 @@
-import { AbstractInstrument, ArnDetails } from './abstract-instrument'
-import { Resolution } from './instrument'
-import { Section } from './section'
+import { AbstractInstrument, ArnDetails } from './abstract-instrument.js'
+import { Resolution } from './instrument.js'
+import { Section } from './section.js'
 
 interface S3BucketProperties {
   isExactName?: boolean

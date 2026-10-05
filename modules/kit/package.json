@@ -4,11 +4,12 @@
   "description": "",
   "keywords": [],
   "author": "",
+  "type": "module",
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc -b",
     "publish-package": "yarn build && pack.sh",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "jest": {
     "preset": "../../jest.preset.js"
