@@ -23,7 +23,7 @@ export function App() {
   return (
     <>
       <SessionAge />
-      <h1 id="greeting">{isPending ? 'Loading...' : error ? error.message : data.greeting}</h1>
+      <h1 id="greeting">{isPending ? 'Loading... ⏳' : error ? error.message : data.greeting}</h1>
     </>
   )
 }
