@@ -1,3 +1,4 @@
+import { useMutation } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
 
@@ -8,32 +9,27 @@ const GreetingResponse = z.object({ greeting: z.string() })
 export function App() {
   const [text, setText] = useState('Loading…')
 
-  // const mutation = useMutation({
-  //   mutationFn: (newTodo) => {
-  //     return axios.post('/todos', newTodo)
-  //   },
-  // })
+  const mutation = useMutation({
+    mutationFn: async ({ name }: { name: string }) => {
+      fetch(`/api/greeting?name=${encodeURIComponent(name)}`)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          return res.json()
+        })
+        .then(data => {
+          setText(GreetingResponse.parse(data).greeting)
+        })
+        .catch(err => {
+          // if (!controller.signal.aborted) {
+          setText(`Error: ${err instanceof Error ? err.message : String(err)}`)
+          // }
+        })
+    },
+  })
   useEffect(() => {
     const name = new URLSearchParams(location.search).get('yourName') ?? ''
-    // Aborts the request when the component unmounts (StrictMode mounts twice in development).
-    const controller = new AbortController()
-
-    fetch(`/ap_i/greeting?name=${encodeURIComponent(name)}`, { signal: controller.signal })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json()
-      })
-      .then(data => {
-        setText(GreetingResponse.parse(data).greeting)
-      })
-      .catch(err => {
-        if (!controller.signal.aborted) {
-          setText(`Error: ${err instanceof Error ? err.message : String(err)}`)
-        }
-      })
-
-    return () => controller.abort()
-  }, [])
+    mutation.mutate({ name })
+  }, [mutation])
 
   return (
     <>
