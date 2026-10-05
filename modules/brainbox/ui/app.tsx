@@ -9,7 +9,7 @@ const GreetingResponse = z.object({ greeting: z.string() })
 export function App() {
   const [text, setText] = useState('Loading…')
 
-  const mutation = useMutation({
+  const { mutate } = useMutation({
     mutationFn: async ({ name }: { name: string }) => {
       fetch(`/api/greeting?name=${encodeURIComponent(name)}`)
         .then(res => {
@@ -28,8 +28,8 @@ export function App() {
   })
   useEffect(() => {
     const name = new URLSearchParams(location.search).get('yourName') ?? ''
-    mutation.mutate({ name })
-  }, [mutation])
+    mutate({ name })
+  }, [mutate])
 
   return (
     <>
