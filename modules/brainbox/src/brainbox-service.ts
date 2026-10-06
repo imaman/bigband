@@ -1,4 +1,16 @@
+import { Hono } from 'hono'
 import crypto from 'node:crypto'
+
+export const app = new Hono()
+
+let count = 0
+app.get('/api/greeting', c =>
+  c.json({
+    greeting: 'Hello, ' + (new URL(c.req.url).searchParams.get('name')?.trim() || 'stranger') + '!',
+    count: ++count,
+    blended: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  }),
+)
 
 /**
  * Handles a single incoming request. Kept separate from the `fetch` export so request handling stays a plain
