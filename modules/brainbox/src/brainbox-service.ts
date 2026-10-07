@@ -1,39 +1,19 @@
+import { env } from 'cloudflare:workers'
 import { Hono } from 'hono'
 import crypto from 'node:crypto'
 
-export const app = new Hono()
+export const app = new Hono<{ Bindings: typeof env }>()
 
-let count = 0
-app.get('/api/greeting', c =>
-  c.json({
-    greeting: 'Hello, ' + (new URL(c.req.url).searchParams.get('name')?.trim() || 'stranger') + '!',
-    count: ++count,
-    blended: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-  }),
-)
-
-/**
- * Handles a single incoming request. Kept separate from the `fetch` export so request handling stays a plain
- * function.
- */
-export async function handleRequest(request: Request, env: Env): Promise<Response> {
-  const count = await env.BACKPLANE.getByName('requests').trafficTick()
+app.get('/api/greeting', async c => {
+  const count = await c.env.BACKPLANE.getByName('requests').trafficTick()
   if (typeof count !== 'number') {
     const retryAfterSeconds = Math.ceil(count.retryAfterMillis / 1000)
     return new Response('Too many requests', { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } })
   }
-  const url = new URL(request.url)
-
-  if (url.pathname === '/api/greeting') {
-    const name = url.searchParams.get('name')?.trim() || 'stranger'
-    const greeting = `Hello, ${name}!`
-    return Response.json({ greeting, count, blended: encrypt(env.BRAINBOX_SERVICE_SECRET, greeting) })
-  }
-
-  // Files under public/ are served by the asset router before the worker runs, so an unmatched path here is a
-  // genuine miss.
-  return new Response('Not found', { status: 404 })
-}
+  const name = c.req.query('name')?.trim() || 'stranger'
+  const greeting = `Hello, ${name}!`
+  return c.json({ greeting, count, blended: encrypt(env.BRAINBOX_SERVICE_SECRET, greeting) })
+})
 
 const VERSION = 1
 const SALT_LEN = 16
@@ -62,10 +42,3 @@ function deriveKey(secret: string, salt: Buffer) {
   }
   return Buffer.from(crypto.hkdfSync('sha256', Buffer.from(secret, 'utf8'), salt, INFO, 32))
 }
-// `satisfies` (rather than a type annotation) checks the object against `ExportedHandler<Env>` while keeping the
-// inferred type, so `fetch` stays required and tests can call `worker.fetch` directly.
-export const brainboxService = {
-  async fetch(request, env, _ctx) {
-    return handleRequest(request, env)
-  },
-} satisfies ExportedHandler<Env>
