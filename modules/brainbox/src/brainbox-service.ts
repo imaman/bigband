@@ -2,17 +2,22 @@ import { env } from 'cloudflare:workers'
 import { Hono } from 'hono'
 import crypto from 'node:crypto'
 
-export const app = new Hono<{ Bindings: typeof env }>()
+export const app = new Hono<{ Bindings: typeof env; Variables: { count: number } }>()
 
-app.get('/api/greeting', async c => {
+app.use(async (c, next) => {
   const count = await c.env.BACKPLANE.getByName('requests').trafficTick()
   if (typeof count !== 'number') {
     const retryAfterSeconds = Math.ceil(count.retryAfterMillis / 1000)
     return new Response('Too many requests', { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } })
   }
+  c.set('count', count)
+  await next()
+})
+
+app.get('/api/greeting', async c => {
   const name = c.req.query('name')?.trim() || 'stranger'
   const greeting = `Hello, ${name}!`
-  return c.json({ greeting, count, blended: encrypt(env.BRAINBOX_SERVICE_SECRET, greeting) })
+  return c.json({ greeting, count: c.get('count'), blended: encrypt(env.BRAINBOX_SERVICE_SECRET, greeting) })
 })
 
 const VERSION = 1
