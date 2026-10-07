@@ -23,7 +23,7 @@ app.use(async (c, next) => {
 app.get('/api/greeting', async c => {
   const name = c.req.query('name')?.trim() || 'stranger'
   const greeting = `Hello, ${name}!`
-  return c.json({ greeting, count: c.get('count'), blended: encrypt(env.BRAINBOX_SERVICE_SECRET, greeting) })
+  return c.json({ greeting, count: c.get('count'), blended: encrypt(c.env.BRAINBOX_SERVICE_SECRET, greeting) })
 })
 
 const VERSION = 1
