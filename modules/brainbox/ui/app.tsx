@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { SessionAge } from './session-age.js'
 
-const GreetingResponse = z.object({ greeting: z.string() })
+const GreetingResponse = z.object({ greeting: z.string(), count: z.number() })
 
 const greetingQuery = (name: string) =>
   queryOptions({
@@ -23,7 +23,7 @@ export function App() {
   return (
     <>
       <SessionAge />
-      <h1 id="greeting">{isPending ? 'Loading... ⏳' : error ? error.message : data.greeting}</h1>
+      <h1 id="greeting">{isPending ? 'Loading... ⏳' : error ? error.message : `${data.greeting} (${data.count})`}</h1>
     </>
   )
 }
