@@ -19,6 +19,7 @@
     "test-harness": "vitest run --config tests/vitest.harness.config.mts"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.9.1",
     "@tanstack/react-query": "^5.104.1",
     "hono": "^4.13.13",
     "react": "^19.3.0",
@@ -45,6 +46,7 @@
         "index.html",
         "ui",
         "src",
+        "dist/src",
         "vite.config.ts",
         "tsconfig-ui.json",
         "wrangler.jsonc"

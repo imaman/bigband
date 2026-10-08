@@ -40,10 +40,19 @@ wrangler default of the package root) so that build-raptor, which fingerprints o
   is type-checked by `yarn build-ui`; Vite itself only strips types. The type-aware lint (`.eslintrc.typed.js`) also
   resolves `ui/` against `tsconfig-ui.json`. `.tsx` files get the React hooks rules (`rules-of-hooks`,
   `exhaustive-deps`) on top of the TypeScript ones.
+- The UI calls the worker through Hono's RPC client (`hc<AppType>` in `ui/app.tsx`), whose types are derived from
+  `AppType` (`typeof app`) in `src/brainbox-service.ts`. Routes must be registered by chaining on `app` (`.get(...)`
+  etc.); a route added in a separate `app.get(...)` statement still works at runtime but is invisible to the client.
+  The UI cannot type-check the worker's source (it needs the Workers types, which conflict with `DOM`), so
+  `tsconfig-ui.json` lists the generated `tsconfig.json` under `references`: TypeScript then resolves the UI's
+  `import type ... from '../src/...'` to the declarations that `yarn build` emits to `dist/src/`. Run `yarn build`
+  before `yarn build-ui`; without it the UI type-check fails with TS6305, and with a stale `dist/` it checks against
+  the old API.
 - Two custom build-raptor tasks (`buildTasks` in package.json) cover the UI, because the standard build and test
   tasks only see `src/`, `tests/` and `dist/`:
   - `build-ui` (label `build`) runs `yarn build-ui`. Its inputs include `ui/`, `src/`, `index.html`,
-    `vite.config.ts` and `wrangler.jsonc`; its output is `vite-dist/`. It deletes the `.dev.vars` that the plugin
+    `vite.config.ts` and `wrangler.jsonc`, plus `dist/src` (the worker's declarations, see above), which makes it
+    depend on `build`; its output is `vite-dist/`. It deletes the `.dev.vars` that the plugin
     copies into the output, so local secrets stay out of build-raptor's cache.
   - `test-harness` (label `test`) runs the harness tests. Listing `vite-dist` and `dist/tests` as inputs makes it
     depend on `build-ui` and `build`, and reruns it whenever the UI or the worker changes.

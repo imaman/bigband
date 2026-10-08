@@ -1,20 +1,21 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
-import { z } from 'zod'
+import { hc } from 'hono/client'
 
+import type { AppType } from '../src/brainbox-service.js'
 import { SessionAge } from './session-age.js'
 
-const GreetingResponse = z.object({ greeting: z.string(), count: z.number() })
+const client = hc<AppType>('/')
 
 const greetingQuery = (name: string) =>
   queryOptions({
     retry: false,
     queryKey: ['greeting', name],
     queryFn: async ({ signal }) => {
-      const r = await fetch(`/api/greeting?name=${encodeURIComponent(name)}`, { signal })
+      const r = await client.api.greeting.$get({ query: { name } }, { init: { signal } })
       if (!r.ok) {
         throw new Error(`Backend call came back with ${r.status}`)
       }
-      return GreetingResponse.parse(await r.json())
+      return await r.json()
     },
   })
 
