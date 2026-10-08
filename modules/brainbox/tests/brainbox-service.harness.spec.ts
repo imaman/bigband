@@ -43,7 +43,7 @@ describe('brainbox-service.harness', () => {
     await server.close()
   })
 
-  it('responds with a greeting under the deployed compatibility settings', async () => {
+  it('serves the built UI at /', async () => {
     const response = await server.fetch('/')
     expect(response.status).toEqual(200)
     const html = await response.text()
