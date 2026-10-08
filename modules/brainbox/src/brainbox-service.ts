@@ -1,8 +1,7 @@
-import { env } from 'cloudflare:workers'
 import { Hono } from 'hono'
 import crypto from 'node:crypto'
 
-export const app = new Hono<{ Bindings: typeof env; Variables: { count: number } }>()
+export const app = new Hono<{ Bindings: Env; Variables: { count: number } }>()
 
 // Hono's default error handler turns an exception into a 500 response, so the invocation would end normally and
 // Cloudflare's observability would not record it as an exception. Rethrow so that errors reach the runtime.
