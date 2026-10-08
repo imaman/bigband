@@ -82,4 +82,24 @@ describe('brainbox-service.harness', () => {
       blended: expect.any(String),
     })
   })
+
+  it('lets an error thrown while handling a request escape to the runtime', async () => {
+    // An empty secret makes the greeting handler throw. The error must propagate out of the worker's `fetch` (so that
+    // Cloudflare records the invocation as an exception) rather than be turned into a 500 response by the worker.
+    // Both end up as a 500; they differ in the body: locally, the runtime answers an uncaught exception with the
+    // error itself, whereas a handled error yields whatever the worker returns (Hono's default: 'Internal Server
+    // Error').
+    await server.update(o => ({
+      ...o,
+      workers: o.workers.map(w =>
+        'configPath' in w
+          ? { ...w, secrets: { ...(w.secrets ?? {}), BRAINBOX_SERVICE_SECRET: '' } }
+          : failMe('no secrets'),
+      ),
+    }))
+
+    const response = await server.fetch('/api/greeting')
+    expect(response.status).toEqual(500)
+    expect(await response.text()).toMatch(/^Error: Key must be a non-empty string/)
+  })
 })

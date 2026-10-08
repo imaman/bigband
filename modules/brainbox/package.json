@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.1",
+    "hono": "^4.13.13",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "timeago.js": "^4.0.2",
