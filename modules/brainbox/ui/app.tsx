@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
-import { hc } from 'hono/client'
+import { hc, parseResponse } from 'hono/client'
 
 import type { AppType } from '../src/brainbox-service.js'
 import { SessionAge } from './session-age.js'
@@ -10,13 +10,7 @@ const greetingQuery = (name: string) =>
   queryOptions({
     retry: false,
     queryKey: ['greeting', name],
-    queryFn: async ({ signal }) => {
-      const r = await client.api.greeting.$get({ query: { name } }, { init: { signal } })
-      if (!r.ok) {
-        throw new Error(`Backend call came back with ${r.status}`)
-      }
-      return await r.json()
-    },
+    queryFn: async ({ signal }) => parseResponse(client.api.greeting.$get({ query: { name } }, { init: { signal } })),
   })
 
 export function App() {
