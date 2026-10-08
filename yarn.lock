@@ -1704,11 +1704,6 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
-"@hono/zod-validator@^0.9.1":
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/@hono/zod-validator/-/zod-validator-0.9.1.tgz#0a2957320c06de84d410d2bc1fd7a82fdcbc3ad5"
-  integrity sha512-iiv6w0qrIc0arfvCtUqBWsvl4fXjzaTcQcCJTTtCnkawF9HHGE+KjEl0ox3gQJ6rKZEgE3mLExlQCF72M+mNuw==
-
 "@humanwhocodes/config-array@^0.9.2":
   version "0.9.5"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.9.5.tgz#2cbaf9a89460da24b5ca6531b8bbfc23e1df50c7"
