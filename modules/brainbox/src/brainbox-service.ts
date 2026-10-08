@@ -1,7 +1,9 @@
+import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import crypto from 'node:crypto'
+import { z } from 'zod'
 
-export const app = new Hono<{ Bindings: Env; Variables: { count: number } }>()
+export const app = new Hono<{ Bindings: Env; Variables: { count: number; abc: { h: string; n: number } } }>()
 
 // Hono's default error handler turns an exception into a 500 response, so the invocation would end normally and
 // Cloudflare's observability would not record it as an exception. Rethrow so that errors reach the runtime.
@@ -19,7 +21,7 @@ app.use(async (c, next) => {
   await next()
 })
 
-app.get('/api/greeting', async c => {
+app.get('/api/greeting', zValidator('form', z.object({ h: z.string(), n: z.number() })), async c => {
   const name = c.req.query('name')?.trim() || 'stranger'
   const greeting = `Hello, ${name}!`
   return c.json({ greeting, count: c.get('count'), blended: encrypt(c.env.BRAINBOX_SERVICE_SECRET, greeting) })
