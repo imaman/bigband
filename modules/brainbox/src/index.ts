@@ -9,4 +9,4 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 export { Backplane } from './backplane.js'
-export { app as default } from './brainbox-service.js'
+export { default } from './brainbox-service.js'

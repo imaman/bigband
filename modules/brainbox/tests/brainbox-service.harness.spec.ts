@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { createTestHarness } from 'wrangler'
 
+import { createApiClient } from './api-client.js'
 import { failMe } from './fail-me.js'
 
 // This spec runs compiled, from dist/tests/, so the package root is two levels up. Anchor the wrangler config to it
@@ -23,6 +24,26 @@ const server = createTestHarness({
     },
   ],
 })
+
+// Sends the API calls over HTTP, through the static-assets router, the way the UI does. The harness speaks
+// Miniflare's Request/Response classes, hence the copying.
+const api = createApiClient('http://localhost', async request => {
+  const response = await server.fetch(new URL(request.url).pathname, {
+    method: request.method,
+    headers: [...request.headers],
+    body: await request.text(),
+  })
+  return new Response(await response.arrayBuffer(), { status: response.status, headers: [...response.headers] })
+})
+
+// A greeting call at the HTTP level, for tests that inspect the response itself (status, body) rather than the
+// result. `{ json: <input> }` is the request body of oRPC's RPC protocol.
+const rawGreeting = () =>
+  server.fetch('/api/greeting', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ json: {} }),
+  })
 
 // Out-of-process tests of the worker as deployed:
 // - Runs exactly what `wrangler deploy` ships: the worker and UI bundles of `vite build`, with the compatibility
@@ -65,18 +86,16 @@ describe('brainbox-service.harness', () => {
 
     const all: unknown[] = []
     for (let i = 0; i < 10; ++i) {
-      const resp = await server.fetch('/api/greeting')
-      all.push(resp.status === 200 ? await resp.json() : [resp.status, await resp.text()])
+      const resp = await rawGreeting()
+      all.push([resp.status, await resp.text()])
     }
 
-    expect(all[0]).toMatchObject({ greeting: 'Hello, stranger!' })
+    expect(all[0]).toEqual([200, expect.stringContaining('Hello, stranger!')])
     expect(all.at(-1)).toEqual([429, 'Too many requests'])
   })
 
   it('routes /api/greeting past the asset router to the worker', async () => {
-    const response = await server.fetch('/api/greeting?name=alice')
-    expect(response.status).toEqual(200)
-    expect(await response.json()).toEqual({
+    expect(await api.greeting({ name: 'alice' })).toEqual({
       greeting: 'Hello, alice!',
       count: expect.any(Number),
       blended: expect.any(String),
@@ -87,8 +106,8 @@ describe('brainbox-service.harness', () => {
     // An empty secret makes the greeting handler throw. The error must propagate out of the worker's `fetch` (so that
     // Cloudflare records the invocation as an exception) rather than be turned into a 500 response by the worker.
     // Both end up as a 500; they differ in the body: locally, the runtime answers an uncaught exception with the
-    // error itself, whereas a handled error yields whatever the worker returns (Hono's default: 'Internal Server
-    // Error').
+    // error itself, whereas a handled error yields whatever the worker returns (oRPC's error response, a JSON
+    // document).
     await server.update(o => ({
       ...o,
       workers: o.workers.map(w =>
@@ -98,7 +117,7 @@ describe('brainbox-service.harness', () => {
       ),
     }))
 
-    const response = await server.fetch('/api/greeting')
+    const response = await rawGreeting()
     expect(response.status).toEqual(500)
     expect(await response.text()).toMatch(/^Error: Key must be a non-empty string/)
   })

@@ -1,25 +1,11 @@
-import { queryOptions, useQuery } from '@tanstack/react-query'
-import { z } from 'zod'
+import { useQuery } from '@tanstack/react-query'
 
+import { orpc } from './api.js'
 import { SessionAge } from './session-age.js'
 
-const GreetingResponse = z.object({ greeting: z.string(), count: z.number() })
-
-const greetingQuery = (name: string) =>
-  queryOptions({
-    retry: false,
-    queryKey: ['greeting', name],
-    queryFn: async ({ signal }) => {
-      const r = await fetch(`/api/greeting?name=${encodeURIComponent(name)}`, { signal })
-      if (!r.ok) {
-        throw new Error(`Backend call came back with ${r.status}`)
-      }
-      return GreetingResponse.parse(await r.json())
-    },
-  })
-
 export function App() {
-  const { isPending, error, data } = useQuery(greetingQuery(new URLSearchParams(location.search).get('yourName') ?? ''))
+  const name = new URLSearchParams(location.search).get('yourName') ?? ''
+  const { isPending, error, data } = useQuery(orpc.greeting.queryOptions({ input: { name }, retry: false }))
   return (
     <>
       <SessionAge />
