@@ -1,7 +1,8 @@
 import react from '@vitejs/plugin-react'
-import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
+
+import { viteDistWranglerConfigPath } from './vite-dist.mjs'
 
 // This file lives under tests/ (so that build-raptor fingerprints it), hence the package root is one level up.
 const packageRoot = fileURLToPath(new URL('..', import.meta.url))
@@ -20,9 +21,6 @@ export default defineConfig({
     root: packageRoot,
     include: ['ui/**/*.ui-spec.tsx'],
     environment: 'happy-dom',
-    provide: {
-      // The config that `vite build` generates, i.e. the one `wrangler deploy` uses.
-      wranglerConfigPath: path.join(packageRoot, 'vite-dist/brainbox/wrangler.json'),
-    },
+    provide: { wranglerConfigPath: viteDistWranglerConfigPath },
   },
 })

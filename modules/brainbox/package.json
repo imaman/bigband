@@ -68,6 +68,8 @@
     "test-harness": {
       "inputs": [
         "dist/tests",
+        "tests/vitest.harness.config.mts",
+        "tests/vite-dist.mts",
         "vite-dist"
       ],
       "outputs": [],
@@ -77,6 +79,7 @@
       "inputs": [
         "ui",
         "tests/vitest.ui.config.mts",
+        "tests/vite-dist.mts",
         "vite-dist"
       ],
       "outputs": [],

@@ -1,6 +1,8 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
+import { viteDistWranglerConfigPath } from './vite-dist.mjs'
+
 // This file lives under tests/ (so that build-raptor fingerprints it), hence the package root is one level up.
 const packageRoot = fileURLToPath(new URL('..', import.meta.url))
 
@@ -14,5 +16,6 @@ export default defineConfig({
     root: packageRoot,
     include: ['dist/tests/**/*.harness.spec.js'],
     environment: 'node',
+    provide: { wranglerConfigPath: viteDistWranglerConfigPath },
   },
 })

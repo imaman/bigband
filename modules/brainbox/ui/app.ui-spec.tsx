@@ -7,7 +7,7 @@ import { createTestHarness } from 'wrangler'
 import { App } from './app.js'
 
 declare module 'vitest' {
-  export interface ProvidedContext {
+  interface ProvidedContext {
     wranglerConfigPath: string
   }
 }
