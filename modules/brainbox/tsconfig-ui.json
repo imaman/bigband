@@ -8,5 +8,6 @@
     "types": ["vite/client"],
     "noEmit": true
   },
-  "include": ["ui"]
+  "include": ["ui"],
+  "references": [{ "path": "./tsconfig.json" }]
 }

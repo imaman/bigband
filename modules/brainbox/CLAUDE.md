@@ -17,6 +17,7 @@ KV, R2, D1, Durable Objects, Queues, Vectorize, AI, or Agents SDK code. Limits a
 | `yarn build-ui`     | Type-check `ui/` (`tsconfig-ui.json`) and `vite build` the UI and worker to `vite-dist/` |
 | `yarn test`         | Run the workerd tests (vitest, inside workerd) against `dist/tests`; build first         |
 | `yarn test-harness` | Run the harness tests against `vite-dist/`; run `yarn build` and `yarn build-ui` first   |
+| `yarn test-ui`      | Run the UI component tests (`ui/**/*.ui-spec.tsx`); run `yarn build` and `yarn build-ui` first |
 
 Run `yarn cf-typegen` after changing bindings in `wrangler.jsonc`. `src/worker-configuration.d.ts` is generated: it
 is prettier- and eslint-ignored and carries its own `eslint-disable` header. It lives under `src/` (rather than the
@@ -40,10 +41,19 @@ wrangler default of the package root) so that build-raptor, which fingerprints o
   is type-checked by `yarn build-ui`; Vite itself only strips types. The type-aware lint (`.eslintrc.typed.js`) also
   resolves `ui/` against `tsconfig-ui.json`. `.tsx` files get the React hooks rules (`rules-of-hooks`,
   `exhaustive-deps`) on top of the TypeScript ones.
+- The UI calls the worker through Hono's RPC client (`hc<AppType>` in `ui/app.tsx`), whose types are derived from
+  `AppType` (`typeof app`) in `src/brainbox-service.ts`. Routes must be registered by chaining on `app` (`.get(...)`
+  etc.); a route added in a separate `app.get(...)` statement still works at runtime but is invisible to the client.
+  The UI cannot type-check the worker's source (it needs the Workers types, which conflict with `DOM`), so
+  `tsconfig-ui.json` lists the generated `tsconfig.json` under `references`: TypeScript then resolves the UI's
+  `import type ... from '../src/...'` to the declarations that `yarn build` emits to `dist/src/`. Run `yarn build`
+  before `yarn build-ui`; without it the UI type-check fails with TS6305, and with a stale `dist/` it checks against
+  the old API.
 - Two custom build-raptor tasks (`buildTasks` in package.json) cover the UI, because the standard build and test
   tasks only see `src/`, `tests/` and `dist/`:
   - `build-ui` (label `build`) runs `yarn build-ui`. Its inputs include `ui/`, `src/`, `index.html`,
-    `vite.config.ts` and `wrangler.jsonc`; its output is `vite-dist/`. It deletes the `.dev.vars` that the plugin
+    `vite.config.ts` and `wrangler.jsonc`, plus `dist/src` (the worker's declarations, see above), which makes it
+    depend on `build`; its output is `vite-dist/`. It deletes the `.dev.vars` that the plugin
     copies into the output, so local secrets stay out of build-raptor's cache.
   - `test-harness` (label `test`) runs the harness tests. Listing `vite-dist` and `dist/tests` as inputs makes it
     depend on `build-ui` and `build`, and reruns it whenever the UI or the worker changes.
@@ -72,6 +82,15 @@ wrangler default of the package root) so that build-raptor, which fingerprints o
   https://developers.cloudflare.com/workers/runtime-apis/nodejs/ (e.g. `node:http2`, `node:vm`,
   `node:child_process`). Such code type-checks and fails at runtime, so exercise it in a harness test.
   Prefer `*.spec.ts` for anything else; the harness spawns a workerd per test file and is slower.
+- A third kind, UI component tests (`ui/**/*.ui-spec.tsx`, `tests/vitest.ui.config.mts`), render the React
+  components with `@testing-library/react` in happy-dom and let them call the worker over HTTP: the worker runs in
+  wrangler's test harness from `vite-dist/`, as in the harness specs, and the test points happy-dom's page at the
+  harness's origin (`happyDOM.setURL()`), so the UI's relative requests reach it same-origin. Nothing is mocked.
+  Unlike all other tests in the repo, these run from source, not from `dist/`: tsc's build of `src/` and `tests/`
+  cannot compile the UI (it needs `DOM`), so they are type-checked by `tsconfig-ui.json` along with the rest of `ui/`.
+  build-raptor runs them as the `test-ui` build task (label `test`), which depends on `build-ui` via its `vite-dist`
+  input. The harness may change ports on `reset()`/`update()`, so look the origin up with `server.listen()` after
+  each of them.
 - Cache-invisible files: `tsconfig-base.json` is not a build-raptor input, and `wrangler.jsonc` is an input of
   `build-ui` (and therefore of `test-harness`) but not of the standard build and test tasks. After editing them, a
   cached build or workerd-test result may be replayed. Force a rerun by also touching `package.json` (e.g. a comment

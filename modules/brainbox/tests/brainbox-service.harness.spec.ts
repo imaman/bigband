@@ -1,24 +1,14 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, inject, it } from 'vitest'
 import { createTestHarness } from 'wrangler'
 
 import { failMe } from './fail-me.js'
 
-// This spec runs compiled, from dist/tests/, so the package root is two levels up. Anchor the wrangler config to it
-// (rather than to process.cwd(), which is what a relative `configPath` resolves against) so the harness works no
-// matter which directory vitest is launched from, same as tests/vitest.config.mts does for the workerd tests.
-const packageRoot = fileURLToPath(new URL('../..', import.meta.url))
-// The config that `vite build` generates, i.e. the one `wrangler deploy` uses: it runs the worker bundle that Vite
-// built and serves the built UI as static assets. See
-// https://developers.cloudflare.com/workers/testing/test-harness/configure/
-const wranglerConfigPath = path.join(packageRoot, 'vite-dist/brainbox/wrangler.json')
-
 // Follows https://developers.cloudflare.com/workers/testing/test-harness/get-started/
+// `wranglerConfigPath` is provided by tests/vitest.harness.config.mts (see tests/vite-dist.mts).
 const server = createTestHarness({
   workers: [
     {
-      configPath: wranglerConfigPath,
+      configPath: inject('wranglerConfigPath'),
       secrets: { BRAINBOX_SERVICE_SECRET: '12345' },
     },
   ],
