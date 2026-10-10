@@ -1,29 +1,60 @@
-import { Hono } from 'hono'
+import { implement, ORPCError } from '@orpc/server'
+import { RPCHandler } from '@orpc/server/fetch'
+import { experimental_RethrowHandlerPlugin } from '@orpc/server/plugins'
 import crypto from 'node:crypto'
 
-export const app = new Hono<{ Bindings: Env; Variables: { count: number } }>()
+import { contract } from './api-contract.js'
 
-// Hono's default error handler turns an exception into a 500 response, so the invocation would end normally and
-// Cloudflare's observability would not record it as an exception. Rethrow so that errors reach the runtime.
-app.onError(err => {
-  throw err
+interface Context {
+  env: Env
+  count: number
+}
+
+const os = implement(contract).$context<Context>()
+
+const router = os.router({
+  greeting: os.greeting.handler(({ input, context }) => {
+    const name = input.name?.trim() || 'stranger'
+    const greeting = `Hello, ${name}!`
+    return { greeting, count: context.count, blended: encrypt(context.env.BRAINBOX_SERVICE_SECRET, greeting) }
+  }),
 })
 
-app.use(async (c, next) => {
-  const count = await c.env.BACKPLANE.getByName('requests').trafficTick()
-  if (typeof count !== 'number') {
-    const retryAfterSeconds = Math.ceil(count.retryAfterMillis / 1000)
-    return new Response('Too many requests', { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } })
-  }
-  c.set('count', count)
-  await next()
+// Errors that procedures raised and that are bugs rather than part of the API: anything but an `ORPCError`, or an
+// `ORPCError` that is a server error (e.g. an output that fails the contract's schema).
+const unexpectedErrors = new WeakSet<object>()
+
+const handler = new RPCHandler(router, {
+  clientInterceptors: [
+    async ({ next }) => {
+      try {
+        return await next()
+      } catch (e) {
+        const error = typeof e === 'object' && e !== null ? e : new Error(String(e))
+        if (!(error instanceof ORPCError) || error.status >= 500) {
+          unexpectedErrors.add(error)
+        }
+        throw error
+      }
+    },
+  ],
+  // The handler turns every error into an error response, so the invocation would end normally and Cloudflare's
+  // observability would not record it as an exception. Rethrow the unexpected ones so that they reach the runtime.
+  plugins: [new experimental_RethrowHandlerPlugin({ filter: e => unexpectedErrors.has(e) })],
 })
 
-app.get('/api/greeting', async c => {
-  const name = c.req.query('name')?.trim() || 'stranger'
-  const greeting = `Hello, ${name}!`
-  return c.json({ greeting, count: c.get('count'), blended: encrypt(c.env.BRAINBOX_SERVICE_SECRET, greeting) })
-})
+export default {
+  async fetch(request, env) {
+    const count = await env.BACKPLANE.getByName('requests').trafficTick()
+    if (typeof count !== 'number') {
+      const retryAfterSeconds = Math.ceil(count.retryAfterMillis / 1000)
+      return new Response('Too many requests', { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } })
+    }
+
+    const { matched, response } = await handler.handle(request, { prefix: '/api', context: { env, count } })
+    return matched ? response : new Response('Not found', { status: 404 })
+  },
+} satisfies ExportedHandler<Env>
 
 const VERSION = 1
 const SALT_LEN = 16
