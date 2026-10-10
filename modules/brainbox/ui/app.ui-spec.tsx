@@ -75,6 +75,6 @@ describe('app', () => {
     }))
     await navigate('/?yourName=alice')
     renderApp()
-    expect(await screen.findByText('429 Too Many Requests')).toBeTruthy()
+    expect(await screen.findByText('Backend call came back with 429')).toBeTruthy()
   })
 })
